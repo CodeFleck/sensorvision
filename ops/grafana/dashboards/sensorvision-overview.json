@@ -1,0 +1,47 @@
+{
+  "id": null,
+  "uid": "sensorvision-overview",
+  "schemaVersion": 39,
+  "title": "SensorVision Overview",
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Power Consumption (kW)",
+      "targets": [
+        {
+          "expr": "avg(iot_kw_consumption)",
+          "legendFormat": "{{device}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 0}
+    },
+    {
+      "type": "stat",
+      "title": "MQTT Messages Processed",
+      "targets": [
+        {
+          "expr": "rate(mqtt_messages_total[1m])",
+          "refId": "B"
+        }
+      ],
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 9}
+    },
+    {
+      "type": "stat",
+      "title": "Active Devices",
+      "targets": [
+        {
+          "expr": "count(iot_device_status{status=\"ONLINE\"})",
+          "refId": "C"
+        }
+      ],
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 9}
+    }
+  ],
+  "templating": {
+    "list": []
+  }
+}

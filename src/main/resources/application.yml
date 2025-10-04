@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: sensorvision
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sensorvision
+    username: sensorvision
+    password: sensorvision123
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+mqtt:
+  broker:
+    url: tcp://localhost:1883
+    username: sensorvision
+    password: sensorvision123
+
+simulator:
+  enabled: true
+  device-count: 10
+  interval-seconds: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    org.sensorvision: INFO

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:ubidots.com)",
+      "Bash(./gradlew:*)",
+      "Bash(docker exec:*)",
+      "Bash(winpty docker exec:*)",
+      "Bash(docker-compose:*)",
+      "Bash(node:*)",
+      "Bash(set NODE_OPTIONS=--trace-deprecation)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:docs.ubidots.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
