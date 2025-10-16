@@ -108,11 +108,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (contentType && contentType.includes('application/json')) {
           const error = await response.json();
           console.error('Login error response:', error);
-          errorMessage = error.message || error.detail || `Login failed: ${response.status} ${response.statusText}`;
+          errorMessage = error.message || error.detail || 'Login failed: Server is currently unavailable. Please try again later.';
         } else {
           const errorText = await response.text();
           console.error('Login error (non-JSON):', errorText);
-          errorMessage = `Login failed: ${response.status} ${response.statusText}`;
+          errorMessage = 'Login failed: Server is currently unavailable. Please try again later.';
         }
 
         throw new Error(errorMessage);
@@ -131,6 +131,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await fetchCurrentUser();
     } catch (error) {
       console.error('Login exception:', error);
+      // Check if it's a network error (server not running)
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Login failed: Server is currently unavailable. Please try again later.');
+      }
       throw error;
     }
   };
@@ -156,11 +160,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (contentType && contentType.includes('application/json')) {
           const error = await response.json();
           console.error('Registration error response:', error);
-          errorMessage = error.message || error.detail || `Registration failed: ${response.status} ${response.statusText}`;
+          errorMessage = error.message || error.detail || 'Login failed: Server is currently unavailable. Please try again later.';
         } else {
           const errorText = await response.text();
           console.error('Registration error (non-JSON):', errorText);
-          errorMessage = `Registration failed: ${response.status} ${response.statusText}`;
+          errorMessage = 'Login failed: Server is currently unavailable. Please try again later.';
         }
 
         throw new Error(errorMessage);
@@ -180,6 +184,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await fetchCurrentUser();
     } catch (error) {
       console.error('Registration exception:', error);
+      // Check if it's a network error (server not running)
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Oops, something went wrong while trying to register. Try again later...');
+      }
       throw error;
     }
   };

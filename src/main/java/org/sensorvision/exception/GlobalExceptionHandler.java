@@ -3,10 +3,13 @@ package org.sensorvision.exception;
 import jakarta.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
+import org.hibernate.HibernateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -66,12 +69,45 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(HibernateException.class)
+    public ProblemDetail handleHibernateException(HibernateException ex) {
+        logger.error("Database error occurred: {}", ex.getMessage(), ex);
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        problem.setTitle("Database Operation Failed");
+        problem.setDetail("Unable to complete the database operation. Please try again or contact support if the issue persists.");
+        problem.setProperty("developerMessage", ex.getMessage());
+        problem.setProperty("errorType", ex.getClass().getSimpleName());
+        return problem;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        logger.error("Data integrity violation: {}", ex.getMessage(), ex);
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problem.setTitle("Data Conflict");
+        problem.setDetail("The operation conflicts with existing data. This might be due to duplicate entries or related data constraints.");
+        problem.setProperty("developerMessage", ex.getMostSpecificCause().getMessage());
+        return problem;
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+        logger.warn("Access denied: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.FORBIDDEN);
+        problem.setTitle("Access Denied");
+        problem.setDetail("You don't have permission to access this resource.");
+        problem.setProperty("developerMessage", ex.getMessage());
+        return problem;
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleUnknown(Exception ex) {
         logger.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        problem.setTitle("Internal Server Error");
-        problem.setDetail("Unexpected error occurred: " + ex.getMessage());
+        problem.setTitle("Something Went Wrong");
+        problem.setDetail("An unexpected error occurred while processing your request. Our team has been notified. Please try again later.");
+        problem.setProperty("developerMessage", ex.getMessage());
+        problem.setProperty("errorType", ex.getClass().getSimpleName());
         return problem;
     }
 }

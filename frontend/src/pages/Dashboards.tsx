@@ -16,7 +16,7 @@ export const Dashboards: React.FC = () => {
   const [latestData, setLatestData] = useState<Map<string, TelemetryPoint>>(new Map());
 
   // WebSocket connection for real-time updates
-  const { lastMessage, connectionStatus } = useWebSocket('ws://localhost:8083/ws/telemetry');
+  const { lastMessage, connectionStatus } = useWebSocket('ws://localhost:8080/ws/telemetry');
 
   // Process incoming WebSocket messages
   useEffect(() => {
@@ -40,8 +40,9 @@ export const Dashboards: React.FC = () => {
       setDashboard(data);
       setError(null);
     } catch (err) {
-      setError('Failed to load dashboard');
-      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard';
+      setError(errorMessage);
+      console.error('Dashboard load error:', err);
     } finally {
       setLoading(false);
     }
@@ -55,8 +56,9 @@ export const Dashboards: React.FC = () => {
         await apiService.deleteWidget(dashboard.id, widgetId);
         await loadDashboard(); // Reload dashboard
       } catch (err) {
-        console.error('Failed to delete widget:', err);
-        alert('Failed to delete widget');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to delete widget';
+        console.error('Widget deletion error:', err);
+        alert(`Failed to delete widget:\n\n${errorMessage}`);
       }
     }
   };
@@ -72,12 +74,14 @@ export const Dashboards: React.FC = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
+        <div className="text-center max-w-2xl px-4">
           <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Dashboard</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="text-left bg-gray-50 rounded-lg p-4 mb-4">
+            <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">{error}</pre>
+          </div>
           <button
             onClick={loadDashboard}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"

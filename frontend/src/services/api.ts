@@ -24,8 +24,35 @@ class ApiService {
         // Unauthorized - clear token and reload
         localStorage.removeItem('accessToken');
         window.location.href = '/login';
+        throw new Error('Session expired. Please login again.');
       }
-      throw new Error(`API Error: ${response.statusText}`);
+
+      // Try to parse error response (ProblemDetail format from backend)
+      try {
+        const errorData = await response.json();
+
+        // Build user-friendly error message with developer info if available
+        let errorMessage = errorData.detail || errorData.title || response.statusText;
+
+        // Add developer message if available (for debugging)
+        if (errorData.developerMessage) {
+          errorMessage += `\n\nDeveloper Info: ${errorData.developerMessage}`;
+        }
+
+        // Add error type if available
+        if (errorData.errorType) {
+          errorMessage += ` (${errorData.errorType})`;
+        }
+
+        throw new Error(errorMessage);
+      } catch (parseError) {
+        // If we can't parse the error response, fall back to status text
+        if (parseError instanceof Error && parseError.message.includes('Developer Info')) {
+          // Re-throw our formatted error
+          throw parseError;
+        }
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
     }
 
     return response.json();

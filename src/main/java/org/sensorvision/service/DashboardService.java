@@ -86,8 +86,9 @@ public class DashboardService {
                 return saved;
             });
 
-        // Load widgets separately to avoid lazy loading issues
-        dashboard.setWidgets(widgetRepository.findByDashboardId(dashboard.getId()));
+        // Trigger lazy loading of widgets within the transaction
+        // This avoids replacing the collection which would break orphan removal
+        dashboard.getWidgets().size();
 
         return DashboardResponse.fromEntity(dashboard);
     }
@@ -161,8 +162,8 @@ public class DashboardService {
 
         Dashboard updated = dashboardRepository.save(dashboard);
 
-        // Load widgets for response
-        updated.setWidgets(widgetRepository.findByDashboardId(updated.getId()));
+        // Trigger lazy loading of widgets within the transaction
+        updated.getWidgets().size();
 
         return DashboardResponse.fromEntity(updated);
     }

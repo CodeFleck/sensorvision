@@ -24,7 +24,8 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         sessions.add(session);
-        log.info("WebSocket connection established: {}", session.getId());
+        log.info("WebSocket connection established: {} from remote address: {}, URI: {}",
+                session.getId(), session.getRemoteAddress(), session.getUri());
     }
 
     @Override
@@ -35,7 +36,12 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        log.error("WebSocket transport error for session {}: {}", session.getId(), exception.getMessage());
+        log.error("WebSocket transport error for session {}: {}",
+                session.getId(),
+                exception != null ? exception.getClass().getName() : "null exception");
+        if (exception != null) {
+            log.error("WebSocket transport error details for session {}", session.getId(), exception);
+        }
         sessions.remove(session);
     }
 

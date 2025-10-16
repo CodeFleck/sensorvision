@@ -47,7 +47,10 @@
       "Bash(docker inspect:*)",
       "Bash(del:*)",
       "Bash(npm run lint)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(set \"DB_USERNAME=sensorvision\")",
+      "Bash(set \"DB_PASSWORD=sensorvision123\")",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
