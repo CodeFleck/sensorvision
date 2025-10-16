@@ -1,16 +1,38 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-SensorVision is a Spring Boot 3 service. Production code lives in `src/main/java/org/sensorvision`, split by concern: `controller/` for REST entrypoints, `service/` for orchestration and telemetry ingestion, `mqtt/` for broker adapters, `simulator/` for the smart-meter publisher, and `model/` + `repository/` for JPA entities. Configuration beans reside in `config/` while DTOs are grouped under `dto/`. Application settings and Flyway migrations sit in `src/main/resources`, with SQL scripts under `db/migration`. Operational assets stay in `ops/grafana` and `ops/prometheus`, and the Mosquitto broker files are in `mosquitto/config`, `mosquitto/data`, and `mosquitto/log`.
+- `src/main/java/org/sensorvision/...` contains Spring Boot code organized by feature: `controller`, `service`, `mqtt`, `simulator`, `model`, and `repository`.
+- `src/main/resources` holds configuration, Flyway migrations in `db/migration`, and other runtime assets.
+- `src/test/java/org/sensorvision` mirrors production packages, with payload fixtures stored in `src/test/resources`.
+- Operational assets live under `ops/`, while Mosquitto broker files reside in `mosquitto/config`, `mosquitto/data`, and `mosquitto/log`.
 
 ## Build, Test, and Development Commands
-Run `./gradlew clean build` (`gradlew.bat` on Windows) to compile, run tests, and produce the executable jar in `build/libs/`. Launch the app with `./gradlew bootRun` for iterative development. Execute `./gradlew test` for the JUnit 5 test suite; add `--info` when inspecting flaky behavior. Start supporting services with `docker-compose up -d` and inspect them via `docker-compose logs mosquitto` or `docker-compose logs postgres`. Shut everything down using `docker-compose down` before switching branches.
+- `./gradlew clean build` compiles, runs JUnit 5 tests, and produces the executable jar in `build/libs/`.
+- `./gradlew bootRun` launches the application for iterative local development against live services.
+- `./gradlew test --info` executes the test suite with verbose diagnostics for flaky assertions.
+- `docker-compose up -d` starts Postgres, Mosquitto, and other dependencies; `docker-compose logs mosquitto` inspects broker output.
+- `docker-compose down` stops supporting services before branch changes to prevent stale containers.
 
 ## Coding Style & Naming Conventions
-Write Java 17 code with four-space indentation and avoid wildcard imports. Name classes with PascalCase (`DeviceService`), methods and fields camelCase, configuration properties with kebab-case in `application.yml`, and MQTT topics using the `sensorvision/<domain>/...` template. Keep DTOs immutable where possible and annotate domain models with Lombok for boilerplate. When adding new packages, mirror the existing feature-based structure under `org.sensorvision`.
+- Write Java 17 with four-space indentation and avoid wildcard imports; annotate domain entities with Lombok where helpful.
+- Name classes in PascalCase, methods and fields in camelCase, and keep DTOs immutable when practical.
+- Configuration keys stay kebab-case in `application.yml`; MQTT topics follow `sensorvision/<domain>/...`.
+- Mirror the existing package layout when adding features under `org.sensorvision`.
 
 ## Testing Guidelines
-Place tests under `src/test/java/org/sensorvision`, mirroring production packages and naming classes `*Tests`. Favor focused unit tests and Spring slice tests (`@DataJpaTest`, `@SpringBootTest`) over full-stack starts. Provide representative MQTT payload samples in `src/test/resources`. Before every pull request, run `./gradlew test`; integration tests that rely on Docker services should guard themselves behind an explicit profile so they do not block the default test task.
+- Favor focused unit tests and Spring slice tests (e.g., `@DataJpaTest`, `@SpringBootTest`) over full-stack startups.
+- Name test classes `*Tests` and match the production package of the code under test.
+- Guard Docker-dependent integrations behind explicit profiles so `./gradlew test` stays fast by default.
+- Store representative MQTT payload samples alongside tests in `src/test/resources`.
 
 ## Commit & Pull Request Guidelines
-Write imperative, present-tense commit subjects under 72 characters and group related changes together (e.g., `service: handle offline device alerts`). Use descriptive bodies for context and reference issue IDs where relevant. Pull requests must outline the change, list manual verification (commands or API calls), and include screenshots for Grafana dashboard updates. Call out configuration changes to `ops/` or `mosquitto/`, request reviews from the owning subsystem, and wait for CI to pass before merging.
+- Write imperative, <=72-character subjects (e.g., `service: handle offline device alerts`) and group related edits.
+- Provide descriptive bodies with context, linked issues, and rationale for non-obvious changes.
+- Pull requests should outline the change, list manual verification steps, and include Grafana screenshots when dashboards move.
+- Call out adjustments under `ops/` or `mosquitto/`, request subsystem reviewers, and wait for CI to pass before merging.
+
+## Security & Configuration Tips
+- Keep secrets out of the repo; prefer environment overrides for sensitive configuration values in `application.yml`.
+- Coordinate telemetry adapter or broker configuration updates with the ops team so `mosquitto` and `ops/` assets stay aligned.
+- Use `docker-compose down` before switching branches to avoid persisting stale database or broker state between runs.
+

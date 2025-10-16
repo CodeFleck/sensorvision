@@ -15,6 +15,20 @@ logs/
 /target/
 .vscode/
 
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+*.env
+!*.env.example
+
+# Database backups and sensitive data
+/scripts/*.csv
+/scripts/*.sql.backup
+/backups/
+device_tokens_backup*.csv
+
 # Frontend (Node/React)
 /frontend/node_modules/
 /frontend/dist/
@@ -29,3 +43,12 @@ logs/
 /frontend/yarn-error.log*
 /frontend/pnpm-debug.log*
 /frontend/.eslintcache
+
+# Terraform
+/terraform/.terraform/
+/terraform/.terraform.lock.hcl
+/terraform/terraform.tfstate
+/terraform/terraform.tfstate.backup
+/terraform/terraform.tfvars
+/terraform/*.tfvars
+!/terraform/terraform.tfvars.example

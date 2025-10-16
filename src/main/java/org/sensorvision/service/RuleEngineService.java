@@ -1,6 +1,7 @@
 package org.sensorvision.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.model.Alert;
 import org.sensorvision.model.AlertSeverity;
 import org.sensorvision.model.Device;
+import org.sensorvision.model.Event;
 import org.sensorvision.model.Rule;
 import org.sensorvision.model.TelemetryRecord;
 import org.sensorvision.repository.AlertRepository;
@@ -26,6 +28,7 @@ public class RuleEngineService {
     private final RuleRepository ruleRepository;
     private final AlertRepository alertRepository;
     private final AlertService alertService;
+    private final EventService eventService;
 
     /**
      * Evaluate all rules for a telemetry record and trigger alerts if conditions are met
@@ -97,8 +100,40 @@ public class RuleEngineService {
         alert = alertRepository.save(alert);
         log.info("Alert triggered: {} for device {}", message, telemetryRecord.getDevice().getExternalId());
 
+        // Emit rule triggered event
+        if (rule.getOrganization() != null) {
+            Event.EventSeverity eventSeverity = mapAlertSeverityToEventSeverity(severity);
+            eventService.emitRuleEvent(
+                rule.getOrganization(),
+                rule.getId(),
+                rule.getName(),
+                Event.EventType.RULE_TRIGGERED,
+                eventSeverity,
+                message
+            );
+
+            // Also emit alert created event
+            eventService.emitAlertEvent(
+                rule.getOrganization(),
+                alert.getId(),
+                telemetryRecord.getDevice().getExternalId(),
+                Event.EventType.ALERT_CREATED,
+                eventSeverity,
+                message
+            );
+        }
+
         // Send notification via AlertService
         alertService.sendAlertNotification(alert);
+    }
+
+    private Event.EventSeverity mapAlertSeverityToEventSeverity(AlertSeverity alertSeverity) {
+        return switch (alertSeverity) {
+            case CRITICAL -> Event.EventSeverity.CRITICAL;
+            case HIGH -> Event.EventSeverity.ERROR;
+            case MEDIUM -> Event.EventSeverity.WARNING;
+            case LOW -> Event.EventSeverity.INFO;
+        };
     }
 
     private AlertSeverity determineSeverity(Rule rule, BigDecimal triggeredValue) {
@@ -111,7 +146,7 @@ public class RuleEngineService {
         }
 
         // Calculate percentage deviation
-        BigDecimal percentageDeviation = deviation.divide(threshold, 4, BigDecimal.ROUND_HALF_UP);
+        BigDecimal percentageDeviation = deviation.divide(threshold, 4, RoundingMode.HALF_UP);
 
         if (percentageDeviation.compareTo(BigDecimal.valueOf(2.0)) > 0) {
             return AlertSeverity.CRITICAL;

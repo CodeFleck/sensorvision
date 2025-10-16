@@ -9,10 +9,13 @@ import org.sensorvision.dto.LatestTelemetryResponse;
 import org.sensorvision.dto.TelemetryPointDto;
 import org.sensorvision.exception.ResourceNotFoundException;
 import org.sensorvision.model.Device;
+import org.sensorvision.model.Organization;
 import org.sensorvision.model.TelemetryRecord;
 import org.sensorvision.repository.DeviceRepository;
 import org.sensorvision.repository.TelemetryRecordRepository;
+import org.sensorvision.security.SecurityUtils;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,8 +33,14 @@ public class TelemetryService {
             throw new IllegalArgumentException("Parameter 'from' must be before 'to'");
         }
 
+        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + externalId));
+
+        // Verify device belongs to user's organization
+        if (!device.getOrganization().getId().equals(userOrg.getId())) {
+            throw new AccessDeniedException("Access denied to device: " + externalId);
+        }
 
         return telemetryRecordRepository
                 .findByDeviceExternalIdAndTimestampBetweenOrderByTimestampAsc(device.getExternalId(), from, to)
@@ -42,8 +51,14 @@ public class TelemetryService {
 
     @Transactional(readOnly = true)
     public TelemetryPointDto getLatest(String externalId) {
+        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + externalId));
+
+        // Verify device belongs to user's organization
+        if (!device.getOrganization().getId().equals(userOrg.getId())) {
+            throw new AccessDeniedException("Access denied to device: " + externalId);
+        }
 
         return telemetryRecordRepository
                 .findByDeviceExternalIdOrderByTimestampDesc(device.getExternalId(), PageRequest.of(0, 1))
@@ -59,7 +74,14 @@ public class TelemetryService {
             return List.of();
         }
 
-        return telemetryRecordRepository.findLatestForDevices(externalIds).stream()
+        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+
+        // First, get all records
+        List<TelemetryRecord> records = telemetryRecordRepository.findLatestForDevices(externalIds);
+
+        // Filter to only include records from user's organization
+        return records.stream()
+                .filter(record -> record.getDevice().getOrganization().getId().equals(userOrg.getId()))
                 .map(this::toLatestResponse)
                 .collect(Collectors.toList());
     }

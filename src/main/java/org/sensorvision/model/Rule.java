@@ -55,6 +55,10 @@ public class Rule extends AuditableEntity {
     @Builder.Default
     private Boolean enabled = true;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
+
     @PrePersist
     void ensureId() {
         if (this.id == null) {

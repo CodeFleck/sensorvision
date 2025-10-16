@@ -1,6 +1,8 @@
 package org.sensorvision.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,7 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
 
     /**
      * Broadcast telemetry data to all connected WebSocket clients
+     * Fixed to avoid race conditions by collecting failed sessions separately
      */
     public void broadcastTelemetryData(TelemetryPointDto telemetryPoint) {
         if (sessions.isEmpty()) {
@@ -49,21 +52,31 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
             String message = objectMapper.writeValueAsString(telemetryPoint);
             TextMessage textMessage = new TextMessage(message);
 
-            // Use iterator to safely remove sessions that fail to send
-            sessions.removeIf(session -> {
+            // Collect failed sessions separately to avoid concurrent modification
+            List<WebSocketSession> failedSessions = new ArrayList<>();
+
+            for (WebSocketSession session : sessions) {
                 try {
-                    if (session.isOpen()) {
-                        session.sendMessage(textMessage);
-                        return false;
-                    } else {
-                        return true; // Remove closed session
+                    // Synchronize on session to prevent concurrent access
+                    synchronized (session) {
+                        if (session.isOpen()) {
+                            session.sendMessage(textMessage);
+                        } else {
+                            failedSessions.add(session);
+                        }
                     }
                 } catch (Exception e) {
                     log.warn("Failed to send message to WebSocket session {}: {}",
                             session.getId(), e.getMessage());
-                    return true; // Remove failed session
+                    failedSessions.add(session);
                 }
-            });
+            }
+
+            // Remove failed sessions after iteration completes
+            if (!failedSessions.isEmpty()) {
+                sessions.removeAll(failedSessions);
+                log.debug("Removed {} failed WebSocket sessions", failedSessions.size());
+            }
 
         } catch (Exception e) {
             log.error("Failed to broadcast telemetry data: {}", e.getMessage());

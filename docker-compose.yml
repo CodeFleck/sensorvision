@@ -1,18 +1,21 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:15-alpine
     container_name: sensorvision-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: sensorvision
-      POSTGRES_USER: sensorvision
-      POSTGRES_PASSWORD: sensorvision123
+      POSTGRES_DB: ${POSTGRES_DB:-sensorvision}
+      POSTGRES_USER: ${DB_USERNAME:-sensorvision}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sensorvision123}
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sensorvision}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mosquitto:
     image: eclipse-mosquitto:2.0
@@ -20,32 +23,64 @@ services:
     restart: unless-stopped
     ports:
       - "1883:1883"
+      - "9001:9001"
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -W 3 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  prometheus:
-    image: prom/prometheus:v2.52.0
-    container_name: sensorvision-prometheus
+  backend:
+    build: .
+    container_name: sensorvision-backend
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - "${SERVER_PORT:-8080}:8080"
     volumes:
-      - ./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-
-  grafana:
-    image: grafana/grafana:10.4.5
-    container_name: sensorvision-grafana
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin123
-    volumes:
-      - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./ops/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      # Database
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sensorvision}
+      DB_USERNAME: ${DB_USERNAME:-sensorvision}
+      DB_PASSWORD: ${DB_PASSWORD:-sensorvision123}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      JWT_ISSUER: ${JWT_ISSUER:-http://localhost:8080}
+
+      # MQTT
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-sensorvision}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-sensorvision123}
+      MQTT_DEVICE_AUTH_REQUIRED: ${MQTT_DEVICE_AUTH_REQUIRED:-false}
+
+      # Application
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+
+      # Optional notification services
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      SMS_ENABLED: ${SMS_ENABLED:-false}
+      WEBHOOK_ENABLED: ${WEBHOOK_ENABLED:-true}
+      SLACK_ENABLED: ${SLACK_ENABLED:-false}
+      TEAMS_ENABLED: ${TEAMS_ENABLED:-false}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
 volumes:
   postgres-data:

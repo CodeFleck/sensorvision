@@ -4,7 +4,7 @@ import { RealTimeChart } from '../components/RealTimeChart';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { apiService } from '../services/api';
 import { Device, LatestTelemetry, TelemetryPoint } from '../types';
-import { Activity, Zap, AlertTriangle, Cpu } from 'lucide-react';
+import { Activity, Zap, Cpu } from 'lucide-react';
 
 export const Dashboard = () => {
   const [devices, setDevices] = useState<Device[]>([]);

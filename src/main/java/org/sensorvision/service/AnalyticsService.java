@@ -6,10 +6,18 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.sensorvision.dto.AggregationResponse;
+import org.sensorvision.exception.BadRequestException;
+import org.sensorvision.exception.ResourceNotFoundException;
+import org.sensorvision.model.Device;
+import org.sensorvision.model.Organization;
 import org.sensorvision.model.TelemetryRecord;
+import org.sensorvision.repository.DeviceRepository;
 import org.sensorvision.repository.TelemetryRecordRepository;
+import org.sensorvision.security.SecurityUtils;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +27,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class AnalyticsService {
 
     private final TelemetryRecordRepository telemetryRecordRepository;
+    private final DeviceRepository deviceRepository;
+
+    private static final Set<String> VALID_VARIABLES = Set.of(
+            "kwConsumption", "voltage", "current", "powerFactor", "frequency"
+    );
+
+    private static final Set<String> VALID_AGGREGATIONS = Set.of(
+            "MIN", "MAX", "AVG", "SUM", "COUNT"
+    );
 
     /**
      * Perform aggregation on telemetry data
@@ -29,6 +46,34 @@ public class AnalyticsService {
                                                   Instant from,
                                                   Instant to,
                                                   String interval) {
+
+        // Validate inputs
+        if (deviceId == null || deviceId.trim().isEmpty()) {
+            throw new BadRequestException("Device ID is required");
+        }
+        if (from == null || to == null) {
+            throw new BadRequestException("Time range (from and to) is required");
+        }
+        if (to.isBefore(from)) {
+            throw new BadRequestException("End time must be after start time");
+        }
+        if (!VALID_AGGREGATIONS.contains(aggregation.toUpperCase())) {
+            throw new BadRequestException("Invalid aggregation type: " + aggregation +
+                    ". Valid types are: " + VALID_AGGREGATIONS);
+        }
+        if (!VALID_VARIABLES.contains(variable)) {
+            throw new BadRequestException("Invalid variable: " + variable +
+                    ". Valid variables are: " + VALID_VARIABLES);
+        }
+
+        // Verify device ownership
+        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Device device = deviceRepository.findByExternalId(deviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + deviceId));
+
+        if (!device.getOrganization().getId().equals(userOrg.getId())) {
+            throw new AccessDeniedException("Access denied to device: " + deviceId);
+        }
 
         // Get telemetry records for the time range
         List<TelemetryRecord> records = telemetryRecordRepository

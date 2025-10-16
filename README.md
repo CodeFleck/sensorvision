@@ -5,34 +5,56 @@ A comprehensive Ubidots-like IoT monitoring platform built on Spring Boot and MQ
 ## 🚀 Features
 
 ### Core Infrastructure
-- **MQTT ingestion pipeline** built with Spring Integration and Eclipse Paho
+- **MQTT & HTTP REST ingestion** for flexible device connectivity
 - **PostgreSQL persistence** with Flyway-managed schema migrations
 - **WebSocket real-time streaming** for live dashboard updates
-- **Docker-first infrastructure**: Mosquitto, PostgreSQL, Prometheus, and Grafana in one stack
+- **Docker-first infrastructure**: Mosquitto and PostgreSQL in a lightweight stack
+- **Swagger/OpenAPI documentation** for interactive API testing
 
 ### Frontend Dashboard
 - **Modern React Web Dashboard** built with Vite and TypeScript
 - **Real-time data visualization** with Chart.js and WebSocket integration
 - **Device management interface** with CRUD operations
 - **Responsive design** with Tailwind CSS
+- **Widget-based dashboards** with drag-and-drop functionality
 
 ### Device & Data Management
 - **Device lifecycle management** with status tracking
+- **Device groups & tags** for flexible organization
 - **Time-series telemetry storage** with optimized indexing
 - **Data aggregation endpoints** (MIN/MAX/AVG/SUM) with time intervals
+- **Data export** in CSV and JSON formats
+- **Variable management** with rich metadata (units, ranges, colors)
 - **RESTful APIs** for all operations
+- **Multi-tenant organization** support
 
-### Advanced Analytics
+### Advanced Analytics & Alerting
 - **Rules engine** for conditional monitoring and automation
 - **Alert system** with severity levels and acknowledgment
 - **Synthetic variables** for derived metrics and calculations
 - **Historical data analytics** with flexible time ranges
+- **Multi-channel notifications** - Email, SMS, Webhook, and In-App
+- **Configurable notification preferences** with severity thresholds
+
+### Security & Access Control
+- **JWT-based authentication** with secure token management
+- **Role-based access control** (Admin, User, Viewer roles)
+- **Multi-tenant architecture** with organization isolation
+- **User registration** with automatic organization creation
+- **Secure password hashing** with BCrypt
+
+### Events & Audit Trail
+- **Comprehensive event system** tracking all platform activities
+- **Event filtering** by type, severity, device, and time range
+- **Event statistics** and analytics dashboards
+- **Real-time event notifications** via WebSocket
 
 ### Monitoring & Observability
-- **Prometheus metrics** exposed via Spring Boot Actuator
-- **Grafana dashboards** provisioned automatically
+- **Structured logging** with rolling file appenders
 - **Smart meter simulator** for testing and demonstration
 - **Real-time connection status** and health monitoring
+- **Notification delivery tracking** with success/failure logs
+- **Health endpoints** for service monitoring
 
 ## Quick Start
 
@@ -52,21 +74,24 @@ cd sensorvision
 ### 2. Start Infrastructure Services
 
 ```bash
-# Start PostgreSQL, MQTT broker, Prometheus, and Grafana
+# Start PostgreSQL and MQTT broker
 docker-compose up -d
 ```
 
 ### 3. Run the Application
 
 ```bash
-# On Windows
+# On Windows PowerShell (use .\ prefix)
+.\gradlew.bat bootRun
+
+# On Windows Command Prompt
 gradlew.bat bootRun
 
 # On Linux/Mac
 ./gradlew bootRun
 ```
 
-### 4. Start the Frontend (New!)
+### 4. Start the Frontend
 
 ```bash
 cd frontend
@@ -76,25 +101,31 @@ npm run dev
 
 ### 5. Access the Services
 
-- **🌟 SensorVision Dashboard**: http://localhost:3001 (New React UI!)
-- **Backend API**: http://localhost:8080/api/v1/devices
-- **Grafana Dashboard**: http://localhost:3000 (admin/admin123)
-- **Prometheus Metrics**: http://localhost:9090
+- **🌟 SensorVision Dashboard**: http://localhost:3001 (React Web UI)
+- **📚 Swagger API Documentation**: http://localhost:8080/swagger-ui.html
+- **Backend API**: http://localhost:8080/api/v1/*
 - **MQTT Broker**: localhost:1883
+
+### 6. First Time Setup
+
+1. Register a new account at http://localhost:3001/register
+2. Login with your credentials
+3. The simulator will auto-create 10 test devices
+4. Explore the dashboard and test the new features!
 
 ## 🏗️ Architecture Overview
 
 ### System Architecture
 ```
-┌─────────────┐    MQTT     ┌─────────────────┐    WebSocket    ┌─────────────────┐
+┌─────────────┐  MQTT/HTTP  ┌─────────────────┐    WebSocket    ┌─────────────────┐
 │ IoT Devices │─────────────>│   Spring Boot   │<───────────────>│   React Web     │
 └─────────────┘             │   Application   │                 │   Dashboard     │
                             └─────────────────┘                 └─────────────────┘
                                      │
                                      ▼
 ┌─────────────┐              ┌─────────────────┐              ┌─────────────────┐
-│ PostgreSQL  │<─────────────│  Data Pipeline  │─────────────>│   Prometheus    │
-│ Database    │              │  & Processing   │              │   & Grafana     │
+│ PostgreSQL  │<─────────────│  Data Pipeline  │─────────────>│ Custom Widgets  │
+│ Time-Series │              │  & Processing   │              │ & Dashboards    │
 └─────────────┘              └─────────────────┘              └─────────────────┘
                                      │
                                      ▼
@@ -129,7 +160,95 @@ The built-in simulator publishes synthetic smart meter telemetry when `simulator
 
 To disable the simulator, set `SIMULATOR_ENABLED=false` or toggle the property in `application.yml`.
 
+## 🆕 New Features
+
+### HTTP REST Data Ingestion
+In addition to MQTT, devices can now send telemetry via HTTP REST API:
+
+```bash
+# Full telemetry ingestion
+curl -X POST http://localhost:8080/api/v1/data/ingest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "deviceId": "sensor-001",
+    "variables": {
+      "temperature": 23.5,
+      "humidity": 65.2
+    }
+  }'
+
+# Single variable ingestion
+curl -X POST http://localhost:8080/api/v1/data/sensor-001/temperature \
+  -H "Content-Type: application/json" \
+  -d "23.5"
+```
+
+### Device Groups & Tags
+Organize devices with flexible grouping and color-coded tags:
+- Create groups like "Building A Sensors" or "Production Line 1"
+- Add tags with custom colors for quick filtering
+- Store custom properties per device
+
+### Data Export
+Export historical telemetry data:
+
+```bash
+# CSV export
+curl "http://localhost:8080/api/v1/export/csv/sensor-001?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z" \
+  -o data.csv
+
+# JSON export
+curl "http://localhost:8080/api/v1/export/json/sensor-001?from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z" \
+  -o data.json
+```
+
+### Variable Management
+Define variables with rich metadata:
+- Display names and descriptions
+- Units (kW, °C, V, etc.)
+- Min/max value constraints
+- Custom colors and icons
+- Decimal precision control
+
+### Dashboard Sharing
+Share dashboards with team members or publicly:
+- Generate public share links
+- Set user permissions (VIEW, EDIT, ADMIN)
+- Configure expiration dates
+- Track dashboard access logs
+
+### Interactive API Documentation
+Explore and test all APIs at: **http://localhost:8080/swagger-ui.html**
+
 ## 🔧 API Examples
+
+### Authentication
+
+```bash
+# Register a new user and organization
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john.doe",
+    "email": "john@example.com",
+    "password": "SecurePass123!",
+    "firstName": "John",
+    "lastName": "Doe",
+    "organizationName": "My IoT Company"
+  }'
+
+# Login and get JWT token
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john.doe",
+    "password": "SecurePass123!"
+  }'
+
+# Use the token in subsequent requests
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:8080/api/v1/devices
+```
 
 ### Device Management
 
@@ -166,7 +285,7 @@ curl "http://localhost:8080/api/v1/data/latest?deviceIds=meter-001,meter-002"
 curl http://localhost:8080/api/v1/data/latest/meter-001
 ```
 
-### Analytics & Aggregation (New!)
+### Analytics & Aggregation
 
 ```bash
 # Get aggregated data (hourly averages)
@@ -176,7 +295,7 @@ curl "http://localhost:8080/api/v1/analytics/aggregate?deviceId=meter-001&variab
 curl "http://localhost:8080/api/v1/analytics/aggregate?deviceId=meter-001&variable=voltage&aggregation=MAX&from=2024-01-01T00:00:00Z&to=2024-01-31T00:00:00Z&interval=1d"
 ```
 
-### Rules Management (New!)
+### Rules Management
 
 ```bash
 # Get all rules
@@ -201,17 +320,92 @@ curl -X PUT http://localhost:8080/api/v1/rules/{ruleId} \
   -d '{"enabled": false}'
 ```
 
-### Alerts Management (New!)
+### Alerts Management
 
 ```bash
 # Get all alerts
-curl http://localhost:8080/api/v1/alerts
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:8080/api/v1/alerts
 
 # Get only unacknowledged alerts
-curl "http://localhost:8080/api/v1/alerts?unacknowledgedOnly=true"
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:8080/api/v1/alerts?unacknowledgedOnly=true"
 
 # Acknowledge an alert
-curl -X POST http://localhost:8080/api/v1/alerts/{alertId}/acknowledge
+curl -X POST \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:8080/api/v1/alerts/{alertId}/acknowledge
+```
+
+### Notification Management
+
+```bash
+# Get notification preferences
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:8080/api/v1/notifications/preferences
+
+# Configure email notifications
+curl -X POST \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel": "EMAIL",
+    "enabled": true,
+    "destination": "alerts@example.com",
+    "minSeverity": "HIGH",
+    "immediate": true
+  }' \
+  http://localhost:8080/api/v1/notifications/preferences
+
+# Configure SMS notifications
+curl -X POST \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel": "SMS",
+    "enabled": true,
+    "destination": "+1234567890",
+    "minSeverity": "CRITICAL",
+    "immediate": true
+  }' \
+  http://localhost:8080/api/v1/notifications/preferences
+
+# Get notification history
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:8080/api/v1/notifications/logs?page=0&size=20"
+
+# Get notification statistics
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:8080/api/v1/notifications/stats
+
+# Delete a notification channel
+curl -X DELETE \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  http://localhost:8080/api/v1/notifications/preferences/EMAIL
+```
+
+### Events & Audit Trail
+
+```bash
+# Get all events with filters
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:8080/api/v1/events?page=0&size=50"
+
+# Filter by event type
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:8080/api/v1/events?eventType=ALERT_CREATED&severity=CRITICAL"
+
+# Get recent events (last 24 hours)
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:8080/api/v1/events/recent?hours=24"
+
+# Get event statistics by type
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:8080/api/v1/events/statistics/by-type?hours=24"
+
+# Get event statistics by severity
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:8080/api/v1/events/statistics/by-severity?hours=24"
 ```
 
 ## MQTT Topics
@@ -379,26 +573,44 @@ sequenceDiagram
 ```
 ├── src/main/java/org/sensorvision/
 │   ├── controller/          # REST API controllers
+│   │   ├── AuthController.java
 │   │   ├── DeviceController.java
 │   │   ├── TelemetryController.java
 │   │   ├── RuleController.java
 │   │   ├── AlertController.java
-│   │   └── AnalyticsController.java
+│   │   ├── AnalyticsController.java
+│   │   ├── DashboardController.java
+│   │   ├── EventController.java
+│   │   └── NotificationController.java
 │   ├── service/             # Business logic services
+│   │   ├── UserService.java
 │   │   ├── DeviceService.java
 │   │   ├── TelemetryService.java
 │   │   ├── TelemetryIngestionService.java
 │   │   ├── RuleEngineService.java
 │   │   ├── AlertService.java
 │   │   ├── AnalyticsService.java
-│   │   └── SyntheticVariableService.java
+│   │   ├── SyntheticVariableService.java
+│   │   ├── DashboardService.java
+│   │   ├── EventService.java
+│   │   ├── NotificationService.java
+│   │   ├── EmailNotificationService.java
+│   │   └── SmsNotificationService.java
 │   ├── model/               # JPA entities
+│   │   ├── User.java
+│   │   ├── Organization.java
 │   │   ├── Device.java
 │   │   ├── TelemetryRecord.java
 │   │   ├── Rule.java
 │   │   ├── Alert.java
-│   │   └── SyntheticVariable.java
+│   │   ├── SyntheticVariable.java
+│   │   ├── Dashboard.java
+│   │   ├── Widget.java
+│   │   ├── Event.java
+│   │   ├── UserNotificationPreference.java
+│   │   └── NotificationLog.java
 │   ├── repository/          # Spring Data repositories
+│   ├── security/            # Security configuration & JWT
 │   ├── websocket/           # WebSocket handling
 │   ├── mqtt/                # MQTT message handling
 │   ├── simulator/           # Smart meter simulator
@@ -407,25 +619,65 @@ sequenceDiagram
 ├── frontend/                # React TypeScript frontend
 │   ├── src/
 │   │   ├── components/      # Reusable UI components
+│   │   │   ├── Layout.tsx
+│   │   │   ├── ProtectedRoute.tsx
+│   │   │   └── RealTimeChart.tsx
 │   │   ├── pages/          # Page-level components
+│   │   │   ├── Login.tsx
+│   │   │   ├── Register.tsx
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Dashboards.tsx
+│   │   │   ├── Devices.tsx
+│   │   │   ├── Analytics.tsx
+│   │   │   ├── Rules.tsx
+│   │   │   ├── Alerts.tsx
+│   │   │   ├── Events.tsx
+│   │   │   └── Notifications.tsx
+│   │   ├── contexts/       # React contexts (Auth)
 │   │   ├── services/       # API client services
 │   │   ├── hooks/          # Custom React hooks
 │   │   └── types/          # TypeScript type definitions
 │   └── package.json
 └── src/main/resources/
     └── db/migration/        # Flyway database migrations
+        ├── V1__Initial_schema.sql
+        ├── V2__Add_rules_and_alerts.sql
+        ├── V3__Add_synthetic_variables.sql
+        ├── V4__Add_dashboards_and_widgets.sql
+        ├── V5__Add_users_and_organizations.sql
+        ├── V6__Add_user_roles.sql
+        ├── V7__Add_events.sql
+        └── V8__Add_notifications.sql
 ```
 
 ### Database Schema Overview
 
 ```sql
--- Core entities
-devices                    # IoT device registry
-telemetry_records         # Time-series sensor data
-rules                     # Monitoring rules/conditions
-alerts                    # Triggered alert records
-synthetic_variables       # Calculated metric definitions
-synthetic_variable_values # Computed synthetic values
+-- Authentication & Authorization
+users                          # User accounts
+organizations                  # Multi-tenant organizations
+user_roles                     # User role assignments
+
+-- Core IoT entities
+devices                        # IoT device registry
+telemetry_records             # Time-series sensor data
+
+-- Rules & Alerting
+rules                          # Monitoring rules/conditions
+alerts                         # Triggered alert records
+
+-- Analytics & Dashboards
+synthetic_variables            # Calculated metric definitions
+synthetic_variable_values      # Computed synthetic values
+dashboards                     # Custom dashboard configurations
+widgets                        # Dashboard widget definitions
+
+-- Notifications
+user_notification_preferences  # User notification settings
+notification_logs              # Notification delivery history
+
+-- Audit & Events
+events                         # System-wide event log
 ```
 
 ### Key Technologies Used
@@ -676,57 +928,82 @@ Refer to [Repository Guidelines](AGENTS.md) for detailed development guidelines.
 |---------|-------------|---------|---------|
 | Device Management | ✅ | ✅ | Complete |
 | Real-time Dashboard | ✅ | ✅ | Complete |
+| Widget Dashboards | ✅ | ✅ | Complete |
 | Data Visualization | ✅ | ✅ | Complete |
 | Rules Engine | ✅ | ✅ | Complete |
 | Alerting System | ✅ | ✅ | Complete |
 | Data Aggregation | ✅ | ✅ | Complete |
 | WebSocket Streaming | ✅ | ✅ | Complete |
 | Synthetic Variables | ✅ | ✅ | Complete |
+| User Authentication | ✅ | ✅ | Complete |
+| Multi-tenancy | ✅ | ✅ | Complete |
+| Role-based Access | ✅ | ✅ | Complete |
+| Email Notifications | ✅ | ✅ | Complete (stub) |
+| SMS Notifications | ✅ | ✅ | Complete (stub) |
+| Webhook Notifications | 🔶 | ✅ | Partial |
+| Events & Audit Trail | ✅ | ✅ | Complete |
 | Multi-Protocol Support | 🔶 MQTT Only | ✅ HTTP/MQTT/TCP/UDP | Future |
-| User Authentication | ❌ | ✅ | Future |
-| Multi-tenancy | ❌ | ✅ | Future |
 | Mobile Apps | ❌ | ✅ | Future |
 | Machine Learning | ❌ | ✅ | Future |
-| Geolocation | ❌ | ✅ | Future |
+| Geolocation/Maps | ❌ | ✅ | Future |
+| Data Export | ❌ | ✅ | Future |
 
 **Legend:** ✅ Complete | 🔶 Partial | ❌ Not Implemented
 
-## 🔮 Future Roadmap
+## 🔮 Feature Roadmap
 
-### Phase 1 (Current) - Core Platform ✅
+### Phase 1 - Core Platform ✅ COMPLETE
 - [x] MQTT ingestion pipeline
 - [x] Real-time web dashboard
 - [x] Device management
 - [x] Rules engine & alerting
 - [x] Data aggregation & analytics
 - [x] Synthetic variables
+- [x] Widget-based dashboards
 
-### Phase 2 - Authentication & Security
-- [ ] JWT-based authentication
-- [ ] Role-based access control
+### Phase 2 - Authentication & Security ✅ COMPLETE
+- [x] JWT-based authentication
+- [x] Role-based access control (Admin, User, Viewer)
+- [x] Multi-tenant architecture
+- [x] Organization isolation
+- [x] User registration & management
 - [ ] API rate limiting
 - [ ] HTTPS/WSS enforcement
 
-### Phase 3 - Multi-Protocol & Integration
+### Phase 3 - Advanced Alerting ✅ COMPLETE
+- [x] Multi-channel notifications (Email, SMS, Webhook, In-App)
+- [x] Configurable notification preferences
+- [x] Severity-based filtering
+- [x] Immediate vs digest delivery
+- [x] Notification history & tracking
+- [x] Events & audit trail system
+- [ ] Slack/Teams integration
+- [ ] PagerDuty integration
+
+### Phase 4 - Extended Protocol Support 🔄 PLANNED
 - [ ] HTTP REST data ingestion
 - [ ] TCP/UDP protocol support
-- [ ] Webhook notifications
-- [ ] Email/SMS alerting
-- [ ] Slack/Teams integration
+- [ ] CoAP protocol support
+- [ ] LoRaWAN integration
+- [ ] Zigbee/Z-Wave support
 
-### Phase 4 - Advanced Features
-- [ ] Multi-tenant architecture
+### Phase 5 - Advanced Features 🔄 PLANNED
+- [ ] Geolocation & map widgets
+- [ ] Device groups & tagging
+- [ ] Data export/import (CSV, JSON, Excel)
 - [ ] Machine learning anomaly detection
-- [ ] Geolocation mapping
+- [ ] Predictive maintenance algorithms
 - [ ] Mobile app (React Native)
-- [ ] Data export/import tools
+- [ ] Scheduled reports
 
-### Phase 5 - Enterprise Features
+### Phase 6 - Enterprise Features 🔄 PLANNED
 - [ ] White-label customization
-- [ ] Advanced user management
-- [ ] Audit logging
-- [ ] Data governance tools
+- [ ] Advanced user permissions
+- [ ] Team/department hierarchies
+- [ ] Data retention policies
 - [ ] Custom plugin system
+- [ ] Advanced analytics & BI integration
+- [ ] SSO/SAML authentication
 
 ## 📄 License
 

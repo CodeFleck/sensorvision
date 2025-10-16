@@ -51,6 +51,9 @@ public class Alert extends AuditableEntity {
     @Column(name = "triggered_value", precision = 15, scale = 6)
     private BigDecimal triggeredValue;
 
+    @Column(name = "triggered_at")
+    private java.time.LocalDateTime triggeredAt;
+
     @Column(name = "acknowledged", nullable = false)
     @Builder.Default
     private Boolean acknowledged = false;

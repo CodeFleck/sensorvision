@@ -1,18 +1,30 @@
-import { Device, TelemetryPoint, LatestTelemetry, Rule, Alert } from '../types';
+import { Device, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel } from '../types';
 
 const API_BASE = '/api/v1';
 
 class ApiService {
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const token = localStorage.getItem('accessToken');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options?.headers as Record<string, string>),
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_BASE}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+      headers,
       ...options,
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        // Unauthorized - clear token and reload
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+      }
       throw new Error(`API Error: ${response.statusText}`);
     }
 
@@ -115,6 +127,157 @@ class ApiService {
 
   async acknowledgeAlert(id: string): Promise<void> {
     await this.request(`/alerts/${id}/acknowledge`, { method: 'POST' });
+  }
+
+  // Dashboard Management
+  async getDashboards(): Promise<Dashboard[]> {
+    return this.request<Dashboard[]>('/dashboards');
+  }
+
+  async getDashboard(id: number): Promise<Dashboard> {
+    return this.request<Dashboard>(`/dashboards/${id}`);
+  }
+
+  async getDefaultDashboard(): Promise<Dashboard> {
+    return this.request<Dashboard>('/dashboards/default');
+  }
+
+  async createDashboard(dashboard: DashboardCreateRequest): Promise<Dashboard> {
+    return this.request<Dashboard>('/dashboards', {
+      method: 'POST',
+      body: JSON.stringify(dashboard),
+    });
+  }
+
+  async updateDashboard(id: number, dashboard: Partial<DashboardCreateRequest>): Promise<Dashboard> {
+    return this.request<Dashboard>(`/dashboards/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(dashboard),
+    });
+  }
+
+  async deleteDashboard(id: number): Promise<void> {
+    await this.request(`/dashboards/${id}`, { method: 'DELETE' });
+  }
+
+  // Widget Management
+  async getDashboardWidgets(dashboardId: number): Promise<Widget[]> {
+    return this.request<Widget[]>(`/dashboards/${dashboardId}/widgets`);
+  }
+
+  async createWidget(dashboardId: number, widget: WidgetCreateRequest): Promise<Widget> {
+    return this.request<Widget>(`/dashboards/${dashboardId}/widgets`, {
+      method: 'POST',
+      body: JSON.stringify(widget),
+    });
+  }
+
+  async updateWidget(dashboardId: number, widgetId: number, widget: Partial<WidgetCreateRequest>): Promise<Widget> {
+    return this.request<Widget>(`/dashboards/${dashboardId}/widgets/${widgetId}`, {
+      method: 'PUT',
+      body: JSON.stringify(widget),
+    });
+  }
+
+  async deleteWidget(dashboardId: number, widgetId: number): Promise<void> {
+    await this.request(`/dashboards/${dashboardId}/widgets/${widgetId}`, { method: 'DELETE' });
+  }
+
+  // Event Management
+  async getEvents(params?: {
+    eventType?: EventType;
+    severity?: EventSeverity;
+    deviceId?: string;
+    entityType?: string;
+    startTime?: string;
+    endTime?: string;
+    page?: number;
+    size?: number;
+  }): Promise<{ content: Event[]; totalElements: number; totalPages: number }> {
+    const queryParams = new URLSearchParams();
+    if (params?.eventType) queryParams.append('eventType', params.eventType);
+    if (params?.severity) queryParams.append('severity', params.severity);
+    if (params?.deviceId) queryParams.append('deviceId', params.deviceId);
+    if (params?.entityType) queryParams.append('entityType', params.entityType);
+    if (params?.startTime) queryParams.append('startTime', params.startTime);
+    if (params?.endTime) queryParams.append('endTime', params.endTime);
+    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+    return this.request(`/events?${queryParams.toString()}`);
+  }
+
+  async getRecentEvents(hours: number = 24): Promise<Event[]> {
+    return this.request(`/events/recent?hours=${hours}`);
+  }
+
+  async getEventStatisticsByType(hours: number = 24): Promise<Record<string, number>> {
+    return this.request(`/events/statistics/by-type?hours=${hours}`);
+  }
+
+  async getEventStatisticsBySeverity(hours: number = 24): Promise<Record<string, number>> {
+    return this.request(`/events/statistics/by-severity?hours=${hours}`);
+  }
+
+  // Notification Management
+  async getNotificationPreferences(): Promise<NotificationPreference[]> {
+    return this.request<NotificationPreference[]>('/notifications/preferences');
+  }
+
+  async saveNotificationPreference(preference: NotificationPreferenceRequest): Promise<NotificationPreference> {
+    return this.request<NotificationPreference>('/notifications/preferences', {
+      method: 'POST',
+      body: JSON.stringify(preference),
+    });
+  }
+
+  async deleteNotificationPreference(channel: NotificationChannel): Promise<void> {
+    await this.request(`/notifications/preferences/${channel}`, { method: 'DELETE' });
+  }
+
+  async getNotificationLogs(page: number = 0, size: number = 20): Promise<{ content: NotificationLog[]; totalElements: number; totalPages: number }> {
+    return this.request(`/notifications/logs?page=${page}&size=${size}`);
+  }
+
+  async getNotificationStats(): Promise<NotificationStats> {
+    return this.request<NotificationStats>('/notifications/stats');
+  }
+
+  // Generic HTTP methods for stub/placeholder pages
+  async get<T = any>(endpoint: string): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint);
+    return { data: result };
+  }
+
+  async post<T = any>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    return { data: result };
+  }
+
+  async put<T = any>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    return { data: result };
+  }
+
+  async patch<T = any>(endpoint: string, data?: any): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    return { data: result };
+  }
+
+  async delete<T = any>(endpoint: string): Promise<{ data: T }> {
+    const result = await this.request<T>(endpoint, {
+      method: 'DELETE',
+    });
+    return { data: result };
   }
 }
 

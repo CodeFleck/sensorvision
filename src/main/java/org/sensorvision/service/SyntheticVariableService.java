@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.model.SyntheticVariable;
@@ -91,7 +92,11 @@ public class SyntheticVariableService {
                 return null;
             }
 
-            evaluatedExpression = evaluatedExpression.replace(variable, value.toString());
+            // Use word boundary regex to replace only whole words and escape variable name
+            evaluatedExpression = evaluatedExpression.replaceAll(
+                    "\\b" + Pattern.quote(variable) + "\\b",
+                    Matcher.quoteReplacement(value.toString())
+            );
         }
 
         // Evaluate the mathematical expression
@@ -165,7 +170,8 @@ public class SyntheticVariableService {
                 case "*" -> left.multiply(right);
                 case "/" -> {
                     if (right.compareTo(BigDecimal.ZERO) == 0) {
-                        throw new ArithmeticException("Division by zero");
+                        log.error("Division by zero in synthetic variable calculation");
+                        throw new ArithmeticException("Division by zero in expression");
                     }
                     yield left.divide(right, new MathContext(10, RoundingMode.HALF_UP));
                 }

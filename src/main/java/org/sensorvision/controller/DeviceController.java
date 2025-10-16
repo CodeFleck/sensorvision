@@ -53,4 +53,13 @@ public class DeviceController {
     public void deleteDevice(@PathVariable String externalId) {
         deviceService.deleteDevice(externalId);
     }
+
+    @PostMapping("/{externalId}/rotate-token")
+    public ResponseEntity<TokenRotationResponse> rotateDeviceToken(@PathVariable String externalId) {
+        String newToken = deviceService.rotateDeviceToken(externalId);
+        return ResponseEntity.ok(new TokenRotationResponse(externalId, newToken));
+    }
+
+    // DTO for token rotation response
+    public record TokenRotationResponse(String deviceExternalId, String apiToken) {}
 }

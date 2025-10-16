@@ -10,9 +10,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.sensorvision.model.Device;
 import org.sensorvision.model.DeviceStatus;
+import org.sensorvision.model.Organization;
 import org.sensorvision.model.TelemetryRecord;
 import org.sensorvision.mqtt.TelemetryPayload;
 import org.sensorvision.repository.DeviceRepository;
+import org.sensorvision.repository.OrganizationRepository;
 import org.sensorvision.repository.TelemetryRecordRepository;
 import org.sensorvision.dto.TelemetryPointDto;
 import org.sensorvision.websocket.TelemetryWebSocketHandler;
@@ -26,6 +28,7 @@ public class TelemetryIngestionService {
     private static final BigDecimal ZERO = BigDecimal.ZERO;
 
     private final DeviceRepository deviceRepository;
+    private final OrganizationRepository organizationRepository;
     private final TelemetryRecordRepository telemetryRecordRepository;
     private final TelemetryWebSocketHandler webSocketHandler;
     private final RuleEngineService ruleEngineService;
@@ -40,12 +43,14 @@ public class TelemetryIngestionService {
     private final ConcurrentHashMap<String, AtomicDouble> frequencyGauges = new ConcurrentHashMap<>();
 
     public TelemetryIngestionService(DeviceRepository deviceRepository,
+                                     OrganizationRepository organizationRepository,
                                      TelemetryRecordRepository telemetryRecordRepository,
                                      TelemetryWebSocketHandler webSocketHandler,
                                      RuleEngineService ruleEngineService,
                                      SyntheticVariableService syntheticVariableService,
                                      MeterRegistry meterRegistry) {
         this.deviceRepository = deviceRepository;
+        this.organizationRepository = organizationRepository;
         this.telemetryRecordRepository = telemetryRecordRepository;
         this.webSocketHandler = webSocketHandler;
         this.ruleEngineService = ruleEngineService;
@@ -54,13 +59,36 @@ public class TelemetryIngestionService {
         this.mqttMessagesCounter = meterRegistry.counter("mqtt_messages_total");
     }
 
-    public void ingest(TelemetryPayload payload) {
+    /**
+     * Ingest telemetry data with optional auto-provisioning
+     * @param payload The telemetry data
+     * @param allowAutoProvision Whether to automatically create devices if they don't exist
+     */
+    public void ingest(TelemetryPayload payload, boolean allowAutoProvision) {
         Device device = deviceRepository.findByExternalId(payload.deviceId())
-                .orElseGet(() -> deviceRepository.save(Device.builder()
-                        .externalId(payload.deviceId())
-                        .name(payload.deviceId())
-                        .status(DeviceStatus.UNKNOWN)
-                        .build()));
+                .orElseGet(() -> {
+                    if (!allowAutoProvision) {
+                        throw new IllegalArgumentException(
+                            "Device not found and auto-provisioning is disabled: " + payload.deviceId());
+                    }
+
+                    // Get or create default organization for auto-created devices
+                    // SECURITY WARNING: Auto-provisioning should be disabled in production
+                    Organization defaultOrg = organizationRepository
+                            .findByName("Default Organization")
+                            .orElseGet(() -> organizationRepository.save(
+                                    Organization.builder()
+                                            .name("Default Organization")
+                                            .build()
+                            ));
+
+                    return deviceRepository.save(Device.builder()
+                            .externalId(payload.deviceId())
+                            .name(payload.deviceId())
+                            .status(DeviceStatus.UNKNOWN)
+                            .organization(defaultOrg)
+                            .build());
+                });
 
         Map<String, Object> metadata = payload.metadata();
         if (metadata != null) {

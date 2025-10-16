@@ -1,13 +1,11 @@
 package org.sensorvision.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -50,6 +48,57 @@ public class Device extends AuditableEntity {
 
     @Column(name = "last_seen_at")
     private Instant lastSeenAt;
+
+    // Geolocation fields (added by V11 migration)
+    @Column(name = "latitude", precision = 10, scale = 8)
+    private BigDecimal latitude;
+
+    @Column(name = "longitude", precision = 11, scale = 8)
+    private BigDecimal longitude;
+
+    @Column(name = "altitude", precision = 10, scale = 2)
+    private BigDecimal altitude;
+
+    @Column(name = "location_updated_at")
+    private LocalDateTime locationUpdatedAt;
+
+    // Device API Token (for per-device authentication)
+    @Column(name = "api_token", unique = true, length = 64)
+    private String apiToken;
+
+    @Column(name = "token_created_at")
+    private LocalDateTime tokenCreatedAt;
+
+    @Column(name = "token_last_used_at")
+    private LocalDateTime tokenLastUsedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id", nullable = false)
+    private Organization organization;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "device_type_id")
+    private DeviceType deviceType;
+
+    // Device Groups
+    @ManyToMany(mappedBy = "devices")
+    @Builder.Default
+    private Set<DeviceGroup> groups = new HashSet<>();
+
+    // Device Tags
+    @ManyToMany
+    @JoinTable(
+            name = "device_tag_assignments",
+            joinColumns = @JoinColumn(name = "device_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    @Builder.Default
+    private Set<DeviceTag> tags = new HashSet<>();
+
+    // Custom Properties
+    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<DeviceProperty> properties = new HashSet<>();
 
     @PrePersist
     void ensureId() {

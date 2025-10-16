@@ -1,5 +1,6 @@
 package org.sensorvision.mqtt;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -11,7 +12,10 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.sensorvision.model.Device;
+import org.sensorvision.service.DeviceService;
 import org.sensorvision.service.TelemetryIngestionService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
@@ -23,14 +27,48 @@ public class TelemetryMessageHandler {
 
     private final ObjectMapper objectMapper;
     private final TelemetryIngestionService telemetryIngestionService;
+    private final DeviceService deviceService;
+
+    @Value("${mqtt.device-auth.required:true}")
+    private boolean deviceAuthRequired;
 
     @ServiceActivator(inputChannel = "mqttInboundChannel")
     public void handleMessage(Message<String> message) {
         String raw = message.getPayload();
         try {
             JsonNode root = objectMapper.readTree(raw);
+
+            // Extract API token if provided
+            String apiToken = textValue(root, "apiToken");
+
             TelemetryPayload telemetryPayload = toPayload(root);
-            telemetryIngestionService.ingest(telemetryPayload);
+
+            // Authenticate device if token is required
+            if (deviceAuthRequired) {
+                if (apiToken == null || apiToken.isEmpty()) {
+                    log.warn("MQTT telemetry rejected: no API token provided for device {}",
+                            telemetryPayload.deviceId());
+                    return;
+                }
+
+                Device device = deviceService.authenticateDeviceByToken(apiToken);
+                if (device == null) {
+                    log.warn("MQTT telemetry rejected: invalid API token for device {}",
+                            telemetryPayload.deviceId());
+                    return;
+                }
+
+                // Verify the device ID matches the token
+                if (!device.getExternalId().equals(telemetryPayload.deviceId())) {
+                    log.warn("MQTT telemetry rejected: device ID mismatch. Token for {}, payload has {}",
+                            device.getExternalId(), telemetryPayload.deviceId());
+                    return;
+                }
+
+                log.debug("Device {} authenticated via MQTT token", device.getExternalId());
+            }
+
+            telemetryIngestionService.ingest(telemetryPayload, !deviceAuthRequired);
         } catch (Exception ex) {
             String topic = (String) message.getHeaders().getOrDefault("mqtt_receivedTopic", "unknown");
             log.error("Failed to process telemetry message from topic {}: {}", topic, ex.getMessage(), ex);
@@ -59,7 +97,7 @@ public class TelemetryMessageHandler {
         Map<String, Object> metadata = Map.of();
         JsonNode metadataNode = root.path("metadata");
         if (metadataNode.isObject()) {
-            metadata = objectMapper.convertValue(metadataNode, Map.class);
+            metadata = objectMapper.convertValue(metadataNode, new TypeReference<Map<String, Object>>() {});
         }
 
         return new TelemetryPayload(deviceId, timestamp, variables, metadata);
@@ -69,7 +107,12 @@ public class TelemetryMessageHandler {
         try {
             return Instant.parse(value);
         } catch (DateTimeParseException first) {
-            return LocalDateTime.parse(value).toInstant(ZoneOffset.UTC);
+            try {
+                return LocalDateTime.parse(value).toInstant(ZoneOffset.UTC);
+            } catch (DateTimeParseException second) {
+                log.error("Failed to parse timestamp: {}. Using current time.", value);
+                return Instant.now();
+            }
         }
     }
 

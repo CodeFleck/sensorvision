@@ -58,6 +58,16 @@ public class TelemetryRecord extends AuditableEntity {
     @Column(name = "frequency", precision = 6, scale = 3)
     private BigDecimal frequency;
 
+    // Geolocation fields (added by V11 migration for moving devices)
+    @Column(name = "latitude", precision = 10, scale = 8)
+    private BigDecimal latitude;
+
+    @Column(name = "longitude", precision = 11, scale = 8)
+    private BigDecimal longitude;
+
+    @Column(name = "altitude", precision = 10, scale = 2)
+    private BigDecimal altitude;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
     private Map<String, Object> metadata;

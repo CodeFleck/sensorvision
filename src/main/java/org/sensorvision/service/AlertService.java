@@ -9,7 +9,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.dto.AlertResponse;
 import org.sensorvision.exception.ResourceNotFoundException;
 import org.sensorvision.model.Alert;
+import org.sensorvision.model.Organization;
 import org.sensorvision.repository.AlertRepository;
+import org.sensorvision.security.SecurityUtils;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,24 +23,33 @@ import org.springframework.transaction.annotation.Transactional;
 public class AlertService {
 
     private final AlertRepository alertRepository;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<AlertResponse> getAllAlerts() {
-        return alertRepository.findAllByOrderByCreatedAtDesc(null).stream()
+        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        return alertRepository.findByDeviceOrganizationOrderByCreatedAtDesc(userOrg).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<AlertResponse> getUnacknowledgedAlerts() {
-        return alertRepository.findByAcknowledgedFalseOrderByCreatedAtDesc().stream()
+        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        return alertRepository.findByDeviceOrganizationAndAcknowledgedFalseOrderByCreatedAtDesc(userOrg).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     public void acknowledgeAlert(UUID alertId) {
+        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
         Alert alert = alertRepository.findById(alertId)
                 .orElseThrow(() -> new ResourceNotFoundException("Alert not found: " + alertId));
+
+        // Verify alert belongs to user's organization
+        if (!alert.getDevice().getOrganization().getId().equals(userOrg.getId())) {
+            throw new AccessDeniedException("Access denied to alert: " + alertId);
+        }
 
         if (!alert.getAcknowledged()) {
             alert.setAcknowledged(true);
@@ -48,34 +60,27 @@ public class AlertService {
     }
 
     /**
-     * Send notification for an alert (email, webhook, etc.)
-     * This is a placeholder for actual notification implementation
+     * Save an alert to the database
+     */
+    public Alert saveAlert(Alert alert) {
+        Alert saved = alertRepository.save(alert);
+        log.info("Alert saved: {} for device: {}", saved.getId(), alert.getDevice().getId());
+
+        // Send notifications for the alert
+        sendAlertNotification(saved);
+
+        return saved;
+    }
+
+    /**
+     * Send notification for an alert through configured channels
      */
     public void sendAlertNotification(Alert alert) {
-        // TODO: Implement actual notification sending
-        // This could include:
-        // - Email notifications
-        // - Webhook calls
-        // - Push notifications
-        // - Slack/Teams integration
-        // - SMS alerts
-
-        log.info("Notification sent for alert: {} (severity: {})",
+        log.info("Triggering notifications for alert: {} (severity: {})",
                 alert.getMessage(), alert.getSeverity());
 
-        // For demonstration, we'll just log the alert
-        // In a real implementation, you might use:
-        // - Spring Boot's JavaMailSender for email
-        // - RestTemplate/WebClient for webhooks
-        // - Third-party services like Twilio for SMS
-        // - Integration with services like PagerDuty, Slack, etc.
-
-        switch (alert.getSeverity()) {
-            case CRITICAL -> log.error("🚨 CRITICAL ALERT: {}", alert.getMessage());
-            case HIGH -> log.warn("⚠️ HIGH ALERT: {}", alert.getMessage());
-            case MEDIUM -> log.info("ℹ️ MEDIUM ALERT: {}", alert.getMessage());
-            case LOW -> log.debug("📝 LOW ALERT: {}", alert.getMessage());
-        }
+        // Delegate to NotificationService to handle all channels
+        notificationService.sendAlertNotifications(alert);
     }
 
     private AlertResponse toResponse(Alert alert) {

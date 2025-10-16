@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Calendar, TrendingUp, BarChart3, Download } from 'lucide-react';
-import { Device, TelemetryPoint } from '../types';
+import { TrendingUp, BarChart3, Download } from 'lucide-react';
+import { Device } from '../types';
 import { apiService } from '../services/api';
 import { AggregationChart } from '../components/AggregationChart';
 
@@ -45,7 +45,7 @@ export const Analytics = () => {
         `${dateRange.to}T23:59:59Z`,
         '1h' // hourly intervals
       );
-      setAggregatedData(data);
+      setAggregatedData(data as any[]);
     } catch (error) {
       console.error('Failed to fetch aggregated data:', error);
     } finally {
