@@ -36,7 +36,7 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
       if (rule) {
         await apiService.updateRule(rule.id, ruleData);
       } else {
-        await apiService.createRule(ruleData as any);
+        await apiService.createRule(ruleData);
       }
       onClose();
     } catch (error) {

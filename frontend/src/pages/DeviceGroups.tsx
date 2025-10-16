@@ -36,9 +36,9 @@ const DeviceGroups: React.FC = () => {
     try {
       setLoading(true);
       const response = await apiService.get('/device-groups');
-      setGroups(response.data);
+      setGroups(response.data as DeviceGroup[]);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to load device groups');
       console.error(err);
     } finally {
@@ -69,8 +69,11 @@ const DeviceGroups: React.FC = () => {
       }
       await loadGroups();
       handleCloseModal();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save device group');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to save device group')
+        : 'Failed to save device group';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -84,8 +87,11 @@ const DeviceGroups: React.FC = () => {
     try {
       await apiService.delete(`/device-groups/${id}`);
       await loadGroups();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete device group');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to delete device group')
+        : 'Failed to delete device group';
+      setError(message);
     }
   };
 

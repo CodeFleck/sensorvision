@@ -22,15 +22,20 @@ ChartJS.register(
   Legend
 );
 
+interface AggregationDataPoint {
+  timestamp: string;
+  value: number;
+}
+
 interface AggregationChartProps {
-  data: any[];
+  data: AggregationDataPoint[];
   variable: string;
   aggregation: string;
 }
 
 export const AggregationChart = ({ data, variable, aggregation }: AggregationChartProps) => {
   const chartData = {
-    labels: data.map((item: any) =>
+    labels: data.map((item) =>
       new Date(item.timestamp).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -40,7 +45,7 @@ export const AggregationChart = ({ data, variable, aggregation }: AggregationCha
     datasets: [
       {
         label: `${aggregation} ${variable}`,
-        data: data.map((item: any) => item.value),
+        data: data.map((item) => item.value),
         backgroundColor: 'rgba(59, 130, 246, 0.8)',
         borderColor: 'rgba(59, 130, 246, 1)',
         borderWidth: 1,

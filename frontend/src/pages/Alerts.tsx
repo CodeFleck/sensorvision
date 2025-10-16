@@ -97,7 +97,7 @@ export const Alerts = () => {
             {['all', 'unacknowledged', 'acknowledged'].map((filterOption) => (
               <button
                 key={filterOption}
-                onClick={() => setFilter(filterOption as any)}
+                onClick={() => setFilter(filterOption as 'all' | 'unacknowledged' | 'acknowledged')}
                 className={clsx(
                   'px-3 py-1 text-xs font-medium rounded-full transition-colors',
                   filter === filterOption

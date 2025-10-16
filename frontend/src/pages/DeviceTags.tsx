@@ -34,9 +34,9 @@ const DeviceTags: React.FC = () => {
     try {
       setLoading(true);
       const response = await apiService.get('/device-tags');
-      setTags(response.data);
+      setTags(response.data as DeviceTag[]);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to load device tags');
       console.error(err);
     } finally {
@@ -57,8 +57,11 @@ const DeviceTags: React.FC = () => {
       }
       await loadTags();
       handleCloseModal();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save device tag');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to save device tag')
+        : 'Failed to save device tag';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -72,8 +75,11 @@ const DeviceTags: React.FC = () => {
     try {
       await apiService.delete(`/device-tags/${id}`);
       await loadTags();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete device tag');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to delete device tag')
+        : 'Failed to delete device tag';
+      setError(message);
     }
   };
 

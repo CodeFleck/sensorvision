@@ -207,15 +207,15 @@ class ApiService {
     return this.request(`/events?${queryParams.toString()}`);
   }
 
-  async getRecentEvents(hours: number = 24): Promise<Event[]> {
+  async getRecentEvents(hours = 24): Promise<Event[]> {
     return this.request(`/events/recent?hours=${hours}`);
   }
 
-  async getEventStatisticsByType(hours: number = 24): Promise<Record<string, number>> {
+  async getEventStatisticsByType(hours = 24): Promise<Record<string, number>> {
     return this.request(`/events/statistics/by-type?hours=${hours}`);
   }
 
-  async getEventStatisticsBySeverity(hours: number = 24): Promise<Record<string, number>> {
+  async getEventStatisticsBySeverity(hours = 24): Promise<Record<string, number>> {
     return this.request(`/events/statistics/by-severity?hours=${hours}`);
   }
 
@@ -235,7 +235,7 @@ class ApiService {
     await this.request(`/notifications/preferences/${channel}`, { method: 'DELETE' });
   }
 
-  async getNotificationLogs(page: number = 0, size: number = 20): Promise<{ content: NotificationLog[]; totalElements: number; totalPages: number }> {
+  async getNotificationLogs(page = 0, size = 20): Promise<{ content: NotificationLog[]; totalElements: number; totalPages: number }> {
     return this.request(`/notifications/logs?page=${page}&size=${size}`);
   }
 
@@ -244,12 +244,12 @@ class ApiService {
   }
 
   // Generic HTTP methods for stub/placeholder pages
-  async get<T = any>(endpoint: string): Promise<{ data: T }> {
+  async get<T = unknown>(endpoint: string): Promise<{ data: T }> {
     const result = await this.request<T>(endpoint);
     return { data: result };
   }
 
-  async post<T = any>(endpoint: string, data?: any): Promise<{ data: T }> {
+  async post<T = unknown>(endpoint: string, data?: unknown): Promise<{ data: T }> {
     const result = await this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
@@ -257,7 +257,7 @@ class ApiService {
     return { data: result };
   }
 
-  async put<T = any>(endpoint: string, data?: any): Promise<{ data: T }> {
+  async put<T = unknown>(endpoint: string, data?: unknown): Promise<{ data: T }> {
     const result = await this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
@@ -265,7 +265,7 @@ class ApiService {
     return { data: result };
   }
 
-  async patch<T = any>(endpoint: string, data?: any): Promise<{ data: T }> {
+  async patch<T = unknown>(endpoint: string, data?: unknown): Promise<{ data: T }> {
     const result = await this.request<T>(endpoint, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
@@ -273,7 +273,7 @@ class ApiService {
     return { data: result };
   }
 
-  async delete<T = any>(endpoint: string): Promise<{ data: T }> {
+  async delete<T = unknown>(endpoint: string): Promise<{ data: T }> {
     const result = await this.request<T>(endpoint, {
       method: 'DELETE',
     });

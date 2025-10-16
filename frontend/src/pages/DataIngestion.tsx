@@ -13,7 +13,7 @@ const DataIngestion: React.FC = () => {
   const [singleDeviceId, setSingleDeviceId] = useState('');
   const [singleVariableName, setSingleVariableName] = useState('');
   const [singleValue, setSingleValue] = useState('');
-  const [response, setResponse] = useState<any>(null);
+  const [response, setResponse] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -52,9 +52,12 @@ const DataIngestion: React.FC = () => {
       };
 
       const result = await apiService.post('/data/ingest', payload);
-      setResponse(result.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to ingest data');
+      setResponse(result.data as Record<string, unknown>);
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to ingest data')
+        : 'Failed to ingest data';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -71,9 +74,12 @@ const DataIngestion: React.FC = () => {
         `/data/${singleDeviceId}/${singleVariableName}`,
         parseFloat(singleValue)
       );
-      setResponse(result.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to ingest data');
+      setResponse(result.data as Record<string, unknown>);
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to ingest data')
+        : 'Failed to ingest data';
+      setError(message);
     } finally {
       setLoading(false);
     }

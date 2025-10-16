@@ -68,7 +68,7 @@ export type WidgetType =
 export type WidgetAggregation = 'NONE' | 'MIN' | 'MAX' | 'AVG' | 'SUM' | 'COUNT' | 'LAST';
 
 export interface WidgetConfig {
-  [key: string]: any;
+  [key: string]: unknown;
   // Common config options
   min?: number;
   max?: number;
@@ -221,7 +221,7 @@ export interface Event {
   entityId?: string;
   title: string;
   description?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   userId?: number;
   deviceId?: string;
   createdAt: string;

@@ -13,7 +13,7 @@ export const Analytics = () => {
     from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 24 hours ago
     to: new Date().toISOString().split('T')[0], // now
   });
-  const [aggregatedData, setAggregatedData] = useState<any[]>([]);
+  const [aggregatedData, setAggregatedData] = useState<Array<{ timestamp: string; value: number }>>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export const Analytics = () => {
         `${dateRange.to}T23:59:59Z`,
         '1h' // hourly intervals
       );
-      setAggregatedData(data as any[]);
+      setAggregatedData(data as Array<{ timestamp: string; value: number }>);
     } catch (error) {
       console.error('Failed to fetch aggregated data:', error);
     } finally {
@@ -90,7 +90,7 @@ export const Analytics = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Variable</label>
             <select
               value={selectedVariable}
-              onChange={(e) => setSelectedVariable(e.target.value as any)}
+              onChange={(e) => setSelectedVariable(e.target.value as 'kwConsumption' | 'voltage' | 'current')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="kwConsumption">Power Consumption</option>
@@ -103,7 +103,7 @@ export const Analytics = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Aggregation</label>
             <select
               value={aggregationType}
-              onChange={(e) => setAggregationType(e.target.value as any)}
+              onChange={(e) => setAggregationType(e.target.value as 'MIN' | 'MAX' | 'AVG' | 'SUM')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="AVG">Average</option>

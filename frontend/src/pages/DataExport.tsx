@@ -30,7 +30,7 @@ const DataExport: React.FC = () => {
   const loadDevices = async () => {
     try {
       const response = await apiService.get('/devices');
-      setDevices(response.data);
+      setDevices(response.data as Device[]);
     } catch (err) {
       console.error('Failed to load devices:', err);
       setError('Failed to load devices');
@@ -75,8 +75,11 @@ const DataExport: React.FC = () => {
       window.URL.revokeObjectURL(downloadUrl);
 
       setSuccess(`Data exported successfully as ${exportFormat.toUpperCase()}`);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to export data');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to export data')
+        : 'Failed to export data';
+      setError(message);
     } finally {
       setLoading(false);
     }

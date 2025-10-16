@@ -79,10 +79,13 @@ const DataImport: React.FC = () => {
           setResult(null);
         }, 5000);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Import failed. Please check your file format.')
+        : 'Import failed. Please check your file format.';
       setResult({
         success: false,
-        message: err.response?.data?.message || 'Import failed. Please check your file format.',
+        message,
       });
     } finally {
       setLoading(false);
@@ -395,7 +398,7 @@ const DataImport: React.FC = () => {
                         <div className="mt-2 text-sm text-green-800">
                           <p>Total records: {result.totalRecords}</p>
                           <p>Successfully imported: {result.successCount}</p>
-                          {result.failureCount! > 0 && (
+                          {(result.failureCount ?? 0) > 0 && (
                             <p className="text-orange-600">
                               Failed: {result.failureCount}
                             </p>

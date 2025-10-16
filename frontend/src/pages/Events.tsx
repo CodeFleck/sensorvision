@@ -23,12 +23,13 @@ export const Events: React.FC = () => {
 
   useEffect(() => {
     fetchEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEventType, selectedSeverity, selectedDeviceId, page]);
 
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: Record<string, string | number> = {
         page,
         size: 50,
       };

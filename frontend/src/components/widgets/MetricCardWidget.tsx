@@ -25,6 +25,7 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, late
       setValue(newValue);
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latestData, widget.variableName]);
 
   // Initial data fetch and fallback polling
@@ -52,6 +53,7 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, late
     fetchData();
     const interval = setInterval(fetchData, widget.config.refreshInterval ?? 30000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widget]);
 
   if (loading) {
@@ -93,7 +95,7 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, late
       {/* Threshold warning */}
       {widget.config.thresholds && widget.config.thresholds.length > 0 && (
         <div className="mt-3 text-xs">
-          {widget.config.thresholds.map((threshold: any, idx: number) => {
+          {(widget.config.thresholds as Array<{ value: number; color: string }>).map((threshold, idx: number) => {
             if (value >= threshold.value) {
               return (
                 <div

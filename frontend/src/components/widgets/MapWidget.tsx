@@ -87,8 +87,8 @@ export const MapWidget: React.FC<MapWidgetProps> = ({ widget, latestData }) => {
               .map(d => ({
                 deviceId: d.externalId,
                 name: d.name || d.externalId,
-                latitude: d.latitude!,
-                longitude: d.longitude!,
+                latitude: d.latitude as number,
+                longitude: d.longitude as number,
                 altitude: d.altitude,
                 lastSeen: d.lastSeenAt,
                 status: d.status,

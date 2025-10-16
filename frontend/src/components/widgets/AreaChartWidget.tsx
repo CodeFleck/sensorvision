@@ -32,7 +32,7 @@ interface AreaChartWidgetProps {
 }
 
 export const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({ widget, latestData }) => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<{ labels: string[]; datasets: Array<Record<string, unknown>> } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -68,7 +68,7 @@ export const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({ widget, latest
         const labels = telemetryData.map((point) =>
           new Date(point.timestamp).toLocaleTimeString()
         );
-        const values = telemetryData.map((point) => (point as any)[varName] || 0);
+        const values = telemetryData.map((point) => (point as Record<string, unknown>)[varName] as number || 0);
 
         // Get colors from config or use defaults
         const borderColor = widget.config.colors?.[0] || 'rgb(59, 130, 246)';

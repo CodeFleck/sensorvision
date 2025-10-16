@@ -44,7 +44,10 @@
       "Bash(del srcmainresourcesdbmigrationV18__Add_dashboard_organization.sql)",
       "Bash(chmod:*)",
       "Bash(powershell:*)",
-      "Bash(docker inspect:*)"
+      "Bash(docker inspect:*)",
+      "Bash(del:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": []

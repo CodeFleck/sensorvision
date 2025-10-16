@@ -21,7 +21,7 @@ interface BarChartWidgetProps {
 }
 
 export const BarChartWidget: React.FC<BarChartWidgetProps> = ({ widget, latestData }) => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<{ labels: string[]; datasets: Array<Record<string, unknown>> } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -54,7 +54,7 @@ export const BarChartWidget: React.FC<BarChartWidgetProps> = ({ widget, latestDa
         const labels = telemetryData.map((point) =>
           new Date(point.timestamp).toLocaleTimeString()
         );
-        const values = telemetryData.map((point) => (point as any)[varName] || 0);
+        const values = telemetryData.map((point) => (point as Record<string, unknown>)[varName] as number || 0);
 
         setData({
           labels,

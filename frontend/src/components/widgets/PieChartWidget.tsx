@@ -18,7 +18,7 @@ interface PieChartWidgetProps {
 }
 
 export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, latestData }) => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<{ labels: string[]; datasets: Array<Record<string, unknown>> } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 

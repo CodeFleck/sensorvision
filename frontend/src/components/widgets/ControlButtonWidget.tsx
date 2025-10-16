@@ -52,11 +52,14 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
               message: result.message || 'Command failed',
             });
           }
-        } catch (apiError: any) {
+        } catch (apiError: unknown) {
           console.error('API error sending command:', apiError);
+          const message = apiError instanceof Error && 'response' in apiError
+            ? ((apiError as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to send command')
+            : 'Failed to send command';
           setLastResult({
             success: false,
-            message: apiError.response?.data?.message || 'Failed to send command',
+            message,
           });
         }
       } else if (method === 'http') {
@@ -89,11 +92,11 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
           message: 'Unknown command method',
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error executing command:', error);
       setLastResult({
         success: false,
-        message: error.message || 'Command execution failed',
+        message: error instanceof Error ? error.message : 'Command execution failed',
       });
     } finally {
       setIsExecuting(false);

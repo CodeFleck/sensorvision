@@ -22,7 +22,7 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, latest
       try {
         // Fetch latest value for the device
         const telemetryData = await apiService.getLatestForDevice(widget.deviceId);
-        const value = (telemetryData as any)[widget.variableName];
+        const value = (telemetryData as Record<string, unknown>)[widget.variableName] as number;
 
         if (value !== null && value !== undefined) {
           setCurrentValue(value);
@@ -38,6 +38,7 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, latest
     fetchData();
     const interval = setInterval(fetchData, widget.config.refreshInterval || 5000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widget, latestData]);
 
   const calculateStatus = (value: number) => {

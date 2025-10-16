@@ -20,8 +20,19 @@ interface ScatterChartWidgetProps {
   latestData?: TelemetryPoint;
 }
 
+interface ScatterChartData {
+  datasets: Array<{
+    label: string;
+    data: Array<{ x: number; y: number }>;
+    backgroundColor: string;
+    borderColor: string;
+    pointRadius: number;
+    pointHoverRadius: number;
+  }>;
+}
+
 export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, latestData }) => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ScatterChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -58,16 +69,16 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
         const yVar = widget.variableName || widget.config.yVariable || 'kwConsumption';
 
         // Transform data for scatter plot
-        const scatterData = telemetryData.map((point: any) => {
+        const scatterData = (telemetryData as Array<Record<string, unknown>>).map((point) => {
           let xValue: number;
 
           if (xVar === 'timestamp') {
-            xValue = new Date(point.timestamp).getTime();
+            xValue = new Date(point.timestamp as string).getTime();
           } else {
-            xValue = point[xVar] || 0;
+            xValue = (point[xVar] as number) || 0;
           }
 
-          const yValue = point[yVar] || 0;
+          const yValue = (point[yVar] as number) || 0;
 
           return {
             x: xValue,

@@ -44,9 +44,9 @@ const Variables: React.FC = () => {
     try {
       setLoading(true);
       const response = await apiService.get('/variables');
-      setVariables(response.data);
+      setVariables(response.data as Variable[]);
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to load variables');
       console.error(err);
     } finally {
@@ -73,8 +73,11 @@ const Variables: React.FC = () => {
       }
       await loadVariables();
       handleCloseModal();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save variable');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to save variable')
+        : 'Failed to save variable';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -88,8 +91,11 @@ const Variables: React.FC = () => {
     try {
       await apiService.delete(`/variables/${id}`);
       await loadVariables();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete variable');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to delete variable')
+        : 'Failed to delete variable';
+      setError(message);
     }
   };
 

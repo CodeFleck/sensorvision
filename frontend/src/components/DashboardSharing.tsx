@@ -40,12 +40,13 @@ export const DashboardSharing: React.FC<DashboardSharingProps> = ({
     if (isPublic && publicShareToken) {
       setShareUrl(`${window.location.origin}/public/dashboard/${publicShareToken}`);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dashboardId, isPublic, publicShareToken]);
 
   const loadPermissions = async () => {
     try {
       const response = await apiService.get(`/dashboards/${dashboardId}/permissions`);
-      setPermissions(response.data);
+      setPermissions(response.data as DashboardPermission[]);
     } catch (err) {
       console.error('Failed to load permissions:', err);
     }
@@ -57,10 +58,13 @@ export const DashboardSharing: React.FC<DashboardSharingProps> = ({
       const response = await apiService.patch(`/dashboards/${dashboardId}/sharing`, {
         isPublic: !isPublic,
       });
-      setShareUrl(response.data.publicShareUrl);
+      setShareUrl((response.data as { publicShareUrl: string }).publicShareUrl);
       onUpdate();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update sharing settings');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update sharing settings')
+        : 'Failed to update sharing settings';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -80,8 +84,11 @@ export const DashboardSharing: React.FC<DashboardSharingProps> = ({
       await loadPermissions();
       setShowAddUserModal(false);
       setNewPermission({ email: '', permissionLevel: 'VIEW', expiresAt: '' });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to add permission');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to add permission')
+        : 'Failed to add permission';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -96,8 +103,11 @@ export const DashboardSharing: React.FC<DashboardSharingProps> = ({
         permissionLevel,
       });
       await loadPermissions();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update permission');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update permission')
+        : 'Failed to update permission';
+      setError(message);
     }
   };
 
@@ -109,8 +119,11 @@ export const DashboardSharing: React.FC<DashboardSharingProps> = ({
     try {
       await apiService.delete(`/dashboards/${dashboardId}/permissions/${permissionId}`);
       await loadPermissions();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to revoke permission');
+    } catch (err: unknown) {
+      const message = err instanceof Error && 'response' in err
+        ? ((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to revoke permission')
+        : 'Failed to revoke permission';
+      setError(message);
     }
   };
 
