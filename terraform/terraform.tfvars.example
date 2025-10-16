@@ -1,0 +1,8 @@
+aws_region        = "us-east-1"
+environment       = "prod"
+app_count         = 2
+fargate_cpu       = "1024"
+fargate_memory    = "2048"
+db_instance_class = "db.t3.micro"
+db_username       = "sensorvision"
+db_password       = "CHANGE_ME_TO_SECURE_PASSWORD"

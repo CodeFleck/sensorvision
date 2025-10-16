@@ -1,0 +1,169 @@
+import React, { useEffect, useState } from 'react';
+import { Widget, TelemetryPoint } from '../../types';
+import { apiService } from '../../services/api';
+
+interface IndicatorWidgetProps {
+  widget: Widget;
+  latestData?: TelemetryPoint;
+}
+
+export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, latestData }) => {
+  const [currentValue, setCurrentValue] = useState<number | null>(null);
+  const [status, setStatus] = useState<'off' | 'normal' | 'warning' | 'critical'>('off');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!widget.deviceId || !widget.variableName) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Fetch latest value for the device
+        const telemetryData = await apiService.getLatestForDevice(widget.deviceId);
+        const value = (telemetryData as any)[widget.variableName];
+
+        if (value !== null && value !== undefined) {
+          setCurrentValue(value);
+          calculateStatus(value);
+        }
+      } catch (error) {
+        console.error('Error fetching indicator data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, widget.config.refreshInterval || 5000);
+    return () => clearInterval(interval);
+  }, [widget, latestData]);
+
+  const calculateStatus = (value: number) => {
+    // Status calculation based on thresholds in config
+    const statusThresholds = widget.config.statusThresholds as {
+      critical?: { min: number | null; max: number | null };
+      warning?: { min: number | null; max: number | null };
+      normal?: { min: number | null; max: number | null };
+    } | undefined;
+
+    if (!statusThresholds) {
+      setStatus('normal');
+      return;
+    }
+
+    // Check critical range
+    if (statusThresholds.critical) {
+      const { min, max } = statusThresholds.critical;
+      if ((min !== null && value < min) || (max !== null && value > max)) {
+        setStatus('critical');
+        return;
+      }
+    }
+
+    // Check warning range
+    if (statusThresholds.warning) {
+      const { min, max } = statusThresholds.warning;
+      if ((min !== null && value < min) || (max !== null && value > max)) {
+        setStatus('warning');
+        return;
+      }
+    }
+
+    // Normal range
+    setStatus('normal');
+  };
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'critical':
+        return 'bg-red-500 shadow-red-500/50';
+      case 'warning':
+        return 'bg-yellow-500 shadow-yellow-500/50';
+      case 'normal':
+        return 'bg-green-500 shadow-green-500/50';
+      case 'off':
+      default:
+        return 'bg-gray-400 shadow-gray-400/50';
+    }
+  };
+
+  const getStatusText = () => {
+    switch (status) {
+      case 'critical':
+        return 'CRITICAL';
+      case 'warning':
+        return 'WARNING';
+      case 'normal':
+        return 'NORMAL';
+      case 'off':
+      default:
+        return 'OFF';
+    }
+  };
+
+  const getTextColor = () => {
+    switch (status) {
+      case 'critical':
+        return 'text-red-500';
+      case 'warning':
+        return 'text-yellow-500';
+      case 'normal':
+        return 'text-green-500';
+      case 'off':
+      default:
+        return 'text-gray-400';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center w-full h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  const indicatorSize = widget.config.size || 'large';
+  const sizeClasses = {
+    small: 'w-8 h-8',
+    medium: 'w-16 h-16',
+    large: 'w-24 h-24',
+  };
+
+  const showLabel = widget.config.showLabel ?? true;
+  const showValue = widget.config.showValue ?? true;
+
+  return (
+    <div className="flex flex-col items-center justify-center w-full h-full space-y-4">
+      {/* Status Light */}
+      <div
+        className={`${sizeClasses[indicatorSize as keyof typeof sizeClasses]} rounded-full ${getStatusColor()}
+                    shadow-lg animate-pulse transition-all duration-300`}
+      />
+
+      {/* Status Label */}
+      {showLabel && (
+        <div className={`text-lg font-bold ${getTextColor()} tracking-wider`}>
+          {getStatusText()}
+        </div>
+      )}
+
+      {/* Current Value */}
+      {showValue && currentValue !== null && (
+        <div className="text-2xl font-mono text-gray-300">
+          {currentValue.toFixed(2)}
+          {widget.config.unit && <span className="text-sm ml-1 text-gray-400">{widget.config.unit}</span>}
+        </div>
+      )}
+
+      {/* Variable Name */}
+      {widget.config.showVariableName && (
+        <div className="text-sm text-gray-500">
+          {widget.variableName}
+        </div>
+      )}
+    </div>
+  );
+};

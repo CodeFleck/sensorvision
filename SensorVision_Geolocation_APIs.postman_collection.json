@@ -1,0 +1,539 @@
+{
+	"info": {
+		"_postman_id": "geolocation-api-collection",
+		"name": "SensorVision Geolocation APIs",
+		"description": "Complete API collection for testing geolocation and maps features including geofences, location tracking, and location history",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "geofence_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "device_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    console.log('User registered successfully');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"organizationName\": \"Test Organization\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('jwt_token', jsonData.token);",
+									"    console.log('JWT Token saved: ' + jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Geofences",
+			"item": [
+				{
+					"name": "Get All Geofences",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/geofences",
+							"host": ["{{base_url}}"],
+							"path": ["geofences"]
+						},
+						"description": "Retrieve all geofences for the organization"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Circle Geofence",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('geofence_id', jsonData.id);",
+									"    console.log('Geofence ID saved: ' + jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Warehouse Zone\",\n  \"description\": \"Main warehouse perimeter\",\n  \"shape\": \"CIRCLE\",\n  \"centerLatitude\": 40.7128,\n  \"centerLongitude\": -74.0060,\n  \"radiusMeters\": 500,\n  \"enabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/geofences",
+							"host": ["{{base_url}}"],
+							"path": ["geofences"]
+						},
+						"description": "Create a circular geofence around coordinates"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Polygon Geofence",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Factory Area\",\n  \"description\": \"Factory floor boundary\",\n  \"shape\": \"POLYGON\",\n  \"polygonCoordinates\": [\n    [40.7128, -74.0060],\n    [40.7138, -74.0060],\n    [40.7138, -74.0050],\n    [40.7128, -74.0050],\n    [40.7128, -74.0060]\n  ],\n  \"enabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/geofences",
+							"host": ["{{base_url}}"],
+							"path": ["geofences"]
+						},
+						"description": "Create a polygon geofence with custom shape"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Rectangle Geofence",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Parking Lot\",\n  \"description\": \"Employee parking area\",\n  \"shape\": \"RECTANGLE\",\n  \"polygonCoordinates\": [\n    [40.7100, -74.0100],\n    [40.7100, -74.0080],\n    [40.7110, -74.0080],\n    [40.7110, -74.0100]\n  ],\n  \"enabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/geofences",
+							"host": ["{{base_url}}"],
+							"path": ["geofences"]
+						},
+						"description": "Create a rectangular geofence"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Geofence by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/geofences/{{geofence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["geofences", "{{geofence_id}}"]
+						},
+						"description": "Get details of a specific geofence"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Geofence",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Warehouse Zone (Updated)\",\n  \"description\": \"Expanded warehouse perimeter\",\n  \"shape\": \"CIRCLE\",\n  \"centerLatitude\": 40.7128,\n  \"centerLongitude\": -74.0060,\n  \"radiusMeters\": 750,\n  \"enabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/geofences/{{geofence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["geofences", "{{geofence_id}}"]
+						},
+						"description": "Update an existing geofence"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Geofence Assignments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/geofences/{{geofence_id}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["geofences", "{{geofence_id}}", "assignments"]
+						},
+						"description": "Get all device assignments for a geofence"
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Device to Geofence",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"deviceId\": \"{{device_id}}\",\n  \"alertOnEnter\": true,\n  \"alertOnExit\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/geofences/{{geofence_id}}/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["geofences", "{{geofence_id}}", "assignments"]
+						},
+						"description": "Assign a device to a geofence for monitoring"
+					},
+					"response": []
+				},
+				{
+					"name": "Unassign Device from Geofence",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/geofences/{{geofence_id}}/assignments/{{device_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["geofences", "{{geofence_id}}", "assignments", "{{device_id}}"]
+						},
+						"description": "Remove a device assignment from a geofence"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Geofence",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/geofences/{{geofence_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["geofences", "{{geofence_id}}"]
+						},
+						"description": "Delete a geofence"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Location Tracking",
+			"item": [
+				{
+					"name": "Get All Device Locations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/locations",
+							"host": ["{{base_url}}"],
+							"path": ["locations"]
+						},
+						"description": "Get current locations of all devices with coordinates"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device Location",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/locations/devices/{{device_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["locations", "devices", "{{device_id}}"]
+						},
+						"description": "Get current location of a specific device"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Device Location",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"latitude\": 40.7128,\n  \"longitude\": -74.0060,\n  \"altitude\": 10.5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/locations/devices/{{device_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["locations", "devices", "{{device_id}}"]
+						},
+						"description": "Update device location (triggers geofence alerts)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Device Location - Inside Geofence",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"latitude\": 40.7128,\n  \"longitude\": -74.0060,\n  \"altitude\": 10.5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/locations/devices/{{device_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["locations", "devices", "{{device_id}}"]
+						},
+						"description": "Move device inside geofence (should trigger ENTER alert)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Device Location - Outside Geofence",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"latitude\": 40.7200,\n  \"longitude\": -74.0100,\n  \"altitude\": 15.0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/locations/devices/{{device_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["locations", "devices", "{{device_id}}"]
+						},
+						"description": "Move device outside geofence (should trigger EXIT alert)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Location History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/locations/devices/{{device_id}}/history?limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["locations", "devices", "{{device_id}}", "history"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Get location history for a device (last 100 points)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Location History with Time Filter",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/locations/devices/{{device_id}}/history?startTime=2025-10-13T00:00:00&endTime=2025-10-14T00:00:00&limit=500",
+							"host": ["{{base_url}}"],
+							"path": ["locations", "devices", "{{device_id}}", "history"],
+							"query": [
+								{
+									"key": "startTime",
+									"value": "2025-10-13T00:00:00"
+								},
+								{
+									"key": "endTime",
+									"value": "2025-10-14T00:00:00"
+								},
+								{
+									"key": "limit",
+									"value": "500"
+								}
+							]
+						},
+						"description": "Get location history for a specific time range"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Devices (Helper Endpoints)",
+			"item": [
+				{
+					"name": "Get All Devices",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        pm.collectionVariables.set('device_id', jsonData[0].id);",
+									"        console.log('Device ID saved: ' + jsonData[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/devices",
+							"host": ["{{base_url}}"],
+							"path": ["devices"]
+						},
+						"description": "Get all devices (to get device IDs for testing)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Events (Verify Geofence Alerts)",
+			"item": [
+				{
+					"name": "Get Recent Events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/events?page=0&size=20",
+							"host": ["{{base_url}}"],
+							"path": ["events"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get recent events to verify geofence enter/exit alerts"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
