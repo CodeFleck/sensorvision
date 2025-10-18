@@ -55,6 +55,12 @@ class ApiService {
       }
     }
 
+    // Handle HTTP 204 No Content responses (common for DELETE operations)
+    // These responses have no body, so attempting to parse JSON will fail
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+      return undefined as T;
+    }
+
     return response.json();
   }
 

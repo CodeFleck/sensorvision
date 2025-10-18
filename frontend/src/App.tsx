@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { WebSocketProvider } from './contexts/WebSocketContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
@@ -22,7 +23,8 @@ import Variables from './pages/Variables';
 function App() {
   return (
     <AuthProvider>
-      <Routes>
+      <WebSocketProvider url="ws://localhost:8080/ws/telemetry">
+        <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -57,6 +59,7 @@ function App() {
           }
         />
       </Routes>
+      </WebSocketProvider>
     </AuthProvider>
   );
 }

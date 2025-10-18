@@ -23,11 +23,12 @@ spring:
       leak-detection-threshold: 60000
   jpa:
     open-in-view: false
+    show-sql: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         # Enable second-level cache for better performance
         cache:
           use_second_level_cache: false
@@ -178,8 +179,16 @@ notifications:
 
 logging:
   level:
+    root: INFO
     org.sensorvision: INFO
     org.springframework.web: INFO
     org.hibernate: WARN
+    # Reduce noisy Hibernate SQL and bind-parameter logs
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    org.hibernate.engine.jdbc.spi.SqlStatementLogger: ERROR
   file:
     name: logs/sensorvision.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

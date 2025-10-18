@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { TelemetryPoint } from '../types';
+import { useWebSocketContext } from '../contexts/WebSocketContext';
 
 interface UseWebSocketReturn {
   lastMessage: TelemetryPoint | null;
@@ -7,48 +7,20 @@ interface UseWebSocketReturn {
   sendMessage: (message: string) => void;
 }
 
-export const useWebSocket = (url: string): UseWebSocketReturn => {
-  const [lastMessage, setLastMessage] = useState<TelemetryPoint | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'Connecting' | 'Open' | 'Closing' | 'Closed'>('Closed');
-  const ws = useRef<WebSocket | null>(null);
+/**
+ * Hook to access WebSocket connection managed by WebSocketProvider.
+ * Note: url parameter is deprecated and ignored - connection is managed at the provider level.
+ *
+ * @deprecated The url parameter is no longer used. WebSocket connection is managed by WebSocketProvider.
+ */
+export const useWebSocket = (_url?: string): UseWebSocketReturn => {
+  const { lastMessage, connectionStatus } = useWebSocketContext();
 
-  const sendMessage = (message: string) => {
-    if (ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(message);
-    }
+  // sendMessage is not currently supported in the context-based implementation
+  // This is a placeholder for backward compatibility
+  const sendMessage = (_message: string) => {
+    console.warn('[useWebSocket] sendMessage is not implemented in context-based WebSocket');
   };
-
-  useEffect(() => {
-    const websocket = new WebSocket(url);
-    ws.current = websocket;
-
-    websocket.onopen = () => {
-      setConnectionStatus('Open');
-      console.log('WebSocket connected');
-    };
-
-    websocket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data) as TelemetryPoint;
-        setLastMessage(data);
-      } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
-      }
-    };
-
-    websocket.onclose = () => {
-      setConnectionStatus('Closed');
-      console.log('WebSocket disconnected');
-    };
-
-    websocket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    return () => {
-      websocket.close();
-    };
-  }, [url]);
 
   return {
     lastMessage,

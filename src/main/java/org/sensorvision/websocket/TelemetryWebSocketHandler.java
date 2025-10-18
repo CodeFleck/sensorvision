@@ -24,23 +24,45 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         sessions.add(session);
-        log.info("WebSocket connection established: {} from remote address: {}, URI: {}",
-                session.getId(), session.getRemoteAddress(), session.getUri());
+        log.debug("WebSocket connection established: {} from {}",
+                session.getId(), session.getRemoteAddress());
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         sessions.remove(session);
-        log.info("WebSocket connection closed: {} with status: {}", session.getId(), status);
+
+        // Only log abnormal closures (not normal disconnects)
+        // 1000 = Normal closure, 1001 = Going away (page reload/navigation)
+        if (status.getCode() != 1000 && status.getCode() != 1001) {
+            log.warn("WebSocket connection closed abnormally: {} with status code: {} ({})",
+                    session.getId(), status.getCode(), status.getReason());
+        } else {
+            log.debug("WebSocket connection closed normally: {} with status: {}",
+                    session.getId(), status);
+        }
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        log.error("WebSocket transport error for session {}: {}",
-                session.getId(),
-                exception != null ? exception.getClass().getName() : "null exception");
-        if (exception != null) {
-            log.error("WebSocket transport error details for session {}", session.getId(), exception);
+        // Only log actual errors, not normal connection issues during close
+        // IOException "connection aborted" often happens during normal page reload/navigation
+        if (exception != null && exception instanceof java.io.IOException) {
+            String message = exception.getMessage();
+            if (message != null && (message.contains("connection was aborted") ||
+                                   message.contains("Connection reset"))) {
+                log.debug("WebSocket connection closed by client: {}", session.getId());
+            } else {
+                log.warn("WebSocket I/O error for session {}: {}",
+                        session.getId(), exception.getMessage());
+            }
+        } else {
+            log.error("WebSocket transport error for session {}: {}",
+                    session.getId(),
+                    exception != null ? exception.getClass().getName() : "null exception");
+            if (exception != null) {
+                log.error("WebSocket transport error details for session {}", session.getId(), exception);
+            }
         }
         sessions.remove(session);
     }
