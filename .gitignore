@@ -44,6 +44,10 @@ device_tokens_backup*.csv
 /frontend/pnpm-debug.log*
 /frontend/.eslintcache
 
+# Node package lock files
+/package-lock.json
+/frontend/package-lock.json
+
 # Terraform
 /terraform/.terraform/
 /terraform/.terraform.lock.hcl

@@ -51,7 +51,8 @@
       "Bash(set \"DB_USERNAME=sensorvision\")",
       "Bash(set \"DB_PASSWORD=sensorvision123\")",
       "Bash(dir:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(./gradlew.bat test:*)"
     ],
     "deny": [],
     "ask": []

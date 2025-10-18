@@ -9,6 +9,7 @@ import org.sensorvision.model.Organization;
 import org.sensorvision.repository.DeviceRepository;
 import org.sensorvision.security.SecurityUtils;
 import org.sensorvision.service.MqttPublishService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,6 +24,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/devices/{deviceId}/commands")
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "mqtt", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DeviceCommandController {
 
     private final MqttPublishService mqttPublishService;
