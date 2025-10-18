@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,13 +23,17 @@ public class DashboardService {
     private final DashboardRepository dashboardRepository;
     private final WidgetRepository widgetRepository;
     private final ObjectMapper objectMapper;
+    private final DefaultDashboardInitializer defaultDashboardInitializer;
+
 
     public DashboardService(DashboardRepository dashboardRepository,
                           WidgetRepository widgetRepository,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          DefaultDashboardInitializer defaultDashboardInitializer) {
         this.dashboardRepository = dashboardRepository;
         this.widgetRepository = widgetRepository;
         this.objectMapper = objectMapper;
+        this.defaultDashboardInitializer = defaultDashboardInitializer;
     }
 
     /**
@@ -65,30 +68,17 @@ public class DashboardService {
      * Get the default dashboard
      * If no default dashboard exists, creates one automatically
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public DashboardResponse getDefaultDashboard() {
         Organization userOrg = SecurityUtils.getCurrentUserOrganization();
-        Dashboard dashboard = dashboardRepository.findByOrganizationAndIsDefaultTrue(userOrg)
-            .orElseGet(() -> {
-                // No default dashboard exists, create one automatically
-                logger.info("No default dashboard found for organization: {}. Creating one automatically.",
-                           userOrg.getId());
 
-                Dashboard newDashboard = new Dashboard();
-                newDashboard.setName("Default Dashboard");
-                newDashboard.setDescription("Automatically generated default dashboard");
-                newDashboard.setIsDefault(true);
-                newDashboard.setLayoutConfig(objectMapper.createObjectNode());
-                newDashboard.setOrganization(userOrg);
+        defaultDashboardInitializer.ensureDefaultDashboardExists(userOrg);
 
-                Dashboard saved = dashboardRepository.save(newDashboard);
-                logger.info("Default dashboard created with id: {}", saved.getId());
-                return saved;
-            });
+        Dashboard dashboard = dashboardRepository.findByOrganizationAndIsDefaultTrueWithWidgets(userOrg)
+            .orElseThrow(() -> new RuntimeException("Default dashboard could not be loaded after initialization"));
 
-        // Trigger lazy loading of widgets within the transaction
-        // This avoids replacing the collection which would break orphan removal
         dashboard.getWidgets().size();
+        dashboard.getPermissions().size();
 
         return DashboardResponse.fromEntity(dashboard);
     }
@@ -104,6 +94,9 @@ public class DashboardService {
         // If this dashboard is set as default, unset any existing default for this organization
         if (Boolean.TRUE.equals(request.isDefault())) {
             dashboardRepository.findByOrganizationAndIsDefaultTrue(userOrg).ifPresent(existingDefault -> {
+                // CRITICAL: Initialize collections to prevent orphan removal errors
+                existingDefault.getWidgets().size();
+                existingDefault.getPermissions().size();
                 existingDefault.setIsDefault(false);
                 dashboardRepository.save(existingDefault);
             });
@@ -133,6 +126,10 @@ public class DashboardService {
         Dashboard dashboard = dashboardRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Dashboard not found with id: " + id));
 
+        // CRITICAL: Initialize collections to prevent orphan removal errors
+        dashboard.getWidgets().size();
+        dashboard.getPermissions().size();
+
         // Verify dashboard belongs to user's organization
         if (!dashboard.getOrganization().getId().equals(userOrg.getId())) {
             throw new AccessDeniedException("Access denied to dashboard: " + id);
@@ -149,6 +146,9 @@ public class DashboardService {
             if (Boolean.TRUE.equals(request.isDefault())) {
                 dashboardRepository.findByOrganizationAndIsDefaultTrue(userOrg).ifPresent(existingDefault -> {
                     if (!existingDefault.getId().equals(id)) {
+                        // CRITICAL: Initialize collections to prevent orphan removal errors
+                        existingDefault.getWidgets().size();
+                        existingDefault.getPermissions().size();
                         existingDefault.setIsDefault(false);
                         dashboardRepository.save(existingDefault);
                     }
@@ -203,6 +203,10 @@ public class DashboardService {
 
         Dashboard dashboard = dashboardRepository.findById(dashboardId)
             .orElseThrow(() -> new RuntimeException("Dashboard not found with id: " + dashboardId));
+
+        // CRITICAL: Initialize collections to prevent orphan removal errors
+        dashboard.getWidgets().size();
+        dashboard.getPermissions().size();
 
         // Verify dashboard belongs to user's organization
         if (!dashboard.getOrganization().getId().equals(userOrg.getId())) {
@@ -322,4 +326,29 @@ public class DashboardService {
             .map(WidgetResponse::fromEntity)
             .collect(Collectors.toList());
     }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

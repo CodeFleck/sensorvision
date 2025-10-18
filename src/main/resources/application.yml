@@ -108,6 +108,11 @@ notification:
     enabled: ${WEBHOOK_ENABLED:true}
     timeout-ms: ${WEBHOOK_TIMEOUT_MS:5000}
 
+support:
+  issue:
+    email: ${SUPPORT_ISSUE_EMAIL:support@sensorvision.com}
+    enabled: ${SUPPORT_ISSUE_ENABLED:true}
+
 simulator:
   enabled: true
   device-count: 10

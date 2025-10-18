@@ -271,3 +271,42 @@ export interface NotificationStats {
   sent: number;
   failed: number;
 }
+
+// Issue Submission types
+export type IssueCategory = 'BUG' | 'FEATURE_REQUEST' | 'QUESTION' | 'OTHER';
+
+export type IssueSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type IssueStatus = 'SUBMITTED' | 'IN_REVIEW' | 'RESOLVED' | 'CLOSED';
+
+export interface IssueSubmissionRequest {
+  title: string;
+  description: string;
+  category: IssueCategory;
+  severity: IssueSeverity;
+  screenshotBase64?: string;
+  screenshotFilename?: string;
+  browserInfo?: string;
+  pageUrl?: string;
+  userAgent?: string;
+  screenResolution?: string;
+}
+
+export interface IssueSubmission {
+  id: number;
+  title: string;
+  description: string;
+  category: IssueCategory;
+  severity: IssueSeverity;
+  status: IssueStatus;
+  screenshotFilename?: string;
+  hasScreenshot: boolean;
+  browserInfo?: string;
+  pageUrl?: string;
+  userAgent?: string;
+  screenResolution?: string;
+  username: string;
+  organizationName: string;
+  createdAt: string;
+  updatedAt: string;
+}

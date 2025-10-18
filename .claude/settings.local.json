@@ -50,7 +50,8 @@
       "Bash(npm run:*)",
       "Bash(set \"DB_USERNAME=sensorvision\")",
       "Bash(set \"DB_PASSWORD=sensorvision123\")",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []

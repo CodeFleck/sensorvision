@@ -1,4 +1,4 @@
-import { Device, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel } from '../types';
+import { Device, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -305,6 +305,30 @@ class ApiService {
       method: 'DELETE',
     });
     return { data: result };
+  }
+
+  // Issue Submission Management
+  async submitIssue(issue: IssueSubmissionRequest): Promise<IssueSubmission> {
+    return this.request<IssueSubmission>('/support/issues', {
+      method: 'POST',
+      body: JSON.stringify(issue),
+    });
+  }
+
+  async getUserIssues(): Promise<IssueSubmission[]> {
+    return this.request<IssueSubmission[]>('/support/issues');
+  }
+
+  async getIssueById(id: number): Promise<IssueSubmission> {
+    return this.request<IssueSubmission>(`/support/issues/${id}`);
+  }
+
+  async getUserIssuesByStatus(status: IssueStatus): Promise<IssueSubmission[]> {
+    return this.request<IssueSubmission[]>(`/support/issues/status/${status}`);
+  }
+
+  async getUserIssueCount(): Promise<{ count: number }> {
+    return this.request<{ count: number }>('/support/issues/count');
   }
 }
 

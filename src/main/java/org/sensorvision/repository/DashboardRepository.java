@@ -41,4 +41,10 @@ public interface DashboardRepository extends JpaRepository<Dashboard, Long> {
      * Find default dashboard for an organization
      */
     Optional<Dashboard> findByOrganizationAndIsDefaultTrue(Organization organization);
+
+    /**
+     * Find default dashboard for an organization with widgets eagerly loaded
+     */
+    @Query("SELECT d FROM Dashboard d LEFT JOIN FETCH d.widgets WHERE d.organization = :organization AND d.isDefault = true")
+    Optional<Dashboard> findByOrganizationAndIsDefaultTrueWithWidgets(@Param("organization") Organization organization);
 }
