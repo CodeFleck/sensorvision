@@ -99,8 +99,35 @@ public class Dashboard extends AuditableEntity {
         return widgets;
     }
 
-    public void setWidgets(List<Widget> widgets) {
-        this.widgets = widgets;
+    /**
+     * IMPORTANT: With orphanRemoval=true, we must NEVER replace the collection instance.
+     * This method clears the existing collection and adds all new widgets properly.
+     */
+    public void setWidgets(List<Widget> newWidgets) {
+        if (newWidgets == null) {
+            this.widgets.clear();
+            return;
+        }
+
+        // Remove widgets that are no longer in the new list
+        this.widgets.removeIf(existingWidget ->
+            newWidgets.stream().noneMatch(w -> w.getId() != null && w.getId().equals(existingWidget.getId()))
+        );
+
+        // Add or update widgets
+        for (Widget newWidget : newWidgets) {
+            if (newWidget.getId() == null) {
+                // New widget - add it
+                addWidget(newWidget);
+            } else {
+                // Existing widget - check if it's already in the collection
+                boolean exists = this.widgets.stream()
+                    .anyMatch(w -> w.getId().equals(newWidget.getId()));
+                if (!exists) {
+                    addWidget(newWidget);
+                }
+            }
+        }
     }
 
     public Organization getOrganization() {
@@ -131,8 +158,28 @@ public class Dashboard extends AuditableEntity {
         return permissions;
     }
 
-    public void setPermissions(List<DashboardPermission> permissions) {
-        this.permissions = permissions;
+    /**
+     * IMPORTANT: With orphanRemoval=true, we must NEVER replace the collection instance.
+     * This method clears the existing collection and adds all new permissions properly.
+     */
+    public void setPermissions(List<DashboardPermission> newPermissions) {
+        if (newPermissions == null) {
+            this.permissions.clear();
+            return;
+        }
+
+        // Remove permissions that are no longer in the new list
+        this.permissions.removeIf(existingPerm ->
+            newPermissions.stream().noneMatch(p -> p.getId() != null && p.getId().equals(existingPerm.getId()))
+        );
+
+        // Add new permissions
+        for (DashboardPermission newPerm : newPermissions) {
+            if (newPerm.getId() == null || this.permissions.stream().noneMatch(p -> p.getId().equals(newPerm.getId()))) {
+                this.permissions.add(newPerm);
+                newPerm.setDashboard(this);
+            }
+        }
     }
 
     // Helper methods

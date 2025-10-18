@@ -303,4 +303,164 @@ public class EmailNotificationService {
                 </html>
                 """, verificationLink, verificationLink);
     }
+
+    /**
+     * Send issue report email to support team with screenshot attachment
+     */
+    public boolean sendIssueReportEmail(org.sensorvision.model.IssueSubmission issue, String supportEmail) {
+        if (!emailEnabled) {
+            log.info("Email notifications disabled. Would have sent issue report to: {}", supportEmail);
+            return false;
+        }
+
+        try {
+            String subject = String.format("[SensorVision] %s Issue: %s",
+                issue.getSeverity().getDisplayName(),
+                issue.getTitle());
+
+            String body = generateIssueReportEmailBody(issue);
+
+            log.info("Sending issue report email to: {}", supportEmail);
+
+            if (mailSender != null) {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom(fromEmail);
+                helper.setTo(supportEmail);
+                helper.setSubject(subject);
+                helper.setText(body, true); // true = isHtml
+
+                // Attach screenshot if available
+                if (issue.getScreenshotData() != null && issue.getScreenshotData().length > 0) {
+                    String filename = issue.getScreenshotFilename() != null ?
+                        issue.getScreenshotFilename() : "screenshot.png";
+                    helper.addAttachment(filename, new ByteArrayResource(issue.getScreenshotData()));
+                    log.info("Screenshot attached: {} ({} bytes)", filename, issue.getScreenshotData().length);
+                }
+
+                mailSender.send(message);
+                log.info("Issue report email sent successfully to {}", supportEmail);
+            } else {
+                log.info("JavaMailSender not configured. Issue report would be sent to: {}", supportEmail);
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to send issue report email to {}", supportEmail, e);
+            return false;
+        }
+    }
+
+    private String generateIssueReportEmailBody(org.sensorvision.model.IssueSubmission issue) {
+        StringBuilder body = new StringBuilder();
+        body.append("<html><body style='font-family: Arial, sans-serif;'>");
+        body.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+
+        // Header
+        body.append("<h2 style='color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px;'>");
+        body.append("New Issue Report Submitted");
+        body.append("</h2>");
+
+        // Issue Details
+        body.append("<div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;'>");
+
+        body.append("<h3 style='color: #007bff; margin-top: 0;'>").append(issue.getTitle()).append("</h3>");
+
+        body.append("<table style='width: 100%; border-collapse: collapse;'>");
+        addTableRow(body, "Category", issue.getCategory().getDisplayName());
+        addTableRow(body, "Severity", getSeverityWithColor(issue.getSeverity()));
+        addTableRow(body, "Status", issue.getStatus().getDisplayName());
+        addTableRow(body, "Submitted By", issue.getUser().getUsername());
+        addTableRow(body, "Email", issue.getUser().getEmail());
+        addTableRow(body, "Organization", issue.getOrganization().getName());
+        addTableRow(body, "Submission Time", issue.getCreatedAt().toString());
+        body.append("</table>");
+
+        body.append("</div>");
+
+        // Description
+        body.append("<div style='margin: 20px 0;'>");
+        body.append("<h3 style='color: #333;'>Description:</h3>");
+        body.append("<div style='background-color: #fff; padding: 15px; border-left: 4px solid #007bff;'>");
+        body.append("<p style='white-space: pre-wrap; margin: 0;'>").append(escapeHtml(issue.getDescription())).append("</p>");
+        body.append("</div>");
+        body.append("</div>");
+
+        // Technical Details
+        if (issue.getBrowserInfo() != null || issue.getPageUrl() != null ||
+            issue.getUserAgent() != null || issue.getScreenResolution() != null) {
+            body.append("<div style='margin: 20px 0;'>");
+            body.append("<h3 style='color: #333;'>Technical Details:</h3>");
+            body.append("<table style='width: 100%; border-collapse: collapse; background-color: #f8f9fa;'>");
+
+            if (issue.getPageUrl() != null) {
+                addTableRow(body, "Page URL", issue.getPageUrl());
+            }
+            if (issue.getBrowserInfo() != null) {
+                addTableRow(body, "Browser", issue.getBrowserInfo());
+            }
+            if (issue.getScreenResolution() != null) {
+                addTableRow(body, "Screen Resolution", issue.getScreenResolution());
+            }
+            if (issue.getUserAgent() != null) {
+                addTableRow(body, "User Agent", "<code style='font-size: 11px;'>" + escapeHtml(issue.getUserAgent()) + "</code>");
+            }
+
+            body.append("</table>");
+            body.append("</div>");
+        }
+
+        // Screenshot note
+        if (issue.getScreenshotData() != null && issue.getScreenshotData().length > 0) {
+            body.append("<div style='margin: 20px 0; padding: 15px; background-color: #e7f3ff; border-radius: 5px;'>");
+            body.append("<p style='margin: 0;'><strong>📷 Screenshot Attached:</strong> ");
+            body.append(issue.getScreenshotFilename());
+            body.append(" (").append(String.format("%.2f", issue.getScreenshotData().length / 1024.0)).append(" KB)</p>");
+            body.append("</div>");
+        }
+
+        // Footer
+        body.append("<hr style='margin: 30px 0; border: none; border-top: 1px solid #ddd;'>");
+        body.append("<p style='color: #666; font-size: 12px; text-align: center;'>");
+        body.append("This is an automated issue report from SensorVision IoT Platform<br>");
+        body.append("Issue ID: #").append(issue.getId());
+        body.append("</p>");
+
+        body.append("</div>");
+        body.append("</body></html>");
+
+        return body.toString();
+    }
+
+    private void addTableRow(StringBuilder body, String label, String value) {
+        body.append("<tr>");
+        body.append("<td style='padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold; width: 35%;'>");
+        body.append(label).append(":");
+        body.append("</td>");
+        body.append("<td style='padding: 8px; border-bottom: 1px solid #dee2e6;'>");
+        body.append(value);
+        body.append("</td>");
+        body.append("</tr>");
+    }
+
+    private String getSeverityWithColor(org.sensorvision.model.IssueSeverity severity) {
+        String color = switch (severity) {
+            case LOW -> "#28a745";      // Green
+            case MEDIUM -> "#ffc107";   // Yellow/Orange
+            case HIGH -> "#fd7e14";     // Orange
+            case CRITICAL -> "#dc3545"; // Red
+        };
+
+        return String.format("<span style='color: %s; font-weight: bold;'>%s</span>",
+            color, severity.getDisplayName());
+    }
+
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
+    }
 }

@@ -56,6 +56,9 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:junit-jupiter")
+    testImplementation("org.testcontainers:postgresql")
     testImplementation("com.h2database:h2")
 }
 
@@ -66,3 +69,18 @@ tasks.withType<Test> {
 springBoot {
     mainClass.set("org.sensorvision.SensorVisionApplication")
 }
+
+// Load .env file for bootRun task
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
+    val envFile = file(".env")
+    if (envFile.exists()) {
+        envFile.readLines().forEach { line ->
+            val trimmedLine = line.trim()
+            if (trimmedLine.isNotEmpty() && !trimmedLine.startsWith("#") && trimmedLine.contains("=")) {
+                val (key, value) = trimmedLine.split("=", limit = 2)
+                environment(key.trim(), value.trim())
+            }
+        }
+    }
+}
+

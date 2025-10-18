@@ -33,6 +33,11 @@ public class DashboardSharingService {
     public Dashboard updateSharingSettings(Long dashboardId, DashboardSharingRequest request) {
         Dashboard dashboard = findDashboardById(dashboardId);
 
+        // CRITICAL: Initialize the widgets collection to prevent orphan removal errors
+        // This ensures Hibernate doesn't try to replace the collection reference during save
+        dashboard.getWidgets().size();
+        dashboard.getPermissions().size();
+
         boolean wasPublic = dashboard.getIsPublic();
         dashboard.setIsPublic(request.isPublic());
 
@@ -69,6 +74,10 @@ public class DashboardSharingService {
 
     public DashboardPermissionResponse addPermission(Long dashboardId, DashboardPermissionRequest request) {
         Dashboard dashboard = findDashboardById(dashboardId);
+        // Initialize collections to prevent orphan removal errors
+        dashboard.getWidgets().size();
+        dashboard.getPermissions().size();
+
         Organization org = SecurityUtils.getCurrentUserOrganization();
 
         // Find user by email within the same organization
@@ -112,6 +121,9 @@ public class DashboardSharingService {
     public DashboardPermissionResponse updatePermission(Long dashboardId, Long permissionId,
                                                         DashboardPermission.PermissionLevel permissionLevel) {
         Dashboard dashboard = findDashboardById(dashboardId);
+        // Initialize collections to prevent orphan removal errors
+        dashboard.getWidgets().size();
+        dashboard.getPermissions().size();
 
         DashboardPermission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Permission not found: " + permissionId));
@@ -139,6 +151,9 @@ public class DashboardSharingService {
 
     public void revokePermission(Long dashboardId, Long permissionId) {
         Dashboard dashboard = findDashboardById(dashboardId);
+        // Initialize collections to prevent orphan removal errors
+        dashboard.getWidgets().size();
+        dashboard.getPermissions().size();
 
         DashboardPermission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Permission not found: " + permissionId));

@@ -18,9 +18,12 @@ import {
   LogOut,
   Shield,
   User,
+  Bug,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
+import { SubmitIssueModal } from './SubmitIssueModal';
+import { useState } from 'react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -46,6 +49,7 @@ const navigation = [
 export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const { user, logout, isAdmin } = useAuth();
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
 
   // Filter navigation based on user role
   const filteredNavigation = navigation.filter(item => {
@@ -92,7 +96,7 @@ export const Layout = ({ children }: LayoutProps) => {
             })}
           </nav>
 
-          {/* User info and logout */}
+          {/* User info and actions */}
           <div className="flex-shrink-0 border-t border-gray-200">
             <div className="p-4">
               <div className="flex items-center mb-3">
@@ -114,6 +118,17 @@ export const Layout = ({ children }: LayoutProps) => {
                   )}
                 </div>
               </div>
+
+              {/* Report Issue Button */}
+              <button
+                onClick={() => setIsIssueModalOpen(true)}
+                className="w-full flex items-center justify-center px-4 py-2 mb-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+              >
+                <Bug className="mr-2 h-4 w-4" />
+                Report Issue
+              </button>
+
+              {/* Sign Out Button */}
               <button
                 onClick={logout}
                 className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
@@ -132,6 +147,15 @@ export const Layout = ({ children }: LayoutProps) => {
           </main>
         </div>
       </div>
+
+      {/* Issue Submission Modal */}
+      <SubmitIssueModal
+        isOpen={isIssueModalOpen}
+        onClose={() => setIsIssueModalOpen(false)}
+        onSuccess={() => {
+          // Optional: You could show a success toast here
+        }}
+      />
     </div>
   );
 };
