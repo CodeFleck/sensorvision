@@ -1,0 +1,213 @@
+# =============================================================================
+# SensorVision Production Profile Configuration
+# =============================================================================
+# This profile is activated when SPRING_PROFILES_ACTIVE=prod
+# It overrides default settings with production-optimized values
+# =============================================================================
+
+server:
+  port: 8080
+  shutdown: graceful  # Enable graceful shutdown
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-exception: false
+    include-binding-errors: never
+
+spring:
+  application:
+    name: sensorvision
+
+  # Database Configuration (RDS)
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      # Production connection pool settings
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      initialization-fail-timeout: 60000
+      connection-test-query: SELECT 1
+      leak-detection-threshold: 60000
+
+  jpa:
+    open-in-view: false
+    show-sql: false  # Disable SQL logging in production
+    hibernate:
+      ddl-auto: validate  # Never auto-create schema in production
+    properties:
+      hibernate:
+        format_sql: false
+        cache:
+          use_second_level_cache: true
+          region:
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+        jdbc:
+          batch_size: 20
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+
+  # Flyway - Production settings
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    connect-retries: 10
+    connect-retries-interval: 5
+
+  # Mail Configuration
+  mail:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  # Security - JWT
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret: ${JWT_SECRET}
+
+# MQTT Configuration
+mqtt:
+  broker:
+    url: ${MQTT_BROKER_URL}
+    username: ${MQTT_USERNAME}
+    password: ${MQTT_PASSWORD}
+  device-auth:
+    required: ${MQTT_DEVICE_AUTH_REQUIRED:true}  # MUST be true in production
+
+# Notification Services
+notification:
+  email:
+    enabled: ${EMAIL_ENABLED:false}
+    from: ${EMAIL_FROM}
+  sms:
+    enabled: ${SMS_ENABLED:false}
+    from: ${SMS_FROM_NUMBER:}
+    twilio:
+      account-sid: ${TWILIO_ACCOUNT_SID:}
+      auth-token: ${TWILIO_AUTH_TOKEN:}
+  webhook:
+    enabled: ${WEBHOOK_ENABLED:true}
+    timeout-ms: ${WEBHOOK_TIMEOUT_MS:5000}
+
+notifications:
+  slack:
+    enabled: ${SLACK_ENABLED:false}
+    webhook-url: ${SLACK_WEBHOOK_URL:}
+  teams:
+    enabled: ${TEAMS_ENABLED:false}
+    webhook-url: ${TEAMS_WEBHOOK_URL:}
+
+# Support Configuration
+support:
+  issue:
+    email: ${SUPPORT_ISSUE_EMAIL}
+    enabled: ${SUPPORT_ISSUE_ENABLED:true}
+
+# Simulator - DISABLED in production
+simulator:
+  enabled: false
+
+# JWT Configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+    issuer: ${JWT_ISSUER}
+
+# Management & Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        # Only expose necessary endpoints in production
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized  # Hide details from unauthorized users
+      show-components: when-authorized
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: 10GB  # Alert when less than 10GB free
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: production
+    export:
+      prometheus:
+        enabled: true
+
+# Rate Limiting - Production values
+rate-limit:
+  enabled: true
+  # Stricter limits for production
+  default-capacity: 60
+  default-refill-tokens: 60
+  default-refill-minutes: 1
+  # IoT telemetry - allow higher throughput
+  data-ingestion-capacity: 2000
+  data-ingestion-refill-tokens: 2000
+  data-ingestion-refill-minutes: 1
+  # Import/Export moderate limits
+  import-capacity: 30
+  import-refill-tokens: 30
+  import-refill-minutes: 1
+  export-capacity: 50
+  export-refill-tokens: 50
+  export-refill-minutes: 1
+
+# Logging - Production levels
+logging:
+  level:
+    root: WARN
+    org.sensorvision: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate: WARN
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    org.hibernate.engine.jdbc.spi.SqlStatementLogger: ERROR
+  file:
+    name: logs/sensorvision.log
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 5GB
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+
+# CORS Configuration - Production domains only
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://${DOMAIN:localhost}}
+  allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+  allowed-headers: "*"
+  allow-credentials: true
+  max-age: 3600

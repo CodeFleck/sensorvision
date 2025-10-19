@@ -1,0 +1,133 @@
+# =============================================================================
+# SensorVision Production Docker Compose Configuration
+# =============================================================================
+# This configuration is designed for AWS deployment with:
+# - RDS PostgreSQL (managed database - not in this compose file)
+# - EC2 instance running this Docker Compose stack
+# - MQTT broker and backend application containers
+# =============================================================================
+
+version: '3.8'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: sensorvision-mosquitto
+    restart: always
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -W 3 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - sensorvision-network
+
+  backend:
+    # Image will be pulled from ECR by deployment script
+    # Format: {AWS_ACCOUNT_ID}.dkr.ecr.{AWS_REGION}.amazonaws.com/sensorvision-backend:latest
+    image: ${ECR_REGISTRY}/sensorvision-backend:${IMAGE_TAG:-latest}
+    container_name: sensorvision-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    environment:
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: prod
+
+      # Database (RDS PostgreSQL)
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      DB_POOL_MIN_IDLE: ${DB_POOL_MIN_IDLE:-2}
+
+      # JWT Authentication
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      JWT_ISSUER: ${JWT_ISSUER}
+
+      # MQTT (local container)
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      MQTT_DEVICE_AUTH_REQUIRED: ${MQTT_DEVICE_AUTH_REQUIRED:-true}
+
+      # Simulator (DISABLED in production)
+      SIMULATOR_ENABLED: false
+
+      # Notification Services
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@sensorvision.com}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+
+      SMS_ENABLED: ${SMS_ENABLED:-false}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      SMS_FROM_NUMBER: ${SMS_FROM_NUMBER:-}
+
+      WEBHOOK_ENABLED: ${WEBHOOK_ENABLED:-true}
+      WEBHOOK_TIMEOUT_MS: ${WEBHOOK_TIMEOUT_MS:-5000}
+
+      SLACK_ENABLED: ${SLACK_ENABLED:-false}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+
+      TEAMS_ENABLED: ${TEAMS_ENABLED:-false}
+      TEAMS_WEBHOOK_URL: ${TEAMS_WEBHOOK_URL:-}
+
+      # Support
+      SUPPORT_ISSUE_EMAIL: ${SUPPORT_ISSUE_EMAIL:-support@sensorvision.com}
+      SUPPORT_ISSUE_ENABLED: ${SUPPORT_ISSUE_ENABLED:-true}
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    networks:
+      - sensorvision-network
+
+  # Nginx reverse proxy for SSL termination (optional - use ALB instead if preferred)
+  nginx:
+    image: nginx:alpine
+    container_name: sensorvision-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+    depends_on:
+      - backend
+    networks:
+      - sensorvision-network
+
+volumes:
+  mosquitto-data:
+    driver: local
+  mosquitto-log:
+    driver: local
+  nginx-cache:
+    driver: local
+
+networks:
+  sensorvision-network:
+    driver: bridge

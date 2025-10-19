@@ -1,0 +1,117 @@
+
+C:\sensorvision\frontend\src\components\AggregationChart.tsx
+  26:9   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\components\DashboardSharing.tsx
+   43:6   warning  React Hook useEffect has a missing dependency: 'loadPermissions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   62:19  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+   83:19  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+   99:19  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  112:19  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\components\RuleModal.tsx
+  39:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\components\widgets\AreaChartWidget.tsx
+  35:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\components\widgets\BarChartWidget.tsx
+  24:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\components\widgets\ControlButtonWidget.tsx
+  55:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  92:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\components\widgets\IndicatorWidget.tsx
+  25:41  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  41:6   warning  React Hook useEffect has a missing dependency: 'calculateStatus'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\sensorvision\frontend\src\components\widgets\LineChartWidget.tsx
+  33:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:63  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\components\widgets\MapWidget.tsx
+  90:27  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  91:28  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+C:\sensorvision\frontend\src\components\widgets\MetricCardWidget.tsx
+  28:6   warning  React Hook useEffect has a missing dependency: 'value'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setPreviousValue' needs the current value of 'value'  react-hooks/exhaustive-deps
+  55:6   warning  React Hook useEffect has a missing dependency: 'value'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setPreviousValue' needs the current value of 'value'  react-hooks/exhaustive-deps
+  96:53  warning  Unexpected any. Specify a different type                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\components\widgets\PieChartWidget.tsx
+  21:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\components\widgets\ScatterChartWidget.tsx
+  24:36  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:55  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\contexts\AuthContext.tsx
+  17:14  warning  Fast refresh only works when a file only export components. Use a new file to share constant or functions between components  react-refresh/only-export-components
+
+C:\sensorvision\frontend\src\main.tsx
+  7:21  warning  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+C:\sensorvision\frontend\src\pages\Alerts.tsx
+  100:58  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\pages\Analytics.tsx
+   16:56  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   48:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:70  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:69  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\pages\DataExport.tsx
+  78:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\pages\DataImport.tsx
+   82:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  398:28  warning  Forbidden non-null assertion              @typescript-eslint/no-non-null-assertion
+
+C:\sensorvision\frontend\src\pages\DataIngestion.tsx
+  16:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\pages\DeviceGroups.tsx
+  41:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  72:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  87:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\pages\DeviceTags.tsx
+  39:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  60:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\pages\Events.tsx
+  26:6   warning  React Hook useEffect has a missing dependency: 'fetchEvents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  31:21  warning  Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\pages\Notifications.tsx
+  41:6  warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\sensorvision\frontend\src\pages\Variables.tsx
+  49:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  91:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\services\api.ts
+  247:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  252:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  252:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  260:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  260:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:49  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  276:20  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\sensorvision\frontend\src\types\index.ts
+   71:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 62 problems (0 errors, 62 warnings)
+
