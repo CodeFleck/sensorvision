@@ -19,10 +19,21 @@ logs/
 .env
 .env.local
 .env.*.local
+.env.production
 !.env.example
+!.env.production.template
 *.env
 !*.env.example
 src/main/resources/application-local.yml
+
+# Production deployment files with secrets
+.env.prod
+.env.production.local
+deploy_key
+deploy_key.pub
+*.pem
+*.key
+ssl/
 
 # Database backups and sensitive data
 /scripts/*.csv

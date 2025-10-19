@@ -83,6 +83,8 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         // OAuth2 login endpoints
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        // Static resources (frontend)
+                        .requestMatchers("/", "/index.html", "/assets/**", "/static/**", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg").permitAll()
                         // Protected endpoints
                         .anyRequest().authenticated()
                 )
