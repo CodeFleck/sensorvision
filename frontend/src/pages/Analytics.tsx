@@ -59,6 +59,73 @@ export const Analytics = () => {
     current: 'Current (A)',
   };
 
+  // Calculate statistics from aggregated data
+  const calculateStat = (stat: 'MIN' | 'MAX' | 'AVG' | 'SUM'): number => {
+    if (aggregatedData.length === 0) return 0;
+
+    const values = aggregatedData.map(d => d.value).filter(v => v != null);
+    if (values.length === 0) return 0;
+
+    switch (stat) {
+      case 'MIN':
+        return Math.min(...values);
+      case 'MAX':
+        return Math.max(...values);
+      case 'AVG':
+        return values.reduce((sum, val) => sum + val, 0) / values.length;
+      case 'SUM':
+        return values.reduce((sum, val) => sum + val, 0);
+      default:
+        return 0;
+    }
+  };
+
+  const formatStatValue = (value: number): string => {
+    return value.toFixed(2);
+  };
+
+  const handleExportCSV = () => {
+    if (aggregatedData.length === 0) {
+      console.warn('No data to export');
+      return;
+    }
+
+    // Create CSV headers
+    const headers = ['Timestamp', 'Value', 'Device', 'Variable', 'Aggregation'];
+
+    // Create CSV rows
+    const rows = aggregatedData.map(item => [
+      new Date(item.timestamp).toISOString(),
+      item.value.toString(),
+      selectedDevice,
+      selectedVariable,
+      aggregationType
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `analytics-${selectedDevice}-${selectedVariable}-${aggregationType}-${timestamp}.csv`;
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -153,7 +220,10 @@ export const Analytics = () => {
             <h2 className="text-lg font-semibold text-gray-900">
               {aggregationType} {variableLabels[selectedVariable]} - {selectedDevice}
             </h2>
-            <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-800">
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors"
+            >
               <Download className="h-4 w-4" />
               <span>Export CSV</span>
             </button>
@@ -177,8 +247,7 @@ export const Analytics = () => {
                 <div>
                   <div className="text-sm font-medium text-gray-600">{stat}</div>
                   <div className="text-lg font-bold text-gray-900">
-                    {/* Calculate stat from aggregatedData */}
-                    --
+                    {formatStatValue(calculateStat(stat as 'MIN' | 'MAX' | 'AVG' | 'SUM'))}
                   </div>
                 </div>
               </div>

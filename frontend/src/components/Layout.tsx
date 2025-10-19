@@ -19,6 +19,8 @@ import {
   Shield,
   User,
   Bug,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,12 +31,27 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-const navigation = [
+interface NavigationItem {
+  name: string;
+  href?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  adminOnly: boolean;
+  children?: NavigationItem[];
+}
+
+const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: Home, adminOnly: false },
   { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false },
-  { name: 'Devices', href: '/devices', icon: Cpu, adminOnly: false },
-  { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: true },
-  { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: true },
+  {
+    name: 'Devices',
+    href: '/devices',
+    icon: Cpu,
+    adminOnly: false,
+    children: [
+      { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: true },
+      { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: true },
+    ]
+  },
   { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: false },
   { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false },
   { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
@@ -50,14 +67,58 @@ export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const { user, logout, isAdmin } = useAuth();
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['Devices']));
+
+  // Toggle expansion state for parent items
+  const toggleExpanded = (itemName: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemName)) {
+        newSet.delete(itemName);
+      } else {
+        newSet.add(itemName);
+      }
+      return newSet;
+    });
+  };
+
+  // Check if any child route is active
+  const isChildActive = (item: NavigationItem): boolean => {
+    if (!item.children) return false;
+    return item.children.some(child => child.href === location.pathname);
+  };
 
   // Filter navigation based on user role
-  const filteredNavigation = navigation.filter(item => {
-    if (item.adminOnly && !isAdmin) {
-      return false;
-    }
-    return true;
-  });
+  const filterNavigation = (items: NavigationItem[]): NavigationItem[] => {
+    return items
+      .map(item => {
+        // Filter children if they exist
+        const filteredChildren = item.children
+          ? item.children.filter(child => !child.adminOnly || isAdmin)
+          : undefined;
+
+        // If item has children, keep it if at least one child is visible
+        if (item.children) {
+          if (filteredChildren && filteredChildren.length > 0) {
+            return { ...item, children: filteredChildren };
+          }
+          // If no children are visible but parent is not admin-only, keep parent
+          if (!item.adminOnly) {
+            return { ...item, children: undefined };
+          }
+          return null;
+        }
+
+        // For items without children, apply standard filter
+        if (item.adminOnly && !isAdmin) {
+          return null;
+        }
+        return item;
+      })
+      .filter((item): item is NavigationItem => item !== null);
+  };
+
+  const filteredNavigation = filterNavigation(navigation);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -76,22 +137,88 @@ export const Layout = ({ children }: LayoutProps) => {
           {/* Navigation */}
           <nav className="mt-6 flex-1 overflow-y-auto">
             {filteredNavigation.map((item) => {
-              const isActive = location.pathname === item.href;
+              const isActive = item.href ? location.pathname === item.href : false;
+              const hasActiveChild = isChildActive(item);
+              const isExpanded = expandedItems.has(item.name);
               const Icon = item.icon;
+              const hasChildren = item.children && item.children.length > 0;
+
               return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={clsx(
-                    'flex items-center px-6 py-3 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                <div key={item.name}>
+                  {/* Parent Item */}
+                  {item.href ? (
+                    <Link
+                      to={item.href}
+                      className={clsx(
+                        'flex items-center px-6 py-3 text-sm font-medium transition-colors',
+                        isActive || hasActiveChild
+                          ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      )}
+                      onClick={(e) => {
+                        if (hasChildren) {
+                          e.preventDefault();
+                          toggleExpanded(item.name);
+                        }
+                      }}
+                    >
+                      <Icon className="mr-3 h-5 w-5" />
+                      <span className="flex-1">{item.name}</span>
+                      {hasChildren && (
+                        isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )
+                      )}
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={() => toggleExpanded(item.name)}
+                      className={clsx(
+                        'w-full flex items-center px-6 py-3 text-sm font-medium transition-colors',
+                        hasActiveChild
+                          ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      )}
+                    >
+                      <Icon className="mr-3 h-5 w-5" />
+                      <span className="flex-1 text-left">{item.name}</span>
+                      {hasChildren && (
+                        isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )
+                      )}
+                    </button>
                   )}
-                >
-                  <Icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </Link>
+
+                  {/* Child Items */}
+                  {hasChildren && isExpanded && item.children && (
+                    <div className="bg-gray-50">
+                      {item.children.map((child) => {
+                        const isChildItemActive = child.href === location.pathname;
+                        const ChildIcon = child.icon;
+                        return child.href ? (
+                          <Link
+                            key={child.name}
+                            to={child.href}
+                            className={clsx(
+                              'flex items-center pl-12 pr-6 py-2.5 text-sm font-medium transition-colors',
+                              isChildItemActive
+                                ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-600'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            )}
+                          >
+                            <ChildIcon className="mr-3 h-4 w-4" />
+                            {child.name}
+                          </Link>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
