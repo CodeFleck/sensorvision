@@ -71,7 +71,9 @@
       "Bash(ssh -i \"C:\\sensorvision\\sensorvision-key.pem\" -o StrictHostKeyChecking=no ubuntu@35.88.65.186 \"docker exec sensorvision-backend curl -s http://localhost:8080/actuator/health\")",
       "Bash(ssh -i \"C:\\sensorvision\\sensorvision-key.pem\" -o StrictHostKeyChecking=no ubuntu@35.88.65.186 \"curl -s http://localhost:8080/actuator/health | head -5\")",
       "Bash(ssh -i \"C:\\sensorvision\\sensorvision-key.pem\" -o StrictHostKeyChecking=no ubuntu@35.88.65.186 \"curl -s http://localhost:8080/ | head -20\")",
-      "Bash(ssh -i \"C:\\sensorvision\\sensorvision-key.pem\" -o StrictHostKeyChecking=no ubuntu@35.88.65.186 \"docker ps\")"
+      "Bash(ssh -i \"C:\\sensorvision\\sensorvision-key.pem\" -o StrictHostKeyChecking=no ubuntu@35.88.65.186 \"docker ps\")",
+      "Bash(ssh -i \"C:\\sensorvision\\sensorvision-key.pem\" -o StrictHostKeyChecking=no ubuntu@35.88.65.186 \"cd /home/ubuntu/sensorvision && aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 639230721997.dkr.ecr.us-west-2.amazonaws.com && docker-compose -f docker-compose.production.yml pull backend && docker-compose -f docker-compose.production.yml down && docker-compose -f docker-compose.production.yml up -d\")",
+      "Bash(ssh -i \"C:\\sensorvision\\sensorvision-key.pem\" -o StrictHostKeyChecking=no ubuntu@35.88.65.186 \"docker logs sensorvision-backend --tail 30\")"
     ],
     "deny": [],
     "ask": []
