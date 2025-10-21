@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert Notification</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            padding: 30px;
+            text-align: center;
+        }
+        .header.critical {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        }
+        .header.high {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        }
+        .header.medium {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .header.low {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .severity-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 12px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+        .content {
+            padding: 30px;
+        }
+        .alert-details {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #374151;
+            min-width: 140px;
+        }
+        .detail-value {
+            color: #6b7280;
+            flex: 1;
+        }
+        .message-box {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .message-box p {
+            margin: 0;
+            color: #78350f;
+            font-weight: 500;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 28px;
+            background-color: #3b82f6;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 25px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header {{SEVERITY_CLASS}}">
+            <div class="icon">⚠️</div>
+            <h1>Alert Triggered</h1>
+            <div class="severity-badge">{{SEVERITY}} Severity</div>
+        </div>
+        <div class="content">
+            <h2 style="color: #111827; margin-top: 0;">{{RULE_NAME}}</h2>
+
+            <div class="message-box">
+                <p>{{ALERT_MESSAGE}}</p>
+            </div>
+
+            <div class="alert-details">
+                <h3 style="color: #374151; margin-top: 0; font-size: 16px;">Alert Details</h3>
+                <div class="detail-row">
+                    <div class="detail-label">Device:</div>
+                    <div class="detail-value">{{DEVICE_NAME}}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Triggered Value:</div>
+                    <div class="detail-value">{{TRIGGERED_VALUE}}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Time:</div>
+                    <div class="detail-value">{{CREATED_AT}}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Rule:</div>
+                    <div class="detail-value">{{RULE_NAME}}</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{DASHBOARD_LINK}}" class="button">View in Dashboard</a>
+            </div>
+
+            <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+                <strong>💡 Tip:</strong> You can manage your notification preferences in your account settings.
+            </p>
+        </div>
+        <div class="footer">
+            <p><strong>SensorVision IoT Platform</strong></p>
+            <p>Real-time device monitoring and analytics</p>
+            <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">
+                This is an automated alert notification. Please do not reply to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

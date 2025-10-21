@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 public class EmailNotificationService {
 
     private final JavaMailSender mailSender;
+    private final EmailTemplateService templateService;
 
     @Value("${notification.email.enabled:false}")
     private boolean emailEnabled;
@@ -27,8 +28,9 @@ public class EmailNotificationService {
     private String fromEmail;
 
     @Autowired(required = false)
-    public EmailNotificationService(JavaMailSender mailSender) {
+    public EmailNotificationService(JavaMailSender mailSender, EmailTemplateService templateService) {
         this.mailSender = mailSender;
+        this.templateService = templateService;
     }
 
     /**
@@ -85,27 +87,8 @@ public class EmailNotificationService {
     }
 
     private String generateEmailBody(Alert alert) {
-        return String.format("""
-                <html>
-                <body>
-                    <h2>Alert Notification</h2>
-                    <p><strong>Rule:</strong> %s</p>
-                    <p><strong>Device:</strong> %s</p>
-                    <p><strong>Severity:</strong> %s</p>
-                    <p><strong>Message:</strong> %s</p>
-                    <p><strong>Triggered Value:</strong> %s</p>
-                    <p><strong>Time:</strong> %s</p>
-                    <hr>
-                    <p><small>This is an automated message from SensorVision IoT Platform</small></p>
-                </body>
-                </html>
-                """,
-                alert.getRule().getName(),
-                alert.getDevice().getName(),
-                alert.getSeverity(),
-                alert.getMessage(),
-                alert.getTriggeredValue(),
-                alert.getCreatedAt());
+        // Use enhanced template service for better email design
+        return templateService.generateAlertNotificationEmail(alert);
     }
 
     /**
@@ -267,22 +250,8 @@ public class EmailNotificationService {
     }
 
     private String generatePasswordResetEmailBody(String resetLink) {
-        return String.format("""
-                <html>
-                <body>
-                    <h2>Password Reset Request</h2>
-                    <p>We received a request to reset your password for your SensorVision account.</p>
-                    <p>Click the link below to reset your password:</p>
-                    <p><a href="%s" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
-                    <p>Or copy and paste this link into your browser:</p>
-                    <p>%s</p>
-                    <p><strong>This link will expire in 1 hour.</strong></p>
-                    <p>If you didn't request a password reset, you can safely ignore this email.</p>
-                    <hr>
-                    <p><small>This is an automated message from SensorVision IoT Platform</small></p>
-                </body>
-                </html>
-                """, resetLink, resetLink);
+        // Use enhanced template service for better email design
+        return templateService.generatePasswordResetEmail(resetLink);
     }
 
     private String generateVerificationEmailBody(String verificationLink) {
