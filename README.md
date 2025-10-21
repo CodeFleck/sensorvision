@@ -38,10 +38,12 @@ A comprehensive Ubidots-like IoT monitoring platform built on Spring Boot and MQ
 
 ### Security & Access Control
 - **JWT-based authentication** with secure token management
+- **OAuth 2.0 integration** - Google Sign-In with automatic account creation
 - **Role-based access control** (Admin, User, Viewer roles)
 - **Multi-tenant architecture** with organization isolation
 - **User registration** with automatic organization creation
 - **Secure password hashing** with BCrypt
+- **Production security** with AWS Security Groups and RDS encryption
 
 ### Events & Audit Trail
 - **Comprehensive event system** tracking all platform activities
@@ -50,6 +52,12 @@ A comprehensive Ubidots-like IoT monitoring platform built on Spring Boot and MQ
 - **Real-time event notifications** via WebSocket
 
 ### Monitoring & Observability
+- **Prometheus metrics** collection with Spring Boot Actuator
+- **Grafana dashboards** for real-time visualization
+- **JVM metrics** - memory, threads, garbage collection
+- **HTTP metrics** - request rates, response times, error rates
+- **Database metrics** - connection pool, query performance
+- **Custom IoT metrics** - device telemetry, MQTT throughput
 - **Structured logging** with rolling file appenders
 - **Smart meter simulator** for testing and demonstration
 - **Real-time connection status** and health monitoring
@@ -101,10 +109,18 @@ npm run dev
 
 ### 5. Access the Services
 
+**Local Development:**
 - **🌟 SensorVision Dashboard**: http://localhost:3001 (React Web UI)
 - **📚 Swagger API Documentation**: http://localhost:8080/swagger-ui.html
 - **Backend API**: http://localhost:8080/api/v1/*
 - **MQTT Broker**: localhost:1883
+
+**Production Deployment (AWS):**
+- **🌟 SensorVision Application**: http://35.88.65.186.nip.io:8080
+- **📊 Grafana Monitoring**: http://35.88.65.186.nip.io:3000 (admin/admin)
+- **📈 Prometheus Metrics**: http://35.88.65.186.nip.io:9090
+- **Backend API**: http://35.88.65.186.nip.io:8080/api/v1/*
+- **MQTT Broker**: 35.88.65.186:1883
 
 ### 6. First Time Setup
 
