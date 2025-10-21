@@ -126,7 +126,7 @@ public class TelemetryIngestionService {
         updateGauge("iot_power_factor", powerFactorGauges, device.getExternalId(), powerFactor);
         updateGauge("iot_frequency", frequencyGauges, device.getExternalId(), frequency);
 
-        // Broadcast telemetry data to WebSocket clients
+        // Broadcast telemetry data to WebSocket clients (only to same organization)
         TelemetryPointDto telemetryPoint = new TelemetryPointDto(
                 device.getExternalId(),
                 payload.timestamp(),
@@ -136,7 +136,7 @@ public class TelemetryIngestionService {
                 powerFactor != null ? powerFactor.doubleValue() : null,
                 frequency != null ? frequency.doubleValue() : null
         );
-        webSocketHandler.broadcastTelemetryData(telemetryPoint);
+        webSocketHandler.broadcastTelemetryData(telemetryPoint, device.getOrganization().getId());
 
         // Evaluate rules and trigger alerts if conditions are met
         ruleEngineService.evaluateRules(record);

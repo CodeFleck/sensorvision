@@ -115,9 +115,12 @@ public class AuthService {
                         return organizationRepository.save(newOrg);
                     });
         } else {
-            // Use default organization
-            organization = organizationRepository.findByName("Default Organization")
-                    .orElseThrow(() -> new RuntimeException("Default organization not found"));
+            // Create a unique organization for this user to ensure data isolation
+            String orgName = registerRequest.getUsername() + "'s Organization";
+            organization = Organization.builder()
+                    .name(orgName)
+                    .build();
+            organization = organizationRepository.save(organization);
         }
 
         // Get default user role

@@ -116,6 +116,19 @@ public class JwtService {
     }
 
     /**
+     * Get organization ID from JWT token
+     */
+    public Long getOrganizationIdFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return claims.get("organizationId", Long.class);
+    }
+
+    /**
      * Validate JWT token
      */
     public boolean validateToken(String token) {

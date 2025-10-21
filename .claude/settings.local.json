@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(aws ec2 authorize-security-group-ingress --group-id sg-0255cea554e401228 --protocol tcp --port 3000 --cidr 0.0.0.0/0 --region us-west-2)",
-      "Bash(aws ec2 authorize-security-group-ingress --group-id sg-0255cea554e401228 --protocol tcp --port 9090 --cidr 0.0.0.0/0 --region us-west-2)"
+      "Bash(aws ec2 authorize-security-group-ingress --group-id sg-0255cea554e401228 --protocol tcp --port 9090 --cidr 0.0.0.0/0 --region us-west-2)",
+      "Bash(C:sensorvisioncopy-docs-for-drive.bat)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(aws ec2 describe-instances:*)",
+      "Bash(curl -s http://35.88.65.186:8080/actuator/health)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(curl -s http://35.88.65.186:8080/actuator/health/liveness)",
+      "Bash(curl -s http://35.88.65.186:8080/actuator/health/readiness)",
+      "Bash(curl:*)",
+      "Bash(./gradlew clean build:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

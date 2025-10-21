@@ -39,9 +39,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     }
 
     setConnectionStatus('Connecting');
-    console.log(`[WebSocket] Connecting to ${url}...`);
 
-    const websocket = new WebSocket(url);
+    // Append JWT token to WebSocket URL for authentication
+    const token = localStorage.getItem('accessToken');
+    const wsUrl = token ? `${url}?token=${encodeURIComponent(token)}` : url;
+
+    console.log(`[WebSocket] Connecting to ${url}${token ? ' (authenticated)' : ' (unauthenticated)'}...`);
+
+    const websocket = new WebSocket(wsUrl);
     ws.current = websocket;
 
     websocket.onopen = () => {
