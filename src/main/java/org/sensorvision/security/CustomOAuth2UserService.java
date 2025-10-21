@@ -52,14 +52,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private User createNewOAuth2User(String email, String name, String provider) {
-        // Get default organization
-        Organization organization = organizationRepository.findByName("Default Organization")
-                .orElseGet(() -> {
-                    Organization newOrg = Organization.builder()
-                            .name("Default Organization")
-                            .build();
-                    return organizationRepository.save(newOrg);
-                });
+        // Create a unique organization for this user to ensure data isolation
+        String orgName = email.split("@")[0] + "'s Organization";
+        Organization organization = Organization.builder()
+                .name(orgName)
+                .build();
+        organization = organizationRepository.save(organization);
 
         // Get user role
         Role userRole = roleRepository.findByName("ROLE_USER")

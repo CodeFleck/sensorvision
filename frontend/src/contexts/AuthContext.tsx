@@ -106,10 +106,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const contentType = response.headers.get('content-type');
         let errorMessage = 'Login failed';
 
-        if (contentType && contentType.includes('application/json')) {
+        if (contentType && (contentType.includes('application/json') || contentType.includes('application/problem+json'))) {
           const error = await response.json();
           console.error('Login error response:', error);
-          errorMessage = error.message || error.detail || 'Login failed: Server is currently unavailable. Please try again later.';
+          errorMessage = error.detail || error.message || 'Login failed. Please check your credentials.';
         } else {
           const errorText = await response.text();
           console.error('Login error (non-JSON):', errorText);
@@ -158,14 +158,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const contentType = response.headers.get('content-type');
         let errorMessage = 'Registration failed';
 
-        if (contentType && contentType.includes('application/json')) {
+        if (contentType && (contentType.includes('application/json') || contentType.includes('application/problem+json'))) {
           const error = await response.json();
           console.error('Registration error response:', error);
-          errorMessage = error.message || error.detail || 'Login failed: Server is currently unavailable. Please try again later.';
+          errorMessage = error.detail || error.message || 'Registration failed. Please try again.';
         } else {
           const errorText = await response.text();
           console.error('Registration error (non-JSON):', errorText);
-          errorMessage = 'Login failed: Server is currently unavailable. Please try again later.';
+          errorMessage = 'Registration failed: Server is currently unavailable. Please try again later.';
         }
 
         throw new Error(errorMessage);

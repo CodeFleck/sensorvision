@@ -59,6 +59,7 @@ device_tokens_backup*.csv
 # Node package lock files
 /package-lock.json
 /frontend/package-lock.json
+mosquitto.db
 
 # Terraform
 /terraform/.terraform/
@@ -68,3 +69,7 @@ device_tokens_backup*.csv
 /terraform/terraform.tfvars
 /terraform/*.tfvars
 !/terraform/terraform.tfvars.example
+
+# Claude local agent settings (do not commit local CLAUDE settings)
+/.claude/
+/.claude/*.json

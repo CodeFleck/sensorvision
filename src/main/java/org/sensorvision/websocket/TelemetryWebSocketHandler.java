@@ -68,10 +68,13 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
-     * Broadcast telemetry data to all connected WebSocket clients
+     * Broadcast telemetry data to WebSocket clients in the same organization
      * Fixed to avoid race conditions by collecting failed sessions separately
+     *
+     * @param telemetryPoint The telemetry data to broadcast
+     * @param organizationId The organization ID that owns this device/data
      */
-    public void broadcastTelemetryData(TelemetryPointDto telemetryPoint) {
+    public void broadcastTelemetryData(TelemetryPointDto telemetryPoint, Long organizationId) {
         if (sessions.isEmpty()) {
             return;
         }
@@ -82,13 +85,21 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
 
             // Collect failed sessions separately to avoid concurrent modification
             List<WebSocketSession> failedSessions = new ArrayList<>();
+            int sentCount = 0;
 
             for (WebSocketSession session : sessions) {
                 try {
                     // Synchronize on session to prevent concurrent access
                     synchronized (session) {
                         if (session.isOpen()) {
-                            session.sendMessage(textMessage);
+                            // Only send to sessions with matching organization ID
+                            Long sessionOrgId = (Long) session.getAttributes().get("organizationId");
+
+                            if (sessionOrgId != null && sessionOrgId.equals(organizationId)) {
+                                session.sendMessage(textMessage);
+                                sentCount++;
+                            }
+                            // Sessions without organizationId are silently skipped (no data sent)
                         } else {
                             failedSessions.add(session);
                         }
@@ -105,6 +116,9 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
                 sessions.removeAll(failedSessions);
                 log.debug("Removed {} failed WebSocket sessions", failedSessions.size());
             }
+
+            log.debug("Broadcast telemetry for device {} to {} sessions in organization {}",
+                    telemetryPoint.deviceId(), sentCount, organizationId);
 
         } catch (Exception e) {
             log.error("Failed to broadcast telemetry data: {}", e.getMessage());
