@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { OAuth2Callback } from './pages/OAuth2Callback';
 import { Dashboard } from './pages/Dashboard';
 import { Dashboards } from './pages/Dashboards';
 import { Devices } from './pages/Devices';
@@ -28,6 +29,7 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/oauth2/callback" element={<OAuth2Callback />} />
 
         {/* Protected routes */}
         <Route

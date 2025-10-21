@@ -4,6 +4,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -20,6 +21,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
+
+    @Value("${app.oauth2.redirect-base-url:http://localhost:3001}")
+    private String redirectBaseUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -39,8 +43,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String accessToken = jwtService.generateAccessToken(userDetails, oauth2User.getId(), oauth2User.getOrganizationId());
         String refreshToken = jwtService.generateRefreshToken(userDetails, oauth2User.getId(), oauth2User.getOrganizationId());
 
-        // Redirect to frontend with tokens
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3001/oauth2/callback")
+        // Redirect to frontend with tokens (configurable for dev/production)
+        String targetUrl = UriComponentsBuilder.fromUriString(redirectBaseUrl + "/oauth2/callback")
                 .queryParam("accessToken", accessToken)
                 .queryParam("refreshToken", refreshToken)
                 .build().toUriString();

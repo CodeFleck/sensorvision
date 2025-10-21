@@ -79,12 +79,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/refresh").permitAll()
                         .requestMatchers("/api/v1/auth/forgot-password", "/api/v1/auth/reset-password").permitAll()
                         .requestMatchers("/api/v1/auth/verify-email").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/prometheus", "/actuator/metrics").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         // OAuth2 login endpoints
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
-                        // Static resources (frontend)
-                        .requestMatchers("/", "/index.html", "/assets/**", "/static/**", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg").permitAll()
+                        // Static resources (frontend) - serve React app for these routes
+                        .requestMatchers("/", "/index.html", "/login", "/register", "/oauth2/callback", "/dashboard", "/devices", "/rules", "/analytics", "/assets/**", "/static/**", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg").permitAll()
                         // Protected endpoints
                         .anyRequest().authenticated()
                 )
@@ -95,11 +95,12 @@ public class SecurityConfig {
                         )
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/oauth2/login") // Custom OAuth2 login page (not /login)
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
                         )
                         .successHandler(oauth2AuthenticationSuccessHandler)
-                        .failureUrl("http://localhost:3001/login?error=oauth2_failed")
+                        .failureUrl("http://35.88.65.186:8080/login?error=oauth2_failed")
                 )
                 .authenticationProvider(authenticationProvider());
 
@@ -136,7 +137,9 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3002",
                 "http://localhost:3001",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "http://35.88.65.186.nip.io:8080",
+                "http://35.88.65.186:8080"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

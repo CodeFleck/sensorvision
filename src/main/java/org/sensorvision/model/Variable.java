@@ -49,10 +49,10 @@ public class Variable {
     @Column(length = 7)
     private String color;  // Hex color code like #FF5733
 
-    @Column(name = "min_value")
+    @Column(name = "min_value", columnDefinition = "numeric")
     private Double minValue;
 
-    @Column(name = "max_value")
+    @Column(name = "max_value", columnDefinition = "numeric")
     private Double maxValue;
 
     @Column(name = "decimal_places")

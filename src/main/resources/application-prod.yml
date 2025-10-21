@@ -43,9 +43,10 @@ spring:
       hibernate:
         format_sql: false
         cache:
-          use_second_level_cache: true
-          region:
-            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+          use_second_level_cache: false
+          # Caching disabled - JCache dependency not included
+          # region:
+          #   factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
         jdbc:
           batch_size: 20
           batch_versioned_data: true

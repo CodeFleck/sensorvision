@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User, LoginRequest, RegisterRequest, AuthResponse } from '../types';
 
 interface AuthContextType {
@@ -7,6 +7,7 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
+  setTokens: (accessToken: string, refreshToken: string) => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   hasRole: (role: string) => boolean;
@@ -53,22 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [userRoles, setUserRoles] = useState<string[]>([]);
 
-  // Check for existing token and fetch user on mount
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      // Decode token to get roles immediately
-      const decoded = decodeToken(token);
-      if (decoded) {
-        setUserRoles(decoded.roles);
-      }
-      fetchCurrentUser();
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const response = await fetch('/api/v1/auth/me', {
         headers: {
@@ -89,7 +75,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Check for existing token and fetch user on mount
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      // Decode token to get roles immediately
+      const decoded = decodeToken(token);
+      if (decoded) {
+        setUserRoles(decoded.roles);
+      }
+      fetchCurrentUser();
+    } else {
+      setLoading(false);
+    }
+  }, [fetchCurrentUser]);
 
   const login = async (credentials: LoginRequest) => {
     try {
@@ -200,6 +201,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     window.location.href = '/login';
   };
 
+  const setTokens = useCallback(async (accessToken: string, refreshToken: string) => {
+    // Save tokens to localStorage
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+
+    // Decode token to get roles
+    const decoded = decodeToken(accessToken);
+    if (decoded) {
+      setUserRoles(decoded.roles);
+    }
+
+    // Fetch full user details
+    await fetchCurrentUser();
+  }, [fetchCurrentUser]);
+
   const hasRole = (role: string): boolean => {
     return userRoles.includes(role);
   };
@@ -212,6 +228,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    setTokens,
     isAuthenticated: !!user,
     isAdmin,
     hasRole,

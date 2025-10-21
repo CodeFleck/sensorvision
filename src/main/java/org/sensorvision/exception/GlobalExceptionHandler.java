@@ -1,19 +1,27 @@
 package org.sensorvision.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.HibernateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.util.StreamUtils;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -98,6 +106,41 @@ public class GlobalExceptionHandler {
         problem.setDetail("You don't have permission to access this resource.");
         problem.setProperty("developerMessage", ex.getMessage());
         return problem;
+    }
+
+    /**
+     * Handle 404 errors for SPA routes - serve index.html for non-API routes
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<?> handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
+        String requestUri = request.getRequestURI();
+
+        // For non-API routes, serve the React SPA (index.html)
+        if (!requestUri.startsWith("/api/") && !requestUri.startsWith("/actuator/")) {
+            logger.debug("Serving SPA for route: {}", requestUri);
+            Resource resource = new ClassPathResource("/static/index.html");
+
+            try {
+                if (resource.exists()) {
+                    byte[] content = StreamUtils.copyToByteArray(resource.getInputStream());
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.TEXT_HTML)
+                            .body(content);
+                }
+            } catch (IOException ioEx) {
+                logger.error("Failed to read index.html", ioEx);
+            }
+        }
+
+        // For API routes or if index.html not found, return 404 error as JSON
+        logger.error("Resource not found: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setTitle("Resource Not Found");
+        problem.setDetail("The requested resource was not found.");
+        problem.setProperty("developerMessage", ex.getMessage());
+        problem.setProperty("errorType", "NoResourceFoundException");
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
     }
 
     @ExceptionHandler(Exception.class)

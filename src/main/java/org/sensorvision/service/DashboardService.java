@@ -68,7 +68,7 @@ public class DashboardService {
      * Get the default dashboard
      * If no default dashboard exists, creates one automatically
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public DashboardResponse getDefaultDashboard() {
         Organization userOrg = SecurityUtils.getCurrentUserOrganization();
 

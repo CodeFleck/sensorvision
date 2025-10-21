@@ -4,6 +4,13 @@ server:
 spring:
   application:
     name: sensorvision
+  web:
+    resources:
+      # Don't throw exceptions for missing static resources - let controllers handle routing
+      add-mappings: true
+  mvc:
+    # Don't throw exception when no handler is found - let error handler deal with it
+    throw-exception-if-no-handler-found: false
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/sensorvision}
     username: ${DB_USERNAME:}
@@ -125,6 +132,10 @@ app:
     secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
     issuer: ${JWT_ISSUER:http://localhost:8080}
+  oauth2:
+    # OAuth2 redirect URL after successful authentication
+    # For production, set to: http://35.88.65.186:8080
+    redirect-base-url: ${OAUTH2_REDIRECT_BASE_URL:http://localhost:3001}
 
 management:
   endpoints:
