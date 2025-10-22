@@ -133,3 +133,4 @@ Mathematical expressions like "kwConsumption * voltage" are parsed and calculate
 - Integration tests using `@SpringBootTest` with H2 database
 - MQTT integration tests should use test profile to avoid Docker dependency
 - Frontend testing via npm test (Jest/React Testing Library)
+- This project is already deployed to PROD. Project urls: https://github.com/CodeFleck/sensorvision, http://35.88.65.186.nip.io:8080/
