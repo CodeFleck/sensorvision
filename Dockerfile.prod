@@ -1,0 +1,76 @@
+# Multi-stage build for production-optimized image
+
+# Stage 1: Build the application
+FROM gradle:8.5-jdk17-alpine AS build
+
+WORKDIR /app
+
+# Copy gradle files
+COPY build.gradle.kts settings.gradle.kts ./
+COPY gradle ./gradle
+
+# Download dependencies (cached layer)
+RUN gradle dependencies --no-daemon || true
+
+# Copy source code
+COPY src ./src
+
+# Build application
+RUN gradle clean build -x test --no-daemon
+
+# Stage 2: Build frontend
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy frontend source
+COPY frontend ./
+
+# Build frontend
+RUN npm run build
+
+# Stage 3: Runtime image
+FROM amazoncorretto:17-alpine
+
+# Install curl for healthchecks
+RUN apk add --no-cache curl
+
+# Create app user for security
+RUN addgroup -g 1000 appuser && \
+    adduser -u 1000 -G appuser -s /bin/sh -D appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy JAR from build stage
+COPY --from=build /app/build/libs/*.jar app.jar
+
+# Copy frontend dist from frontend-build stage
+COPY --from=frontend-build /app/dist /app/static
+
+# Change ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose ports
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# JVM options for production
+ENV JAVA_OPTS="-Xmx512m -Xms256m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 \
+  -XX:+UseStringDeduplication -XX:+OptimizeStringConcat \
+  -Djava.security.egd=file:/dev/./urandom"
+
+# Run application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
