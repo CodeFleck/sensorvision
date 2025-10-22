@@ -137,6 +137,13 @@ export const Login: React.FC = () => {
             Sign in with Google
           </button>
         </div>
+
+        {/* Forgot Password Link */}
+        <div className="text-center mt-4">
+          <Link to="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+            Forgot your password?
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -1,172 +1,195 @@
-# SensorVision AWS Deployment - Files Overview
+# SensorVision Deployment - Complete Documentation
 
-This document explains all the deployment files that have been created for your AWS deployment.
+This document provides an overview of all deployment files and documentation created for SensorVision.
 
 ---
 
 ## 📚 Documentation Files (READ THESE FIRST!)
 
-### 🌟 **DEPLOYMENT_WALKTHROUGH.md** ⭐ START HERE!
-**Purpose**: Complete beginner-friendly step-by-step guide
-**Use this if**: You're deploying to AWS for the first time
-**Time**: 2-3 hours to complete
+### 🌟 **SENSOR_INTEGRATION_GUIDE.md** ⭐ FOR END USERS!
+**Purpose**: Complete end-user guide for sensor integration
+**Use this if**: You need to integrate sensors and set up monitoring
+**Time**: 30 minutes to integrate first sensor
 **What it covers**:
-- Creating AWS account from scratch
-- Installing all required tools
-- Creating every AWS resource step-by-step
-- First deployment
-- Setting up SSL
-- Testing everything works
+- Device registration walkthrough
+- MQTT and HTTP data ingestion
+- Setting up monitoring rules and alerts
+- Real-time dashboard usage
+- Code examples (Python, JavaScript, Arduino)
+- Troubleshooting guide
 
-### **AWS_DEPLOYMENT.md**
-**Purpose**: Technical reference for AWS infrastructure
-**Use this if**: You know AWS basics and want quick commands
+### **AWS_DEPLOYMENT_GUIDE.md**
+**Purpose**: Comprehensive AWS deployment guide
+**Use this if**: You're deploying SensorVision to AWS Cloud
 **What it covers**:
-- Architecture diagrams
-- AWS CLI commands for all resources
-- Security group configurations
-- Troubleshooting infrastructure issues
+- Complete architecture diagrams
+- Three deployment options (EC2, ECS, Elastic Beanstalk)
+- Step-by-step AWS resource creation
+- Database setup (RDS)
+- Security configuration
+- Monitoring and logging
+- Cost estimates and optimization
 
-### **DEPLOYMENT_OPERATIONS.md**
-**Purpose**: Day-to-day operations guide
-**Use this if**: Your app is already deployed and you need to manage it
+### **SCREENSHOT_GUIDE.md**
+**Purpose**: Screenshot capture instructions for documentation
+**Use this if**: You need to capture or update UI screenshots
 **What it covers**:
-- Checking logs
-- Restarting services
-- Database operations
-- Backups and recovery
-- Monitoring
-- Cost optimization
-- Troubleshooting common issues
+- List of all 17 required screenshots
+- Specific instructions for each image
+- Screenshot specifications
+- Tools and setup requirements
 
 ---
 
 ## 🔧 Configuration Files
 
-### **docker-compose.production.yml**
+### **docker-compose.prod.yml**
 **Purpose**: Production Docker Compose configuration
 **What it does**:
-- Defines all containers (backend, MQTT, nginx)
-- Connects to RDS instead of local PostgreSQL
-- Pulls images from ECR
-- Sets up networking between containers
+- Defines all containers (backend, MQTT, nginx, Prometheus, Grafana)
+- Configures health checks for all services
+- Sets up production logging
+- Manages volumes for data persistence
+- Optional monitoring stack with profiles
 
 **When to modify**:
 - Adding new environment variables
 - Changing container resources
 - Adding new services
+- Adjusting health check parameters
 
-### **.env.production.template**
-**Purpose**: Template for production environment variables
+### **Dockerfile.prod**
+**Purpose**: Production-optimized multi-stage Docker image
 **What it does**:
-- Shows all required environment variables
-- Provides examples and documentation
-- Security checklist
+- Stage 1: Builds Spring Boot application with Gradle
+- Stage 2: Builds React frontend with Node.js
+- Stage 3: Creates optimized runtime image with Amazon Corretto
+- Runs as non-root user for security
+- Includes health check configuration
 
-**How to use**:
-1. Copy to `.env.production` on EC2
-2. Fill in actual values (passwords, endpoints, etc.)
-3. Keep it secret - never commit to git!
+**Features**:
+- Multi-stage build for smaller image size
+- Optimized JVM parameters for production
+- Frontend assets bundled with backend
+- Security hardening
 
-### **application-prod.yml**
+### **src/main/resources/application-prod.properties**
 **Purpose**: Spring Boot production configuration
 **What it does**:
-- Optimizes database connections for production
-- Disables development features (like simulator)
-- Configures logging levels
-- Sets security settings
+- Optimizes database connection pooling (HikariCP)
+- Disables development features (simulator, SQL logging)
+- Configures production logging levels
+- Sets up Actuator endpoints for monitoring
+- Configures MQTT production settings
+- Email notification configuration
 
 **When to modify**:
 - Changing database pool size
-- Adjusting rate limits
-- Changing log levels
+- Adjusting logging levels
+- Adding new environment-specific properties
+- Configuring OAuth2 providers
 
-### **nginx.conf**
-**Purpose**: Nginx reverse proxy and SSL configuration
+### **nginx/nginx.conf**
+**Purpose**: Nginx reverse proxy with SSL and caching
 **What it does**:
 - Terminates SSL/HTTPS connections
-- Routes requests to backend
-- Handles WebSocket connections
-- Rate limiting
-- Security headers
+- Routes frontend and backend requests
+- Handles WebSocket connections for real-time updates
+- Implements rate limiting (10 req/s for API, 5 req/m for auth)
+- Security headers and gzip compression
+- Caches static assets for 1 year
 
 **When to modify**:
-- Changing domain name
+- Changing domain name or SSL certificates
 - Adjusting rate limits
-- Modifying SSL settings
+- Modifying caching policies
+- Adding new API routes
 
 ---
 
 ## 🚀 Deployment Scripts
 
-### **deploy.sh**
-**Purpose**: Automated deployment script
+### **deploy-to-aws.sh**
+**Purpose**: Interactive AWS deployment menu system
 **What it does**:
-1. Checks prerequisites (Docker, AWS CLI, .env file)
-2. Logs into ECR
-3. Creates backup of current deployment
-4. Pulls latest Docker images
-5. Checks database connectivity
-6. Deploys new version
-7. Runs health checks
-8. Automatic rollback if deployment fails
+- Checks AWS CLI installation and credentials
+- Provides deployment options menu:
+  1. Deploy to new EC2 instance
+  2. Update existing EC2 instance
+  3. Deploy using Docker Compose only
+  4. Create RDS database
+  5. Full AWS infrastructure setup
+- Delegates to specific deployment scripts
 
 **How to use**:
 ```bash
-# Normal deployment
-./deploy.sh
+chmod +x deploy-to-aws.sh
+./deploy-to-aws.sh
+```
 
-# Rollback to previous version
-./deploy.sh --rollback
+### **scripts/deploy-docker-compose.sh**
+**Purpose**: Docker Compose deployment automation
+**What it does**:
+1. Checks prerequisites (Docker, Docker Compose)
+2. Creates .env.prod template if needed
+3. Builds application with Gradle
+4. Builds frontend with npm
+5. Builds Docker images
+6. Starts containers with health checks
+7. Verifies application is running
 
-# Just run health check
-./deploy.sh --health-check
+**How to use**:
+```bash
+chmod +x scripts/deploy-docker-compose.sh
+./deploy-to-aws.sh
+# Select option 3
 ```
 
 **When to use**:
-- Manual deployments
-- Rolling back bad deployments
-- Testing health checks
+- Local production-like testing
+- Standalone server deployment
+- Quick deployments without AWS
 
 ---
 
-## 🤖 GitHub Actions Workflows
+## 📸 Documentation Assets
 
-### **.github/workflows/ci.yml**
-**Purpose**: Continuous Integration - runs tests on every push/PR
-**What it does**:
-1. Backend tests (Spring Boot)
-2. Frontend tests (React/TypeScript)
-3. Docker build test
-4. Security scanning
-5. Code coverage reports
+### **docs/images/*.png** (17 images)
+**Purpose**: UI screenshots for SENSOR_INTEGRATION_GUIDE.md
+**What's included**:
+1. Device Management page
+2. Add Device modal (empty and filled)
+3. Device list with new device
+4. Data Ingestion page and success
+5. Rules & Automation page
+6. Create Rule modal (empty and filled)
+7. Dashboard overview and components
+8. Status cards, charts, device cards
+9. Alerts page
+10. WebSocket connection status
 
-**Triggers**:
-- Push to `main`, `develop`, or `feature/*` branches
-- Pull requests to `main` or `develop`
+**Status**: Placeholder images generated, ready to be replaced with actual screenshots
 
-**Where to see results**:
-- GitHub → Actions tab → CI workflow runs
+**How to update**:
+1. Follow SCREENSHOT_GUIDE.md instructions
+2. Capture actual screenshots from running application
+3. Replace placeholder images in docs/images/
+4. Screenshots are already referenced in SENSOR_INTEGRATION_GUIDE.md
 
-### **.github/workflows/deploy-production.yml**
-**Purpose**: Continuous Deployment - deploys to AWS automatically
-**What it does**:
-1. Builds Docker image
-2. Pushes to ECR
-3. SSHs to EC2
-4. Creates .env.production with GitHub secrets
-5. Runs deployment script
-6. Verifies health
-7. Sends Slack notifications (optional)
+###  **capture-screenshots.ps1** & **generate-screenshot-placeholders.ps1**
+**Purpose**: PowerShell automation for screenshot capture
+**What they do**:
+- capture-screenshots.ps1: Opens browser and captures full screenshots
+- generate-screenshot-placeholders.ps1: Creates placeholder images with descriptions
 
-**Triggers**:
-- Push to `main` branch
-- Manual trigger from GitHub UI
+**How to use**:
+```powershell
+# Generate placeholders
+powershell -ExecutionPolicy Bypass -File generate-screenshot-placeholders.ps1
 
-**Requirements**:
-- All GitHub secrets configured
-- EC2 instance running
-- SSH key in GitHub secrets
+# Or capture actual screenshots (requires running app)
+powershell -ExecutionPolicy Bypass -File capture-screenshots.ps1
+```
 
 ---
 
