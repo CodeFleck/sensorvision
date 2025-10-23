@@ -51,17 +51,17 @@ public class DeviceTokenService {
     }
 
     /**
-     * Get device by API token
+     * Get device by API token (with organization eager-loaded)
      *
      * @param token The API token
-     * @return Optional containing the device if found
+     * @return Optional containing the device with organization if found
      */
     public Optional<Device> getDeviceByToken(String token) {
         if (token == null || token.trim().isEmpty()) {
             return Optional.empty();
         }
 
-        return deviceRepository.findByApiToken(token);
+        return deviceRepository.findByApiTokenWithOrganization(token);
     }
 
     /**

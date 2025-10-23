@@ -86,6 +86,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/verify-email").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/prometheus", "/actuator/metrics").permitAll()
                         .requestMatchers("/ws/**").permitAll()
+                        // Device data ingestion (uses device token authentication in controller)
+                        .requestMatchers("/api/v1/ingest/**").permitAll()
                         // OAuth2 login endpoints
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         // Static resources (frontend) - serve React app for these routes

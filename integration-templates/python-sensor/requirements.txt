@@ -1,0 +1,28 @@
+# SensorVision Python Client Requirements
+
+# Core dependency
+requests>=2.31.0
+
+# Optional: Uncomment based on your hardware
+
+# Raspberry Pi DHT sensors (DHT11, DHT22, AM2302)
+# Adafruit-DHT>=1.4.0
+
+# DS18B20 temperature sensors
+# w1thermsensor>=2.0.0
+
+# BME280 (temperature, humidity, pressure)
+# RPi.bme280>=0.2.4
+# smbus2>=0.4.2
+
+# BMP280 (temperature, pressure)
+# adafruit-circuitpython-bmp280>=3.2.0
+
+# I2C and SPI devices
+# adafruit-blinka>=8.20.0
+
+# GPIO control (Raspberry Pi)
+# RPi.GPIO>=0.7.1
+
+# Serial communication (USB sensors)
+# pyserial>=3.5
