@@ -15,6 +15,9 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
 
     Optional<Device> findByApiToken(String apiToken);
 
+    @Query("SELECT d FROM Device d LEFT JOIN FETCH d.organization WHERE d.apiToken = :apiToken")
+    Optional<Device> findByApiTokenWithOrganization(@Param("apiToken") String apiToken);
+
     List<Device> findAllByApiTokenIsNotNull();
 
     List<Device> findByOrganizationId(Long organizationId);

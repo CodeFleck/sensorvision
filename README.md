@@ -37,12 +37,14 @@ A comprehensive Ubidots-like IoT monitoring platform built on Spring Boot and MQ
 - **Configurable notification preferences** with severity thresholds
 
 ### Security & Access Control
-- **JWT-based authentication** with secure token management
+- **Device Token Authentication** - Simple UUID-based API keys for IoT devices (never expires)
+- **JWT-based authentication** - Web dashboard and API access with secure token management
 - **OAuth 2.0 integration** - Google Sign-In with automatic account creation
 - **Role-based access control** (Admin, User, Viewer roles)
 - **Multi-tenant architecture** with organization isolation
 - **User registration** with automatic organization creation
 - **Secure password hashing** with BCrypt
+- **Token management** - Generate, rotate, and revoke device tokens via UI
 - **Production security** with AWS Security Groups and RDS encryption
 
 ### Events & Audit Trail
@@ -64,7 +66,83 @@ A comprehensive Ubidots-like IoT monitoring platform built on Spring Boot and MQ
 - **Notification delivery tracking** with success/failure logs
 - **Health endpoints** for service monitoring
 
-## Quick Start
+## ⚡ 5-Minute Quick Start for IoT Devices
+
+**NEW**: SensorVision now supports ultra-simple device integration! No complex authentication, no manual device registration required.
+
+### For IoT Developers (ESP32, Arduino, Python, etc.)
+
+#### Step 1: Get Your Device API Key
+1. Register at http://localhost:3001/register (or production URL)
+2. Login to the dashboard
+3. Create your first device via the UI
+4. Click the **Key icon** (🔑) next to your device
+5. Copy the API token (UUID format)
+
+#### Step 2: Send Data (That's It!)
+
+**ESP32/Arduino:**
+```cpp
+// Install: ArduinoHttpClient library
+#include <WiFi.h>
+#include <HttpClient.h>
+
+const char* apiKey = "YOUR-DEVICE-API-KEY";  // From Step 1
+const char* deviceId = "my-sensor-001";
+
+void loop() {
+  float temperature = readSensor();
+
+  // One HTTP POST - device auto-created on first send!
+  HttpClient http;
+  http.begin("http://YOUR-SERVER:8080/api/v1/ingest/" + String(deviceId));
+  http.addHeader("X-API-Key", apiKey);
+  http.addHeader("Content-Type", "application/json");
+
+  String payload = "{\"temperature\":" + String(temperature) + "}";
+  http.POST(payload);
+
+  delay(60000); // Send every minute
+}
+```
+
+**Python (Raspberry Pi, PC):**
+```python
+import requests
+import time
+
+API_KEY = "YOUR-DEVICE-API-KEY"  # From Step 1
+DEVICE_ID = "my-sensor-001"
+
+while True:
+    temperature = read_sensor()
+
+    # One HTTP POST - device auto-created on first send!
+    response = requests.post(
+        f"http://YOUR-SERVER:8080/api/v1/ingest/{DEVICE_ID}",
+        headers={"X-API-Key": API_KEY},
+        json={"temperature": temperature}
+    )
+
+    time.sleep(60)  # Send every minute
+```
+
+**curl (Testing):**
+```bash
+curl -X POST http://localhost:8080/api/v1/ingest/my-sensor-001 \
+  -H "X-API-Key: 550e8400-e29b-41d4-a716-446655440000" \
+  -H "Content-Type: application/json" \
+  -d '{"temperature": 23.5, "humidity": 65.2}'
+```
+
+#### Step 3: View Live Data
+Open http://localhost:3001/dashboard and watch your data appear in real-time! 🎉
+
+**That's it!** No JWT complexity, no manual device registration, no nested JSON payloads. Perfect for IoT devices.
+
+---
+
+## Full Platform Quick Start
 
 ### Prerequisites
 

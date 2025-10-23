@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.lenient;
 
@@ -33,6 +34,9 @@ class EmailNotificationServiceTest {
 
     @Mock
     private JavaMailSender mailSender;
+
+    @Mock
+    private EmailTemplateService templateService;
 
     @InjectMocks
     private EmailNotificationService emailNotificationService;
@@ -63,6 +67,12 @@ class EmailNotificationServiceTest {
         testDevice = createTestDevice();
         testRule = createTestRule();
         testAlert = createTestAlert();
+
+        // Mock template service responses with valid HTML content
+        lenient().when(templateService.generateAlertNotificationEmail(any(Alert.class)))
+                .thenReturn("<html><body><h1>Alert Notification</h1><p>Test alert email body</p></body></html>");
+        lenient().when(templateService.generatePasswordResetEmail(anyString()))
+                .thenReturn("<html><body><h1>Password Reset</h1><p>Test password reset email body</p></body></html>");
     }
 
     @Test

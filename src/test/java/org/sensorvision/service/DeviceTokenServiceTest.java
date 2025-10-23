@@ -120,7 +120,7 @@ class DeviceTokenServiceTest {
         // Given
         String token = UUID.randomUUID().toString();
         testDevice.setApiToken(token);
-        when(deviceRepository.findByApiToken(token)).thenReturn(Optional.of(testDevice));
+        when(deviceRepository.findByApiTokenWithOrganization(token)).thenReturn(Optional.of(testDevice));
 
         // When
         Optional<Device> result = deviceTokenService.getDeviceByToken(token);
@@ -128,20 +128,21 @@ class DeviceTokenServiceTest {
         // Then
         assertThat(result).isPresent();
         assertThat(result.get().getExternalId()).isEqualTo("test-device-001");
-        verify(deviceRepository).findByApiToken(token);
+        verify(deviceRepository).findByApiTokenWithOrganization(token);
     }
 
     @Test
     void getDeviceByToken_withInvalidToken_shouldReturnEmpty() {
         // Given
         String token = "invalid-token";
-        when(deviceRepository.findByApiToken(token)).thenReturn(Optional.empty());
+        when(deviceRepository.findByApiTokenWithOrganization(token)).thenReturn(Optional.empty());
 
         // When
         Optional<Device> result = deviceTokenService.getDeviceByToken(token);
 
         // Then
         assertThat(result).isEmpty();
+        verify(deviceRepository).findByApiTokenWithOrganization(token);
     }
 
     @Test
