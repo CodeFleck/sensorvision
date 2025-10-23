@@ -23,6 +23,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Integration tests for NotificationService.
@@ -77,24 +78,63 @@ class NotificationServiceTest {
         criticalAlert = createCriticalAlert();
         lowAlert = createLowAlert();
 
-        // Default mock behavior - email service returns true
-        when(emailService.sendAlertEmail(any(), any(), anyString())).thenReturn(true);
-        when(smsService.sendAlertSms(any(), any(), anyString())).thenReturn(true);
-        when(webhookService.sendAlertWebhook(any(), any(), anyString())).thenReturn(true);
+        // Default mock behavior - email service returns true (lenient for tests that don't use it)
+        lenient().when(emailService.sendAlertEmail(any(), any(), anyString())).thenReturn(true);
+        lenient().when(smsService.sendAlertSms(any(), any(), anyString())).thenReturn(true);
+        lenient().when(webhookService.sendAlertWebhook(any(), any(), anyString())).thenReturn(true);
     }
 
     @Test
-    void testSendAlertNotifications_WithEnabledEmailPreference_SendsEmail() {
+    void testSendAlertNotifications_CreatesEvent() {
+        // When
+        notificationService.sendAlertNotifications(criticalAlert);
+
+        // Then
+        verify(eventService).createEvent(
+                eq(testOrganization),
+                eq(Event.EventType.ALERT_CREATED),
+                eq(Event.EventSeverity.CRITICAL),
+                contains("Alert:"),
+                contains("device")
+        );
+    }
+
+    @Test
+    void testSendAlertNotifications_SendsToWebhookServices() {
+        // When
+        notificationService.sendAlertNotifications(criticalAlert);
+
+        // Then
+        verify(slackService).sendAlertNotification(criticalAlert);
+        verify(teamsService).sendAlertNotification(criticalAlert);
+    }
+
+    @Test
+    void testSendAlertNotifications_HandlesNullOrganizationGracefully() {
+        // Given - Device with no organization
+        Device deviceNoOrg = createTestDevice();
+        deviceNoOrg.setOrganization(null);
+        Alert alertNoOrg = createCriticalAlert();
+        alertNoOrg.setDevice(deviceNoOrg);
+
+        // When
+        notificationService.sendAlertNotifications(alertNoOrg);
+
+        // Then - Should not throw, and should not call webhook services
+        verify(eventService, never()).createEvent(any(), any(), any(), any(), any());
+        verify(slackService, never()).sendAlertNotification(any());
+        verify(teamsService, never()).sendAlertNotification(any());
+    }
+
+    @Test
+    void testSendNotificationToUser_WithEnabledEmailPreference_SendsEmail() {
         // Given
         UserNotificationPreference emailPref = createEmailPreference(testUser, true);
-        when(preferenceRepository.findByUserOrganizationAndChannelAndEnabledTrue(
-                testOrganization, NotificationChannel.EMAIL))
-                .thenReturn(Collections.singletonList(emailPref));
         when(preferenceRepository.findByUserAndEnabledTrue(testUser))
                 .thenReturn(Collections.singletonList(emailPref));
 
         // When
-        notificationService.sendAlertNotifications(criticalAlert);
+        notificationService.sendNotificationToUser(testUser, criticalAlert);
 
         // Then
         verify(emailService).sendAlertEmail(eq(testUser), eq(criticalAlert), anyString());
@@ -102,15 +142,13 @@ class NotificationServiceTest {
     }
 
     @Test
-    void testSendAlertNotifications_WithDisabledPreference_DoesNotSendEmail() {
+    void testSendNotificationToUser_WithNoPreferences_DoesNotSend() {
         // Given
-        UserNotificationPreference emailPref = createEmailPreference(testUser, false);
-        when(preferenceRepository.findByUserOrganizationAndChannelAndEnabledTrue(
-                testOrganization, NotificationChannel.EMAIL))
+        when(preferenceRepository.findByUserAndEnabledTrue(testUser))
                 .thenReturn(Collections.emptyList());
 
         // When
-        notificationService.sendAlertNotifications(criticalAlert);
+        notificationService.sendNotificationToUser(testUser, criticalAlert);
 
         // Then
         verify(emailService, never()).sendAlertEmail(any(), any(), anyString());
@@ -236,41 +274,6 @@ class NotificationServiceTest {
     }
 
     @Test
-    void testSendAlertNotifications_EmitsEventForInAppNotifications() {
-        // Given
-        when(preferenceRepository.findByUserOrganizationAndChannelAndEnabledTrue(
-                any(), eq(NotificationChannel.EMAIL)))
-                .thenReturn(Collections.emptyList());
-
-        // When
-        notificationService.sendAlertNotifications(criticalAlert);
-
-        // Then
-        verify(eventService).createEvent(
-                eq(testOrganization),
-                eq(Event.EventType.ALERT_CREATED),
-                eq(Event.EventSeverity.CRITICAL),
-                contains("Alert:"),
-                contains("device")
-        );
-    }
-
-    @Test
-    void testSendAlertNotifications_CallsWebhookServices() {
-        // Given
-        when(preferenceRepository.findByUserOrganizationAndChannelAndEnabledTrue(
-                any(), any()))
-                .thenReturn(Collections.emptyList());
-
-        // When
-        notificationService.sendAlertNotifications(criticalAlert);
-
-        // Then
-        verify(slackService).sendAlertNotification(criticalAlert);
-        verify(teamsService).sendAlertNotification(criticalAlert);
-    }
-
-    @Test
     void testSavePreference_CreatesNewPreference() {
         // Given
         UserNotificationPreference newPref = createEmailPreference(testUser, true);
@@ -384,10 +387,9 @@ class NotificationServiceTest {
 
     private Device createTestDevice() {
         Device device = new Device();
-        device.setId(1L);
-        device.setDeviceId("device-001");
+        device.setId(UUID.randomUUID());
+        device.setExternalId("device-001");
         device.setName("Test Device");
-        device.setExternalId("EXT-001");
         device.setOrganization(testOrganization);
         return device;
     }
@@ -404,10 +406,10 @@ class NotificationServiceTest {
 
     private Alert createCriticalAlert() {
         Alert alert = new Alert();
-        alert.setId(1L);
+        alert.setId(UUID.randomUUID());
         alert.setDevice(testDevice);
         alert.setRule(testRule);
-        alert.setTriggeredValue(100.5);
+        alert.setTriggeredValue(new BigDecimal("100.5"));
         alert.setSeverity(AlertSeverity.CRITICAL);
         alert.setTriggeredAt(LocalDateTime.now());
         alert.setMessage("Critical temperature exceeded");
@@ -416,10 +418,10 @@ class NotificationServiceTest {
 
     private Alert createLowAlert() {
         Alert alert = new Alert();
-        alert.setId(2L);
+        alert.setId(UUID.randomUUID());
         alert.setDevice(testDevice);
         alert.setRule(testRule);
-        alert.setTriggeredValue(76.0);
+        alert.setTriggeredValue(new BigDecimal("76.0"));
         alert.setSeverity(AlertSeverity.LOW);
         alert.setTriggeredAt(LocalDateTime.now());
         alert.setMessage("Temperature slightly elevated");

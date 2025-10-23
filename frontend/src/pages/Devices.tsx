@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Key } from 'lucide-react';
 import { Device } from '../types';
 import { apiService } from '../services/api';
 import { DeviceModal } from '../components/DeviceModal';
+import { TokenModal } from '../components/TokenModal';
 import { clsx } from 'clsx';
 
 export const Devices = () => {
@@ -10,6 +11,7 @@ export const Devices = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
 
   useEffect(() => {
@@ -35,6 +37,11 @@ export const Devices = () => {
   const handleEdit = (device: Device) => {
     setSelectedDevice(device);
     setIsModalOpen(true);
+  };
+
+  const handleManageToken = (device: Device) => {
+    setSelectedDevice(device);
+    setIsTokenModalOpen(true);
   };
 
   const handleDelete = async (externalId: string) => {
@@ -158,14 +165,23 @@ export const Devices = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-2">
                     <button
+                      onClick={() => handleManageToken(device)}
+                      className="text-green-600 hover:text-green-900 p-1"
+                      title="Manage API Token"
+                    >
+                      <Key className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => handleEdit(device)}
                       className="text-blue-600 hover:text-blue-900 p-1"
+                      title="Edit Device"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(device.externalId)}
                       className="text-red-600 hover:text-red-900 p-1"
+                      title="Delete Device"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -188,6 +204,18 @@ export const Devices = () => {
         <DeviceModal
           device={selectedDevice}
           onClose={handleModalClose}
+        />
+      )}
+
+      {/* Token Management Modal */}
+      {isTokenModalOpen && selectedDevice && (
+        <TokenModal
+          device={selectedDevice}
+          isOpen={isTokenModalOpen}
+          onClose={() => {
+            setIsTokenModalOpen(false);
+            setSelectedDevice(null);
+          }}
         />
       )}
     </div>

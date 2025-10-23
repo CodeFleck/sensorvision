@@ -1,25 +1,30 @@
 package org.sensorvision.security;
 
+import lombok.RequiredArgsConstructor;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.User;
 import org.sensorvision.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
+/**
+ * Utility service for retrieving authenticated user information from Spring Security context.
+ * This bean should be injected into services and controllers that need access to the current user.
+ */
 @Component
+@RequiredArgsConstructor
 public class SecurityUtils {
 
-    private static UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    public void setUserRepository(UserRepository userRepository) {
-        SecurityUtils.userRepository = userRepository;
-    }
-
-    public static User getCurrentUser() {
+    /**
+     * Get the currently authenticated user from Spring Security context.
+     * @return The authenticated User entity with eagerly loaded associations
+     * @throws RuntimeException if no user is authenticated or user not found
+     */
+    public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -55,12 +60,20 @@ public class SecurityUtils {
         return user;
     }
 
-    public static Organization getCurrentUserOrganization() {
+    /**
+     * Get the organization of the currently authenticated user.
+     * @return The user's Organization entity
+     */
+    public Organization getCurrentUserOrganization() {
         User user = getCurrentUser();
         return user.getOrganization();
     }
 
-    public static Long getCurrentUserId() {
+    /**
+     * Get the ID of the currently authenticated user.
+     * @return The user's ID
+     */
+    public Long getCurrentUserId() {
         User user = getCurrentUser();
         return user.getId();
     }

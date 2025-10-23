@@ -28,6 +28,7 @@ public class AnalyticsService {
 
     private final TelemetryRecordRepository telemetryRecordRepository;
     private final DeviceRepository deviceRepository;
+    private final SecurityUtils securityUtils;
 
     private static final Set<String> VALID_VARIABLES = Set.of(
             "kwConsumption", "voltage", "current", "powerFactor", "frequency"
@@ -67,7 +68,7 @@ public class AnalyticsService {
         }
 
         // Verify device ownership
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + deviceId));
 

@@ -32,6 +32,7 @@ public class DataImportService {
     private final DeviceRepository deviceRepository;
     private final OrganizationRepository organizationRepository;
     private final ObjectMapper objectMapper;
+    private final SecurityUtils securityUtils;
 
     /**
      * Import telemetry data from CSV file
@@ -81,8 +82,8 @@ public class DataImportService {
 
                 try {
                     TelemetryImportRequest importRequest = parseCsvLine(line, variableNames);
-                    // Allow auto-provision for import - user is authenticated
-                    telemetryIngestionService.ingest(convertToPayload(importRequest), true);
+                    // Auto-provision setting controlled by configuration
+                    telemetryIngestionService.ingest(convertToPayload(importRequest));
                     result.incrementSuccessCount();
                 } catch (Exception e) {
                     String errorMsg = String.format("Line %d: %s - %s", lineNumber, e.getMessage(), line);
@@ -118,8 +119,8 @@ public class DataImportService {
                 try {
                     TelemetryImportRequest record = records[i];
                     validateImportRequest(record);
-                    // Allow auto-provision for import - user is authenticated
-                    telemetryIngestionService.ingest(convertToPayload(record), true);
+                    // Auto-provision setting controlled by configuration
+                    telemetryIngestionService.ingest(convertToPayload(record));
                     result.incrementSuccessCount();
                 } catch (Exception e) {
                     String errorMsg = String.format("Record %d: %s", i + 1, e.getMessage());
@@ -420,7 +421,7 @@ public class DataImportService {
     }
 
     private Organization getCurrentOrganization() {
-        User currentUser = SecurityUtils.getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
         Organization organization = currentUser.getOrganization();
         if (organization == null) {
             throw new IllegalStateException("User organization not found");

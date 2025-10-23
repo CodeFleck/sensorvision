@@ -1,4 +1,4 @@
-import { Device, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -89,6 +89,29 @@ class ApiService {
 
   async deleteDevice(externalId: string): Promise<void> {
     await this.request(`/devices/${externalId}`, { method: 'DELETE' });
+  }
+
+  // Device Token Management
+  async generateDeviceToken(deviceId: string): Promise<DeviceTokenResponse> {
+    return this.request<DeviceTokenResponse>(`/devices/${deviceId}/token/generate`, {
+      method: 'POST',
+    });
+  }
+
+  async rotateDeviceToken(deviceId: string): Promise<DeviceTokenResponse> {
+    return this.request<DeviceTokenResponse>(`/devices/${deviceId}/token/rotate`, {
+      method: 'POST',
+    });
+  }
+
+  async getDeviceTokenInfo(deviceId: string): Promise<DeviceTokenResponse> {
+    return this.request<DeviceTokenResponse>(`/devices/${deviceId}/token`);
+  }
+
+  async revokeDeviceToken(deviceId: string): Promise<DeviceTokenResponse> {
+    return this.request<DeviceTokenResponse>(`/devices/${deviceId}/token`, {
+      method: 'DELETE',
+    });
   }
 
   // Telemetry Data

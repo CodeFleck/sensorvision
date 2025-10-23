@@ -113,10 +113,9 @@ public class NotificationTestFixtures {
 
         public Device build() {
             Device device = new Device();
-            device.setId(id);
-            device.setDeviceId(deviceId);
+            device.setId(UUID.randomUUID());
+            device.setExternalId(externalId != null ? externalId : deviceId);
             device.setName(name);
-            device.setExternalId(externalId);
             device.setOrganization(organization);
             return device;
         }
@@ -172,15 +171,15 @@ public class NotificationTestFixtures {
      * Builder for creating test Alert entities
      */
     public static class AlertBuilder {
-        private Long id = 1L;
+        private UUID id = UUID.randomUUID();
         private Device device;
         private Rule rule;
-        private Double triggeredValue = 100.0;
+        private BigDecimal triggeredValue = new BigDecimal("100.0");
         private AlertSeverity severity = AlertSeverity.CRITICAL;
         private LocalDateTime triggeredAt = LocalDateTime.now();
         private String message = "Alert triggered";
 
-        public AlertBuilder id(Long id) {
+        public AlertBuilder id(UUID id) {
             this.id = id;
             return this;
         }
@@ -195,7 +194,7 @@ public class NotificationTestFixtures {
             return this;
         }
 
-        public AlertBuilder triggeredValue(Double triggeredValue) {
+        public AlertBuilder triggeredValue(BigDecimal triggeredValue) {
             this.triggeredValue = triggeredValue;
             return this;
         }
@@ -436,7 +435,7 @@ public class NotificationTestFixtures {
                 .device(device)
                 .rule(rule)
                 .severity(AlertSeverity.CRITICAL)
-                .triggeredValue(95.5)
+                .triggeredValue(new BigDecimal("95.5"))
                 .message("Temperature critically high")
                 .build();
     }

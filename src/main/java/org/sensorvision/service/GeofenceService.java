@@ -29,10 +29,11 @@ public class GeofenceService {
     private final DeviceRepository deviceRepository;
     private final EventService eventService;
     private final ObjectMapper objectMapper;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public List<GeofenceResponse> getAllGeofences() {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
         return geofenceRepository.findByOrganizationId(org.getId()).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -45,7 +46,7 @@ public class GeofenceService {
     }
 
     public GeofenceResponse createGeofence(GeofenceRequest request) {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
 
         validateGeofenceRequest(request);
 
@@ -196,13 +197,13 @@ public class GeofenceService {
     }
 
     private Geofence findGeofenceById(Long id) {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
         return geofenceRepository.findByIdAndOrganizationId(id, org.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Geofence not found: " + id));
     }
 
     private Device findDeviceById(UUID id) {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + id));
 

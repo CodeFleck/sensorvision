@@ -11,6 +11,16 @@ export interface Device {
   altitude?: number;
 }
 
+export interface DeviceTokenResponse {
+  deviceId?: string;
+  token?: string;          // Full token (only shown once on generation/rotation)
+  maskedToken?: string;    // Masked token (e.g., "550e8400...0000")
+  message: string;
+  success: boolean;
+  tokenCreatedAt?: string;
+  tokenLastUsedAt?: string;
+}
+
 export interface TelemetryPoint {
   deviceId: string;
   timestamp: string;

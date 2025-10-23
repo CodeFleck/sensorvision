@@ -29,6 +29,7 @@ public class DashboardSharingService {
     private final DashboardPermissionRepository permissionRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
+    private final SecurityUtils securityUtils;
 
     public Dashboard updateSharingSettings(Long dashboardId, DashboardSharingRequest request) {
         Dashboard dashboard = findDashboardById(dashboardId);
@@ -78,7 +79,7 @@ public class DashboardSharingService {
         dashboard.getWidgets().size();
         dashboard.getPermissions().size();
 
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
 
         // Find user by email within the same organization
         User targetUser = userRepository.findByEmail(request.email())
@@ -183,7 +184,7 @@ public class DashboardSharingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Dashboard not found: " + id));
 
         // Verify organization access
-        Organization currentOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization currentOrg = securityUtils.getCurrentUserOrganization();
         if (!dashboard.getOrganization().getId().equals(currentOrg.getId())) {
             throw new ResourceNotFoundException("Dashboard not found: " + id);
         }

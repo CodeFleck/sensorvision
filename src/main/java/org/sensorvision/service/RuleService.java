@@ -24,10 +24,11 @@ public class RuleService {
 
     private final RuleRepository ruleRepository;
     private final DeviceRepository deviceRepository;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public List<RuleResponse> getAllRules() {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         return ruleRepository.findAll().stream()
                 .filter(rule -> rule.getDevice().getOrganization().getId().equals(userOrg.getId()))
                 .map(this::toResponse)
@@ -36,7 +37,7 @@ public class RuleService {
 
     @Transactional(readOnly = true)
     public RuleResponse getRule(UUID id) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Rule rule = ruleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rule not found: " + id));
 
@@ -49,7 +50,7 @@ public class RuleService {
     }
 
     public RuleResponse createRule(RuleCreateRequest request) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(request.deviceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + request.deviceId()));
 
@@ -73,7 +74,7 @@ public class RuleService {
     }
 
     public RuleResponse updateRule(UUID id, RuleCreateRequest request) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Rule rule = ruleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rule not found: " + id));
 
@@ -117,7 +118,7 @@ public class RuleService {
     }
 
     public void deleteRule(UUID id) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Rule rule = ruleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rule not found: " + id));
 

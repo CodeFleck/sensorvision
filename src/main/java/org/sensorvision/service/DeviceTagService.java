@@ -29,10 +29,11 @@ public class DeviceTagService {
     private final DeviceTagRepository deviceTagRepository;
     private final DeviceRepository deviceRepository;
     private final EventService eventService;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public List<DeviceTagResponse> getAllTags() {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
         return deviceTagRepository.findByOrganizationId(org.getId()).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -45,7 +46,7 @@ public class DeviceTagService {
     }
 
     public DeviceTagResponse createTag(DeviceTagRequest request) {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
 
         // Check for duplicate name within organization
         if (deviceTagRepository.existsByOrganizationIdAndName(org.getId(), request.name())) {
@@ -165,7 +166,7 @@ public class DeviceTagService {
                 .orElseThrow(() -> new ResourceNotFoundException("Device tag not found: " + id));
 
         // Verify organization access
-        Organization currentOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization currentOrg = securityUtils.getCurrentUserOrganization();
         if (!tag.getOrganization().getId().equals(currentOrg.getId())) {
             throw new ResourceNotFoundException("Device tag not found: " + id);
         }

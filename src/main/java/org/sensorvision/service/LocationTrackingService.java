@@ -33,10 +33,11 @@ public class LocationTrackingService {
     private final GeofenceAssignmentRepository assignmentRepository;
     private final GeofenceAlertService geofenceAlertService;
     private final EventService eventService;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public List<DeviceLocationResponse> getAllDeviceLocations() {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
         return deviceRepository.findByOrganizationId(org.getId()).stream()
                 .filter(device -> device.getLatitude() != null && device.getLongitude() != null)
                 .map(this::toLocationResponse)
@@ -150,7 +151,7 @@ public class LocationTrackingService {
     }
 
     private Device findDeviceById(UUID id) {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + id));
 

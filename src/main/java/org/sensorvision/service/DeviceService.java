@@ -30,10 +30,12 @@ public class DeviceService {
     private final DeviceRepository deviceRepository;
     private final EventService eventService;
     private final PasswordEncoder passwordEncoder;
+    private final DeviceTokenService deviceTokenService;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public List<DeviceResponse> getAllDevices() {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         return deviceRepository.findByOrganization(userOrg).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -41,7 +43,7 @@ public class DeviceService {
 
     @Transactional(readOnly = true)
     public DeviceResponse getDevice(String externalId) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + externalId));
 
@@ -54,7 +56,7 @@ public class DeviceService {
     }
 
     public DeviceResponse createDevice(DeviceCreateRequest request) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
 
         deviceRepository.findByExternalId(request.externalId())
                 .ifPresent(existing -> {
@@ -71,10 +73,10 @@ public class DeviceService {
                 .organization(userOrg)  // Set organization from current user
                 .build();
 
-        // Generate API token for new device (returns raw token)
-        String rawToken = generateApiToken(device);
-
         Device saved = deviceRepository.save(device);
+
+        // Generate API token for new device using DeviceTokenService
+        String apiToken = deviceTokenService.assignTokenToDevice(saved);
 
         // Emit device created event
         if (saved.getOrganization() != null) {
@@ -86,15 +88,15 @@ public class DeviceService {
             );
         }
 
-        log.info("Device created with API token: {} (token starts with: {}..., stored as hash)",
+        log.info("Device created with API token: {} (token: {}...)",
                 saved.getExternalId(),
-                rawToken != null ? rawToken.substring(0, 8) : "none");
+                apiToken != null ? apiToken.substring(0, 8) : "none");
 
         return toResponse(saved);
     }
 
     public DeviceResponse updateDevice(String externalId, DeviceUpdateRequest request) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + externalId));
 
@@ -123,7 +125,7 @@ public class DeviceService {
     }
 
     public void deleteDevice(String externalId) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + externalId));
 
@@ -147,10 +149,10 @@ public class DeviceService {
 
     /**
      * Generate or rotate API token for a device
-     * Returns the raw (unhashed) token to be shown to the user ONCE
+     * Returns the raw token to be shown to the user
      */
     public String rotateDeviceToken(String externalId) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + externalId));
 
@@ -159,98 +161,58 @@ public class DeviceService {
             throw new AccessDeniedException("Access denied to device: " + externalId);
         }
 
-        String rawToken = generateApiToken(device);
-        Device saved = deviceRepository.save(device);
+        String newToken = deviceTokenService.rotateToken(device.getId());
 
-        log.info("API token rotated for device: {} (showing first 8 chars of hash: {}...)",
+        log.info("API token rotated for device: {} (token: {}...)",
                 externalId,
-                saved.getApiToken() != null ? saved.getApiToken().substring(0, 8) : "none");
+                newToken != null ? newToken.substring(0, 8) : "none");
 
         // Emit token rotation event
-        if (saved.getOrganization() != null) {
+        if (device.getOrganization() != null) {
             eventService.createEvent(
-                    saved.getOrganization(),
+                    device.getOrganization(),
                     Event.EventType.DEVICE_UPDATED,
                     Event.EventSeverity.INFO,
                     "Device API Token Rotated",
-                    String.format("API token rotated for device %s (%s)", saved.getName(), saved.getExternalId())
+                    String.format("API token rotated for device %s (%s)", device.getName(), device.getExternalId())
             );
         }
 
         // Return the raw token - this is the only time it will be visible
-        return rawToken;
+        return newToken;
     }
 
     /**
-     * Validate device API token and update last used timestamp
-     * Tokens are hashed at rest, so we must check all devices and verify with BCrypt
+     * Get device by external ID (convenience method for auto-provisioning)
      */
-    @Transactional
-    public Device authenticateDeviceByToken(String rawToken) {
-        if (rawToken == null || rawToken.isEmpty()) {
-            return null;
-        }
+    public Device getOrCreateDevice(String externalId, Organization organization) {
+        return deviceRepository.findByExternalId(externalId)
+                .orElseGet(() -> {
+                    log.info("Auto-creating device: {} for organization: {}",
+                            externalId, organization.getName());
 
-        // We cannot query by token directly since it's hashed
-        // We need a more efficient approach - find all devices with non-null tokens
-        // In production, consider using a token prefix or separate token table
-        List<Device> devicesWithTokens = deviceRepository.findAllByApiTokenIsNotNull();
+                    Device device = Device.builder()
+                            .externalId(externalId)
+                            .name(externalId)  // Use externalId as default name
+                            .status(DeviceStatus.UNKNOWN)
+                            .organization(organization)
+                            .build();
 
-        for (Device device : devicesWithTokens) {
-            if (passwordEncoder.matches(rawToken, device.getApiToken())) {
-                device.setTokenLastUsedAt(LocalDateTime.now());
-                deviceRepository.save(device);
-                log.debug("Device authenticated via token: {}", device.getExternalId());
-                return device;
-            }
-        }
+                    Device saved = deviceRepository.save(device);
 
-        log.debug("No device found matching provided token");
-        return null;
-    }
+                    // Generate API token for auto-created device
+                    deviceTokenService.assignTokenToDevice(saved);
 
-    /**
-     * Get device by API token (read-only, no timestamp update)
-     * Note: This is inefficient with hashed tokens, prefer authenticateDeviceByToken
-     * @deprecated Use authenticateDeviceByToken instead
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    public Device getDeviceByToken(String rawToken) {
-        if (rawToken == null || rawToken.isEmpty()) {
-            return null;
-        }
+                    // Emit device created event
+                    eventService.emitDeviceLifecycleEvent(
+                            organization,
+                            saved.getExternalId(),
+                            saved.getName(),
+                            Event.EventType.DEVICE_CREATED
+                    );
 
-        List<Device> devicesWithTokens = deviceRepository.findAllByApiTokenIsNotNull();
-        for (Device device : devicesWithTokens) {
-            if (passwordEncoder.matches(rawToken, device.getApiToken())) {
-                return device;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Generate a new API token for a device
-     * Returns the raw token (to be shown to user once), stores hashed version
-     */
-    private String generateApiToken(Device device) {
-        // Generate a secure random token
-        String rawToken = UUID.randomUUID().toString().replace("-", "");
-
-        // Hash the token using BCrypt before storing
-        String hashedToken = passwordEncoder.encode(rawToken);
-
-        device.setApiToken(hashedToken);
-        device.setTokenCreatedAt(LocalDateTime.now());
-        device.setTokenLastUsedAt(null);
-
-        log.debug("Generated API token for device {}, hash starts with: {}...",
-                device.getExternalId(),
-                hashedToken.substring(0, Math.min(10, hashedToken.length())));
-
-        // Return raw token so it can be displayed to user
-        return rawToken;
+                    return saved;
+                });
     }
 
     private DeviceResponse toResponse(Device device) {

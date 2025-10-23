@@ -126,6 +126,13 @@ simulator:
   device-count: 10
   interval-seconds: 30
 
+telemetry:
+  auto-provision:
+    # Automatically create devices on first data send
+    # When enabled, devices sending telemetry data with a valid API token will be auto-created
+    # The device will belong to the same organization as the token used for authentication
+    enabled: ${TELEMETRY_AUTO_PROVISION_ENABLED:true}
+
 app:
   jwt:
     # SECURITY: JWT secret MUST be set via JWT_SECRET environment variable

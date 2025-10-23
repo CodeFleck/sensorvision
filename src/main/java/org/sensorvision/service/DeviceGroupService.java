@@ -29,10 +29,11 @@ public class DeviceGroupService {
     private final DeviceGroupRepository deviceGroupRepository;
     private final DeviceRepository deviceRepository;
     private final EventService eventService;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public List<DeviceGroupResponse> getAllGroups() {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
         return deviceGroupRepository.findByOrganizationId(org.getId()).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -45,7 +46,7 @@ public class DeviceGroupService {
     }
 
     public DeviceGroupResponse createGroup(DeviceGroupRequest request) {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
 
         // Check for duplicate name within organization
         if (deviceGroupRepository.existsByOrganizationIdAndName(org.getId(), request.name())) {
@@ -162,7 +163,7 @@ public class DeviceGroupService {
                 .orElseThrow(() -> new ResourceNotFoundException("Device group not found: " + id));
 
         // Verify organization access
-        Organization currentOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization currentOrg = securityUtils.getCurrentUserOrganization();
         if (!group.getOrganization().getId().equals(currentOrg.getId())) {
             throw new ResourceNotFoundException("Device group not found: " + id);
         }

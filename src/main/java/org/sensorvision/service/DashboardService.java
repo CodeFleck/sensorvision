@@ -24,16 +24,19 @@ public class DashboardService {
     private final WidgetRepository widgetRepository;
     private final ObjectMapper objectMapper;
     private final DefaultDashboardInitializer defaultDashboardInitializer;
+    private final SecurityUtils securityUtils;
 
 
     public DashboardService(DashboardRepository dashboardRepository,
                           WidgetRepository widgetRepository,
                           ObjectMapper objectMapper,
-                          DefaultDashboardInitializer defaultDashboardInitializer) {
+                          DefaultDashboardInitializer defaultDashboardInitializer,
+                          SecurityUtils securityUtils) {
         this.dashboardRepository = dashboardRepository;
         this.widgetRepository = widgetRepository;
         this.objectMapper = objectMapper;
         this.defaultDashboardInitializer = defaultDashboardInitializer;
+        this.securityUtils = securityUtils;
     }
 
     /**
@@ -41,7 +44,7 @@ public class DashboardService {
      */
     @Transactional(readOnly = true)
     public List<DashboardResponse> getAllDashboards() {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         return dashboardRepository.findByOrganization(userOrg).stream()
             .map(DashboardResponse::fromEntityWithoutWidgets)
             .collect(Collectors.toList());
@@ -52,7 +55,7 @@ public class DashboardService {
      */
     @Transactional(readOnly = true)
     public DashboardResponse getDashboardById(Long id) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Dashboard dashboard = dashboardRepository.findByIdWithWidgets(id)
             .orElseThrow(() -> new RuntimeException("Dashboard not found with id: " + id));
 
@@ -70,7 +73,7 @@ public class DashboardService {
      */
     @Transactional
     public DashboardResponse getDefaultDashboard() {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
 
         defaultDashboardInitializer.ensureDefaultDashboardExists(userOrg);
 
@@ -88,7 +91,7 @@ public class DashboardService {
      */
     @Transactional
     public DashboardResponse createDashboard(DashboardCreateRequest request) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         logger.info("Creating new dashboard: {} for organization: {}", request.name(), userOrg.getId());
 
         // If this dashboard is set as default, unset any existing default for this organization
@@ -120,7 +123,7 @@ public class DashboardService {
      */
     @Transactional
     public DashboardResponse updateDashboard(Long id, DashboardUpdateRequest request) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         logger.info("Updating dashboard: {}", id);
 
         Dashboard dashboard = dashboardRepository.findById(id)
@@ -173,7 +176,7 @@ public class DashboardService {
      */
     @Transactional
     public void deleteDashboard(Long id) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         logger.info("Deleting dashboard: {}", id);
 
         Dashboard dashboard = dashboardRepository.findById(id)
@@ -198,7 +201,7 @@ public class DashboardService {
      */
     @Transactional
     public WidgetResponse addWidget(Long dashboardId, WidgetCreateRequest request) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         logger.info("Adding widget to dashboard {}: {}", dashboardId, request.name());
 
         Dashboard dashboard = dashboardRepository.findById(dashboardId)
@@ -238,7 +241,7 @@ public class DashboardService {
      */
     @Transactional
     public WidgetResponse updateWidget(Long widgetId, WidgetUpdateRequest request) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         logger.info("Updating widget: {}", widgetId);
 
         Widget widget = widgetRepository.findById(widgetId)
@@ -292,7 +295,7 @@ public class DashboardService {
      */
     @Transactional
     public void deleteWidget(Long widgetId) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         logger.info("Deleting widget: {}", widgetId);
 
         Widget widget = widgetRepository.findById(widgetId)
@@ -312,7 +315,7 @@ public class DashboardService {
      */
     @Transactional(readOnly = true)
     public List<WidgetResponse> getWidgetsByDashboard(Long dashboardId) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
 
         // Verify dashboard belongs to user's organization
         Dashboard dashboard = dashboardRepository.findById(dashboardId)

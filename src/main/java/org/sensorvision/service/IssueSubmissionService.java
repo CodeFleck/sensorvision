@@ -29,6 +29,7 @@ public class IssueSubmissionService {
 
     private final IssueSubmissionRepository issueSubmissionRepository;
     private final EmailNotificationService emailNotificationService;
+    private final SecurityUtils securityUtils;
 
     @Value("${support.issue.enabled:true}")
     private boolean issueSubmissionEnabled;
@@ -38,9 +39,11 @@ public class IssueSubmissionService {
 
     @Autowired
     public IssueSubmissionService(IssueSubmissionRepository issueSubmissionRepository,
-                                 EmailNotificationService emailNotificationService) {
+                                 EmailNotificationService emailNotificationService,
+                                 SecurityUtils securityUtils) {
         this.issueSubmissionRepository = issueSubmissionRepository;
         this.emailNotificationService = emailNotificationService;
+        this.securityUtils = securityUtils;
     }
 
     /**
@@ -52,8 +55,8 @@ public class IssueSubmissionService {
             throw new RuntimeException("Issue submission is currently disabled");
         }
 
-        User currentUser = SecurityUtils.getCurrentUser();
-        Organization organization = SecurityUtils.getCurrentUserOrganization();
+        User currentUser = securityUtils.getCurrentUser();
+        Organization organization = securityUtils.getCurrentUserOrganization();
 
         // Check rate limit: max 3 issues per 24 hours per user
         LocalDateTime rateLimitStart = LocalDateTime.now().minusHours(RATE_LIMIT_HOURS);
@@ -142,7 +145,7 @@ public class IssueSubmissionService {
      */
     @Transactional(readOnly = true)
     public List<IssueSubmissionResponse> getUserIssues() {
-        User currentUser = SecurityUtils.getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
         return issueSubmissionRepository.findByUserOrderByCreatedAtDesc(currentUser).stream()
             .map(IssueSubmissionResponse::fromEntity)
             .collect(Collectors.toList());
@@ -153,7 +156,7 @@ public class IssueSubmissionService {
      */
     @Transactional(readOnly = true)
     public IssueSubmissionResponse getIssueById(Long id) {
-        User currentUser = SecurityUtils.getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
         IssueSubmission issue = issueSubmissionRepository.findByIdAndUser(id, currentUser)
             .orElseThrow(() -> new RuntimeException("Issue not found with id: " + id));
         return IssueSubmissionResponse.fromEntity(issue);
@@ -164,7 +167,7 @@ public class IssueSubmissionService {
      */
     @Transactional(readOnly = true)
     public List<IssueSubmissionResponse> getUserIssuesByStatus(IssueStatus status) {
-        User currentUser = SecurityUtils.getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
         return issueSubmissionRepository.findByUserAndStatusOrderByCreatedAtDesc(currentUser, status).stream()
             .map(IssueSubmissionResponse::fromEntity)
             .collect(Collectors.toList());
@@ -175,7 +178,7 @@ public class IssueSubmissionService {
      */
     @Transactional(readOnly = true)
     public long getUserIssueCount() {
-        User currentUser = SecurityUtils.getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
         return issueSubmissionRepository.countByUser(currentUser);
     }
 }

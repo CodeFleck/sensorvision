@@ -18,6 +18,7 @@ import org.sensorvision.mqtt.TelemetryPayload;
 import org.sensorvision.repository.DeviceRepository;
 import org.sensorvision.security.SecurityUtils;
 import org.sensorvision.service.DeviceService;
+import org.sensorvision.service.DeviceTokenService;
 import org.sensorvision.service.TelemetryIngestionService;
 import org.sensorvision.service.TelemetryService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -35,7 +36,9 @@ public class TelemetryController {
     private final TelemetryService telemetryService;
     private final TelemetryIngestionService telemetryIngestionService;
     private final DeviceService deviceService;
+    private final DeviceTokenService deviceTokenService;
     private final DeviceRepository deviceRepository;
+    private final SecurityUtils securityUtils;
 
     @GetMapping("/query")
     public List<TelemetryPointDto> queryTelemetry(@RequestParam String deviceId,
@@ -77,7 +80,7 @@ public class TelemetryController {
 
         // Authenticate device if token is provided
         if (deviceToken != null && !deviceToken.isEmpty()) {
-            Device authenticatedDevice = deviceService.authenticateDeviceByToken(deviceToken);
+            Device authenticatedDevice = deviceTokenService.getDeviceByToken(deviceToken).orElse(null);
             if (authenticatedDevice == null) {
                 log.warn("Invalid device token provided for device: {}", deviceId);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -91,10 +94,13 @@ public class TelemetryController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new TelemetryIngestResponse(false, "Device ID mismatch"));
             }
+
+            // Update last used timestamp
+            deviceTokenService.updateTokenLastUsed(deviceToken);
         } else {
             // If using JWT auth (no device token), verify organization ownership
             try {
-                Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+                Organization userOrg = securityUtils.getCurrentUserOrganization();
                 Device device = deviceRepository.findByExternalId(deviceId)
                         .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + deviceId));
 
@@ -120,8 +126,8 @@ public class TelemetryController {
                     request.metadata()
             );
 
-            // Ingest via existing service (allow auto-provision - device is authenticated)
-            telemetryIngestionService.ingest(payload, true);
+            // Ingest via existing service (auto-provision setting controlled by configuration)
+            telemetryIngestionService.ingest(payload);
 
             log.info("Successfully ingested HTTP telemetry for device: {}", deviceId);
 
@@ -146,7 +152,7 @@ public class TelemetryController {
 
         // For bulk ingestion via JWT, verify all devices belong to user's organization
         try {
-            Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+            Organization userOrg = securityUtils.getCurrentUserOrganization();
 
             // Pre-validate all devices belong to user's organization
             for (SingleDeviceTelemetry telemetry : request.telemetry()) {
@@ -178,8 +184,8 @@ public class TelemetryController {
                         telemetry.metadata()
                 );
 
-                // Allow auto-provision - organization already validated
-                telemetryIngestionService.ingest(payload, true);
+                // Auto-provision setting controlled by configuration
+                telemetryIngestionService.ingest(payload);
                 successCount++;
 
             } catch (Exception e) {

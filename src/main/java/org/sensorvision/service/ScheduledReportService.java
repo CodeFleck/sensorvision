@@ -26,10 +26,11 @@ public class ScheduledReportService {
     private final ReportExecutionRepository reportExecutionRepository;
     private final ReportGenerationService reportGenerationService;
     private final EmailNotificationService emailNotificationService;
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public ScheduledReport createScheduledReport(ScheduledReportRequest request) {
-        User currentUser = SecurityUtils.getCurrentUser();
+        User currentUser = securityUtils.getCurrentUser();
         Organization organization = currentUser.getOrganization();
 
         ScheduledReport report = ScheduledReport.builder()
@@ -53,7 +54,7 @@ public class ScheduledReportService {
 
     @Transactional
     public ScheduledReport updateScheduledReport(Long reportId, ScheduledReportRequest request) {
-        Organization currentOrg = SecurityUtils.getCurrentUser().getOrganization();
+        Organization currentOrg = securityUtils.getCurrentUser().getOrganization();
 
         ScheduledReport report = scheduledReportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Scheduled report not found: " + reportId));
@@ -80,7 +81,7 @@ public class ScheduledReportService {
 
     @Transactional
     public void deleteScheduledReport(Long reportId) {
-        Organization currentOrg = SecurityUtils.getCurrentUser().getOrganization();
+        Organization currentOrg = securityUtils.getCurrentUser().getOrganization();
 
         ScheduledReport report = scheduledReportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Scheduled report not found: " + reportId));
@@ -95,13 +96,13 @@ public class ScheduledReportService {
 
     @Transactional(readOnly = true)
     public List<ScheduledReport> getScheduledReports() {
-        Organization currentOrg = SecurityUtils.getCurrentUser().getOrganization();
+        Organization currentOrg = securityUtils.getCurrentUser().getOrganization();
         return scheduledReportRepository.findByOrganization(currentOrg);
     }
 
     @Transactional(readOnly = true)
     public ScheduledReport getScheduledReport(Long reportId) {
-        Organization currentOrg = SecurityUtils.getCurrentUser().getOrganization();
+        Organization currentOrg = securityUtils.getCurrentUser().getOrganization();
 
         ScheduledReport report = scheduledReportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Scheduled report not found: " + reportId));
@@ -193,7 +194,7 @@ public class ScheduledReportService {
      */
     @Transactional
     public ReportExecution triggerReportExecution(Long reportId) {
-        Organization currentOrg = SecurityUtils.getCurrentUser().getOrganization();
+        Organization currentOrg = securityUtils.getCurrentUser().getOrganization();
 
         ScheduledReport report = scheduledReportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Scheduled report not found: " + reportId));

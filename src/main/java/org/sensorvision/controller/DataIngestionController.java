@@ -73,8 +73,8 @@ public class DataIngestionController {
                     request.metadata() != null ? request.metadata() : java.util.Map.of()
             );
 
-            // Ingest the data (allow auto-provision for HTTP endpoints - user is authenticated)
-            telemetryIngestionService.ingest(payload, true);
+            // Ingest the data (auto-provision setting controlled by configuration)
+            telemetryIngestionService.ingest(payload);
 
             log.info("HTTP telemetry data ingested for device: {}", request.deviceId());
 
@@ -131,8 +131,8 @@ public class DataIngestionController {
                     java.util.Map.of()
             );
 
-            // Allow auto-provision for HTTP endpoints - user is authenticated
-            telemetryIngestionService.ingest(payload, true);
+            // Auto-provision setting controlled by configuration
+            telemetryIngestionService.ingest(payload);
 
             log.info("HTTP single variable '{}' ingested for device: {}", variableName, deviceId);
 
@@ -183,8 +183,8 @@ public class DataIngestionController {
                         request.metadata() != null ? request.metadata() : java.util.Map.of()
                 );
 
-                // Allow auto-provision for HTTP endpoints - user is authenticated
-                telemetryIngestionService.ingest(payload, true);
+                // Auto-provision setting controlled by configuration
+                telemetryIngestionService.ingest(payload);
 
                 responses.add(HttpTelemetryResponse.success(
                         request.deviceId(),

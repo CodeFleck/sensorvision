@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.model.Device;
 import org.sensorvision.service.DeviceService;
+import org.sensorvision.service.DeviceTokenService;
 import org.sensorvision.service.TelemetryIngestionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -28,6 +29,7 @@ public class TelemetryMessageHandler {
     private final ObjectMapper objectMapper;
     private final TelemetryIngestionService telemetryIngestionService;
     private final DeviceService deviceService;
+    private final DeviceTokenService deviceTokenService;
 
     @Value("${mqtt.device-auth.required:true}")
     private boolean deviceAuthRequired;
@@ -51,7 +53,7 @@ public class TelemetryMessageHandler {
                     return;
                 }
 
-                Device device = deviceService.authenticateDeviceByToken(apiToken);
+                Device device = deviceTokenService.getDeviceByToken(apiToken).orElse(null);
                 if (device == null) {
                     log.warn("MQTT telemetry rejected: invalid API token for device {}",
                             telemetryPayload.deviceId());
@@ -65,10 +67,13 @@ public class TelemetryMessageHandler {
                     return;
                 }
 
+                // Update last used timestamp
+                deviceTokenService.updateTokenLastUsed(apiToken);
+
                 log.debug("Device {} authenticated via MQTT token", device.getExternalId());
             }
 
-            telemetryIngestionService.ingest(telemetryPayload, !deviceAuthRequired);
+            telemetryIngestionService.ingest(telemetryPayload);
         } catch (Exception ex) {
             String topic = (String) message.getHeaders().getOrDefault("mqtt_receivedTopic", "unknown");
             log.error("Failed to process telemetry message from topic {}: {}", topic, ex.getMessage(), ex);

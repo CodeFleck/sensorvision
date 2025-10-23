@@ -26,6 +26,7 @@ public class TelemetryService {
 
     private final TelemetryRecordRepository telemetryRecordRepository;
     private final DeviceRepository deviceRepository;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public List<TelemetryPointDto> queryTelemetry(String externalId, Instant from, Instant to) {
@@ -33,7 +34,7 @@ public class TelemetryService {
             throw new IllegalArgumentException("Parameter 'from' must be before 'to'");
         }
 
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + externalId));
 
@@ -51,7 +52,7 @@ public class TelemetryService {
 
     @Transactional(readOnly = true)
     public TelemetryPointDto getLatest(String externalId) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + externalId));
 
@@ -74,7 +75,7 @@ public class TelemetryService {
             return List.of();
         }
 
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
 
         // First, get all records
         List<TelemetryRecord> records = telemetryRecordRepository.findLatestForDevices(externalIds);

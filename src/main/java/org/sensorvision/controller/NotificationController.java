@@ -31,13 +31,14 @@ public class NotificationController {
 
     private final NotificationService notificationService;
     private final NotificationLogRepository notificationLogRepository;
+    private final SecurityUtils securityUtils;
 
     /**
      * Get current user's notification preferences
      */
     @GetMapping("/preferences")
     public ResponseEntity<List<NotificationPreferenceResponse>> getPreferences() {
-        User user = SecurityUtils.getCurrentUser();
+        User user = securityUtils.getCurrentUser();
         log.info("Getting notification preferences for user: {}", user.getUsername());
 
         List<UserNotificationPreference> preferences = notificationService.getUserPreferences(user);
@@ -56,7 +57,7 @@ public class NotificationController {
     public ResponseEntity<NotificationPreferenceResponse> savePreference(
             @Valid @RequestBody NotificationPreferenceRequest request
     ) {
-        User user = SecurityUtils.getCurrentUser();
+        User user = securityUtils.getCurrentUser();
         log.info("Saving notification preference for user: {}, channel: {}",
                 user.getUsername(), request.channel());
 
@@ -83,7 +84,7 @@ public class NotificationController {
     public ResponseEntity<Void> deletePreference(
             @PathVariable NotificationChannel channel
     ) {
-        User user = SecurityUtils.getCurrentUser();
+        User user = securityUtils.getCurrentUser();
         log.info("Deleting notification preference for user: {}, channel: {}",
                 user.getUsername(), channel);
 
@@ -100,7 +101,7 @@ public class NotificationController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        User user = SecurityUtils.getCurrentUser();
+        User user = securityUtils.getCurrentUser();
         log.info("Getting notification logs for user: {}, page: {}, size: {}",
                 user.getUsername(), page, size);
 
@@ -117,7 +118,7 @@ public class NotificationController {
      */
     @GetMapping("/stats")
     public ResponseEntity<NotificationStats> getNotificationStats() {
-        User user = SecurityUtils.getCurrentUser();
+        User user = securityUtils.getCurrentUser();
         log.info("Getting notification stats for user: {}", user.getUsername());
 
         long sentCount = notificationLogRepository.countByUserAndStatus(

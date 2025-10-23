@@ -34,11 +34,12 @@ public class ExcelExportService {
     private final TelemetryRecordRepository telemetryRepository;
     private final DeviceRepository deviceRepository;
     private final EventRepository eventRepository;
+    private final SecurityUtils securityUtils;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public byte[] exportTelemetryData(TelemetryExportRequest request) throws IOException {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
 
         // Verify device access
         Device device = deviceRepository.findById(request.deviceId())
@@ -67,7 +68,7 @@ public class ExcelExportService {
     }
 
     public byte[] exportDevices(DeviceExportRequest request) throws IOException {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
 
         List<Device> devices = deviceRepository.findByOrganizationId(org.getId());
 
@@ -82,7 +83,7 @@ public class ExcelExportService {
     }
 
     public byte[] exportEvents(EventExportRequest request) throws IOException {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
 
         Pageable pageable = PageRequest.of(0, 10000, Sort.by(Sort.Direction.DESC, "createdAt"));
         List<Event> events;

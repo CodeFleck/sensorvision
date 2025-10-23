@@ -14,7 +14,15 @@
       "Bash(curl -s http://35.88.65.186:8080/actuator/health/readiness)",
       "Bash(curl:*)",
       "Bash(./gradlew clean build:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "WebFetch(domain:dev.ubidots.com)",
+      "WebFetch(domain:help.ubidots.com)",
+      "Bash(git restore:*)",
+      "Bash(./gradlew compileJava:*)",
+      "Bash(./gradlew test:*)",
+      "Bash(cat:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(xargs basename:*)"
     ],
     "deny": [],
     "ask": []

@@ -29,6 +29,7 @@ public class DeviceCommandController {
 
     private final MqttPublishService mqttPublishService;
     private final DeviceRepository deviceRepository;
+    private final SecurityUtils securityUtils;
 
     /**
      * Send a command to a device
@@ -126,7 +127,7 @@ public class DeviceCommandController {
      * Verify that the device belongs to the current user's organization
      */
     private void verifyDeviceOwnership(String deviceId) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Device device = deviceRepository.findByExternalId(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + deviceId));
 

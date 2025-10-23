@@ -18,6 +18,10 @@ import org.sensorvision.repository.OrganizationRepository;
 import org.sensorvision.repository.TelemetryRecordRepository;
 import org.sensorvision.dto.TelemetryPointDto;
 import org.sensorvision.websocket.TelemetryWebSocketHandler;
+import org.sensorvision.config.TelemetryConfigurationProperties;
+import org.sensorvision.security.DeviceTokenAuthenticationFilter.DeviceTokenAuthentication;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,12 +32,14 @@ public class TelemetryIngestionService {
     private static final BigDecimal ZERO = BigDecimal.ZERO;
 
     private final DeviceRepository deviceRepository;
+    private final DeviceService deviceService;
     private final OrganizationRepository organizationRepository;
     private final TelemetryRecordRepository telemetryRecordRepository;
     private final TelemetryWebSocketHandler webSocketHandler;
     private final RuleEngineService ruleEngineService;
     private final SyntheticVariableService syntheticVariableService;
     private final MeterRegistry meterRegistry;
+    private final TelemetryConfigurationProperties telemetryConfig;
     private final Counter mqttMessagesCounter;
     private final ConcurrentHashMap<String, AtomicInteger> deviceStatusGauges = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicDouble> kwGauges = new ConcurrentHashMap<>();
@@ -43,51 +49,60 @@ public class TelemetryIngestionService {
     private final ConcurrentHashMap<String, AtomicDouble> frequencyGauges = new ConcurrentHashMap<>();
 
     public TelemetryIngestionService(DeviceRepository deviceRepository,
+                                     DeviceService deviceService,
                                      OrganizationRepository organizationRepository,
                                      TelemetryRecordRepository telemetryRecordRepository,
                                      TelemetryWebSocketHandler webSocketHandler,
                                      RuleEngineService ruleEngineService,
                                      SyntheticVariableService syntheticVariableService,
-                                     MeterRegistry meterRegistry) {
+                                     MeterRegistry meterRegistry,
+                                     TelemetryConfigurationProperties telemetryConfig) {
         this.deviceRepository = deviceRepository;
+        this.deviceService = deviceService;
         this.organizationRepository = organizationRepository;
         this.telemetryRecordRepository = telemetryRecordRepository;
         this.webSocketHandler = webSocketHandler;
         this.ruleEngineService = ruleEngineService;
         this.syntheticVariableService = syntheticVariableService;
         this.meterRegistry = meterRegistry;
+        this.telemetryConfig = telemetryConfig;
         this.mqttMessagesCounter = meterRegistry.counter("mqtt_messages_total");
     }
 
     /**
-     * Ingest telemetry data with optional auto-provisioning
+     * Ingest telemetry data with auto-provisioning based on configuration
      * @param payload The telemetry data
-     * @param allowAutoProvision Whether to automatically create devices if they don't exist
      */
-    public void ingest(TelemetryPayload payload, boolean allowAutoProvision) {
+    public void ingest(TelemetryPayload payload) {
         Device device = deviceRepository.findByExternalId(payload.deviceId())
                 .orElseGet(() -> {
-                    if (!allowAutoProvision) {
+                    if (!telemetryConfig.getAutoProvision().isEnabled()) {
                         throw new IllegalArgumentException(
                             "Device not found and auto-provisioning is disabled: " + payload.deviceId());
                     }
 
-                    // Get or create default organization for auto-created devices
-                    // SECURITY WARNING: Auto-provisioning should be disabled in production
-                    Organization defaultOrg = organizationRepository
-                            .findByName("Default Organization")
-                            .orElseGet(() -> organizationRepository.save(
-                                    Organization.builder()
-                                            .name("Default Organization")
-                                            .build()
-                            ));
+                    // Get organization from authenticated device token
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                    Organization targetOrg = null;
 
-                    return deviceRepository.save(Device.builder()
-                            .externalId(payload.deviceId())
-                            .name(payload.deviceId())
-                            .status(DeviceStatus.UNKNOWN)
-                            .organization(defaultOrg)
-                            .build());
+                    if (auth instanceof DeviceTokenAuthentication) {
+                        DeviceTokenAuthentication deviceAuth = (DeviceTokenAuthentication) auth;
+                        Device authenticatedDevice = deviceAuth.getDevice();
+                        targetOrg = authenticatedDevice.getOrganization();
+                    }
+
+                    // Fallback to default organization if no device token authentication
+                    if (targetOrg == null) {
+                        targetOrg = organizationRepository
+                                .findByName("Default Organization")
+                                .orElseGet(() -> organizationRepository.save(
+                                        Organization.builder()
+                                                .name("Default Organization")
+                                                .build()
+                                ));
+                    }
+
+                    return deviceService.getOrCreateDevice(payload.deviceId(), targetOrg);
                 });
 
         Map<String, Object> metadata = payload.metadata();

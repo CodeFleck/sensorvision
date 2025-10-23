@@ -25,10 +25,11 @@ public class VariableService {
 
     private final VariableRepository variableRepository;
     private final EventService eventService;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public List<VariableResponse> getAllVariables() {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
         return variableRepository.findByOrganizationId(org.getId()).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -41,7 +42,7 @@ public class VariableService {
     }
 
     public VariableResponse createVariable(VariableRequest request) {
-        Organization org = SecurityUtils.getCurrentUserOrganization();
+        Organization org = securityUtils.getCurrentUserOrganization();
 
         // Check for duplicate name within organization
         if (variableRepository.existsByOrganizationIdAndName(org.getId(), request.name())) {
@@ -152,7 +153,7 @@ public class VariableService {
                 .orElseThrow(() -> new ResourceNotFoundException("Variable not found: " + id));
 
         // Verify organization access
-        Organization currentOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization currentOrg = securityUtils.getCurrentUserOrganization();
         if (!variable.getOrganization().getId().equals(currentOrg.getId())) {
             throw new ResourceNotFoundException("Variable not found: " + id);
         }

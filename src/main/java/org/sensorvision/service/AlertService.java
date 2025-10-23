@@ -24,10 +24,11 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final NotificationService notificationService;
+    private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
     public List<AlertResponse> getAllAlerts() {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         return alertRepository.findByDeviceOrganizationOrderByCreatedAtDesc(userOrg).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -35,14 +36,14 @@ public class AlertService {
 
     @Transactional(readOnly = true)
     public List<AlertResponse> getUnacknowledgedAlerts() {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         return alertRepository.findByDeviceOrganizationAndAcknowledgedFalseOrderByCreatedAtDesc(userOrg).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     public void acknowledgeAlert(UUID alertId) {
-        Organization userOrg = SecurityUtils.getCurrentUserOrganization();
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         Alert alert = alertRepository.findById(alertId)
                 .orElseThrow(() -> new ResourceNotFoundException("Alert not found: " + alertId));
 
