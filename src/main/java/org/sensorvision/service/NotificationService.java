@@ -42,13 +42,8 @@ public class NotificationService {
             return;
         }
 
-        // Find all users in the organization who should be notified
-        // For now, we'll send to users with active notification preferences
-        // In a production system, you might want to filter by device access, user roles, etc.
-
         try {
-            // Here we would query users in the organization with notification preferences
-            // For now, we'll emit an event
+            // Emit event for in-app notifications
             eventService.createEvent(
                     organization,
                     Event.EventType.ALERT_CREATED,
@@ -56,6 +51,26 @@ public class NotificationService {
                     String.format("Alert: %s", alert.getMessage()),
                     String.format("Alert triggered for device %s", alert.getDevice().getName())
             );
+
+            // Send email notifications to all users in the organization with email preferences enabled
+            List<UserNotificationPreference> emailPreferences = preferenceRepository
+                    .findByUserOrganizationAndChannelAndEnabledTrue(
+                            organization,
+                            NotificationChannel.EMAIL
+                    );
+
+            log.info("Found {} users with email notifications enabled for organization {}",
+                    emailPreferences.size(), organization.getName());
+
+            for (UserNotificationPreference pref : emailPreferences) {
+                try {
+                    sendNotificationToUser(pref.getUser(), alert);
+                } catch (Exception e) {
+                    log.error("Failed to send email notification to user: {}",
+                            pref.getUser().getUsername(), e);
+                    // Continue sending to other users even if one fails
+                }
+            }
 
             // Send webhook notifications (Slack, Teams)
             slackService.sendAlertNotification(alert);

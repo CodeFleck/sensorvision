@@ -1,7 +1,11 @@
 FROM node:20 AS frontend-build
 WORKDIR /frontend
 COPY frontend/package.json frontend/package-lock.json* frontend/yarn.lock* ./
-RUN npm install
+# Configure npm for better reliability in CI environments
+RUN npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-retry-mintimeout 15000 && \
+    npm config set fetch-timeout 120000 && \
+    npm install --prefer-offline --no-audit
 COPY frontend .
 RUN npm run build
 # Verify the dist folder was created
