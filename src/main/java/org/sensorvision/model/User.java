@@ -60,6 +60,13 @@ public class User extends AuditableEntity {
     @Column(name = "email_verification_token_expiry")
     private LocalDateTime emailVerificationTokenExpiry;
 
+    @Column(name = "avatar_url", length = 255)
+    private String avatarUrl;
+
+    @Column(name = "avatar_version")
+    @Builder.Default
+    private Long avatarVersion = 0L;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",

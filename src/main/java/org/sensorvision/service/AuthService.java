@@ -206,6 +206,8 @@ public class AuthService {
                 .organizationName(user.getOrganization().getName())
                 .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
                 .enabled(user.getEnabled())
+                .avatarUrl(user.getAvatarUrl())
+                .avatarVersion(user.getAvatarVersion())
                 .build();
     }
 

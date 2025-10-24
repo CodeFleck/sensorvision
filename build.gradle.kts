@@ -2,6 +2,7 @@ plugins {
     id("org.springframework.boot") version "3.3.4"
     id("io.spring.dependency-management") version "1.1.6"
     id("java")
+    id("jacoco")
 }
 
 group = "org.sensorvision"
@@ -81,6 +82,30 @@ tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
             if (trimmedLine.isNotEmpty() && !trimmedLine.startsWith("#") && trimmedLine.contains("=")) {
                 val (key, value) = trimmedLine.split("=", limit = 2)
                 environment(key.trim(), value.trim())
+            }
+        }
+    }
+}
+
+// Jacoco configuration for code coverage
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.30".toBigDecimal() // 30% minimum coverage
             }
         }
     }

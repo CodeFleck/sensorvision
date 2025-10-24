@@ -149,7 +149,9 @@ public class SecurityConfig {
                 "http://localhost:3001",
                 "http://localhost:3000",
                 "http://35.88.65.186.nip.io:8080",
-                "http://35.88.65.186:8080"
+                "http://35.88.65.186:8080",
+                "http://35.88.65.186:3000",
+                "http://35.88.65.186"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

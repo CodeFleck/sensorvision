@@ -160,6 +160,8 @@ export interface User {
   organizationName: string;
   roles: string[];
   enabled: boolean;
+  avatarUrl?: string;
+  avatarVersion?: number;
 }
 
 export interface LoginRequest {
