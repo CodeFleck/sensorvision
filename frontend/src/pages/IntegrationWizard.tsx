@@ -105,28 +105,55 @@ export const IntegrationWizard: React.FC = () => {
   };
 
   const handleDeviceSetup = async () => {
-    if (!deviceId || !deviceName) return;
+    if (!deviceId || (!useExistingDevice && !deviceName)) return;
 
     setLoading(true);
     try {
+      let tokenResponse;
+
       if (!useExistingDevice) {
         // Create new device
         await apiService.createDevice({
           externalId: deviceId,
           name: deviceName,
         });
+        // Generate token for new device
+        tokenResponse = await apiService.generateDeviceToken(deviceId);
+      } else {
+        // For existing devices, check if token exists
+        try {
+          const tokenInfo = await apiService.getDeviceTokenInfo(deviceId);
+          // Device has a token - need to rotate to get the actual value
+          if (tokenInfo.maskedToken) {
+            tokenResponse = await apiService.rotateDeviceToken(deviceId);
+          } else {
+            // No token yet - generate one
+            tokenResponse = await apiService.generateDeviceToken(deviceId);
+          }
+        } catch (error) {
+          // If getDeviceTokenInfo fails, try to generate (device might not exist)
+          console.error('Error checking token:', error);
+          alert('Device not found or you do not have access to it.');
+          setLoading(false);
+          return;
+        }
       }
 
-      // Generate device token
-      const tokenResponse = await apiService.generateDeviceToken(deviceId);
       if (tokenResponse.token) {
         setApiToken(tokenResponse.token);
         generateCode(selectedPlatform!, deviceId, tokenResponse.token);
         goToNextStep();
+      } else {
+        alert('Failed to obtain device token. Please try again.');
       }
     } catch (error) {
       console.error('Failed to setup device:', error);
-      alert('Failed to setup device. Make sure the device ID is unique.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (errorMessage.includes('unique') || errorMessage.includes('already exists')) {
+        alert('A device with this ID already exists. Please use a different ID or check "Use existing device".');
+      } else {
+        alert(`Failed to setup device: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
