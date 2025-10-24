@@ -66,6 +66,83 @@ A comprehensive Ubidots-like IoT monitoring platform built on Spring Boot and MQ
 - **Notification delivery tracking** with success/failure logs
 - **Health endpoints** for service monitoring
 
+### 🎯 Official SDKs & Integration Tools
+
+#### Python SDK (`sensorvision-sdk`)
+Production-ready Python client library for seamless IoT device integration:
+- Simple, intuitive API for sending telemetry data
+- Configurable retry logic with exponential backoff
+- Comprehensive error handling (authentication, validation, rate limiting)
+- Type hints and full documentation
+- pip installable package
+
+```python
+from sensorvision import SensorVisionClient
+
+client = SensorVisionClient(
+    api_url="http://your-server:8080",
+    api_key="your-device-token"
+)
+
+# Send telemetry data - it's that simple!
+client.send_data("my-device-001", {
+    "temperature": 23.5,
+    "humidity": 65.2
+})
+```
+
+📚 [Full Python SDK Documentation](sensorvision-sdk/README.md)
+
+#### JavaScript/TypeScript SDK (`sensorvision-sdk-js`)
+Cross-platform SDK for Node.js and browsers with WebSocket support:
+- REST client for telemetry ingestion
+- Real-time WebSocket subscriptions for live data
+- Works in Node.js and browsers (UMD, CommonJS, ES Modules)
+- TypeScript definitions included
+- Automatic reconnection and retry logic
+
+```typescript
+import { SensorVisionClient, WebSocketClient } from 'sensorvision-sdk';
+
+// Send data via REST
+const client = new SensorVisionClient({
+    apiUrl: 'http://your-server:8080',
+    apiKey: 'your-device-token'
+});
+
+await client.sendData('my-device-001', {
+    temperature: 23.5,
+    humidity: 65.2
+});
+
+// Subscribe to real-time updates via WebSocket
+const wsClient = new WebSocketClient({
+    wsUrl: 'ws://your-server:8080/ws/telemetry',
+    apiKey: 'your-device-token'
+});
+
+wsClient.subscribe('my-device-001', (data) => {
+    console.log('Received:', data);
+});
+
+wsClient.connect();
+```
+
+📚 [Full JavaScript SDK Documentation](sensorvision-sdk-js/README.md)
+
+#### Frontend Integration Wizard
+Interactive 5-step wizard for zero-config device onboarding:
+- 🎨 Visual step-by-step setup process
+- 📝 Live code generation for Python and JavaScript
+- 🔑 Smart device token management (auto-detect existing tokens)
+- ⚡ Real-time connection testing with WebSocket
+- 📋 Copy-to-clipboard for all code snippets
+- ✅ Works with both new and existing devices
+
+**Try it now:** Navigate to `/integration-wizard` in the SensorVision dashboard!
+
+📚 [Integration Wizard User Guide](INTEGRATION_WIZARD_GUIDE.md)
+
 ## ⚡ 5-Minute Quick Start for IoT Devices
 
 **NEW**: SensorVision now supports ultra-simple device integration! No complex authentication, no manual device registration required.

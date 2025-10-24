@@ -134,3 +134,105 @@ Mathematical expressions like "kwConsumption * voltage" are parsed and calculate
 - MQTT integration tests should use test profile to avoid Docker dependency
 - Frontend testing via npm test (Jest/React Testing Library)
 - This project is already deployed to PROD. Project urls: https://github.com/CodeFleck/sensorvision, http://35.88.65.186.nip.io:8080/
+
+## Official SDKs and Integration Tools
+
+### Python SDK (`sensorvision-sdk/`)
+Located in the repository root, provides a production-ready Python client:
+
+```bash
+# Development and testing
+cd sensorvision-sdk
+pip install -e .                    # Install in editable mode
+pytest                              # Run tests
+pytest --cov=sensorvision          # Run with coverage
+python -m pytest -v                 # Verbose output
+```
+
+**Key Files:**
+- `sensorvision/client.py` - Main client implementation with retry logic
+- `sensorvision/errors.py` - Custom exception classes
+- `examples/` - Usage examples (basic, advanced, error handling)
+- `tests/` - Comprehensive test suite
+
+**Implementation Notes:**
+- Uses configurable retry with exponential backoff (not hardcoded!)
+- `_send_data_with_retry()` method honors `self.config.retry_attempts` and `self.config.retry_delay`
+- Selective retry: doesn't retry auth/validation errors, only network/timeout errors
+
+### JavaScript/TypeScript SDK (`sensorvision-sdk-js/`)
+Cross-platform SDK supporting Node.js and browsers:
+
+```bash
+# Development and building
+cd sensorvision-sdk-js
+npm install                         # Install dependencies
+npm run build                       # Build all formats (CJS, ESM, UMD)
+npm test                            # Run tests
+npm run lint                        # Lint code
+```
+
+**Key Files:**
+- `src/client.ts` - REST client for telemetry ingestion
+- `src/websocket.ts` - Cross-platform WebSocket client
+- `src/types.ts` - TypeScript type definitions
+- `src/errors.ts` - Error classes
+- `examples/` - Node.js and browser examples
+
+**Critical Implementation Details:**
+- **Cross-platform WebSocket**: `websocket.ts` uses environment detection (`isBrowser`) to:
+  - Load correct WebSocket constructor (native vs 'ws' package)
+  - Use correct event API (addEventListener vs .on)
+  - Extract message data correctly (event.data vs raw data)
+- **Message Format Transformation**: `handleMessage()` transforms backend's flat TelemetryPointDto to SDK's nested format
+- **Subscription Messages**: `subscribe()` and `unsubscribe()` send proper messages to backend
+- **Package Entry Points**: Build includes `copy:entries` script to match declared paths
+
+### Frontend Integration Wizard (`frontend/src/pages/IntegrationWizard.tsx`)
+Interactive 5-step wizard for device onboarding:
+
+**Key Features:**
+- Platform selection (Python/JavaScript)
+- Device setup (new or existing)
+- Smart token management:
+  - New devices: generate token
+  - Existing devices: check token, rotate if needed
+  - Proper error handling for all cases
+- Live code generation with actual credentials
+- Real-time WebSocket connection testing
+
+**Important Logic:**
+- `handleDeviceSetup()` method uses `getDeviceTokenInfo()` to check existing tokens
+- Calls `rotateDeviceToken()` for existing devices (not `generateDeviceToken()` which would fail with 400)
+- Generates new token only for truly new devices
+- `generateCode()` creates runnable code snippets for selected platform
+
+**Navigation:**
+- Route: `/integration-wizard`
+- Added to `frontend/src/App.tsx` routing
+- Link added to main navigation in `frontend/src/components/Layout.tsx`
+
+## Development Patterns for SDKs
+
+### Adding New Features to Python SDK
+1. Update `sensorvision/client.py` with new method
+2. Add type hints and docstrings
+3. Add error handling
+4. Create example in `examples/`
+5. Add tests in `tests/`
+6. Update `README.md`
+
+### Adding New Features to JavaScript SDK
+1. Update TypeScript source in `src/`
+2. Export new functionality from `src/index.ts`
+3. Build: `npm run build`
+4. Test cross-platform (Node.js and browser)
+5. Add examples in `examples/`
+6. Update `README.md`
+
+### Modifying Integration Wizard
+1. Update `frontend/src/pages/IntegrationWizard.tsx`
+2. Test all 5 steps thoroughly
+3. Verify both new and existing device flows
+4. Test code generation for both platforms
+5. Verify WebSocket connection test works
