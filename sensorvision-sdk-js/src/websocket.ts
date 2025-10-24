@@ -2,7 +2,6 @@
  * WebSocket client for real-time telemetry subscriptions
  */
 
-import WebSocket from 'ws';
 import {
   WebSocketConfig,
   TelemetryPoint,
@@ -10,6 +9,25 @@ import {
   ErrorCallback,
 } from './types';
 import { WebSocketError } from './errors';
+
+// Environment-aware WebSocket import
+// In Node.js, use the 'ws' package; in browsers, use native WebSocket
+let WebSocketImpl: typeof WebSocket;
+if (typeof window === 'undefined') {
+  // Node.js environment
+  try {
+    // Dynamic import for Node.js 'ws' package
+    WebSocketImpl = require('ws');
+  } catch (e) {
+    throw new Error('WebSocket support requires the "ws" package in Node.js. Install it with: npm install ws');
+  }
+} else {
+  // Browser environment - use native WebSocket
+  if (typeof WebSocket === 'undefined') {
+    throw new Error('WebSocket is not supported in this browser');
+  }
+  WebSocketImpl = WebSocket;
+}
 
 /**
  * SensorVision WebSocket Client
@@ -68,11 +86,12 @@ export class WebSocketClient {
 
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(this.config.wsUrl, {
+        // Use environment-appropriate WebSocket implementation
+        this.ws = new WebSocketImpl(this.config.wsUrl, {
           headers: {
             'X-API-Key': this.config.apiKey,
           },
-        });
+        }) as WebSocket;
 
         this.ws.on('open', () => {
           this.isConnecting = false;

@@ -12,11 +12,12 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types",
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:umd && npm run build:types && npm run copy:entries",
     "build:cjs": "tsc --module commonjs --outDir dist/cjs",
     "build:esm": "tsc --module esnext --outDir dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "build:umd": "webpack --mode production",
     "build:types": "tsc --declaration --emitDeclarationOnly --outDir dist",
+    "copy:entries": "node -e \"require('fs').copyFileSync('dist/cjs/index.js', 'dist/index.js')\" && node -e \"require('fs').copyFileSync('dist/esm/index.js', 'dist/index.mjs')\"",
     "clean": "rimraf dist",
     "test": "jest",
     "test:watch": "jest --watch",
