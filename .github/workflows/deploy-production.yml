@@ -107,7 +107,7 @@ jobs:
 
       - name: Create .env.production file
         run: |
-          cat > .env.production << 'ENVEOF'
+          cat > .env.production << ENVEOF
           AWS_REGION=${{ env.AWS_REGION }}
           ECR_REGISTRY=${{ needs.build-and-push.outputs.ecr_registry }}
           IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}
