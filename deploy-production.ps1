@@ -23,7 +23,7 @@ if (-not (Test-Path $SSHKeyPath)) {
 }
 
 Write-Host "[1/8] Testing SSH connection..." -ForegroundColor Green
-$testConnection = ssh -i $SSHKeyPath -o ConnectTimeout=10 -o StrictHostKeyChecking=no $EC2User@$EC2Host "echo 'Connected'"
+$testConnection = & ssh -i $SSHKeyPath -o ConnectTimeout=10 -o StrictHostKeyChecking=no "$EC2User@$EC2Host" "echo Connected"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: Cannot connect to $EC2Host" -ForegroundColor Red
     Write-Host "Please check:" -ForegroundColor Yellow
@@ -32,27 +32,30 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "  - Security group allows SSH (port 22)" -ForegroundColor Yellow
     exit 1
 }
-Write-Host "   ✓ SSH connection successful" -ForegroundColor Gray
+Write-Host "   [OK] SSH connection successful" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "[2/8] Checking current git status..." -ForegroundColor Green
-$currentCommit = ssh -i $SSHKeyPath $EC2User@$EC2Host "cd /home/ec2-user/sensorvision && git log --oneline -1"
+$gitStatusCmd = "cd /home/ec2-user/sensorvision; git log --oneline -1"
+$currentCommit = & ssh -i $SSHKeyPath "$EC2User@$EC2Host" $gitStatusCmd
 Write-Host "   Current: $currentCommit" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "[3/8] Pulling latest code from main branch..." -ForegroundColor Green
-$pullOutput = ssh -i $SSHKeyPath $EC2User@$EC2Host "cd /home/ec2-user/sensorvision && git pull origin main 2>&1"
+$gitPullCmd = "cd /home/ec2-user/sensorvision; git pull origin main 2>&1"
+$pullOutput = & ssh -i $SSHKeyPath "$EC2User@$EC2Host" $gitPullCmd
 Write-Host $pullOutput -ForegroundColor Gray
 
 if ($pullOutput -match "Already up to date") {
-    Write-Host "   ℹ No new changes to deploy" -ForegroundColor Yellow
+    Write-Host "   [INFO] No new changes to deploy" -ForegroundColor Yellow
 } else {
-    Write-Host "   ✓ Code updated successfully" -ForegroundColor Gray
+    Write-Host "   [OK] Code updated successfully" -ForegroundColor Gray
 }
 Write-Host ""
 
 Write-Host "[4/8] Checking what will be deployed..." -ForegroundColor Green
-$latestCommits = ssh -i $SSHKeyPath $EC2User@$EC2Host "cd /home/ec2-user/sensorvision && git log --oneline -5"
+$gitLogCmd = "cd /home/ec2-user/sensorvision; git log --oneline -5"
+$latestCommits = & ssh -i $SSHKeyPath "$EC2User@$EC2Host" $gitLogCmd
 Write-Host $latestCommits -ForegroundColor Gray
 Write-Host ""
 
@@ -60,23 +63,20 @@ Write-Host "[5/8] Running deployment script..." -ForegroundColor Green
 Write-Host "   This may take 3-5 minutes..." -ForegroundColor Yellow
 
 # Run deploy.sh with real-time output
-$deployScript = @"
-cd /home/ec2-user/sensorvision
-chmod +x deploy.sh
-./deploy.sh
-"@
+$deployCmd = "cd /home/ec2-user/sensorvision; chmod +x deploy.sh; ./deploy.sh"
+& ssh -i $SSHKeyPath "$EC2User@$EC2Host" $deployCmd
 
-ssh -i $SSHKeyPath $EC2User@$EC2Host $deployScript
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "   ⚠ Deployment script encountered issues" -ForegroundColor Yellow
+    Write-Host "   [WARN] Deployment script encountered issues" -ForegroundColor Yellow
     Write-Host "   Continuing with health checks..." -ForegroundColor Yellow
 } else {
-    Write-Host "   ✓ Deployment script completed" -ForegroundColor Gray
+    Write-Host "   [OK] Deployment script completed" -ForegroundColor Gray
 }
 Write-Host ""
 
 Write-Host "[6/8] Checking container status..." -ForegroundColor Green
-$containerStatus = ssh -i $SSHKeyPath $EC2User@$EC2Host "cd /home/ec2-user/sensorvision && docker-compose -f docker-compose.production.yml ps"
+$containerCmd = "cd /home/ec2-user/sensorvision; docker-compose -f docker-compose.production.yml ps"
+$containerStatus = & ssh -i $SSHKeyPath "$EC2User@$EC2Host" $containerCmd
 Write-Host $containerStatus -ForegroundColor Gray
 Write-Host ""
 
@@ -84,24 +84,24 @@ Write-Host "[7/8] Waiting for application to be healthy..." -ForegroundColor Gre
 $healthCheckScript = @"
 for i in {1..30}; do
     if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
-        echo "HEALTHY"
+        echo HEALTHY
         curl -s http://localhost:8080/actuator/health
         exit 0
     fi
-    echo "Attempt \$i/30: Waiting..."
+    echo Attempt \$i/30: Waiting...
     sleep 10
 done
-echo "TIMEOUT"
+echo TIMEOUT
 exit 1
 "@
 
-$healthResult = ssh -i $SSHKeyPath $EC2User@$EC2Host $healthCheckScript
+$healthResult = & ssh -i $SSHKeyPath "$EC2User@$EC2Host" "bash -c '$healthCheckScript'"
 if ($healthResult -match "HEALTHY") {
-    Write-Host "   ✓ Application is healthy!" -ForegroundColor Green
+    Write-Host "   [OK] Application is healthy!" -ForegroundColor Green
     Write-Host $healthResult -ForegroundColor Gray
 } else {
-    Write-Host "   ⚠ Health check timeout - application may need more time" -ForegroundColor Yellow
-    Write-Host "   Check logs: ssh $EC2User@$EC2Host 'cd /home/ec2-user/sensorvision && docker-compose -f docker-compose.production.yml logs backend'" -ForegroundColor Yellow
+    Write-Host "   [WARN] Health check timeout - application may need more time" -ForegroundColor Yellow
+    Write-Host "   Check logs: ssh $EC2User@$EC2Host 'cd /home/ec2-user/sensorvision; docker-compose -f docker-compose.production.yml logs backend'" -ForegroundColor Yellow
 }
 Write-Host ""
 
@@ -112,13 +112,13 @@ try {
     $healthJson = $externalHealth.Content | ConvertFrom-Json
 
     if ($healthJson.status -eq "UP") {
-        Write-Host "   ✓ External health check: PASSED" -ForegroundColor Green
+        Write-Host "   [OK] External health check: PASSED" -ForegroundColor Green
         Write-Host "   Status: $($healthJson.status)" -ForegroundColor Gray
     } else {
-        Write-Host "   ⚠ External health check: $($healthJson.status)" -ForegroundColor Yellow
+        Write-Host "   [WARN] External health check: $($healthJson.status)" -ForegroundColor Yellow
     }
 } catch {
-    Write-Host "   ⚠ External health check failed: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "   [WARN] External health check failed: $($_.Exception.Message)" -ForegroundColor Yellow
     Write-Host "   Note: Port 8080 may not be open in security group" -ForegroundColor Yellow
 }
 Write-Host ""
@@ -134,10 +134,10 @@ Write-Host "Health Check:          http://$EC2Host:8080/actuator/health" -Foregr
 Write-Host ""
 
 Write-Host "Deployment Features Included:" -ForegroundColor Cyan
-Write-Host "  ✓ Integration Wizard (Phase 6)" -ForegroundColor Green
-Write-Host "  ✓ Python SDK (Phase 4)" -ForegroundColor Green
-Write-Host "  ✓ JavaScript/TypeScript SDK (Phase 5)" -ForegroundColor Green
-Write-Host "  ✓ All bug fixes and improvements" -ForegroundColor Green
+Write-Host "  [OK] Integration Wizard (Phase 6)" -ForegroundColor Green
+Write-Host "  [OK] Python SDK (Phase 4)" -ForegroundColor Green
+Write-Host "  [OK] JavaScript/TypeScript SDK (Phase 5)" -ForegroundColor Green
+Write-Host "  [OK] All bug fixes and improvements" -ForegroundColor Green
 Write-Host ""
 
 Write-Host "Next Steps:" -ForegroundColor Cyan
@@ -147,11 +147,11 @@ Write-Host "  3. Check dashboard for real-time data" -ForegroundColor White
 Write-Host ""
 
 Write-Host "Troubleshooting Commands:" -ForegroundColor Cyan
-Write-Host "  View logs:    ssh -i $SSHKeyPath $EC2User@$EC2Host 'cd /home/ec2-user/sensorvision && docker-compose -f docker-compose.production.yml logs -f'" -ForegroundColor Gray
-Write-Host "  Restart:      ssh -i $SSHKeyPath $EC2User@$EC2Host 'cd /home/ec2-user/sensorvision && docker-compose -f docker-compose.production.yml restart'" -ForegroundColor Gray
-Write-Host "  Status:       ssh -i $SSHKeyPath $EC2User@$EC2Host 'cd /home/ec2-user/sensorvision && docker-compose -f docker-compose.production.yml ps'" -ForegroundColor Gray
+Write-Host "  View logs:    ssh -i $SSHKeyPath $EC2User@$EC2Host 'cd /home/ec2-user/sensorvision; docker-compose -f docker-compose.production.yml logs -f'" -ForegroundColor Gray
+Write-Host "  Restart:      ssh -i $SSHKeyPath $EC2User@$EC2Host 'cd /home/ec2-user/sensorvision; docker-compose -f docker-compose.production.yml restart'" -ForegroundColor Gray
+Write-Host "  Status:       ssh -i $SSHKeyPath $EC2User@$EC2Host 'cd /home/ec2-user/sensorvision; docker-compose -f docker-compose.production.yml ps'" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Deployment Complete! 🚀" -ForegroundColor Green
+Write-Host "  Deployment Complete!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan
