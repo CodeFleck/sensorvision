@@ -111,60 +111,92 @@ class SensorVisionClient:
 
         return self._send_data_with_retry(device_id, data)
 
-    @retry_on_failure(max_attempts=3, delay=1.0)
     def _send_data_with_retry(
         self,
         device_id: str,
         data: Dict[str, float]
     ) -> IngestionResponse:
-        """Internal method with retry logic."""
+        """Internal method with retry logic using configured retry parameters."""
         url = urljoin(self.config.api_url, f"/api/v1/ingest/{device_id}")
 
-        try:
-            logger.debug(f"Sending data to {url}: {data}")
-            response = self.session.post(
-                url,
-                json=data,
-                timeout=self.config.timeout,
-                verify=self.config.verify_ssl
-            )
+        last_exception = None
+        backoff = self.config.retry_delay
 
-            # Handle different HTTP status codes
-            if response.status_code == 200 or response.status_code == 201:
-                logger.info(f"Successfully sent data for device {device_id}")
-                return IngestionResponse.from_dict(response.json())
+        for attempt in range(self.config.retry_attempts):
+            if attempt > 0:
+                logger.debug(f"Retry attempt {attempt + 1}/{self.config.retry_attempts} after {backoff}s delay")
+                import time
+                time.sleep(backoff)
+                backoff *= 2  # Exponential backoff
 
-            elif response.status_code == 401 or response.status_code == 403:
-                raise AuthenticationError(
-                    f"Authentication failed: {response.text}"
+            try:
+                logger.debug(f"Sending data to {url}: {data}")
+                response = self.session.post(
+                    url,
+                    json=data,
+                    timeout=self.config.timeout,
+                    verify=self.config.verify_ssl
                 )
 
-            elif response.status_code == 400:
-                raise ValidationError(
-                    f"Invalid data format: {response.text}"
-                )
+                # Handle different HTTP status codes
+                if response.status_code == 200 or response.status_code == 201:
+                    logger.info(f"Successfully sent data for device {device_id}")
+                    return IngestionResponse.from_dict(response.json())
 
-            elif response.status_code == 429:
-                raise RateLimitError(
-                    f"Rate limit exceeded: {response.text}"
-                )
+                elif response.status_code == 401 or response.status_code == 403:
+                    # Don't retry authentication errors
+                    raise AuthenticationError(
+                        f"Authentication failed: {response.text}"
+                    )
 
-            elif response.status_code >= 500:
-                raise ServerError(
-                    f"Server error ({response.status_code}): {response.text}"
-                )
+                elif response.status_code == 400:
+                    # Don't retry validation errors
+                    raise ValidationError(
+                        f"Invalid data format: {response.text}"
+                    )
 
-            else:
-                raise NetworkError(
-                    f"Unexpected response ({response.status_code}): {response.text}"
-                )
+                elif response.status_code == 429:
+                    # Don't retry rate limit errors
+                    raise RateLimitError(
+                        f"Rate limit exceeded: {response.text}"
+                    )
 
-        except requests.exceptions.Timeout as e:
-            raise NetworkError(f"Request timeout: {str(e)}") from e
-        except requests.exceptions.ConnectionError as e:
-            raise NetworkError(f"Connection error: {str(e)}") from e
-        except requests.exceptions.RequestException as e:
-            raise NetworkError(f"Request failed: {str(e)}") from e
+                elif response.status_code >= 500:
+                    # Retry server errors
+                    last_exception = ServerError(
+                        f"Server error ({response.status_code}): {response.text}"
+                    )
+                    logger.warning(f"Server error on attempt {attempt + 1}: {last_exception}")
+                    continue
+
+                else:
+                    raise NetworkError(
+                        f"Unexpected response ({response.status_code}): {response.text}"
+                    )
+
+            except (AuthenticationError, ValidationError, RateLimitError):
+                # Don't retry these - raise immediately
+                raise
+            except requests.exceptions.Timeout as e:
+                # Retry timeout errors
+                last_exception = NetworkError(f"Request timeout: {str(e)}")
+                logger.warning(f"Timeout on attempt {attempt + 1}: {last_exception}")
+                continue
+            except requests.exceptions.ConnectionError as e:
+                # Retry connection errors
+                last_exception = NetworkError(f"Connection error: {str(e)}")
+                logger.warning(f"Connection error on attempt {attempt + 1}: {last_exception}")
+                continue
+            except requests.exceptions.RequestException as e:
+                # Retry other request errors
+                last_exception = NetworkError(f"Request failed: {str(e)}")
+                logger.warning(f"Request error on attempt {attempt + 1}: {last_exception}")
+                continue
+
+        # All retries exhausted
+        if last_exception:
+            raise last_exception
+        raise NetworkError("Request failed after all retry attempts")
 
     def close(self) -> None:
         """Close the HTTP session."""
