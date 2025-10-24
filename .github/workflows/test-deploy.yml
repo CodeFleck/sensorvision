@@ -1,0 +1,22 @@
+name: Test Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-west-2
+
+jobs:
+  test:
+    name: Test Job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Echo test
+        run: echo "Deployment test successful!"
