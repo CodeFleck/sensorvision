@@ -81,6 +81,29 @@ export class WebSocketClient {
   }
 
   /**
+   * Replay all pending subscriptions to the server
+   * Called when WebSocket connection opens to ensure backend is aware of all subscriptions
+   */
+  private replayPendingSubscriptions(): void {
+    if (!this.ws || this.ws.readyState !== (isBrowser ? WebSocket.OPEN : 1)) {
+      return;
+    }
+
+    // Send subscription message for each device that has callbacks
+    for (const deviceId of this.subscriptions.keys()) {
+      try {
+        this.ws.send(JSON.stringify({
+          type: 'subscribe',
+          deviceId,
+        }));
+        console.log(`Replayed subscription for device: ${deviceId}`);
+      } catch (error) {
+        console.error(`Failed to replay subscription for ${deviceId}:`, error);
+      }
+    }
+  }
+
+  /**
    * Cross-platform event listener attachment
    * Handles differences between Node.js EventEmitter (.on) and browser WebSocket (addEventListener/properties)
    */
@@ -89,6 +112,9 @@ export class WebSocketClient {
       this.isConnecting = false;
       this.reconnectAttempts = 0;
       console.log('WebSocket connected');
+
+      // Replay all pending subscriptions so backend knows what we're subscribed to
+      this.replayPendingSubscriptions();
     };
 
     const onMessage = (event: any) => {
@@ -163,6 +189,10 @@ export class WebSocketClient {
           this.isConnecting = false;
           this.reconnectAttempts = 0;
           console.log('WebSocket connected');
+
+          // Replay pending subscriptions before resolving the promise
+          this.replayPendingSubscriptions();
+
           resolve();
         };
 

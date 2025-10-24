@@ -22,6 +22,7 @@ import {
   ChevronDown,
   ChevronRight,
   Zap,
+  BookOpen,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -43,6 +44,7 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: Home, adminOnly: false },
   { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
+  { name: 'How It Works', href: '/how-it-works', icon: BookOpen, adminOnly: false },
   { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false },
   {
     name: 'Devices',

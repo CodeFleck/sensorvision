@@ -23,6 +23,7 @@ import DeviceTags from './pages/DeviceTags';
 import DataExport from './pages/DataExport';
 import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
+import HowItWorks from './pages/HowItWorks';
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
                   {/* Standard user routes */}
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/integration-wizard" element={<IntegrationWizard />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/dashboards" element={<Dashboards />} />
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/analytics" element={<Analytics />} />
