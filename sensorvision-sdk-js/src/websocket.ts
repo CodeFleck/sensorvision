@@ -1,5 +1,7 @@
 /**
  * WebSocket client for real-time telemetry subscriptions
+ *
+ * Supports both Node.js (using 'ws' package) and browser (native WebSocket) environments.
  */
 
 import {
@@ -10,23 +12,28 @@ import {
 } from './types';
 import { WebSocketError } from './errors';
 
-// Environment-aware WebSocket import
-// In Node.js, use the 'ws' package; in browsers, use native WebSocket
-let WebSocketImpl: typeof WebSocket;
-if (typeof window === 'undefined') {
-  // Node.js environment
-  try {
-    // Dynamic import for Node.js 'ws' package
-    WebSocketImpl = require('ws');
-  } catch (e) {
-    throw new Error('WebSocket support requires the "ws" package in Node.js. Install it with: npm install ws');
+// Type for WebSocket that works in both environments
+type CrossPlatformWebSocket = WebSocket | any;
+
+/**
+ * Helper to detect if we're in a browser environment
+ */
+const isBrowser = typeof window !== 'undefined' && typeof window.WebSocket !== 'undefined';
+
+/**
+ * Helper to get the appropriate WebSocket constructor
+ */
+function getWebSocketConstructor(): any {
+  if (isBrowser) {
+    return WebSocket;
+  } else {
+    // Node.js environment - require ws dynamically
+    try {
+      return require('ws');
+    } catch (e) {
+      throw new Error('WebSocket support requires the "ws" package in Node.js. Install it with: npm install ws');
+    }
   }
-} else {
-  // Browser environment - use native WebSocket
-  if (typeof WebSocket === 'undefined') {
-    throw new Error('WebSocket is not supported in this browser');
-  }
-  WebSocketImpl = WebSocket;
 }
 
 /**
@@ -50,11 +57,11 @@ if (typeof window === 'undefined') {
  */
 export class WebSocketClient {
   private config: Required<WebSocketConfig>;
-  private ws: WebSocket | null = null;
+  private ws: CrossPlatformWebSocket | null = null;
   private subscriptions: Map<string, Set<SubscriptionCallback>> = new Map();
   private errorCallbacks: Set<ErrorCallback> = new Set();
   private reconnectAttempts = 0;
-  private reconnectTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: any = null;
   private isConnecting = false;
   private isManualClose = false;
 
@@ -74,10 +81,59 @@ export class WebSocketClient {
   }
 
   /**
+   * Cross-platform event listener attachment
+   * Handles differences between Node.js EventEmitter (.on) and browser WebSocket (addEventListener/properties)
+   */
+  private attachEventHandlers(ws: CrossPlatformWebSocket): void {
+    const onOpen = () => {
+      this.isConnecting = false;
+      this.reconnectAttempts = 0;
+      console.log('WebSocket connected');
+    };
+
+    const onMessage = (event: any) => {
+      // In browsers, event.data contains the message
+      // In Node.js ws, the event itself is the data
+      const data = isBrowser ? event.data : event;
+      this.handleMessage(data);
+    };
+
+    const onError = (error: any) => {
+      console.error('WebSocket error:', error);
+      const wsError = new WebSocketError(error.message || 'WebSocket error');
+      this.notifyError(wsError);
+    };
+
+    const onClose = () => {
+      console.log('WebSocket disconnected');
+      this.ws = null;
+      this.isConnecting = false;
+
+      if (!this.isManualClose && this.config.reconnect) {
+        this.scheduleReconnect();
+      }
+    };
+
+    if (isBrowser) {
+      // Browser WebSocket API - use addEventListener
+      ws.addEventListener('open', onOpen);
+      ws.addEventListener('message', onMessage);
+      ws.addEventListener('error', onError);
+      ws.addEventListener('close', onClose);
+    } else {
+      // Node.js ws library - use EventEmitter .on()
+      ws.on('open', onOpen);
+      ws.on('message', onMessage);
+      ws.on('error', onError);
+      ws.on('close', onClose);
+    }
+  }
+
+  /**
    * Connect to the WebSocket server
    */
   async connect(): Promise<void> {
-    if (this.isConnecting || (this.ws && this.ws.readyState === WebSocket.OPEN)) {
+    if (this.isConnecting || (this.ws && this.ws.readyState === (isBrowser ? WebSocket.OPEN : 1))) {
       return;
     }
 
@@ -86,38 +142,51 @@ export class WebSocketClient {
 
     return new Promise((resolve, reject) => {
       try {
-        // Use environment-appropriate WebSocket implementation
-        this.ws = new WebSocketImpl(this.config.wsUrl, {
-          headers: {
-            'X-API-Key': this.config.apiKey,
-          },
-        }) as WebSocket;
+        const WS = getWebSocketConstructor();
 
-        this.ws.on('open', () => {
+        // Create WebSocket with environment-specific options
+        if (isBrowser) {
+          // Browser: WebSocket doesn't support custom headers in constructor
+          // Headers must be sent via query params or after connection
+          this.ws = new WS(this.config.wsUrl);
+        } else {
+          // Node.js: ws library supports headers option
+          this.ws = new WS(this.config.wsUrl, {
+            headers: {
+              'X-API-Key': this.config.apiKey,
+            },
+          });
+        }
+
+        // Set up event handlers before connection completes
+        const onOpenOnce = () => {
           this.isConnecting = false;
           this.reconnectAttempts = 0;
           console.log('WebSocket connected');
           resolve();
-        });
+        };
 
-        this.ws.on('message', (data: WebSocket.Data) => {
-          this.handleMessage(data);
-        });
-
-        this.ws.on('error', (error: Error) => {
-          console.error('WebSocket error:', error);
-          this.notifyError(new WebSocketError(error.message));
-        });
-
-        this.ws.on('close', () => {
-          console.log('WebSocket disconnected');
-          this.ws = null;
+        const onErrorOnce = (error: any) => {
           this.isConnecting = false;
+          const wsError = new WebSocketError(
+            `Failed to connect: ${error?.message || 'Unknown error'}`
+          );
+          this.notifyError(wsError);
+          reject(wsError);
+        };
 
-          if (!this.isManualClose && this.config.reconnect) {
-            this.scheduleReconnect();
-          }
-        });
+        // Attach one-time handlers for connection promise
+        if (isBrowser) {
+          this.ws!.addEventListener('open', onOpenOnce, { once: true });
+          this.ws!.addEventListener('error', onErrorOnce, { once: true });
+        } else {
+          this.ws!.once('open', onOpenOnce);
+          this.ws!.once('error', onErrorOnce);
+        }
+
+        // Attach persistent event handlers
+        this.attachEventHandlers(this.ws!);
+
       } catch (error) {
         this.isConnecting = false;
         const wsError = new WebSocketError(
@@ -147,38 +216,23 @@ export class WebSocketClient {
   }
 
   /**
-   * Subscribe to telemetry data for a specific device
+   * Subscribe to telemetry updates for a specific device
    *
-   * @param deviceId - Device ID to subscribe to
+   * @param deviceId - The device ID to subscribe to
    * @param callback - Callback function to receive telemetry data
-   *
-   * @example
-   * ```typescript
-   * wsClient.subscribe('sensor-001', (data) => {
-   *   console.log(`Temperature: ${data.variables.temperature}`);
-   * });
-   * ```
    */
   subscribe(deviceId: string, callback: SubscriptionCallback): void {
     if (!this.subscriptions.has(deviceId)) {
       this.subscriptions.set(deviceId, new Set());
     }
     this.subscriptions.get(deviceId)!.add(callback);
-
-    // Send subscription message if connected
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({
-        type: 'subscribe',
-        deviceId,
-      }));
-    }
   }
 
   /**
-   * Unsubscribe from telemetry data for a specific device
+   * Unsubscribe from telemetry updates for a specific device
    *
-   * @param deviceId - Device ID to unsubscribe from
-   * @param callback - Optional specific callback to remove
+   * @param deviceId - The device ID to unsubscribe from
+   * @param callback - Optional specific callback to remove. If not provided, removes all callbacks for the device.
    */
   unsubscribe(deviceId: string, callback?: SubscriptionCallback): void {
     if (!this.subscriptions.has(deviceId)) {
@@ -187,51 +241,38 @@ export class WebSocketClient {
 
     if (callback) {
       this.subscriptions.get(deviceId)!.delete(callback);
-      if (this.subscriptions.get(deviceId)!.size === 0) {
-        this.subscriptions.delete(deviceId);
-      }
     } else {
       this.subscriptions.delete(deviceId);
-    }
-
-    // Send unsubscribe message if connected
-    if (this.ws && this.ws.readyState === WebSocket.OPEN && this.subscriptions.get(deviceId)?.size === 0) {
-      this.ws.send(JSON.stringify({
-        type: 'unsubscribe',
-        deviceId,
-      }));
     }
   }
 
   /**
    * Register an error callback
    *
-   * @param callback - Error callback function
+   * @param callback - Callback function to receive error notifications
    */
   onError(callback: ErrorCallback): void {
     this.errorCallbacks.add(callback);
   }
 
   /**
-   * Get connection status
-   */
-  isConnected(): boolean {
-    return this.ws !== null && this.ws.readyState === WebSocket.OPEN;
-  }
-
-  /**
    * Handle incoming WebSocket messages
    */
-  private handleMessage(data: WebSocket.Data): void {
+  private handleMessage(data: any): void {
     try {
-      const message = JSON.parse(data.toString());
+      // Parse message data
+      const messageStr = typeof data === 'string' ? data : data.toString();
+      const message = JSON.parse(messageStr);
 
-      if (message.type === 'telemetry' && message.data) {
-        const telemetry: TelemetryPoint = message.data;
-        const callbacks = this.subscriptions.get(telemetry.deviceId);
+      // Check if this is telemetry data
+      if (message.deviceId && message.telemetry) {
+        const telemetry: TelemetryPoint = message.telemetry;
+        const deviceId = message.deviceId;
 
+        // Notify subscribers for this device
+        const callbacks = this.subscriptions.get(deviceId);
         if (callbacks) {
-          callbacks.forEach(callback => {
+          callbacks.forEach((callback) => {
             try {
               callback(telemetry);
             } catch (error) {
@@ -242,42 +283,52 @@ export class WebSocketClient {
       }
     } catch (error) {
       console.error('Failed to parse WebSocket message:', error);
-      this.notifyError(new WebSocketError('Failed to parse message'));
     }
   }
 
   /**
    * Notify error callbacks
    */
-  private notifyError(error: Error): void {
-    this.errorCallbacks.forEach(callback => {
+  private notifyError(error: WebSocketError): void {
+    this.errorCallbacks.forEach((callback) => {
       try {
         callback(error);
-      } catch (err) {
-        console.error('Error in error callback:', err);
+      } catch (e) {
+        console.error('Error in error callback:', e);
       }
     });
   }
 
   /**
-   * Schedule reconnection attempt
+   * Schedule a reconnection attempt
    */
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
       console.error('Max reconnection attempts reached');
-      this.notifyError(new WebSocketError('Max reconnection attempts reached'));
+      this.notifyError(
+        new WebSocketError('Max reconnection attempts reached')
+      );
       return;
     }
 
     this.reconnectAttempts++;
     const delay = this.config.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
 
-    console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`);
+    console.log(
+      `Scheduling reconnection attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts} in ${delay}ms`
+    );
 
     this.reconnectTimer = setTimeout(() => {
-      this.connect().catch(error => {
+      this.connect().catch((error) => {
         console.error('Reconnection failed:', error);
       });
     }, delay);
+  }
+
+  /**
+   * Check if WebSocket is connected
+   */
+  isConnected(): boolean {
+    return this.ws !== null && this.ws.readyState === (isBrowser ? WebSocket.OPEN : 1);
   }
 }
