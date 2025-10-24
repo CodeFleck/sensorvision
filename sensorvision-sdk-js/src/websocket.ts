@@ -226,6 +226,14 @@ export class WebSocketClient {
       this.subscriptions.set(deviceId, new Set());
     }
     this.subscriptions.get(deviceId)!.add(callback);
+
+    // Send subscription message if connected
+    if (this.ws && this.ws.readyState === (isBrowser ? WebSocket.OPEN : 1)) {
+      this.ws.send(JSON.stringify({
+        type: 'subscribe',
+        deviceId,
+      }));
+    }
   }
 
   /**
@@ -241,8 +249,20 @@ export class WebSocketClient {
 
     if (callback) {
       this.subscriptions.get(deviceId)!.delete(callback);
+      // If no more callbacks for this device, remove the subscription entirely
+      if (this.subscriptions.get(deviceId)!.size === 0) {
+        this.subscriptions.delete(deviceId);
+      }
     } else {
       this.subscriptions.delete(deviceId);
+    }
+
+    // Send unsubscribe message if no more subscriptions for this device
+    if (this.ws && this.ws.readyState === (isBrowser ? WebSocket.OPEN : 1) && !this.subscriptions.has(deviceId)) {
+      this.ws.send(JSON.stringify({
+        type: 'unsubscribe',
+        deviceId,
+      }));
     }
   }
 
@@ -264,17 +284,33 @@ export class WebSocketClient {
       const messageStr = typeof data === 'string' ? data : data.toString();
       const message = JSON.parse(messageStr);
 
-      // Check if this is telemetry data
-      if (message.deviceId && message.telemetry) {
-        const telemetry: TelemetryPoint = message.telemetry;
+      // Backend sends TelemetryPointDto with flat structure
+      // Transform it to match SDK's TelemetryPoint interface
+      if (message.deviceId && message.timestamp) {
         const deviceId = message.deviceId;
+        const timestamp = message.timestamp;
+
+        // Extract all properties except deviceId and timestamp into variables object
+        const variables: { [key: string]: number | boolean } = {};
+        for (const key in message) {
+          if (key !== 'deviceId' && key !== 'timestamp' && message[key] !== null && message[key] !== undefined) {
+            variables[key] = message[key];
+          }
+        }
+
+        // Create TelemetryPoint in the format expected by SDK consumers
+        const telemetryPoint: TelemetryPoint = {
+          deviceId,
+          timestamp,
+          variables,
+        };
 
         // Notify subscribers for this device
         const callbacks = this.subscriptions.get(deviceId);
         if (callbacks) {
           callbacks.forEach((callback) => {
             try {
-              callback(telemetry);
+              callback(telemetryPoint);
             } catch (error) {
               console.error('Error in subscription callback:', error);
             }
