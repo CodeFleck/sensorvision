@@ -1,5 +1,7 @@
 /**
  * WebSocket client for real-time telemetry subscriptions
+ *
+ * Supports both Node.js (using 'ws' package) and browser (native WebSocket) environments.
  */
 import { WebSocketConfig, SubscriptionCallback, ErrorCallback } from './types';
 /**
@@ -37,6 +39,16 @@ export declare class WebSocketClient {
      */
     constructor(config: WebSocketConfig);
     /**
+     * Replay all pending subscriptions to the server
+     * Called when WebSocket connection opens to ensure backend is aware of all subscriptions
+     */
+    private replayPendingSubscriptions;
+    /**
+     * Cross-platform event listener attachment
+     * Handles differences between Node.js EventEmitter (.on) and browser WebSocket (addEventListener/properties)
+     */
+    private attachEventHandlers;
+    /**
      * Connect to the WebSocket server
      */
     connect(): Promise<void>;
@@ -45,36 +57,25 @@ export declare class WebSocketClient {
      */
     disconnect(): void;
     /**
-     * Subscribe to telemetry data for a specific device
+     * Subscribe to telemetry updates for a specific device
      *
-     * @param deviceId - Device ID to subscribe to
+     * @param deviceId - The device ID to subscribe to
      * @param callback - Callback function to receive telemetry data
-     *
-     * @example
-     * ```typescript
-     * wsClient.subscribe('sensor-001', (data) => {
-     *   console.log(`Temperature: ${data.variables.temperature}`);
-     * });
-     * ```
      */
     subscribe(deviceId: string, callback: SubscriptionCallback): void;
     /**
-     * Unsubscribe from telemetry data for a specific device
+     * Unsubscribe from telemetry updates for a specific device
      *
-     * @param deviceId - Device ID to unsubscribe from
-     * @param callback - Optional specific callback to remove
+     * @param deviceId - The device ID to unsubscribe from
+     * @param callback - Optional specific callback to remove. If not provided, removes all callbacks for the device.
      */
     unsubscribe(deviceId: string, callback?: SubscriptionCallback): void;
     /**
      * Register an error callback
      *
-     * @param callback - Error callback function
+     * @param callback - Callback function to receive error notifications
      */
     onError(callback: ErrorCallback): void;
-    /**
-     * Get connection status
-     */
-    isConnected(): boolean;
     /**
      * Handle incoming WebSocket messages
      */
@@ -84,8 +85,12 @@ export declare class WebSocketClient {
      */
     private notifyError;
     /**
-     * Schedule reconnection attempt
+     * Schedule a reconnection attempt
      */
     private scheduleReconnect;
+    /**
+     * Check if WebSocket is connected
+     */
+    isConnected(): boolean;
 }
 //# sourceMappingURL=websocket.d.ts.map
