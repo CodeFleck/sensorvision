@@ -7,7 +7,7 @@ on:
   workflow_dispatch:  # Allow manual triggering
 
 env:
-  AWS_REGION: us-east-1  # Change to your AWS region
+  AWS_REGION: us-west-2
   ECR_REPOSITORY: sensorvision-backend
   IMAGE_TAG: ${{ github.sha }}
 
