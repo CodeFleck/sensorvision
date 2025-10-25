@@ -84,6 +84,7 @@ export const IntegrationWizard: React.FC = () => {
   const [connectionSuccess, setConnectionSuccess] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lastSetupDeviceId, setLastSetupDeviceId] = useState(''); // Track which device we set up
   const apiUrl = config.backendUrl;
 
   const totalSteps = 5;
@@ -96,6 +97,11 @@ export const IntegrationWizard: React.FC = () => {
 
   const goToPreviousStep = () => {
     if (currentStep > 1) {
+      // If going back to step 2 (device setup), clear the token to force fresh setup
+      if (currentStep === 3) {
+        setApiToken('');
+        setGeneratedCode('');
+      }
       setCurrentStep(currentStep - 1);
     }
   };
@@ -108,19 +114,63 @@ export const IntegrationWizard: React.FC = () => {
   const handleDeviceSetup = async () => {
     if (!deviceId || (!useExistingDevice && !deviceName)) return;
 
+    // If we already have a token for THIS SAME device, just proceed to code generation
+    // (Prevents re-creating if user clicks Continue multiple times)
+    if (apiToken && generatedCode && lastSetupDeviceId === deviceId) {
+      goToNextStep();
+      return;
+    }
+
     setLoading(true);
     try {
       let tokenResponse;
+      let deviceExists = false;
+
+      // First, check if device already exists (regardless of mode)
+      try {
+        await apiService.getDevice(deviceId);
+        deviceExists = true;
+      } catch (error) {
+        // Device doesn't exist, which is fine if we're creating a new one
+        deviceExists = false;
+      }
 
       if (!useExistingDevice) {
-        // Create new device
-        await apiService.createDevice({
-          externalId: deviceId,
-          name: deviceName,
-        });
-        // Generate token for new device
+        // User wants to create a new device
+        if (deviceExists) {
+          // Device already exists! Ask user what to do
+          const userChoice = confirm(
+            `A device with ID "${deviceId}" already exists.\n\n` +
+            `Would you like to use this existing device?\n\n` +
+            `Click OK to use the existing device, or Cancel to choose a different ID.`
+          );
+
+          if (!userChoice) {
+            // User chose to cancel - let them pick a different ID
+            setLoading(false);
+            return;
+          }
+
+          // User chose to use existing device - switch to existing device mode
+          setUseExistingDevice(true);
+        } else {
+          // Device doesn't exist - create it
+          await apiService.createDevice({
+            externalId: deviceId,
+            name: deviceName,
+          });
+        }
+
+        // Generate token (works for both newly created and existing devices)
         tokenResponse = await apiService.generateDeviceToken(deviceId);
       } else {
+        // User wants to use an existing device
+        if (!deviceExists) {
+          alert(`Device "${deviceId}" does not exist. Please uncheck "Use existing device" to create it, or enter a valid device ID.`);
+          setLoading(false);
+          return;
+        }
+
         // For existing devices, check if token exists
         try {
           const tokenInfo = await apiService.getDeviceTokenInfo(deviceId);
@@ -132,16 +182,17 @@ export const IntegrationWizard: React.FC = () => {
             tokenResponse = await apiService.generateDeviceToken(deviceId);
           }
         } catch (error) {
-          // If getDeviceTokenInfo fails, try to generate (device might not exist)
+          // If getDeviceTokenInfo fails, try to generate
           console.error('Error checking token:', error);
-          alert('Device not found or you do not have access to it.');
+          alert('Failed to get device token. Please check your permissions.');
           setLoading(false);
           return;
         }
       }
 
-      if (tokenResponse.token) {
+      if (tokenResponse && tokenResponse.token) {
         setApiToken(tokenResponse.token);
+        setLastSetupDeviceId(deviceId); // Remember which device we just set up
         generateCode(selectedPlatform!, deviceId, tokenResponse.token);
         goToNextStep();
       } else {
@@ -150,8 +201,22 @@ export const IntegrationWizard: React.FC = () => {
     } catch (error) {
       console.error('Failed to setup device:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      if (errorMessage.includes('unique') || errorMessage.includes('already exists')) {
-        alert('A device with this ID already exists. Please use a different ID or check "Use existing device".');
+
+      // Provide user-friendly error messages
+      if (errorMessage.includes('already exists')) {
+        alert(
+          `A device with ID "${deviceId}" already exists.\n\n` +
+          `Please either:\n` +
+          `1. Check "Use existing device" checkbox, or\n` +
+          `2. Choose a different device ID`
+        );
+      } else if (errorMessage.includes('not found') || errorMessage.includes('404')) {
+        alert(
+          `Device "${deviceId}" was not found.\n\n` +
+          `Please either:\n` +
+          `1. Uncheck "Use existing device" to create a new device, or\n` +
+          `2. Enter the correct device ID`
+        );
       } else {
         alert(`Failed to setup device: ${errorMessage}`);
       }
