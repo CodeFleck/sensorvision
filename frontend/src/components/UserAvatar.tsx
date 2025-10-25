@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User as UserIcon } from 'lucide-react';
 import { User } from '../types';
 import { getInitials, getAvatarColor, getAvatarTextColor, getAvatarUrl } from '../utils/avatarUtils';
@@ -17,6 +17,12 @@ interface UserAvatarProps {
 export const UserAvatar = ({ user, size = 'md', editable = false, onClick }: UserAvatarProps) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Reset image state when avatar URL or version changes
+  useEffect(() => {
+    setImageError(false);
+    setImageLoaded(false);
+  }, [user.avatarUrl, user.avatarVersion]);
 
   // Size classes
   const sizeClasses = {

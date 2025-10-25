@@ -26,6 +26,7 @@ import {
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
 import { SubmitIssueModal } from './SubmitIssueModal';
+import { AvatarUploadModal } from './AvatarUploadModal';
 import { UserAvatar } from './UserAvatar';
 import { useState } from 'react';
 
@@ -69,8 +70,9 @@ const navigation: NavigationItem[] = [
 
 export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, refreshUser } = useAuth();
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['Devices']));
 
   // Toggle expansion state for parent items
@@ -230,9 +232,10 @@ export const Layout = ({ children }: LayoutProps) => {
           {/* User info and actions */}
           <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50">
             <div className="p-4">
-              <div className="flex items-start mb-3 group cursor-pointer hover:bg-white rounded-lg p-2 -m-2 transition-colors">
+              <div className="flex items-start mb-3 group cursor-pointer hover:bg-white rounded-lg p-2 -m-2 transition-colors"
+                   onClick={() => setIsAvatarModalOpen(true)}>
                 <div className="flex-shrink-0">
-                  {user && <UserAvatar user={user} size="md" editable={false} />}
+                  {user && <UserAvatar user={user} size="md" editable={true} />}
                 </div>
                 <div className="ml-3 flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -312,6 +315,18 @@ export const Layout = ({ children }: LayoutProps) => {
           // Optional: You could show a success toast here
         }}
       />
+
+      {/* Avatar Upload Modal */}
+      {user && (
+        <AvatarUploadModal
+          isOpen={isAvatarModalOpen}
+          onClose={() => setIsAvatarModalOpen(false)}
+          user={user}
+          onSuccess={() => {
+            refreshUser();
+          }}
+        />
+      )}
     </div>
   );
 };

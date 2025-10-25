@@ -8,6 +8,7 @@ interface AuthContextType {
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
   setTokens: (accessToken: string, refreshToken: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
   hasRole: (role: string) => boolean;
@@ -229,6 +230,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     setTokens,
+    refreshUser: fetchCurrentUser,
     isAuthenticated: !!user,
     isAdmin,
     hasRole,

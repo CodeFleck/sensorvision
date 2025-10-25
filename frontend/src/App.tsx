@@ -8,7 +8,7 @@ import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { OAuth2Callback } from './pages/OAuth2Callback';
-import { HowItWorks } from './pages/HowItWorks';
+import HowItWorks from './pages/HowItWorks';
 import { Dashboard } from './pages/Dashboard';
 import { Dashboards } from './pages/Dashboards';
 import { Devices } from './pages/Devices';
