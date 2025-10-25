@@ -22,7 +22,7 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, latest
       try {
         // Fetch latest value for the device
         const telemetryData = await apiService.getLatestForDevice(widget.deviceId);
-        const value = (telemetryData as Record<string, unknown>)[widget.variableName] as number;
+        const value = telemetryData[widget.variableName] as number;
 
         if (value !== null && value !== undefined) {
           setCurrentValue(value);
@@ -36,7 +36,7 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, latest
     };
 
     fetchData();
-    const interval = setInterval(fetchData, widget.config.refreshInterval || 5000);
+    const interval = setInterval(fetchData, (widget.config.refreshInterval as number | undefined) || 5000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widget, latestData]);
@@ -126,15 +126,15 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, latest
     );
   }
 
-  const indicatorSize = widget.config.size || 'large';
+  const indicatorSize = (widget.config.size as string | undefined) || 'large';
   const sizeClasses = {
     small: 'w-8 h-8',
     medium: 'w-16 h-16',
     large: 'w-24 h-24',
   };
 
-  const showLabel = widget.config.showLabel ?? true;
-  const showValue = widget.config.showValue ?? true;
+  const showLabel = (widget.config.showLabel as boolean | undefined) ?? true;
+  const showValue = (widget.config.showValue as boolean | undefined) ?? true;
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full space-y-4">
@@ -155,12 +155,12 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, latest
       {showValue && currentValue !== null && (
         <div className="text-2xl font-mono text-gray-300">
           {currentValue.toFixed(2)}
-          {widget.config.unit && <span className="text-sm ml-1 text-gray-400">{widget.config.unit}</span>}
+          {widget.config.unit && <span className="text-sm ml-1 text-gray-400">{widget.config.unit as string}</span>}
         </div>
       )}
 
       {/* Variable Name */}
-      {widget.config.showVariableName && (
+      {(widget.config.showVariableName as boolean | undefined) && (
         <div className="text-sm text-gray-500">
           {widget.variableName}
         </div>

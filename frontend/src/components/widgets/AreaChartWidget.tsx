@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
   ChartOptions,
+  ChartData,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
@@ -32,7 +33,7 @@ interface AreaChartWidgetProps {
 }
 
 export const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({ widget, latestData }) => {
-  const [data, setData] = useState<{ labels: string[]; datasets: Array<Record<string, unknown>> } | null>(null);
+  const [data, setData] = useState<ChartData<'line'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -68,7 +69,7 @@ export const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({ widget, latest
         const labels = telemetryData.map((point) =>
           new Date(point.timestamp).toLocaleTimeString()
         );
-        const values = telemetryData.map((point) => (point as Record<string, unknown>)[varName] as number || 0);
+        const values = telemetryData.map((point) => (point[varName] as number) || 0);
 
         // Get colors from config or use defaults
         const borderColor = widget.config.colors?.[0] || 'rgb(59, 130, 246)';
@@ -84,7 +85,7 @@ export const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({ widget, latest
               backgroundColor: backgroundColor,
               tension: 0.4,
               fill: true,
-              pointRadius: widget.config.showPoints ? 3 : 0,
+              pointRadius: (widget.config.showPoints as boolean | undefined) ? 3 : 0,
               pointHoverRadius: 5,
               borderWidth: 2,
             },
@@ -127,7 +128,7 @@ export const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({ widget, latest
     },
     plugins: {
       legend: {
-        display: widget.config.showLegend ?? true,
+        display: (widget.config.showLegend as boolean | undefined) ?? true,
         position: 'top' as const,
       },
       title: {
@@ -140,16 +141,16 @@ export const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({ widget, latest
     },
     scales: {
       y: {
-        beginAtZero: widget.config.beginAtZero ?? true,
+        beginAtZero: (widget.config.beginAtZero as boolean | undefined) ?? true,
         grid: {
-          display: widget.config.showGrid ?? true,
+          display: (widget.config.showGrid as boolean | undefined) ?? true,
         },
-        ...(widget.config.min !== undefined && { min: widget.config.min }),
-        ...(widget.config.max !== undefined && { max: widget.config.max }),
+        ...(widget.config.min !== undefined && { min: widget.config.min as number }),
+        ...(widget.config.max !== undefined && { max: widget.config.max as number }),
       },
       x: {
         grid: {
-          display: widget.config.showGrid ?? true,
+          display: (widget.config.showGrid as boolean | undefined) ?? true,
         },
       },
     },

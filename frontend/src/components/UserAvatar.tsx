@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { User as UserIcon } from 'lucide-react';
 import { User } from '../types';
 import { getInitials, getAvatarColor, getAvatarTextColor, getAvatarUrl } from '../utils/avatarUtils';
 

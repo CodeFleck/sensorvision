@@ -32,6 +32,8 @@ export interface TelemetryPoint {
   latitude?: number;
   longitude?: number;
   altitude?: number;
+  // Allow dynamic property access for variable names
+  [key: string]: string | number | undefined;
 }
 
 export interface LatestTelemetry {

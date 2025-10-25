@@ -2,6 +2,17 @@ import React, { useState } from 'react';
 import { Widget } from '../../types';
 import { apiService } from '../../services/api';
 
+interface CommandConfig {
+  commandType?: string;
+  command?: string;
+  payload?: unknown;
+  method?: string;
+  url?: string;
+  httpMethod?: string;
+  headers?: Record<string, string>;
+  topic?: string;
+}
+
 interface ControlButtonWidgetProps {
   widget: Widget;
 }
@@ -16,7 +27,7 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
 
     try {
       // Get command configuration
-      const command = widget.config.command || {};
+      const command = (widget.config.command as CommandConfig | undefined) || {};
       const { commandType, payload, method = 'mqtt' } = command;
 
       if (!widget.deviceId) {
@@ -40,7 +51,7 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
             }
           );
 
-          const result = response.data;
+          const result = response.data as { success?: boolean; message?: string };
           if (result.success) {
             setLastResult({
               success: true,
@@ -65,6 +76,14 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
       } else if (method === 'http') {
         // For HTTP commands, make an API call to external URL
         const { url, httpMethod = 'POST', headers = {} } = command;
+
+        if (!url) {
+          setLastResult({
+            success: false,
+            message: 'No URL configured for HTTP command',
+          });
+          return;
+        }
 
         const response = await fetch(url, {
           method: httpMethod,
@@ -106,8 +125,8 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
     }
   };
 
-  const buttonStyle = widget.config.style || 'primary';
-  const buttonSize = widget.config.size || 'medium';
+  const buttonStyle = (widget.config.style as string | undefined) || 'primary';
+  const buttonSize = (widget.config.size as string | undefined) || 'medium';
 
   const getButtonClasses = () => {
     let baseClasses = 'font-semibold rounded-lg transition-all duration-200 shadow-lg ';
@@ -139,7 +158,7 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
     return baseClasses;
   };
 
-  const requireConfirmation = widget.config.requireConfirmation ?? false;
+  const requireConfirmation = (widget.config.requireConfirmation as boolean | undefined) ?? false;
 
   const handleClick = () => {
     if (requireConfirmation) {
@@ -149,8 +168,8 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
     handleButtonClick();
   };
 
-  const buttonLabel = widget.config.label || widget.name || 'Execute';
-  const showIcon = widget.config.showIcon ?? true;
+  const buttonLabel = (widget.config.label as string | undefined) || widget.name || 'Execute';
+  const showIcon = (widget.config.showIcon as boolean | undefined) ?? true;
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full p-4 space-y-4">
@@ -193,9 +212,9 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
       </button>
 
       {/* Description */}
-      {widget.config.description && (
+      {(widget.config.description as string | undefined) && (
         <div className="text-sm text-gray-400 text-center max-w-xs">
-          {widget.config.description}
+          {widget.config.description as string}
         </div>
       )}
 
@@ -213,10 +232,10 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
       )}
 
       {/* Command Info */}
-      {widget.config.showCommandInfo && (
+      {(widget.config.showCommandInfo as boolean | undefined) && (
         <div className="text-xs text-gray-500 space-y-1">
-          <div>Method: {widget.config.command?.method || 'mqtt'}</div>
-          <div>Target: {widget.config.command?.topic || widget.config.command?.url || 'N/A'}</div>
+          <div>Method: {((widget.config.command as CommandConfig | undefined)?.method || 'mqtt')}</div>
+          <div>Target: {((widget.config.command as CommandConfig | undefined)?.topic || (widget.config.command as CommandConfig | undefined)?.url || 'N/A')}</div>
         </div>
       )}
     </div>

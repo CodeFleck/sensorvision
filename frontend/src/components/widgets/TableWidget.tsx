@@ -38,7 +38,7 @@ export const TableWidget: React.FC<TableWidgetProps> = ({ widget, latestData }) 
     };
 
     fetchData();
-    const interval = setInterval(fetchData, widget.config.refreshInterval ?? 30000);
+    const interval = setInterval(fetchData, (widget.config.refreshInterval as number | undefined) ?? 30000);
     return () => clearInterval(interval);
   }, [widget]);
 
@@ -68,8 +68,9 @@ export const TableWidget: React.FC<TableWidgetProps> = ({ widget, latestData }) 
   ];
 
   // Filter fields to only show those configured in widget or all if none specified
-  const displayFields = widget.config.fields
-    ? fields.filter(f => widget.config.fields.includes(f.key))
+  const configuredFields = widget.config.fields as string[] | undefined;
+  const displayFields = configuredFields
+    ? fields.filter(f => configuredFields.includes(f.key))
     : fields;
 
   return (

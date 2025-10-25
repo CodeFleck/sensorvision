@@ -7,6 +7,7 @@ import {
   Tooltip,
   Legend,
   ChartOptions,
+  ChartData,
 } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 
@@ -18,7 +19,7 @@ interface PieChartWidgetProps {
 }
 
 export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, latestData }) => {
-  const [data, setData] = useState<{ labels: string[]; datasets: Array<Record<string, unknown>> } | null>(null);
+  const [data, setData] = useState<ChartData<'pie'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -50,8 +51,9 @@ export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, latestDa
         ];
 
         // Filter to only configured variables if specified
-        const displayVariables = widget.config.variables
-          ? variables.filter(v => widget.config.variables.includes(v.key))
+        const configuredVariables = widget.config.variables as string[] | undefined;
+        const displayVariables = configuredVariables
+          ? variables.filter(v => configuredVariables.includes(v.key))
           : variables;
 
         const labels = displayVariables.map(v => v.label);

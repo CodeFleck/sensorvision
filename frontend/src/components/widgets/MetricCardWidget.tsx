@@ -12,8 +12,8 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, late
   const [previousValue, setPreviousValue] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
-  const unit = widget.config.unit ?? '';
-  const decimals = widget.config.decimals ?? 1;
+  const unit = (widget.config.unit as string | undefined) ?? '';
+  const decimals = (widget.config.decimals as number | undefined) ?? 1;
 
   // Update value when real-time data arrives
   useEffect(() => {
@@ -51,7 +51,7 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, late
     };
 
     fetchData();
-    const interval = setInterval(fetchData, widget.config.refreshInterval ?? 30000);
+    const interval = setInterval(fetchData, (widget.config.refreshInterval as number | undefined) ?? 30000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [widget]);

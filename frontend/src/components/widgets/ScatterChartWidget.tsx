@@ -65,15 +65,15 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
 
         // For scatter chart, we need X and Y variables
         // X-axis variable from config or default to timestamp
-        const xVar = widget.config.xVariable || 'timestamp';
-        const yVar = widget.variableName || widget.config.yVariable || 'kwConsumption';
+        const xVar = (widget.config.xVariable as string | undefined) || 'timestamp';
+        const yVar = widget.variableName || (widget.config.yVariable as string | undefined) || 'kwConsumption';
 
         // Transform data for scatter plot
-        const scatterData = (telemetryData as Array<Record<string, unknown>>).map((point) => {
+        const scatterData = telemetryData.map((point) => {
           let xValue: number;
 
           if (xVar === 'timestamp') {
-            xValue = new Date(point.timestamp as string).getTime();
+            xValue = new Date(point.timestamp).getTime();
           } else {
             xValue = (point[xVar] as number) || 0;
           }
@@ -96,8 +96,8 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
               data: scatterData,
               backgroundColor: backgroundColor,
               borderColor: borderColor,
-              pointRadius: widget.config.pointSize || 5,
-              pointHoverRadius: widget.config.pointSize ? widget.config.pointSize + 2 : 7,
+              pointRadius: (widget.config.pointSize as number | undefined) || 5,
+              pointHoverRadius: (widget.config.pointSize as number | undefined) ? (widget.config.pointSize as number) + 2 : 7,
             },
           ],
         });
@@ -129,14 +129,14 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
     );
   }
 
-  const xVar = widget.config.xVariable || 'timestamp';
+  const xVar = (widget.config.xVariable as string | undefined) || 'timestamp';
 
   const options: ChartOptions<'scatter'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: widget.config.showLegend ?? true,
+        display: (widget.config.showLegend as boolean | undefined) ?? true,
         position: 'top' as const,
       },
       tooltip: {
@@ -162,27 +162,27 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
         position: 'bottom',
         title: {
           display: true,
-          text: xVar === 'timestamp' ? 'Time' : xVar,
+          text: (xVar === 'timestamp' ? 'Time' : xVar) as string,
         },
         grid: {
-          display: widget.config.showGrid ?? true,
+          display: (widget.config.showGrid as boolean | undefined) ?? true,
         },
         ticks: xVar === 'timestamp' ? {
           callback: function(value) {
-            return new Date(value).toLocaleTimeString();
+            return new Date(value as number).toLocaleTimeString();
           }
         } : undefined,
       },
       y: {
         title: {
           display: true,
-          text: widget.variableName || widget.config.yVariable || 'Value',
+          text: (widget.variableName || (widget.config.yVariable as string | undefined) || 'Value') as string,
         },
         grid: {
-          display: widget.config.showGrid ?? true,
+          display: (widget.config.showGrid as boolean | undefined) ?? true,
         },
-        ...(widget.config.min !== undefined && { min: widget.config.min }),
-        ...(widget.config.max !== undefined && { max: widget.config.max }),
+        ...(widget.config.min !== undefined && { min: widget.config.min as number }),
+        ...(widget.config.max !== undefined && { max: widget.config.max as number }),
       },
     },
   };
