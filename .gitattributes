@@ -1,9 +1,9 @@
-# Ensure shell scripts always use LF line endings, even on Windows
+# GitHub Actions workflows must use LF line endings
+.github/workflows/*.yml text eol=lf
+.github/workflows/*.yaml text eol=lf
+
+# Shell scripts should use LF
 *.sh text eol=lf
-gradlew text eol=lf
 
-# Ensure Windows batch files use CRLF
-*.bat text eol=crlf
-
-# Auto detect text files and perform LF normalization
+# Default behavior
 * text=auto
