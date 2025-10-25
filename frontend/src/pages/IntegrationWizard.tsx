@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { apiService } from '../services/api';
 import { clsx } from 'clsx';
+import { config } from '../config';
 
 type Platform = 'esp32' | 'python' | 'nodejs' | 'raspberry-pi' | 'arduino' | 'curl';
 
@@ -83,7 +84,7 @@ export const IntegrationWizard: React.FC = () => {
   const [connectionSuccess, setConnectionSuccess] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [apiUrl] = useState('http://localhost:8080');
+  const apiUrl = config.backendUrl;
 
   const totalSteps = 5;
 

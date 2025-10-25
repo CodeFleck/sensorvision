@@ -21,4 +21,6 @@ public class UserResponse {
     private String organizationName;
     private Set<String> roles;
     private Boolean enabled;
+    private String avatarUrl;
+    private Long avatarVersion;
 }

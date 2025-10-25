@@ -8,6 +8,7 @@ import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { OAuth2Callback } from './pages/OAuth2Callback';
+import HowItWorks from './pages/HowItWorks';
 import { Dashboard } from './pages/Dashboard';
 import { Dashboards } from './pages/Dashboards';
 import { Devices } from './pages/Devices';
@@ -23,12 +24,12 @@ import DeviceTags from './pages/DeviceTags';
 import DataExport from './pages/DataExport';
 import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
-import HowItWorks from './pages/HowItWorks';
+import { config } from './config';
 
 function App() {
   return (
     <AuthProvider>
-      <WebSocketProvider url="ws://localhost:8080/ws/telemetry">
+      <WebSocketProvider url={config.webSocketUrl}>
         <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
@@ -36,6 +37,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/oauth2/callback" element={<OAuth2Callback />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
 
         {/* Protected routes */}
         <Route
@@ -47,7 +49,6 @@ function App() {
                   {/* Standard user routes */}
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/integration-wizard" element={<IntegrationWizard />} />
-                  <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/dashboards" element={<Dashboards />} />
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/analytics" element={<Analytics />} />

@@ -17,7 +17,6 @@ import {
   FileUp,
   LogOut,
   Shield,
-  User,
   Bug,
   ChevronDown,
   ChevronRight,
@@ -27,6 +26,8 @@ import {
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
 import { SubmitIssueModal } from './SubmitIssueModal';
+import { AvatarUploadModal } from './AvatarUploadModal';
+import { UserAvatar } from './UserAvatar';
 import { useState } from 'react';
 
 interface LayoutProps {
@@ -69,8 +70,9 @@ const navigation: NavigationItem[] = [
 
 export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, refreshUser } = useAuth();
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['Devices']));
 
   // Toggle expansion state for parent items
@@ -228,25 +230,30 @@ export const Layout = ({ children }: LayoutProps) => {
           </nav>
 
           {/* User info and actions */}
-          <div className="flex-shrink-0 border-t border-gray-200">
+          <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50">
             <div className="p-4">
-              <div className="flex items-center mb-3">
+              <div className="flex items-start mb-3 group cursor-pointer hover:bg-white rounded-lg p-2 -m-2 transition-colors"
+                   onClick={() => setIsAvatarModalOpen(true)}>
                 <div className="flex-shrink-0">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <User className="h-6 w-6 text-blue-600" />
-                  </div>
+                  {user && <UserAvatar user={user} size="md" editable={true} />}
                 </div>
-                <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium text-gray-900">{user?.username || 'User'}</p>
-                  {isAdmin && (
-                    <div className="flex items-center mt-1">
-                      <Shield className="h-3 w-3 text-amber-500 mr-1" />
-                      <span className="text-xs text-amber-600 font-medium">Admin</span>
-                    </div>
-                  )}
-                  {!isAdmin && (
-                    <p className="text-xs text-gray-500">Standard User</p>
-                  )}
+                <div className="ml-3 flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {user?.username || 'User'}
+                    </p>
+                    {isAdmin && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 flex-shrink-0">
+                        <Shield className="h-3 w-3 text-amber-600" />
+                        <span className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide">
+                          Admin
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 truncate" title={user?.organizationName}>
+                    {user?.organizationName || 'No Organization'}
+                  </p>
                 </div>
               </div>
 
@@ -272,8 +279,29 @@ export const Layout = ({ children }: LayoutProps) => {
         </div>
 
         {/* Main content */}
-        <div className="flex-1">
-          <main className="p-8">
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <header className="bg-white border-b border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between px-8 py-4">
+              <div className="flex-1">
+                {/* Future: Add breadcrumbs or page title here */}
+              </div>
+              <div className="flex items-center space-x-4">
+                <a
+                  href="http://35.88.65.186/how-it-works"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  <span>Documentation</span>
+                </a>
+              </div>
+            </div>
+          </header>
+
+          {/* Main content area */}
+          <main className="flex-1 p-8 overflow-y-auto">
             {children}
           </main>
         </div>
@@ -287,6 +315,18 @@ export const Layout = ({ children }: LayoutProps) => {
           // Optional: You could show a success toast here
         }}
       />
+
+      {/* Avatar Upload Modal */}
+      {user && (
+        <AvatarUploadModal
+          isOpen={isAvatarModalOpen}
+          onClose={() => setIsAvatarModalOpen(false)}
+          user={user}
+          onSuccess={() => {
+            refreshUser();
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -86,6 +87,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/verify-email").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/prometheus", "/actuator/metrics").permitAll()
                         .requestMatchers("/ws/**").permitAll()
+                        // Avatar images - allow anonymous reads (upload/delete still require auth)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/*/avatar").permitAll()
                         // Device data ingestion (uses device token authentication in controller)
                         .requestMatchers("/api/v1/ingest/**").permitAll()
                         // OAuth2 login endpoints
@@ -149,7 +152,9 @@ public class SecurityConfig {
                 "http://localhost:3001",
                 "http://localhost:3000",
                 "http://35.88.65.186.nip.io:8080",
-                "http://35.88.65.186:8080"
+                "http://35.88.65.186:8080",
+                "http://35.88.65.186:3000",
+                "http://35.88.65.186"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

@@ -22,7 +22,14 @@
       "Bash(./gradlew test:*)",
       "Bash(cat:*)",
       "Bash(./gradlew build:*)",
-      "Bash(xargs basename:*)"
+      "Bash(xargs basename:*)",
+      "Bash(gh secret:*)",
+      "Bash(git commit:*)",
+      "Bash(ls:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(aws ec2 describe-key-pairs:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh issue create:*)"
     ],
     "deny": [],
     "ask": []
