@@ -45,7 +45,6 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: Home, adminOnly: false },
   { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
-  { name: 'How It Works', href: '/how-it-works', icon: BookOpen, adminOnly: false },
   { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false },
   {
     name: 'Devices',
@@ -287,15 +286,13 @@ export const Layout = ({ children }: LayoutProps) => {
                 {/* Future: Add breadcrumbs or page title here */}
               </div>
               <div className="flex items-center space-x-4">
-                <a
-                  href="http://35.88.65.186/how-it-works"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  to="/how-it-works"
                   className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                 >
                   <BookOpen className="h-5 w-5" />
                   <span>Documentation</span>
-                </a>
+                </Link>
               </div>
             </div>
           </header>
