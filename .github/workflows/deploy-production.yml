@@ -108,37 +108,37 @@ jobs:
       - name: Create .env.production file
         run: |
           cat > .env.production << 'ENVEOF'
-          AWS_REGION="${{ env.AWS_REGION }}"
-          ECR_REGISTRY="${{ needs.build-and-push.outputs.ecr_registry }}"
-          IMAGE_TAG="${{ needs.build-and-push.outputs.image_tag }}"
-          DB_URL="${{ secrets.DB_URL }}"
-          DB_USERNAME="${{ secrets.DB_USERNAME }}"
-          DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-          JWT_SECRET="${{ secrets.JWT_SECRET }}"
-          JWT_EXPIRATION_MS="${{ secrets.JWT_EXPIRATION_MS }}"
-          JWT_ISSUER="${{ secrets.JWT_ISSUER }}"
-          MQTT_BROKER_URL="tcp://mosquitto:1883"
-          MQTT_USERNAME="${{ secrets.MQTT_USERNAME }}"
-          MQTT_PASSWORD="${{ secrets.MQTT_PASSWORD }}"
-          MQTT_DEVICE_AUTH_REQUIRED="true"
-          DOMAIN="${{ secrets.PRODUCTION_DOMAIN }}"
-          APP_URL="https://${{ secrets.PRODUCTION_DOMAIN }}"
-          EMAIL_ENABLED="${{ secrets.EMAIL_ENABLED }}"
-          EMAIL_FROM="${{ secrets.EMAIL_FROM }}"
-          SMTP_HOST="${{ secrets.SMTP_HOST }}"
-          SMTP_SMTP_PORT="${{ secrets.SMTP_PORT }}"
-          SMTP_USERNAME="${{ secrets.SMTP_USERNAME }}"
-          SMTP_PASSWORD="${{ secrets.SMTP_PASSWORD }}"
-          SMS_ENABLED="${{ secrets.SMS_ENABLED }}"
-          TWILIO_ACCOUNT_SID="${{ secrets.TWILIO_ACCOUNT_SID }}"
-          TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}"
-          SMS_FROM_NUMBER="${{ secrets.SMS_FROM_NUMBER }}"
-          WEBHOOK_ENABLED="true"
-          SLACK_ENABLED="${{ secrets.SLACK_ENABLED }}"
-          SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
-          TEAMS_ENABLED="${{ secrets.TEAMS_ENABLED }}"
-          TEAMS_WEBHOOK_URL="${{ secrets.TEAMS_WEBHOOK_URL }}"
-          SUPPORT_ISSUE_EMAIL="${{ secrets.SUPPORT_ISSUE_EMAIL }}"
+          AWS_REGION=${{ env.AWS_REGION }}
+          ECR_REGISTRY=${{ needs.build-and-push.outputs.ecr_registry }}
+          IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}
+          DB_URL=${{ secrets.DB_URL }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION_MS=${{ secrets.JWT_EXPIRATION_MS }}
+          JWT_ISSUER=${{ secrets.JWT_ISSUER }}
+          MQTT_BROKER_URL=tcp://mosquitto:1883
+          MQTT_USERNAME=${{ secrets.MQTT_USERNAME }}
+          MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }}
+          MQTT_DEVICE_AUTH_REQUIRED=true
+          DOMAIN=${{ secrets.PRODUCTION_DOMAIN }}
+          APP_URL=https://${{ secrets.PRODUCTION_DOMAIN }}
+          EMAIL_ENABLED=${{ secrets.EMAIL_ENABLED }}
+          EMAIL_FROM=${{ secrets.EMAIL_FROM }}
+          SMTP_HOST=${{ secrets.SMTP_HOST }}
+          SMTP_SMTP_PORT=${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          SMS_ENABLED=${{ secrets.SMS_ENABLED }}
+          TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
+          SMS_FROM_NUMBER=${{ secrets.SMS_FROM_NUMBER }}
+          WEBHOOK_ENABLED=true
+          SLACK_ENABLED=${{ secrets.SLACK_ENABLED }}
+          SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}
+          TEAMS_ENABLED=${{ secrets.TEAMS_ENABLED }}
+          TEAMS_WEBHOOK_URL=${{ secrets.TEAMS_WEBHOOK_URL }}
+          SUPPORT_ISSUE_EMAIL=${{ secrets.SUPPORT_ISSUE_EMAIL }}
           ENVEOF
 
       - name: Copy .env.production to EC2
