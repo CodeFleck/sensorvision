@@ -127,13 +127,14 @@ backup_current_state() {
     BACKUP_TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
     BACKUP_PATH="$BACKUP_DIR/backup_$BACKUP_TIMESTAMP"
 
-    mkdir -p "$BACKUP_PATH"
+    # Make backup operations non-fatal to handle permission issues
+    mkdir -p "$BACKUP_PATH" 2>/dev/null || { warn "Could not create backup directory, skipping backup"; return 0; }
 
     # Backup environment file
-    cp "$ENV_FILE" "$BACKUP_PATH/"
+    cp "$ENV_FILE" "$BACKUP_PATH/" 2>/dev/null || true
 
     # Backup docker-compose file
-    cp "$COMPOSE_FILE" "$BACKUP_PATH/"
+    cp "$COMPOSE_FILE" "$BACKUP_PATH/" 2>/dev/null || true
 
     # Export current container states
     docker-compose -f "$COMPOSE_FILE" ps > "$BACKUP_PATH/container_states.txt" 2>&1 || true
