@@ -20,6 +20,9 @@ LOG_FILE="./logs/deployment.log"
 
 # Create logs directory early to avoid permission errors
 mkdir -p logs
+chmod 755 logs
+touch logs/deployment.log
+chmod 644 logs/deployment.log
 
 # Colors for output
 RED='\033[0;31m'
