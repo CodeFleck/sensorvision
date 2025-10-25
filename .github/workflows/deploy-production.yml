@@ -205,7 +205,7 @@ jobs:
 
     steps:
       - name: Notify Slack on success
-        if: needs.deploy.result == 'success' && secrets.SLACK_WEBHOOK_URL
+        if: ${{ needs.deploy.result == 'success' && secrets.SLACK_WEBHOOK_URL }}
         continue-on-error: true
         uses: slackapi/slack-github-action@v1
         with:
@@ -227,7 +227,7 @@ jobs:
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Notify Slack on failure
-        if: needs.deploy.result == 'failure' && secrets.SLACK_WEBHOOK_URL
+        if: ${{ needs.deploy.result == 'failure' && secrets.SLACK_WEBHOOK_URL }}
         continue-on-error: true
         uses: slackapi/slack-github-action@v1
         with:
