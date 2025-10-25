@@ -212,20 +212,38 @@ deploy() {
 health_check() {
     log "Running health checks..."
 
-    MAX_RETRIES=30
+    # Give application time to initialize before first check
+    log "Waiting 15 seconds for application to start..."
+    sleep 15
+
+    MAX_RETRIES=60
     RETRY_INTERVAL=5
 
     for i in $(seq 1 $MAX_RETRIES); do
-        if curl -f http://localhost:8080/actuator/health &> /dev/null; then
-            log "Health check passed!"
+        # Try to get health status with detailed output
+        HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:8080/actuator/health 2>&1 || echo "000")
+        HTTP_CODE=$(echo "$HEALTH_RESPONSE" | tail -n 1)
+        RESPONSE_BODY=$(echo "$HEALTH_RESPONSE" | head -n -1)
+
+        if [ "$HTTP_CODE" = "200" ]; then
+            log "Health check passed! Response: $RESPONSE_BODY"
             return 0
         fi
 
-        warn "Health check attempt $i/$MAX_RETRIES failed. Retrying in $RETRY_INTERVAL seconds..."
+        warn "Health check attempt $i/$MAX_RETRIES failed. HTTP Code: $HTTP_CODE, Response: $RESPONSE_BODY"
+        warn "Retrying in $RETRY_INTERVAL seconds..."
         sleep $RETRY_INTERVAL
     done
 
     error "Health check failed after $MAX_RETRIES attempts!"
+
+    # Show container logs for debugging
+    log "Container status:"
+    docker-compose -f "$COMPOSE_FILE" ps
+
+    log "Recent backend logs:"
+    docker-compose -f "$COMPOSE_FILE" logs --tail=50 backend
+
     return 1
 }
 

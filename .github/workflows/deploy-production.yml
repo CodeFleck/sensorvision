@@ -173,21 +173,23 @@ jobs:
             cd /home/$EC2_USER/sensorvision
 
             # Check if containers are running
+            echo "Container status:"
             docker-compose -f docker-compose.production.yml ps
 
-            # Check health endpoint
-            echo "Waiting for application to be healthy..."
-            for i in {1..30}; do
-              if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
-                echo "Application is healthy!"
-                exit 0
-              fi
-              echo "Attempt \$i/30: Application not ready yet..."
-              sleep 10
-            done
+            # Final health check verification
+            echo "Verifying application health..."
+            sleep 5
 
-            echo "Application failed health check!"
-            exit 1
+            HEALTH_RESPONSE=\$(curl -s http://localhost:8080/actuator/health 2>&1)
+            if echo "\$HEALTH_RESPONSE" | grep -q '"status":"UP"'; then
+              echo "✅ Application is healthy!"
+              echo "Response: \$HEALTH_RESPONSE"
+              exit 0
+            else
+              echo "❌ Application health check failed!"
+              echo "Response: \$HEALTH_RESPONSE"
+              exit 1
+            fi
           EOF
 
       - name: Cleanup SSH key
