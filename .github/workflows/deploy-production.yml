@@ -201,11 +201,12 @@ jobs:
     name: Send Deployment Notification
     runs-on: ubuntu-latest
     needs: deploy
-    if: always() && secrets.SLACK_WEBHOOK_URL != ''
+    if: always()
 
     steps:
       - name: Notify Slack on success
-        if: needs.deploy.result == 'success'
+        if: needs.deploy.result == 'success' && secrets.SLACK_WEBHOOK_URL != ''
+        continue-on-error: true
         uses: slackapi/slack-github-action@v1
         with:
           payload: |
@@ -226,7 +227,8 @@ jobs:
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Notify Slack on failure
-        if: needs.deploy.result == 'failure'
+        if: needs.deploy.result == 'failure' && secrets.SLACK_WEBHOOK_URL != ''
+        continue-on-error: true
         uses: slackapi/slack-github-action@v1
         with:
           payload: |
