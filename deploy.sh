@@ -18,10 +18,10 @@ ENV_FILE=".env.production"
 BACKUP_DIR="./backups"
 LOG_FILE="./logs/deployment.log"
 
-# Create logs directory early to avoid permission errors
-# Remove if exists with wrong permissions, then recreate
-rm -rf logs
-mkdir -p logs
+# Create logs and backups directories early to avoid permission errors
+# Remove if they exist with wrong permissions, then recreate
+rm -rf logs backups
+mkdir -p logs backups
 touch logs/deployment.log
 
 # Colors for output
