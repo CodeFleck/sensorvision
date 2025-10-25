@@ -139,6 +139,8 @@ jobs:
           TEAMS_ENABLED=${{ secrets.TEAMS_ENABLED }}
           TEAMS_WEBHOOK_URL=${{ secrets.TEAMS_WEBHOOK_URL }}
           SUPPORT_ISSUE_EMAIL=${{ secrets.SUPPORT_ISSUE_EMAIL }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           ENVEOF
 
       - name: Copy .env.production to EC2
