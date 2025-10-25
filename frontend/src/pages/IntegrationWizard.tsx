@@ -153,16 +153,32 @@ export const IntegrationWizard: React.FC = () => {
 
           // User chose to use existing device - switch to existing device mode
           setUseExistingDevice(true);
+
+          // For existing device, rotate token to get the value
+          tokenResponse = await apiService.rotateDeviceToken(deviceId);
         } else {
           // Device doesn't exist - create it
-          await apiService.createDevice({
-            externalId: deviceId,
-            name: deviceName,
-          });
-        }
+          try {
+            await apiService.createDevice({
+              externalId: deviceId,
+              name: deviceName,
+            });
 
-        // Generate token (works for both newly created and existing devices)
-        tokenResponse = await apiService.generateDeviceToken(deviceId);
+            // IMPORTANT: Backend automatically generates a token during device creation
+            // We need to rotate it to get the actual token value (create returns masked token)
+            tokenResponse = await apiService.rotateDeviceToken(deviceId);
+          } catch (createError) {
+            // Ignore "already exists" errors - might happen in race conditions
+            const createErrorMsg = createError instanceof Error ? createError.message : '';
+            if (!createErrorMsg.includes('already exists') && !createErrorMsg.includes('unique')) {
+              // Re-throw if it's a different error
+              throw createError;
+            }
+            // Device was created elsewhere, rotate token to get the value
+            console.log('Device was already created, rotating token...');
+            tokenResponse = await apiService.rotateDeviceToken(deviceId);
+          }
+        }
       } else {
         // User wants to use an existing device
         if (!deviceExists) {
@@ -200,6 +216,17 @@ export const IntegrationWizard: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to setup device:', error);
+
+      // Log detailed error information for debugging
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          deviceId,
+          useExistingDevice,
+        });
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
       // Provide user-friendly error messages
