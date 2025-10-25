@@ -18,6 +18,9 @@ ENV_FILE=".env.production"
 BACKUP_DIR="./backups"
 LOG_FILE="./logs/deployment.log"
 
+# Create logs directory early to avoid permission errors
+mkdir -p logs
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
