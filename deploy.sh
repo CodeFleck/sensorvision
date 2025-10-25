@@ -99,8 +99,10 @@ ecr_login() {
         exit 1
     fi
 
-    # Get AWS region and account ID from environment or .env file
-    source "$ENV_FILE"
+    # Extract AWS_REGION and ECR_REGISTRY from .env file without sourcing
+    # (sourcing can fail if values contain special characters)
+    AWS_REGION=$(grep "^AWS_REGION=" "$ENV_FILE" | cut -d '=' -f2)
+    ECR_REGISTRY=$(grep "^ECR_REGISTRY=" "$ENV_FILE" | cut -d '=' -f2)
 
     if [ -z "${AWS_REGION:-}" ]; then
         error "AWS_REGION not set in $ENV_FILE"
@@ -168,7 +170,10 @@ check_database() {
     # The backend container will run Flyway migrations automatically on startup
     # This is just a connectivity check
 
-    source "$ENV_FILE"
+    # Extract database credentials from .env file without sourcing
+    DB_URL=$(grep "^DB_URL=" "$ENV_FILE" | cut -d '=' -f2)
+    DB_USERNAME=$(grep "^DB_USERNAME=" "$ENV_FILE" | cut -d '=' -f2)
+    DB_PASSWORD=$(grep "^DB_PASSWORD=" "$ENV_FILE" | cut -d '=' -f2)
 
     # Simple postgres connection test using docker
     docker run --rm -e PGPASSWORD="$DB_PASSWORD" postgres:15-alpine \
