@@ -20,7 +20,8 @@ LOG_FILE="./logs/deployment.log"
 
 # Create logs and backups directories early to avoid permission errors
 # Remove if they exist with wrong permissions, then recreate
-rm -rf logs backups
+# Use || true to prevent script exit if directories can't be fully deleted
+rm -rf logs backups || true
 mkdir -p logs backups
 touch logs/deployment.log
 
