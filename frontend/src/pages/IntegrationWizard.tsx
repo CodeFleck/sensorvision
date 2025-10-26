@@ -489,8 +489,35 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(generatedCode);
-      showToast('Code copied to clipboard!', 'success');
+      // Try modern clipboard API first (requires HTTPS)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(generatedCode);
+        showToast('Code copied to clipboard!', 'success');
+      } else {
+        // Fallback for non-secure contexts (HTTP)
+        const textArea = document.createElement('textarea');
+        textArea.value = generatedCode;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            showToast('Code copied to clipboard!', 'success');
+          } else {
+            showToast('Failed to copy code. Please try again.', 'error');
+          }
+        } catch (execErr) {
+          console.error('Failed to copy with execCommand:', execErr);
+          showToast('Failed to copy code. Please try again.', 'error');
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
     } catch (err) {
       console.error('Failed to copy:', err);
       showToast('Failed to copy code. Please try again.', 'error');
@@ -545,7 +572,6 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
         body: JSON.stringify({
           temperature: 23.5,
           humidity: 65.2,
-          test: true,
         }),
       });
 
