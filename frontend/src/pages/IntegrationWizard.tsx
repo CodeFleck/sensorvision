@@ -12,6 +12,7 @@ import {
   FileCode,
   Terminal,
   Wifi,
+  AlertTriangle,
 } from 'lucide-react';
 import { apiService } from '../services/api';
 import { clsx } from 'clsx';

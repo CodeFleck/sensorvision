@@ -41,19 +41,17 @@ describe('IntegrationWizard', () => {
     describe('sanitizeFilename', () => {
       // We'll test this through the download functionality
       it('should sanitize invalid filename characters', async () => {
-        const { container } = renderWithRouter(<IntegrationWizard />);
+        renderWithRouter(<IntegrationWizard />);
 
-        // The sanitizeFilename function should handle these characters:
-        const testCases = [
-          { input: 'device/test', expected: 'device_test' },
-          { input: 'device:test', expected: 'device_test' },
-          { input: 'device<test>', expected: 'device_test_' },
-          { input: 'device|test', expected: 'device_test' },
-          { input: 'device?test', expected: 'device_test' },
-          { input: 'device*test', expected: 'device_test' },
-          { input: 'device test', expected: 'device_test' },
-          { input: '  device  test  ', expected: 'device_test' },
-        ];
+        // The sanitizeFilename function handles these characters:
+        // device/test → device_test
+        // device:test → device_test
+        // device<test> → device_test_
+        // device|test → device_test
+        // device?test → device_test
+        // device*test → device_test
+        // device test → device_test
+        //   device  test   → device_test
 
         // We can't directly test the function, but we verified the regex patterns are correct
         expect(true).toBe(true);
@@ -121,7 +119,7 @@ describe('IntegrationWizard', () => {
 
   describe('Device Setup Flow', () => {
     beforeEach(async () => {
-      const { container } = renderWithRouter(<IntegrationWizard />);
+      renderWithRouter(<IntegrationWizard />);
 
       // Navigate to step 2 (Device Setup)
       const pythonButton = screen.getByRole('button', { name: /Python/i });
@@ -163,6 +161,8 @@ describe('IntegrationWizard', () => {
         token: mockToken,
         maskedToken: 'test***123',
         expiresAt: null,
+        message: 'Token rotated successfully',
+        success: true,
       });
 
       const deviceIdInput = screen.getByPlaceholderText(/e.g., sensor-001/i);
@@ -199,6 +199,8 @@ describe('IntegrationWizard', () => {
         token: mockToken,
         maskedToken: 'test***456',
         expiresAt: null,
+        message: 'Token rotated successfully',
+        success: true,
       });
 
       const deviceIdInput = screen.getByPlaceholderText(/e.g., sensor-001/i);
@@ -229,6 +231,8 @@ describe('IntegrationWizard', () => {
         token: mockToken,
         maskedToken: 'existing***789',
         expiresAt: null,
+        message: 'Token rotated successfully',
+        success: true,
       });
 
       // Check "Use existing device"
@@ -276,6 +280,8 @@ describe('IntegrationWizard', () => {
         token: 'test-token',
         maskedToken: 'test***ken',
         expiresAt: null,
+        message: 'Token rotated successfully',
+        success: true,
       });
 
       const deviceIdInput = screen.getByPlaceholderText(/e.g., sensor-001/i);
@@ -309,14 +315,8 @@ describe('IntegrationWizard', () => {
 
       // The component should have platformColorClasses map with explicit classes
       // This ensures Tailwind JIT compiler can detect them
-      const expectedClasses = [
-        'text-blue-600',
-        'text-green-600',
-        'text-yellow-600',
-        'text-red-600',
-        'text-purple-600',
-        'text-gray-600',
-      ];
+      // Expected classes: text-blue-600, text-green-600, text-yellow-600,
+      // text-red-600, text-purple-600, text-gray-600
 
       // We can't directly inspect the constant, but we verified it exists in the component
       expect(true).toBe(true);

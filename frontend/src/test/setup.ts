@@ -27,8 +27,7 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock window.location
 delete (window as any).location;
-window.location = {
-  ...window.location,
+(window as any).location = {
   origin: 'http://localhost:3000',
   protocol: 'http:',
   host: 'localhost:3000',
@@ -39,7 +38,7 @@ window.location = {
 Object.defineProperty(navigator, 'clipboard', {
   writable: true,
   value: {
-    writeText: async (text: string) => {
+    writeText: async (_text: string) => {
       return Promise.resolve();
     },
     readText: async () => {
@@ -49,5 +48,5 @@ Object.defineProperty(navigator, 'clipboard', {
 });
 
 // Mock global alert and confirm
-global.alert = () => {};
-global.confirm = () => true;
+globalThis.alert = () => {};
+globalThis.confirm = () => true;

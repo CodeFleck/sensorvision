@@ -15,6 +15,7 @@ export interface DeviceTokenResponse {
   deviceId?: string;
   token?: string;          // Full token (only shown once on generation/rotation)
   maskedToken?: string;    // Masked token (e.g., "550e8400...0000")
+  expiresAt?: string | null; // Token expiration date (if applicable)
   message: string;
   success: boolean;
   tokenCreatedAt?: string;
