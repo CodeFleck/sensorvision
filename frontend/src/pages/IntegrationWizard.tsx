@@ -27,6 +27,16 @@ interface PlatformOption {
   color: string;
 }
 
+// Map platform colors to explicit Tailwind classes (for JIT compilation)
+const platformColorClasses: Record<string, string> = {
+  blue: 'text-blue-600',
+  green: 'text-green-600',
+  yellow: 'text-yellow-600',
+  red: 'text-red-600',
+  purple: 'text-purple-600',
+  gray: 'text-gray-600',
+};
+
 const platforms: PlatformOption[] = [
   {
     id: 'esp32',
@@ -72,6 +82,12 @@ const platforms: PlatformOption[] = [
   },
 ];
 
+interface ToastMessage {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
 export const IntegrationWizard: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
@@ -85,9 +101,19 @@ export const IntegrationWizard: React.FC = () => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastSetupDeviceId, setLastSetupDeviceId] = useState(''); // Track which device we set up
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const apiUrl = config.backendUrl;
 
   const totalSteps = 5;
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    // Auto-remove toast after 3 seconds
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 3000);
+  };
 
   const goToNextStep = () => {
     if (currentStep < totalSteps) {
@@ -297,6 +323,7 @@ void sendData(float temperature, float humidity) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
 
+    // NOTE: If device ID contains special characters, URL-encode it
     String url = String(apiUrl) + "/api/v1/ingest/" + String(deviceId);
     http.begin(url);
     http.addHeader("X-API-Key", apiKey);
@@ -322,6 +349,7 @@ void sendData(float temperature, float humidity) {
       case 'raspberry-pi':
         code = `import requests
 import time
+from urllib.parse import quote
 
 # SensorVision configuration
 API_URL = "${apiUrl}"
@@ -330,7 +358,8 @@ DEVICE_ID = "${devId}"
 
 def send_data(temperature, humidity):
     """Send sensor data to SensorVision"""
-    url = f"{API_URL}/api/v1/ingest/{DEVICE_ID}"
+    # URL-encode device ID to handle special characters
+    url = f"{API_URL}/api/v1/ingest/{quote(DEVICE_ID)}"
     headers = {
         "X-API-Key": API_KEY,
         "Content-Type": "application/json"
@@ -377,8 +406,9 @@ const DEVICE_ID = '${devId}';
 
 async function sendData(temperature, humidity) {
   try {
+    // URL-encode device ID to handle special characters
     const response = await axios.post(
-      \`\${API_URL}/api/v1/ingest/\${DEVICE_ID}\`,
+      \`\${API_URL}/api/v1/ingest/\${encodeURIComponent(DEVICE_ID)}\`,
       {
         temperature,
         humidity
@@ -428,6 +458,7 @@ DEVICE_ID="${devId}"
 TEMPERATURE=23.5
 HUMIDITY=65.2
 
+# URL-encode device ID (bash handles special chars in variables when quoted)
 # Send data to SensorVision
 curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
   -H "X-API-Key: $API_KEY" \\
@@ -458,10 +489,22 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(generatedCode);
-      alert('Code copied to clipboard!');
+      showToast('Code copied to clipboard!', 'success');
     } catch (err) {
       console.error('Failed to copy:', err);
+      showToast('Failed to copy code. Please try again.', 'error');
     }
+  };
+
+  // Sanitize filename to remove invalid characters for Windows/macOS/Linux
+  const sanitizeFilename = (name: string): string => {
+    // Remove or replace characters that are invalid in filenames
+    // Invalid chars: < > : " / \ | ? * and control characters (0-31)
+    return name
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_') // Replace invalid chars with underscore
+      .replace(/\s+/g, '_') // Replace spaces with underscore
+      .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+      .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
   };
 
   const downloadCode = () => {
@@ -474,7 +517,8 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
       'curl': '.sh',
     };
 
-    const filename = `sensorvision-${deviceId}${extensions[selectedPlatform!]}`;
+    const safeDeviceId = sanitizeFilename(deviceId);
+    const filename = `sensorvision-${safeDeviceId}${extensions[selectedPlatform!]}`;
     const blob = new Blob([generatedCode], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -490,8 +534,8 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
     setConnectionSuccess(false);
 
     try {
-      // Send test data
-      const response = await fetch(`${apiUrl}/api/v1/ingest/${deviceId}`, {
+      // Send test data (URL-encode device ID to handle special characters)
+      const response = await fetch(`${apiUrl}/api/v1/ingest/${encodeURIComponent(deviceId)}`, {
         method: 'POST',
         headers: {
           'X-API-Key': apiToken,
@@ -545,7 +589,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
                       'text-left hover:border-blue-500'
                     )}
                   >
-                    <Icon className={`h-12 w-12 text-${platform.color}-600 mb-3`} />
+                    <Icon className={clsx('h-12 w-12 mb-3', platformColorClasses[platform.color])} />
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">
                       {platform.name}
                     </h3>
@@ -915,6 +959,30 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
             </button>
           </div>
         )}
+      </div>
+
+      {/* Toast Notifications */}
+      <div className="fixed bottom-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={clsx(
+              'px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 min-w-[300px]',
+              'transform transition-all duration-300 ease-in-out',
+              'animate-in slide-in-from-right',
+              {
+                'bg-green-500 text-white': toast.type === 'success',
+                'bg-red-500 text-white': toast.type === 'error',
+                'bg-blue-500 text-white': toast.type === 'info',
+              }
+            )}
+          >
+            {toast.type === 'success' && <CheckCircle2 className="w-5 h-5" />}
+            {toast.type === 'error' && <AlertTriangle className="w-5 h-5" />}
+            {toast.type === 'info' && <Sparkles className="w-5 h-5" />}
+            <span className="flex-1">{toast.message}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
