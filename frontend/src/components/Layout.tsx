@@ -17,7 +17,6 @@ import {
   FileUp,
   LogOut,
   Shield,
-  Bug,
   ChevronDown,
   ChevronRight,
   Zap,
@@ -28,6 +27,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { SubmitIssueModal } from './SubmitIssueModal';
 import { AvatarUploadModal } from './AvatarUploadModal';
 import { UserAvatar } from './UserAvatar';
+import { Footer } from './Footer';
 import { useState } from 'react';
 
 interface LayoutProps {
@@ -256,15 +256,6 @@ export const Layout = ({ children }: LayoutProps) => {
                 </div>
               </div>
 
-              {/* Report Issue Button */}
-              <button
-                onClick={() => setIsIssueModalOpen(true)}
-                className="w-full flex items-center justify-center px-4 py-2 mb-2 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
-              >
-                <Bug className="mr-2 h-4 w-4" />
-                Report Issue
-              </button>
-
               {/* Sign Out Button */}
               <button
                 onClick={logout}
@@ -301,6 +292,9 @@ export const Layout = ({ children }: LayoutProps) => {
           <main className="flex-1 p-8 overflow-y-auto">
             {children}
           </main>
+
+          {/* Footer */}
+          <Footer onReportIssue={() => setIsIssueModalOpen(true)} />
         </div>
       </div>
 
