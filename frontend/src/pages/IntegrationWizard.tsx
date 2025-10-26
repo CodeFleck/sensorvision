@@ -572,7 +572,6 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
         body: JSON.stringify({
           temperature: 23.5,
           humidity: 65.2,
-          test: true,
         }),
       });
 
