@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import { IssueCategory, IssueSeverity, IssueSubmissionRequest } from '../types';
 import { apiService } from '../services/api';
@@ -92,8 +93,10 @@ export const SubmitIssueModal: React.FC<SubmitIssueModalProps> = ({
 
       await apiService.submitIssue(requestData);
 
-      // Success! Show confirmation and close
-      alert('Thank you! Your issue has been submitted successfully. Our team will review it shortly.');
+      // Success! Show confirmation toast
+      toast.success('Thank you! Your issue has been submitted successfully. Our team will review it shortly.', {
+        duration: 5000,
+      });
 
       // Reset form
       setFormData({

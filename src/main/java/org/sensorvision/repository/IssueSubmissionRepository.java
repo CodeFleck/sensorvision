@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,5 +61,5 @@ public interface IssueSubmissionRepository extends JpaRepository<IssueSubmission
      * Count issues submitted by a user after a specific timestamp (for rate limiting)
      */
     @Query("SELECT COUNT(i) FROM IssueSubmission i WHERE i.user = :user AND i.createdAt >= :since")
-    long countByUserSince(@Param("user") User user, @Param("since") LocalDateTime since);
+    long countByUserSince(@Param("user") User user, @Param("since") Instant since);
 }

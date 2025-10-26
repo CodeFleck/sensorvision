@@ -67,7 +67,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
     websocket.onclose = (event) => {
       setConnectionStatus('Closed');
-      console.log(`[WebSocket] Connection closed (code: ${event.code}, reason: ${event.reason || 'none'})`);
+
+      // Don't log expected closures (1000 = normal closure, 1001 = going away)
+      if (event.code !== 1000 && event.code !== 1001) {
+        console.log(`[WebSocket] Connection closed (code: ${event.code}, reason: ${event.reason || 'none'})`);
+      }
 
       // Only attempt to reconnect if we should and haven't exceeded max attempts
       if (shouldReconnect.current && reconnectAttemptCount.current < maxReconnectAttempts) {
@@ -91,7 +95,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     };
 
     websocket.onerror = (error) => {
-      console.error('[WebSocket] Error occurred:', error);
+      // Only log errors for open or connecting sockets, not for expected closures
+      if (websocket.readyState !== WebSocket.CLOSED) {
+        console.error('[WebSocket] Error occurred:', error);
+      }
     };
   }, [url, maxReconnectAttempts, reconnectInterval]);
 

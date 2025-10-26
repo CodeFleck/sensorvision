@@ -15,7 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -59,7 +60,7 @@ public class IssueSubmissionService {
         Organization organization = securityUtils.getCurrentUserOrganization();
 
         // Check rate limit: max 3 issues per 24 hours per user
-        LocalDateTime rateLimitStart = LocalDateTime.now().minusHours(RATE_LIMIT_HOURS);
+        Instant rateLimitStart = Instant.now().minus(RATE_LIMIT_HOURS, ChronoUnit.HOURS);
         long recentIssueCount = issueSubmissionRepository.countByUserSince(currentUser, rateLimitStart);
 
         if (recentIssueCount >= MAX_ISSUES_PER_DAY) {
