@@ -12,6 +12,7 @@ import {
   FileCode,
   Terminal,
   Wifi,
+  AlertTriangle,
 } from 'lucide-react';
 import { apiService } from '../services/api';
 import { clsx } from 'clsx';
@@ -26,6 +27,16 @@ interface PlatformOption {
   icon: React.ComponentType<{ className?: string }>;
   color: string;
 }
+
+// Map platform colors to explicit Tailwind classes (for JIT compilation)
+const platformColorClasses: Record<string, string> = {
+  blue: 'text-blue-600',
+  green: 'text-green-600',
+  yellow: 'text-yellow-600',
+  red: 'text-red-600',
+  purple: 'text-purple-600',
+  gray: 'text-gray-600',
+};
 
 const platforms: PlatformOption[] = [
   {
@@ -72,6 +83,12 @@ const platforms: PlatformOption[] = [
   },
 ];
 
+interface ToastMessage {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
 export const IntegrationWizard: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
@@ -84,9 +101,20 @@ export const IntegrationWizard: React.FC = () => {
   const [connectionSuccess, setConnectionSuccess] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lastSetupDeviceId, setLastSetupDeviceId] = useState(''); // Track which device we set up
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const apiUrl = config.backendUrl;
 
   const totalSteps = 5;
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    // Auto-remove toast after 3 seconds
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 3000);
+  };
 
   const goToNextStep = () => {
     if (currentStep < totalSteps) {
@@ -96,6 +124,11 @@ export const IntegrationWizard: React.FC = () => {
 
   const goToPreviousStep = () => {
     if (currentStep > 1) {
+      // If going back to step 2 (device setup), clear the token to force fresh setup
+      if (currentStep === 3) {
+        setApiToken('');
+        setGeneratedCode('');
+      }
       setCurrentStep(currentStep - 1);
     }
   };
@@ -108,19 +141,79 @@ export const IntegrationWizard: React.FC = () => {
   const handleDeviceSetup = async () => {
     if (!deviceId || (!useExistingDevice && !deviceName)) return;
 
+    // If we already have a token for THIS SAME device, just proceed to code generation
+    // (Prevents re-creating if user clicks Continue multiple times)
+    if (apiToken && generatedCode && lastSetupDeviceId === deviceId) {
+      goToNextStep();
+      return;
+    }
+
     setLoading(true);
     try {
       let tokenResponse;
+      let deviceExists = false;
+
+      // First, check if device already exists (regardless of mode)
+      try {
+        await apiService.getDevice(deviceId);
+        deviceExists = true;
+      } catch (error) {
+        // Device doesn't exist, which is fine if we're creating a new one
+        deviceExists = false;
+      }
 
       if (!useExistingDevice) {
-        // Create new device
-        await apiService.createDevice({
-          externalId: deviceId,
-          name: deviceName,
-        });
-        // Generate token for new device
-        tokenResponse = await apiService.generateDeviceToken(deviceId);
+        // User wants to create a new device
+        if (deviceExists) {
+          // Device already exists! Ask user what to do
+          const userChoice = confirm(
+            `A device with ID "${deviceId}" already exists.\n\n` +
+            `Would you like to use this existing device?\n\n` +
+            `Click OK to use the existing device, or Cancel to choose a different ID.`
+          );
+
+          if (!userChoice) {
+            // User chose to cancel - let them pick a different ID
+            setLoading(false);
+            return;
+          }
+
+          // User chose to use existing device - switch to existing device mode
+          setUseExistingDevice(true);
+
+          // For existing device, rotate token to get the value
+          tokenResponse = await apiService.rotateDeviceToken(deviceId);
+        } else {
+          // Device doesn't exist - create it
+          try {
+            await apiService.createDevice({
+              externalId: deviceId,
+              name: deviceName,
+            });
+
+            // IMPORTANT: Backend automatically generates a token during device creation
+            // We need to rotate it to get the actual token value (create returns masked token)
+            tokenResponse = await apiService.rotateDeviceToken(deviceId);
+          } catch (createError) {
+            // Ignore "already exists" errors - might happen in race conditions
+            const createErrorMsg = createError instanceof Error ? createError.message : '';
+            if (!createErrorMsg.includes('already exists') && !createErrorMsg.includes('unique')) {
+              // Re-throw if it's a different error
+              throw createError;
+            }
+            // Device was created elsewhere, rotate token to get the value
+            console.log('Device was already created, rotating token...');
+            tokenResponse = await apiService.rotateDeviceToken(deviceId);
+          }
+        }
       } else {
+        // User wants to use an existing device
+        if (!deviceExists) {
+          alert(`Device "${deviceId}" does not exist. Please uncheck "Use existing device" to create it, or enter a valid device ID.`);
+          setLoading(false);
+          return;
+        }
+
         // For existing devices, check if token exists
         try {
           const tokenInfo = await apiService.getDeviceTokenInfo(deviceId);
@@ -132,16 +225,17 @@ export const IntegrationWizard: React.FC = () => {
             tokenResponse = await apiService.generateDeviceToken(deviceId);
           }
         } catch (error) {
-          // If getDeviceTokenInfo fails, try to generate (device might not exist)
+          // If getDeviceTokenInfo fails, try to generate
           console.error('Error checking token:', error);
-          alert('Device not found or you do not have access to it.');
+          alert('Failed to get device token. Please check your permissions.');
           setLoading(false);
           return;
         }
       }
 
-      if (tokenResponse.token) {
+      if (tokenResponse && tokenResponse.token) {
         setApiToken(tokenResponse.token);
+        setLastSetupDeviceId(deviceId); // Remember which device we just set up
         generateCode(selectedPlatform!, deviceId, tokenResponse.token);
         goToNextStep();
       } else {
@@ -149,9 +243,34 @@ export const IntegrationWizard: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to setup device:', error);
+
+      // Log detailed error information for debugging
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          deviceId,
+          useExistingDevice,
+        });
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      if (errorMessage.includes('unique') || errorMessage.includes('already exists')) {
-        alert('A device with this ID already exists. Please use a different ID or check "Use existing device".');
+
+      // Provide user-friendly error messages
+      if (errorMessage.includes('already exists')) {
+        alert(
+          `A device with ID "${deviceId}" already exists.\n\n` +
+          `Please either:\n` +
+          `1. Check "Use existing device" checkbox, or\n` +
+          `2. Choose a different device ID`
+        );
+      } else if (errorMessage.includes('not found') || errorMessage.includes('404')) {
+        alert(
+          `Device "${deviceId}" was not found.\n\n` +
+          `Please either:\n` +
+          `1. Uncheck "Use existing device" to create a new device, or\n` +
+          `2. Enter the correct device ID`
+        );
       } else {
         alert(`Failed to setup device: ${errorMessage}`);
       }
@@ -205,6 +324,7 @@ void sendData(float temperature, float humidity) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
 
+    // NOTE: If device ID contains special characters, URL-encode it
     String url = String(apiUrl) + "/api/v1/ingest/" + String(deviceId);
     http.begin(url);
     http.addHeader("X-API-Key", apiKey);
@@ -230,6 +350,7 @@ void sendData(float temperature, float humidity) {
       case 'raspberry-pi':
         code = `import requests
 import time
+from urllib.parse import quote
 
 # SensorVision configuration
 API_URL = "${apiUrl}"
@@ -238,7 +359,8 @@ DEVICE_ID = "${devId}"
 
 def send_data(temperature, humidity):
     """Send sensor data to SensorVision"""
-    url = f"{API_URL}/api/v1/ingest/{DEVICE_ID}"
+    # URL-encode device ID to handle special characters
+    url = f"{API_URL}/api/v1/ingest/{quote(DEVICE_ID)}"
     headers = {
         "X-API-Key": API_KEY,
         "Content-Type": "application/json"
@@ -285,8 +407,9 @@ const DEVICE_ID = '${devId}';
 
 async function sendData(temperature, humidity) {
   try {
+    // URL-encode device ID to handle special characters
     const response = await axios.post(
-      \`\${API_URL}/api/v1/ingest/\${DEVICE_ID}\`,
+      \`\${API_URL}/api/v1/ingest/\${encodeURIComponent(DEVICE_ID)}\`,
       {
         temperature,
         humidity
@@ -336,6 +459,7 @@ DEVICE_ID="${devId}"
 TEMPERATURE=23.5
 HUMIDITY=65.2
 
+# URL-encode device ID (bash handles special chars in variables when quoted)
 # Send data to SensorVision
 curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
   -H "X-API-Key: $API_KEY" \\
@@ -366,10 +490,22 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(generatedCode);
-      alert('Code copied to clipboard!');
+      showToast('Code copied to clipboard!', 'success');
     } catch (err) {
       console.error('Failed to copy:', err);
+      showToast('Failed to copy code. Please try again.', 'error');
     }
+  };
+
+  // Sanitize filename to remove invalid characters for Windows/macOS/Linux
+  const sanitizeFilename = (name: string): string => {
+    // Remove or replace characters that are invalid in filenames
+    // Invalid chars: < > : " / \ | ? * and control characters (0-31)
+    return name
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_') // Replace invalid chars with underscore
+      .replace(/\s+/g, '_') // Replace spaces with underscore
+      .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+      .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
   };
 
   const downloadCode = () => {
@@ -382,7 +518,8 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
       'curl': '.sh',
     };
 
-    const filename = `sensorvision-${deviceId}${extensions[selectedPlatform!]}`;
+    const safeDeviceId = sanitizeFilename(deviceId);
+    const filename = `sensorvision-${safeDeviceId}${extensions[selectedPlatform!]}`;
     const blob = new Blob([generatedCode], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -398,8 +535,8 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
     setConnectionSuccess(false);
 
     try {
-      // Send test data
-      const response = await fetch(`${apiUrl}/api/v1/ingest/${deviceId}`, {
+      // Send test data (URL-encode device ID to handle special characters)
+      const response = await fetch(`${apiUrl}/api/v1/ingest/${encodeURIComponent(deviceId)}`, {
         method: 'POST',
         headers: {
           'X-API-Key': apiToken,
@@ -453,7 +590,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
                       'text-left hover:border-blue-500'
                     )}
                   >
-                    <Icon className={`h-12 w-12 text-${platform.color}-600 mb-3`} />
+                    <Icon className={clsx('h-12 w-12 mb-3', platformColorClasses[platform.color])} />
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">
                       {platform.name}
                     </h3>
@@ -823,6 +960,30 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
             </button>
           </div>
         )}
+      </div>
+
+      {/* Toast Notifications */}
+      <div className="fixed bottom-4 right-4 z-50 space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={clsx(
+              'px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 min-w-[300px]',
+              'transform transition-all duration-300 ease-in-out',
+              'animate-in slide-in-from-right',
+              {
+                'bg-green-500 text-white': toast.type === 'success',
+                'bg-red-500 text-white': toast.type === 'error',
+                'bg-blue-500 text-white': toast.type === 'info',
+              }
+            )}
+          >
+            {toast.type === 'success' && <CheckCircle2 className="w-5 h-5" />}
+            {toast.type === 'error' && <AlertTriangle className="w-5 h-5" />}
+            {toast.type === 'info' && <Sparkles className="w-5 h-5" />}
+            <span className="flex-1">{toast.message}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

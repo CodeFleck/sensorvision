@@ -86,6 +86,8 @@ jobs:
 
       - name: Check code coverage
         run: ./gradlew jacocoTestCoverageVerification --no-daemon || true
+        # Note: Coverage threshold is 30%, currently at ~19%
+        # This check is non-blocking until we add more tests
 
   # =============================================================================
   # Frontend Tests (React + TypeScript)
@@ -117,13 +119,17 @@ jobs:
         working-directory: ./frontend
         run: npx tsc --noEmit
 
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: npm run test:run
+
+      - name: Generate coverage report
+        working-directory: ./frontend
+        run: npm run test:coverage
+
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
-
-      - name: Run frontend tests
-        working-directory: ./frontend
-        run: npm test -- --run --coverage || true
 
       - name: Upload frontend build
         uses: actions/upload-artifact@v4
