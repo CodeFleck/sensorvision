@@ -29,7 +29,9 @@
       "Bash(powershell -Command:*)",
       "Bash(aws ec2 describe-key-pairs:*)",
       "Bash(gh pr list:*)",
-      "Bash(gh issue create:*)"
+      "Bash(gh issue create:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)"
     ],
     "deny": [],
     "ask": []
