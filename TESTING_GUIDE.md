@@ -497,18 +497,18 @@ void validateDeviceId_shouldReturnTrue() {
 
 ### Priority Tests to Write
 
-#### HIGH Priority (Next Sprint)
-1. ✅ `DeviceService` - Already added!
-2. ✅ `IntegrationWizard` - Already added!
-3. ✅ `config.ts` - Already added!
-4. `AuthService` - Security critical
-5. `RuleEngineService` - Business logic
-6. `api.ts` - Core communication layer
+#### HIGH Priority (Next Sprint) - ✅ COMPLETED!
+1. ✅ `DeviceService` - 10 tests covering CRUD, security, and token management
+2. ✅ `IntegrationWizard` - Component tests with user flows
+3. ✅ `config.ts` - Configuration validation tests
+4. ✅ `AuthService` - 18 tests covering login, registration, password reset, email verification
+5. ✅ `RuleEngineService` - 20 tests covering all operators, severity, cooldown, events
+6. ✅ `api.ts` - 28 tests covering authentication, error handling, all CRUD operations
 
-#### MEDIUM Priority (This Quarter)
-7. `AnalyticsService` - Calculations
-8. `AlertService` - Alert triggering
-9. `SyntheticVariableService` - Expression parsing
+#### MEDIUM Priority (This Quarter) - In Progress
+7. ✅ `AnalyticsService` - 23 tests covering aggregations, security, intervals, edge cases
+8. ✅ `AlertService` - 15 tests covering retrieval, acknowledgment, notifications, security
+9. ✅ `SyntheticVariableService` - 19 tests covering expression parsing, operator precedence, error handling
 10. All remaining Controllers
 
 #### LOW Priority (Ongoing)
