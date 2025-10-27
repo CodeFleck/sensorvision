@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { Layout } from './components/Layout';
+import { LayoutV1 } from './components/LayoutV1';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { ForgotPassword } from './pages/ForgotPassword';
@@ -28,6 +28,7 @@ import IntegrationWizard from './pages/IntegrationWizard';
 import { config } from './config';
 
 function App() {
+
   return (
     <AuthProvider>
       <WebSocketProvider url={config.webSocketUrl}>
@@ -69,7 +70,7 @@ function App() {
           path="/*"
           element={
             <ProtectedRoute>
-              <Layout>
+              <LayoutV1>
                 <Routes>
                   {/* Standard user routes */}
                   <Route path="/" element={<Dashboard />} />
@@ -90,7 +91,7 @@ function App() {
                   <Route path="/data-export" element={<ProtectedRoute adminOnly={true}><DataExport /></ProtectedRoute>} />
                   <Route path="/variables" element={<ProtectedRoute adminOnly={true}><Variables /></ProtectedRoute>} />
                 </Routes>
-              </Layout>
+              </LayoutV1>
             </ProtectedRoute>
           }
         />
