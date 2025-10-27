@@ -156,11 +156,6 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
 
   const visibleSections = getVisibleSections();
 
-  // Check if any item in section is active
-  const isSectionActive = (section: NavigationSection): boolean => {
-    return section.items.some(item => item.href === location.pathname);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
@@ -182,7 +177,6 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
               const isCollapsed = collapsedSections.has(section.name);
               const isHovered = hoveredSection === section.name;
               const isExpanded = !isCollapsed || isHovered; // Expand if not collapsed OR if being hovered
-              const hasActiveItem = isSectionActive(section);
 
               return (
                 <div

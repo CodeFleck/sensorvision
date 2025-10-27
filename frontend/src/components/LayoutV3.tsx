@@ -194,7 +194,7 @@ export const LayoutV3 = ({ children }: LayoutProps) => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 'b') {
         e.preventDefault();
-        setIsCollapsed(prev => !prev);
+        setIsCollapsed((prev: boolean) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyPress);
@@ -344,7 +344,17 @@ export const LayoutV3 = ({ children }: LayoutProps) => {
                           }
                         >
                           {/* Icon with gradient */}
-                          <div className={clsx('flex-shrink-0', isCollapsed ? '' : 'mr-3')}>
+                          <div
+                            className={clsx('flex-shrink-0', isCollapsed ? '' : 'mr-3')}
+                            style={
+                              !isActive
+                                ? {
+                                    filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.3))',
+                                    WebkitTextStroke: isActive ? '0' : '1.5px currentColor'
+                                  }
+                                : {}
+                            }
+                          >
                             <Icon
                               className={clsx(
                                 'h-5 w-5 transition-all duration-200',
@@ -352,14 +362,6 @@ export const LayoutV3 = ({ children }: LayoutProps) => {
                                   ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
                                   : `text-transparent bg-clip-text bg-gradient-to-br ${item.gradient}`
                               )}
-                              style={
-                                !isActive
-                                  ? {
-                                      filter: 'drop-shadow(0 0 6px rgba(59, 130, 246, 0.3))',
-                                      WebkitTextStroke: isActive ? '0' : '1.5px currentColor'
-                                    }
-                                  : {}
-                              }
                             />
                           </div>
 

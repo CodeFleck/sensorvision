@@ -31,7 +31,7 @@ describe('ApiService', () => {
 
     // Mock window.location
     delete (window as any).location;
-    window.location = { href: '' } as Location;
+    window.location = { href: '' } as any;
   });
 
   afterEach(() => {
