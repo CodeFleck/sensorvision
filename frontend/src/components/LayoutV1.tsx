@@ -179,15 +179,12 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
               const isExpanded = !isCollapsed || isHovered; // Expand if not collapsed OR if being hovered
 
               return (
-                <div
-                  key={section.name}
-                  className="mb-4"
-                  onMouseEnter={() => setHoveredSection(section.name)}
-                  onMouseLeave={() => setHoveredSection(null)}
-                >
+                <div key={section.name} className="mb-4">
                   {/* Section Header */}
                   <button
                     onClick={() => toggleSection(section.name)}
+                    onMouseEnter={() => setHoveredSection(section.name)}
+                    onMouseLeave={() => setHoveredSection(null)}
                     className="w-full flex items-center px-3 py-2 mb-1 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-all duration-200 group"
                   >
                     <SectionIcon className={clsx('h-4 w-4 mr-2 flex-shrink-0', section.iconColor)} />
