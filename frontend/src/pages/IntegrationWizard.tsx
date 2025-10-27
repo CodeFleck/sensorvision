@@ -209,7 +209,7 @@ export const IntegrationWizard: React.FC = () => {
       } else {
         // User wants to use an existing device
         if (!deviceExists) {
-          alert(`Device "${deviceId}" does not exist. Please uncheck "Use existing device" to create it, or enter a valid device ID.`);
+          showToast(`Device "${deviceId}" does not exist. Please uncheck "Use existing device" to create it, or enter a valid device ID.`, 'error');
           setLoading(false);
           return;
         }
