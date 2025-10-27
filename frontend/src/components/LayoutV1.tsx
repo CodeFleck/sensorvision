@@ -21,6 +21,8 @@ import {
   ChevronRight,
   Zap,
   BookOpen,
+  Headphones,
+  MessageSquare,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -95,6 +97,16 @@ const navigationSections: NavigationSection[] = [
       { name: 'Data Import', href: '/data-import', icon: FileUp, adminOnly: true },
       { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: true },
       { name: 'Variables', href: '/variables', icon: Database, adminOnly: true },
+    ],
+  },
+  {
+    name: 'HELP & SUPPORT',
+    icon: Headphones,
+    iconColor: 'text-pink-600',
+    adminOnly: false,
+    items: [
+      { name: 'My Tickets', href: '/my-tickets', icon: MessageSquare, adminOnly: false },
+      { name: 'Support Tickets', href: '/admin/support-tickets', icon: Headphones, adminOnly: true },
     ],
   },
 ];

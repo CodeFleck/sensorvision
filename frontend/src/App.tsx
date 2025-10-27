@@ -25,6 +25,8 @@ import DeviceTags from './pages/DeviceTags';
 import DataExport from './pages/DataExport';
 import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
+import { AdminSupportTickets } from './pages/AdminSupportTickets';
+import { MyTickets } from './pages/MyTickets';
 import { config } from './config';
 
 function App() {
@@ -81,6 +83,7 @@ function App() {
                   <Route path="/rules" element={<Rules />} />
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/my-tickets" element={<MyTickets />} />
 
                   {/* Admin-only routes */}
                   <Route path="/device-groups" element={<ProtectedRoute adminOnly={true}><DeviceGroups /></ProtectedRoute>} />
@@ -90,6 +93,7 @@ function App() {
                   <Route path="/data-import" element={<ProtectedRoute adminOnly={true}><DataImport /></ProtectedRoute>} />
                   <Route path="/data-export" element={<ProtectedRoute adminOnly={true}><DataExport /></ProtectedRoute>} />
                   <Route path="/variables" element={<ProtectedRoute adminOnly={true}><Variables /></ProtectedRoute>} />
+                  <Route path="/admin/support-tickets" element={<ProtectedRoute adminOnly={true}><AdminSupportTickets /></ProtectedRoute>} />
                 </Routes>
               </LayoutV1>
             </ProtectedRoute>
