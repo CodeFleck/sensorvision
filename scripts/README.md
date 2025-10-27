@@ -333,4 +333,88 @@ docker exec -it sensorvision-postgres psql -U sensorvision -c \
 
 ---
 
+## 📋 Deployment Documentation Scripts
+
+### create-deployment-issue.sh / create-deployment-issue.ps1
+Automatically creates GitHub issues when deployment errors occur.
+
+**Usage (Bash):**
+```bash
+./scripts/create-deployment-issue.sh \
+  "Connection timeout during deployment" \
+  "Docker container failed to start on EC2" \
+  "critical"
+```
+
+**Usage (PowerShell):**
+```powershell
+.\scripts\create-deployment-issue.ps1 `
+  -ErrorTitle "Connection timeout during deployment" `
+  -ErrorDescription "Docker container failed to start on EC2" `
+  -Severity critical
+```
+
+**Severity Levels:**
+- `critical` - 🔴 Critical issues requiring immediate attention
+- `high` - 🟠 High priority issues
+- `medium` - 🟡 Medium priority (default)
+- `low` - 🟢 Low priority
+
+**What it does:**
+- Creates a GitHub issue with detailed error information
+- Automatically adds appropriate labels
+- Updates DEPLOY_DOCUMENTATION.md with error reference
+- Includes environment info, investigation steps, and rollback procedures
+
+### update-deployment-docs.ps1
+Helper script to document successful deployments.
+
+**Usage:**
+```powershell
+.\scripts\update-deployment-docs.ps1 `
+  -Title "Integration Wizard Fix" `
+  -Type "Bug Fix" `
+  -Description "Fixed boolean field in connection test" `
+  -FilesChanged "frontend/src/pages/IntegrationWizard.tsx" `
+  -Impact "Users can now test connections successfully"
+```
+
+**Interactive Mode:**
+```powershell
+.\scripts\update-deployment-docs.ps1
+# Will prompt for all required information
+```
+
+**Types:**
+- `Feature` - New functionality
+- `Bug Fix` - Bug fixes
+- `Enhancement` - Improvements to existing features
+- `Hotfix` - Urgent production fixes
+
+**What it does:**
+- Adds deployment entry to DEPLOY_DOCUMENTATION.md
+- Includes commit info, deployment time, and verification steps
+- Formats the entry consistently
+- Prompts to commit the documentation update
+
+### Quick Deployment Documentation Workflow
+
+**After a successful deployment:**
+```powershell
+.\scripts\update-deployment-docs.ps1
+git add DEPLOY_DOCUMENTATION.md
+git commit -m "docs: update deployment documentation"
+git push
+```
+
+**When a deployment fails:**
+```powershell
+.\scripts\create-deployment-issue.ps1 `
+  -ErrorTitle "Brief error description" `
+  -ErrorDescription "Detailed error with logs" `
+  -Severity high
+```
+
+---
+
 For questions or issues, check the main documentation or open a GitHub issue.
