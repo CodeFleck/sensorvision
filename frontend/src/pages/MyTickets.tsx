@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { IssueSubmission, IssueComment, IssueCommentRequest, IssueStatus } from '../types';
+import { getStatusInfo, getSeverityInfo } from '../utils/issueStatusHelpers';
 
 export const MyTickets: React.FC = () => {
   const { user } = useAuth();
@@ -81,25 +82,9 @@ export const MyTickets: React.FC = () => {
     }
   };
 
-  const getSeverityBadgeColor = (severity: string) => {
-    switch (severity) {
-      case 'CRITICAL': return 'bg-red-100 text-red-800';
-      case 'HIGH': return 'bg-orange-100 text-orange-800';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
-      case 'LOW': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Removed - using getSeverityInfo helper instead
 
-  const getStatusBadgeColor = (status: IssueStatus) => {
-    switch (status) {
-      case 'SUBMITTED': return 'bg-blue-100 text-blue-800';
-      case 'IN_REVIEW': return 'bg-yellow-100 text-yellow-800';
-      case 'RESOLVED': return 'bg-green-100 text-green-800';
-      case 'CLOSED': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Removed - using getStatusInfo helper instead
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
@@ -189,12 +174,22 @@ export const MyTickets: React.FC = () => {
                       </h3>
                     </div>
                     <div className="flex gap-2 mb-3">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(ticket.status)}`}>
-                        {ticket.status.replace('_', ' ')}
-                      </span>
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getSeverityBadgeColor(ticket.severity)}`}>
-                        {ticket.severity}
-                      </span>
+                      {(() => {
+                        const statusInfo = getStatusInfo(ticket.status);
+                        return (
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusInfo.color}`}>
+                            {statusInfo.icon} {statusInfo.label}
+                          </span>
+                        );
+                      })()}
+                      {(() => {
+                        const severityInfo = getSeverityInfo(ticket.severity);
+                        return (
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${severityInfo.color}`}>
+                            {severityInfo.icon} {severityInfo.label}
+                          </span>
+                        );
+                      })()}
                       <span className="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
                         {getCategoryLabel(ticket.category)}
                       </span>
@@ -235,13 +230,30 @@ export const MyTickets: React.FC = () => {
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   #{selectedTicket.id} - {selectedTicket.title}
                 </h2>
+
+                {/* Status with description */}
+                {(() => {
+                  const statusInfo = getStatusInfo(selectedTicket.status);
+                  return (
+                    <div className={`mb-3 p-3 rounded-lg border ${statusInfo.color}`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">{statusInfo.icon}</span>
+                        <span className="font-semibold">{statusInfo.label}</span>
+                      </div>
+                      <p className="text-sm opacity-90">{statusInfo.description}</p>
+                    </div>
+                  );
+                })()}
+
                 <div className="flex gap-2 mb-2">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(selectedTicket.status)}`}>
-                    {selectedTicket.status.replace('_', ' ')}
-                  </span>
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getSeverityBadgeColor(selectedTicket.severity)}`}>
-                    {selectedTicket.severity}
-                  </span>
+                  {(() => {
+                    const severityInfo = getSeverityInfo(selectedTicket.severity);
+                    return (
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${severityInfo.color}`}>
+                        {severityInfo.icon} {severityInfo.label}
+                      </span>
+                    );
+                  })()}
                   <span className="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
                     {getCategoryLabel(selectedTicket.category)}
                   </span>
