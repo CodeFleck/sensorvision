@@ -67,6 +67,7 @@ public class RuleService {
                 .operator(request.operator())
                 .threshold(request.threshold())
                 .enabled(request.enabled() != null ? request.enabled() : true)
+                .organization(userOrg)
                 .build();
 
         Rule saved = ruleRepository.save(rule);
