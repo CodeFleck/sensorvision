@@ -25,14 +25,17 @@ public class IssueCommentService {
     private final IssueCommentRepository commentRepository;
     private final IssueSubmissionRepository issueRepository;
     private final SecurityUtils securityUtils;
+    private final EmailNotificationService emailNotificationService;
 
     @Autowired
     public IssueCommentService(IssueCommentRepository commentRepository,
                               IssueSubmissionRepository issueRepository,
-                              SecurityUtils securityUtils) {
+                              SecurityUtils securityUtils,
+                              EmailNotificationService emailNotificationService) {
         this.commentRepository = commentRepository;
         this.issueRepository = issueRepository;
         this.securityUtils = securityUtils;
+        this.emailNotificationService = emailNotificationService;
     }
 
     /**
@@ -80,6 +83,26 @@ public class IssueCommentService {
             currentUser.getUsername(),
             request.internal() ? "internal" : "public",
             issueId);
+
+        // Send email notification if this is a public reply (not internal)
+        if (!request.internal()) {
+            try {
+                String userEmail = issue.getUser().getEmail();
+                boolean emailSent = emailNotificationService.sendTicketReplyEmail(
+                    issue,
+                    request.message(),
+                    userEmail
+                );
+                if (emailSent) {
+                    logger.info("Email notification sent to {} for ticket #{}", userEmail, issueId);
+                } else {
+                    logger.warn("Email notification failed or disabled for ticket #{}", issueId);
+                }
+            } catch (Exception e) {
+                logger.error("Error sending email notification for ticket #{}: {}", issueId, e.getMessage(), e);
+                // Don't fail the comment creation if email fails
+            }
+        }
 
         return IssueCommentDto.fromEntity(savedComment);
     }

@@ -50,6 +50,14 @@ export const MyTickets: React.FC = () => {
       ]);
       setSelectedTicket(fullTicket);
       setComments(ticketComments);
+
+      // Mark ticket as viewed (for unread badge tracking)
+      try {
+        await apiService.markTicketAsViewed(ticket.id);
+      } catch (error) {
+        console.error('Failed to mark ticket as viewed:', error);
+        // Don't show error to user, this is background tracking
+      }
     } catch (error) {
       toast.error('Failed to load ticket details');
       console.error(error);

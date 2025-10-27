@@ -123,4 +123,26 @@ public class IssueSubmissionController {
         IssueCommentDto comment = commentService.addUserComment(id, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
     }
+
+    /**
+     * Mark ticket as viewed (for unread badge tracking)
+     * POST /api/v1/support/issues/{id}/mark-viewed
+     */
+    @PostMapping("/issues/{id}/mark-viewed")
+    public ResponseEntity<Void> markAsViewed(@PathVariable Long id) {
+        logger.info("User marking issue {} as viewed", id);
+        issueSubmissionService.markAsViewed(id);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Get count of tickets with unread replies
+     * GET /api/v1/support/issues/unread-count
+     */
+    @GetMapping("/issues/unread-count")
+    public ResponseEntity<Map<String, Long>> getUnreadCount() {
+        logger.info("Fetching unread ticket count for current user");
+        long count = issueSubmissionService.getUnreadTicketCount();
+        return ResponseEntity.ok(Map.of("unreadCount", count));
+    }
 }

@@ -372,6 +372,16 @@ class ApiService {
     });
   }
 
+  async markTicketAsViewed(issueId: number): Promise<void> {
+    await this.request<void>(`/support/issues/${issueId}/mark-viewed`, {
+      method: 'POST',
+    });
+  }
+
+  async getUnreadTicketCount(): Promise<{ unreadCount: number }> {
+    return this.request<{ unreadCount: number }>('/support/issues/unread-count');
+  }
+
   // Admin Issue Management
   async getAdminIssues(status?: IssueStatus): Promise<AdminIssue[]> {
     const query = status ? `?status=${status}` : '';

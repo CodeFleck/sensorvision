@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
+import { useUnreadTickets } from '../hooks/useUnreadTickets';
 import { SubmitIssueModal } from './SubmitIssueModal';
 import { AvatarUploadModal } from './AvatarUploadModal';
 import { UserAvatar } from './UserAvatar';
@@ -114,6 +115,7 @@ const navigationSections: NavigationSection[] = [
 export const LayoutV1 = ({ children }: LayoutProps) => {
   const location = useLocation();
   const { user, logout, isAdmin, refreshUser } = useAuth();
+  const { unreadCount } = useUnreadTickets();
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
@@ -225,7 +227,7 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                             key={item.name}
                             to={item.href}
                             className={clsx(
-                              'flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200',
+                              'flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200 relative',
                               isActive
                                 ? 'bg-blue-50 text-blue-700 shadow-sm'
                                 : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
@@ -237,7 +239,13 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                                 isActive ? 'text-blue-600' : 'text-gray-400'
                               )}
                             />
-                            <span>{item.name}</span>
+                            <span className="flex-1">{item.name}</span>
+                            {/* Show unread badge on My Tickets link */}
+                            {item.href === '/my-tickets' && unreadCount > 0 && (
+                              <span className="ml-2 flex-shrink-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
+                                {unreadCount > 9 ? '9+' : unreadCount}
+                              </span>
+                            )}
                           </Link>
                         );
                       })}
