@@ -46,16 +46,9 @@ const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: Home, adminOnly: false },
   { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
   { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false },
-  {
-    name: 'Devices',
-    href: '/devices',
-    icon: Cpu,
-    adminOnly: false,
-    children: [
-      { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: true },
-      { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: true },
-    ]
-  },
+  { name: 'Devices', href: '/devices', icon: Cpu, adminOnly: false },
+  { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: true },
+  { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: true },
   { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: false },
   { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false },
   { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
@@ -72,7 +65,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const { user, logout, isAdmin, refreshUser } = useAuth();
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['Devices']));
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   // Toggle expansion state for parent items
   const toggleExpanded = (itemName: string) => {

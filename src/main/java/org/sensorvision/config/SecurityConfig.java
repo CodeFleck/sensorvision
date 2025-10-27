@@ -148,6 +148,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3003",
                 "http://localhost:3002",
                 "http://localhost:3001",
                 "http://localhost:3000",
