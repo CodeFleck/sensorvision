@@ -28,7 +28,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(telemetryWebSocketHandler, "/ws/telemetry")
-                .setAllowedOrigins("http://localhost:3001", "http://localhost:3000", "http://localhost:3002") // Allow React dev server
+                .setAllowedOrigins("http://localhost:3003", "http://localhost:3002", "http://localhost:3001", "http://localhost:3000") // Allow React dev server
                 .addInterceptors(new HandshakeInterceptor() {
                     @Override
                     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,

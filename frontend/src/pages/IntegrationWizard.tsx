@@ -330,6 +330,8 @@ void sendData(float temperature, float humidity) {
     http.addHeader("X-API-Key", apiKey);
     http.addHeader("Content-Type", "application/json");
 
+    // IMPORTANT: All values must be numeric (float/int)
+    // Do NOT send boolean (true/false) or string values
     String payload = "{\\"temperature\\":" + String(temperature, 1) +
                      ",\\"humidity\\":" + String(humidity, 1) + "}";
 
@@ -358,13 +360,18 @@ API_KEY = "${token}"
 DEVICE_ID = "${devId}"
 
 def send_data(temperature, humidity):
-    """Send sensor data to SensorVision"""
+    """Send sensor data to SensorVision
+
+    IMPORTANT: All values must be numbers (int/float) or numeric strings.
+    Do NOT send booleans, lists, dicts, or other non-numeric types.
+    """
     # URL-encode device ID to handle special characters
     url = f"{API_URL}/api/v1/ingest/{quote(DEVICE_ID)}"
     headers = {
         "X-API-Key": API_KEY,
         "Content-Type": "application/json"
     }
+    # All values must be numeric - no booleans, objects, or arrays
     data = {
         "temperature": temperature,
         "humidity": humidity
@@ -405,14 +412,18 @@ const API_URL = '${apiUrl}';
 const API_KEY = '${token}';
 const DEVICE_ID = '${devId}';
 
+/**
+ * Send telemetry data to SensorVision
+ * IMPORTANT: All values must be numbers. Do NOT send booleans, objects, or arrays.
+ */
 async function sendData(temperature, humidity) {
   try {
     // URL-encode device ID to handle special characters
     const response = await axios.post(
       \`\${API_URL}/api/v1/ingest/\${encodeURIComponent(DEVICE_ID)}\`,
       {
-        temperature,
-        humidity
+        temperature,  // Must be a number
+        humidity      // Must be a number
       },
       {
         headers: {
@@ -455,9 +466,12 @@ API_URL="${apiUrl}"
 API_KEY="${token}"
 DEVICE_ID="${devId}"
 
-# Example sensor data
+# Example sensor data (must be numeric values - no booleans or strings)
 TEMPERATURE=23.5
 HUMIDITY=65.2
+
+# IMPORTANT: All field values must be numbers
+# Do NOT use true/false, strings, or other non-numeric values
 
 # URL-encode device ID (bash handles special chars in variables when quoted)
 # Send data to SensorVision
@@ -562,6 +576,27 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
     setConnectionSuccess(false);
 
     try {
+      // Prepare test data - IMPORTANT: All values must be numbers or numeric strings
+      const testData = {
+        temperature: 23.5,
+        humidity: 65.2,
+      };
+
+      // Validate that all values are numeric (defensive check)
+      for (const [key, value] of Object.entries(testData)) {
+        if (typeof value !== 'number' && typeof value !== 'string') {
+          throw new Error(
+            `Invalid data type for field '${key}': ${typeof value}. ` +
+            `SensorVision only accepts numeric values (numbers or numeric strings), not booleans, objects, or arrays.`
+          );
+        }
+        if (typeof value === 'string' && isNaN(Number(value))) {
+          throw new Error(
+            `Invalid numeric value for field '${key}': '${value}' is not a valid number.`
+          );
+        }
+      }
+
       // Send test data (URL-encode device ID to handle special characters)
       const response = await fetch(`${apiUrl}/api/v1/ingest/${encodeURIComponent(deviceId)}`, {
         method: 'POST',
@@ -569,10 +604,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
           'X-API-Key': apiToken,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          temperature: 23.5,
-          humidity: 65.2,
-        }),
+        body: JSON.stringify(testData),
       });
 
       if (response.ok) {
@@ -580,7 +612,21 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
         goToNextStep();
       } else {
         const error = await response.text();
-        setConnectionError(`Connection failed: ${error}`);
+        // Parse error response if it's JSON
+        try {
+          const errorData = JSON.parse(error);
+          if (errorData.message && errorData.message.includes('Unsupported data type')) {
+            setConnectionError(
+              `${errorData.message}\n\n` +
+              `💡 Tip: SensorVision only accepts numeric values. ` +
+              `Ensure all telemetry fields are numbers, not booleans, strings, objects, or arrays.`
+            );
+          } else {
+            setConnectionError(`Connection failed: ${errorData.message || error}`);
+          }
+        } catch {
+          setConnectionError(`Connection failed: ${error}`);
+        }
       }
     } catch (error) {
       setConnectionError(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -814,8 +860,8 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
 
               {connectionError && (
                 <div className="text-center">
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                    <p className="text-red-700">{connectionError}</p>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-left">
+                    <p className="text-red-700 whitespace-pre-line">{connectionError}</p>
                   </div>
                   <button
                     onClick={testConnection}

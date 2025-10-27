@@ -95,10 +95,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     };
 
     websocket.onerror = (error) => {
-      // Only log errors for open or connecting sockets, not for expected closures
-      if (websocket.readyState !== WebSocket.CLOSED) {
-        console.error('[WebSocket] Error occurred:', error);
-      }
+      console.error('[WebSocket] Error occurred:', error);
     };
   }, [url, maxReconnectAttempts, reconnectInterval]);
 
