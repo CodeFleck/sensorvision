@@ -3,6 +3,8 @@ package org.sensorvision.controller;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.sensorvision.dto.BulkDeviceOperationRequest;
+import org.sensorvision.dto.BulkDeviceOperationResponse;
 import org.sensorvision.dto.DeviceCreateRequest;
 import org.sensorvision.dto.DeviceResponse;
 import org.sensorvision.dto.DeviceUpdateRequest;
@@ -58,6 +60,13 @@ public class DeviceController {
     public ResponseEntity<TokenRotationResponse> rotateDeviceToken(@PathVariable String externalId) {
         String newToken = deviceService.rotateDeviceToken(externalId);
         return ResponseEntity.ok(new TokenRotationResponse(externalId, newToken));
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<BulkDeviceOperationResponse> performBulkOperation(
+            @Valid @RequestBody BulkDeviceOperationRequest request) {
+        BulkDeviceOperationResponse response = deviceService.performBulkOperation(request);
+        return ResponseEntity.ok(response);
     }
 
     // DTO for token rotation response

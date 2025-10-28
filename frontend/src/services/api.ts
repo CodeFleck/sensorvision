@@ -91,6 +91,21 @@ class ApiService {
     await this.request(`/devices/${externalId}`, { method: 'DELETE' });
   }
 
+  async performBulkDeviceOperation(operation: string, deviceIds: string[]): Promise<{
+    totalRequested: number;
+    successCount: number;
+    failureCount: number;
+    message: string;
+  }> {
+    return this.request('/devices/bulk', {
+      method: 'POST',
+      body: JSON.stringify({
+        deviceIds,
+        operation,
+      }),
+    });
+  }
+
   // Device Token Management
   async generateDeviceToken(deviceId: string): Promise<DeviceTokenResponse> {
     return this.request<DeviceTokenResponse>(`/devices/${deviceId}/token/generate`, {
