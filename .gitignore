@@ -25,6 +25,7 @@ logs/
 *.env
 !*.env.example
 src/main/resources/application-local.yml
+src/main/resources/application-local.properties
 
 # Production deployment files with secrets
 .env.prod
