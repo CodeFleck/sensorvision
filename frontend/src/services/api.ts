@@ -427,10 +427,11 @@ class ApiService {
   }
 
   // Canned Responses Management
-  async getCannedResponses(params?: { category?: string; sortByPopularity?: boolean }): Promise<any[]> {
+  async getCannedResponses(params?: { category?: string; sortByPopularity?: boolean; includeInactive?: boolean }): Promise<any[]> {
     const queryParams = new URLSearchParams();
     if (params?.category) queryParams.append('category', params.category);
     if (params?.sortByPopularity) queryParams.append('sortByPopularity', 'true');
+    if (params?.includeInactive) queryParams.append('includeInactive', 'true');
 
     const query = queryParams.toString();
     return this.request<any[]>(`/admin/canned-responses${query ? `?${query}` : ''}`);

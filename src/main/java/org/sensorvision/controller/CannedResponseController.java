@@ -25,19 +25,25 @@ public class CannedResponseController {
     }
 
     /**
-     * Get all active canned responses
+     * Get canned responses with optional filters
+     * @param category optional category filter
+     * @param sortByPopularity if true, sort by use count descending
+     * @param includeInactive if true, includes inactive templates (admin UI only)
      */
     @GetMapping
     public ResponseEntity<List<CannedResponseDto>> getAllActive(
             @RequestParam(required = false) String category,
-            @RequestParam(required = false, defaultValue = "false") boolean sortByPopularity
+            @RequestParam(required = false, defaultValue = "false") boolean sortByPopularity,
+            @RequestParam(required = false, defaultValue = "false") boolean includeInactive
     ) {
         List<CannedResponseDto> responses;
 
         if (category != null && !category.isBlank()) {
-            responses = cannedResponseService.getByCategory(category);
+            responses = cannedResponseService.getByCategory(category, includeInactive);
         } else if (sortByPopularity) {
             responses = cannedResponseService.getAllActiveByPopularity();
+        } else if (includeInactive) {
+            responses = cannedResponseService.getAll();
         } else {
             responses = cannedResponseService.getAllActive();
         }

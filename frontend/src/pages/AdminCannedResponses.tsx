@@ -25,6 +25,7 @@ export const AdminCannedResponses: React.FC = () => {
   const [templates, setTemplates] = useState<CannedResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [showInactive, setShowInactive] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<CannedResponse | null>(null);
   const [formData, setFormData] = useState<CannedResponseFormData>({
@@ -38,12 +39,18 @@ export const AdminCannedResponses: React.FC = () => {
 
   useEffect(() => {
     loadTemplates();
-  }, [categoryFilter]);
+  }, [categoryFilter, showInactive]);
 
   const loadTemplates = async () => {
     try {
       setLoading(true);
-      const params = categoryFilter !== 'ALL' ? { category: categoryFilter } : {};
+      const params: any = {};
+      if (categoryFilter !== 'ALL') {
+        params.category = categoryFilter;
+      }
+      if (showInactive) {
+        params.includeInactive = true;
+      }
       const data = await apiService.getCannedResponses(params);
       setTemplates(data);
     } catch (error) {
@@ -146,8 +153,8 @@ export const AdminCannedResponses: React.FC = () => {
         </button>
       </div>
 
-      {/* Category Filter */}
-      <div className="mb-4">
+      {/* Filters */}
+      <div className="mb-4 flex items-center gap-4">
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
@@ -160,6 +167,16 @@ export const AdminCannedResponses: React.FC = () => {
             </option>
           ))}
         </select>
+
+        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showInactive}
+            onChange={(e) => setShowInactive(e.target.checked)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <span>Show inactive templates</span>
+        </label>
       </div>
 
       {/* Templates List */}

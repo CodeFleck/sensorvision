@@ -82,7 +82,7 @@ class CannedResponseControllerTest {
 
         // When
         ResponseEntity<List<CannedResponseDto>> result =
-            cannedResponseController.getAllActive(null, false);
+            cannedResponseController.getAllActive(null, false, false);
 
         // Then
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -90,7 +90,7 @@ class CannedResponseControllerTest {
         assertThat(result.getBody()).containsExactly(testDto1, testDto2);
         verify(cannedResponseService).getAllActive();
         verify(cannedResponseService, never()).getAllActiveByPopularity();
-        verify(cannedResponseService, never()).getByCategory(any());
+        verify(cannedResponseService, never()).getByCategory(any(), anyBoolean());
     }
 
     @Test
@@ -101,7 +101,7 @@ class CannedResponseControllerTest {
 
         // When
         ResponseEntity<List<CannedResponseDto>> result =
-            cannedResponseController.getAllActive(null, true);
+            cannedResponseController.getAllActive(null, true, false);
 
         // Then
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -116,34 +116,50 @@ class CannedResponseControllerTest {
     void getAllActive_withCategory_shouldReturnFilteredResponses() {
         // Given
         String category = "AUTHENTICATION";
-        when(cannedResponseService.getByCategory(category)).thenReturn(Arrays.asList(testDto2));
+        when(cannedResponseService.getByCategory(category, false)).thenReturn(Arrays.asList(testDto2));
 
         // When
         ResponseEntity<List<CannedResponseDto>> result =
-            cannedResponseController.getAllActive(category, false);
+            cannedResponseController.getAllActive(category, false, false);
 
         // Then
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(result.getBody()).hasSize(1);
         assertThat(result.getBody().get(0).category()).isEqualTo("AUTHENTICATION");
-        verify(cannedResponseService).getByCategory(category);
+        verify(cannedResponseService).getByCategory(category, false);
         verify(cannedResponseService, never()).getAllActive();
     }
 
     @Test
-    void getAllActive_withCategoryAndSortByPopularity_shouldPrioritizeCategory() {
+    void getAllActive_withCategoryAndIncludeInactive_shouldReturnAllInCategory() {
         // Given
         String category = "BUG";
-        when(cannedResponseService.getByCategory(category)).thenReturn(Arrays.asList(testDto1));
+        when(cannedResponseService.getByCategory(category, true)).thenReturn(Arrays.asList(testDto1));
 
         // When
         ResponseEntity<List<CannedResponseDto>> result =
-            cannedResponseController.getAllActive(category, true);
+            cannedResponseController.getAllActive(category, false, true);
 
         // Then
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(cannedResponseService).getByCategory(category);
-        verify(cannedResponseService, never()).getAllActiveByPopularity();
+        verify(cannedResponseService).getByCategory(category, true);
+    }
+
+    @Test
+    void getAllActive_withIncludeInactive_shouldReturnAllResponses() {
+        // Given
+        List<CannedResponseDto> responses = Arrays.asList(testDto1, testDto2);
+        when(cannedResponseService.getAll()).thenReturn(responses);
+
+        // When
+        ResponseEntity<List<CannedResponseDto>> result =
+            cannedResponseController.getAllActive(null, false, true);
+
+        // Then
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody()).hasSize(2);
+        verify(cannedResponseService).getAll();
+        verify(cannedResponseService, never()).getAllActive();
     }
 
     @Test

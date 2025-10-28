@@ -111,20 +111,59 @@ class CannedResponseServiceTest {
     }
 
     @Test
-    void getByCategory_shouldReturnResponsesInCategory() {
+    void getAll_shouldReturnAllResponsesIncludingInactive() {
+        // Given
+        CannedResponse inactiveResponse = new CannedResponse();
+        inactiveResponse.setId(3L);
+        inactiveResponse.setTitle("Inactive Template");
+        inactiveResponse.setActive(false);
+        inactiveResponse.setCreatedBy(testUser);
+
+        List<CannedResponse> allResponses = Arrays.asList(testResponse, testResponse2, inactiveResponse);
+        when(cannedResponseRepository.findAll()).thenReturn(allResponses);
+
+        // When
+        List<CannedResponseDto> result = cannedResponseService.getAll();
+
+        // Then
+        assertThat(result).hasSize(3);
+        assertThat(result.stream().filter(r -> !r.active()).count()).isEqualTo(1);
+        verify(cannedResponseRepository).findAll();
+    }
+
+    @Test
+    void getByCategory_shouldReturnOnlyActiveResponsesWhenIncludeInactiveFalse() {
         // Given
         String category = "AUTHENTICATION";
         when(cannedResponseRepository.findByActiveTrueAndCategory(category))
             .thenReturn(Arrays.asList(testResponse2));
 
         // When
-        List<CannedResponseDto> result = cannedResponseService.getByCategory(category);
+        List<CannedResponseDto> result = cannedResponseService.getByCategory(category, false);
 
         // Then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).category()).isEqualTo("AUTHENTICATION");
         assertThat(result.get(0).title()).isEqualTo("Password Reset");
         verify(cannedResponseRepository).findByActiveTrueAndCategory(category);
+        verify(cannedResponseRepository, never()).findByCategory(any());
+    }
+
+    @Test
+    void getByCategory_shouldReturnAllResponsesWhenIncludeInactiveTrue() {
+        // Given
+        String category = "GENERAL";
+        when(cannedResponseRepository.findByCategory(category))
+            .thenReturn(Arrays.asList(testResponse));
+
+        // When
+        List<CannedResponseDto> result = cannedResponseService.getByCategory(category, true);
+
+        // Then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).category()).isEqualTo("GENERAL");
+        verify(cannedResponseRepository).findByCategory(category);
+        verify(cannedResponseRepository, never()).findByActiveTrueAndCategory(any());
     }
 
     @Test

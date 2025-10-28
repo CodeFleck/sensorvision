@@ -41,6 +41,16 @@ public class CannedResponseService {
     }
 
     /**
+     * Get all canned responses (including inactive ones)
+     */
+    @Transactional(readOnly = true)
+    public List<CannedResponseDto> getAll() {
+        return cannedResponseRepository.findAll().stream()
+            .map(CannedResponseDto::fromEntity)
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Get all active canned responses ordered by popularity
      */
     @Transactional(readOnly = true)
@@ -52,9 +62,16 @@ public class CannedResponseService {
 
     /**
      * Get canned responses by category
+     * @param category the category to filter by
+     * @param includeInactive if true, includes inactive templates
      */
     @Transactional(readOnly = true)
-    public List<CannedResponseDto> getByCategory(String category) {
+    public List<CannedResponseDto> getByCategory(String category, boolean includeInactive) {
+        if (includeInactive) {
+            return cannedResponseRepository.findByCategory(category).stream()
+                .map(CannedResponseDto::fromEntity)
+                .collect(Collectors.toList());
+        }
         return cannedResponseRepository.findByActiveTrueAndCategory(category).stream()
             .map(CannedResponseDto::fromEntity)
             .collect(Collectors.toList());
