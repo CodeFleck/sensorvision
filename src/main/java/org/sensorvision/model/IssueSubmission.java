@@ -60,6 +60,9 @@ public class IssueSubmission extends AuditableEntity {
     @Column(name = "last_viewed_at")
     private java.time.Instant lastViewedAt;
 
+    @Column(name = "last_public_reply_at")
+    private java.time.Instant lastPublicReplyAt;
+
     // Constructors
     public IssueSubmission() {
     }
@@ -201,5 +204,13 @@ public class IssueSubmission extends AuditableEntity {
 
     public void setLastViewedAt(java.time.Instant lastViewedAt) {
         this.lastViewedAt = lastViewedAt;
+    }
+
+    public java.time.Instant getLastPublicReplyAt() {
+        return lastPublicReplyAt;
+    }
+
+    public void setLastPublicReplyAt(java.time.Instant lastPublicReplyAt) {
+        this.lastPublicReplyAt = lastPublicReplyAt;
     }
 }

@@ -201,25 +201,39 @@ public class IssueSubmissionService {
     /**
      * Get count of tickets with unread replies for current user
      * A ticket has unread replies if:
-     * - lastViewedAt is null (never viewed), OR
-     * - updatedAt is after lastViewedAt (new activity since last view)
+     * - Status is NOT CLOSED or RESOLVED (completed tickets don't count as unread)
+     * - AND (lastViewedAt is null (never viewed), OR updatedAt is after lastViewedAt (new activity since last view))
+     * - AND updatedAt is after createdAt (has actual updates, not just initial submission)
      *
      * Uses lightweight projection to avoid loading screenshot blobs and other heavy fields
      */
     @Transactional(readOnly = true)
     public long getUnreadTicketCount() {
         User currentUser = securityUtils.getCurrentUser();
-        // Use projection to only load timestamps, not screenshot data or other heavy fields
+        // Use projection to only load timestamps and status, not screenshot data or other heavy fields
         var timestamps = issueSubmissionRepository.findTimestampProjectionsByUser(currentUser);
 
         return timestamps.stream()
             .filter(projection -> {
-                // If never viewed, check if it has been updated since creation
-                if (projection.getLastViewedAt() == null) {
-                    return projection.getUpdatedAt().isAfter(projection.getCreatedAt());
+                // Exclude closed and resolved tickets from unread count
+                if (projection.getStatus() == IssueStatus.CLOSED ||
+                    projection.getStatus() == IssueStatus.RESOLVED) {
+                    return false;
                 }
-                // Otherwise, check if updated since last view
-                return projection.getUpdatedAt().isAfter(projection.getLastViewedAt());
+
+                // Only count tickets that have a public admin reply
+                // This prevents status-only changes from triggering the unread badge
+                if (projection.getLastPublicReplyAt() == null) {
+                    return false;
+                }
+
+                // If never viewed, count as unread (admin has replied but user hasn't seen it)
+                if (projection.getLastViewedAt() == null) {
+                    return true;
+                }
+
+                // Otherwise, check if admin replied since last view
+                return projection.getLastPublicReplyAt().isAfter(projection.getLastViewedAt());
             })
             .count();
     }
