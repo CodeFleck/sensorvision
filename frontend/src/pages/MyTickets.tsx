@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { Plus } from 'lucide-react';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { IssueSubmission, IssueComment, IssueCommentRequest, IssueStatus } from '../types';
 import { getStatusInfo, getSeverityInfo } from '../utils/issueStatusHelpers';
+import { SubmitIssueModal } from '../components/SubmitIssueModal';
 
 export const MyTickets: React.FC = () => {
   const { user } = useAuth();
@@ -15,6 +17,7 @@ export const MyTickets: React.FC = () => {
   const [comments, setComments] = useState<IssueComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
 
   useEffect(() => {
     loadTickets();
@@ -114,9 +117,18 @@ export const MyTickets: React.FC = () => {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">My Support Tickets</h1>
-        <p className="text-gray-600">View and manage your support requests</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">My Support Tickets</h1>
+          <p className="text-gray-600">View and manage your support requests</p>
+        </div>
+        <button
+          onClick={() => setIsIssueModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium shadow-sm"
+        >
+          <Plus className="h-5 w-5" />
+          Report New Issue
+        </button>
       </div>
 
       {/* Filters */}
@@ -369,6 +381,17 @@ export const MyTickets: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Issue Submission Modal */}
+      <SubmitIssueModal
+        isOpen={isIssueModalOpen}
+        onClose={() => setIsIssueModalOpen(false)}
+        onSuccess={() => {
+          setIsIssueModalOpen(false);
+          loadTickets(); // Refresh the ticket list
+          toast.success('Issue submitted successfully!');
+        }}
+      />
     </div>
   );
 };
