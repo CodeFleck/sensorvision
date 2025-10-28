@@ -425,6 +425,46 @@ class ApiService {
     }
     return response.blob();
   }
+
+  // Canned Responses Management
+  async getCannedResponses(params?: { category?: string; sortByPopularity?: boolean }): Promise<any[]> {
+    const queryParams = new URLSearchParams();
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.sortByPopularity) queryParams.append('sortByPopularity', 'true');
+
+    const query = queryParams.toString();
+    return this.request<any[]>(`/admin/canned-responses${query ? `?${query}` : ''}`);
+  }
+
+  async getCannedResponseById(id: number): Promise<any> {
+    return this.request<any>(`/admin/canned-responses/${id}`);
+  }
+
+  async createCannedResponse(data: { title: string; body: string; category?: string; active?: boolean }): Promise<any> {
+    return this.request<any>('/admin/canned-responses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCannedResponse(id: number, data: { title: string; body: string; category?: string; active?: boolean }): Promise<any> {
+    return this.request<any>(`/admin/canned-responses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCannedResponse(id: number): Promise<void> {
+    await this.request(`/admin/canned-responses/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async markCannedResponseAsUsed(id: number): Promise<void> {
+    await this.request(`/admin/canned-responses/${id}/use`, {
+      method: 'POST',
+    });
+  }
 }
 
 export const apiService = new ApiService();
