@@ -3,6 +3,7 @@ package org.sensorvision.service;
 import org.sensorvision.dto.JwtAuthenticationResponse;
 import org.sensorvision.dto.LoginRequest;
 import org.sensorvision.dto.RegisterRequest;
+import org.sensorvision.dto.UpdateUserPreferencesRequest;
 import org.sensorvision.dto.UserResponse;
 import org.sensorvision.exception.BadRequestException;
 import org.sensorvision.model.Organization;
@@ -325,5 +326,60 @@ public class AuthService {
 
         // Send verification email
         emailNotificationService.sendVerificationEmail(user.getEmail(), verificationToken);
+    }
+
+    /**
+     * Update user preferences (theme, email notifications, etc.)
+     */
+    @Transactional
+    public UserResponse updateUserPreferences(UpdateUserPreferencesRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user;
+
+        if (authentication.getPrincipal() instanceof Jwt) {
+            Jwt jwt = (Jwt) authentication.getPrincipal();
+            String username = jwt.getSubject();
+            user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        } else if (authentication.getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+            user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        } else {
+            throw new RuntimeException("Invalid authentication principal type");
+        }
+
+        // Update email notification preference if provided
+        if (request.emailNotificationsEnabled() != null) {
+            user.setEmailNotificationsEnabled(request.emailNotificationsEnabled());
+        }
+
+        // Note: Theme preference support is in a separate feature branch
+        // When that branch is merged, add:
+        // if (request.themePreference() != null) {
+        //     user.setThemePreference(request.themePreference());
+        // }
+
+        userRepository.save(user);
+
+        return buildUserResponse(user);
+    }
+
+    private UserResponse buildUserResponse(User user) {
+        return UserResponse.builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .email(user.getEmail())
+            .firstName(user.getFirstName())
+            .lastName(user.getLastName())
+            .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
+            .organizationName(user.getOrganization() != null ? user.getOrganization().getName() : null)
+            .roles(user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet()))
+            .enabled(user.getEnabled())
+            .avatarUrl(user.getAvatarUrl())
+            .avatarVersion(user.getAvatarVersion())
+            .build();
     }
 }

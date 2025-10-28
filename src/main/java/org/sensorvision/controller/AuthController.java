@@ -62,4 +62,10 @@ public class AuthController {
         authService.resendVerificationEmail(request.getEmail());
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/preferences")
+    public ResponseEntity<UserResponse> updateUserPreferences(@Valid @RequestBody UpdateUserPreferencesRequest request) {
+        UserResponse user = authService.updateUserPreferences(request);
+        return ResponseEntity.ok(user);
+    }
 }

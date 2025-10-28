@@ -67,6 +67,10 @@ public class User extends AuditableEntity {
     @Builder.Default
     private Long avatarVersion = 0L;
 
+    @Column(name = "email_notifications_enabled")
+    @Builder.Default
+    private Boolean emailNotificationsEnabled = true;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
