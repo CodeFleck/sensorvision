@@ -108,6 +108,7 @@ const navigationSections: NavigationSection[] = [
     items: [
       { name: 'My Tickets', href: '/my-tickets', icon: MessageSquare, adminOnly: false },
       { name: 'Support Tickets', href: '/admin/support-tickets', icon: Headphones, adminOnly: true },
+      { name: 'Canned Responses', href: '/admin/canned-responses', icon: MessageSquare, adminOnly: true },
     ],
   },
 ];
