@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Dashboard, Widget, TelemetryPoint } from '../types';
+import { useSearchParams } from 'react-router-dom';
+import { Dashboard, Widget, TelemetryPoint, Device } from '../types';
 import { apiService } from '../services/api';
 import { WidgetRenderer } from '../components/widgets/WidgetRenderer';
 import { AddWidgetModal } from '../components/widgets/AddWidgetModal';
@@ -7,7 +8,10 @@ import { EditWidgetModal } from '../components/widgets/EditWidgetModal';
 import { useWebSocket } from '../hooks/useWebSocket';
 
 export const Dashboards: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -29,6 +33,33 @@ export const Dashboards: React.FC = () => {
     }
   }, [lastMessage]);
 
+  // Load devices on mount
+  useEffect(() => {
+    const loadDevices = async () => {
+      try {
+        const devicesData = await apiService.getDevices();
+        setDevices(devicesData);
+      } catch (err) {
+        console.error('Failed to load devices:', err);
+      }
+    };
+    loadDevices();
+  }, []);
+
+  // Initialize selected device from URL parameter or dashboard default
+  useEffect(() => {
+    if (dashboard) {
+      const deviceFromUrl = searchParams.get('device');
+      if (deviceFromUrl) {
+        setSelectedDeviceId(deviceFromUrl);
+      } else if (dashboard.defaultDeviceId) {
+        setSelectedDeviceId(dashboard.defaultDeviceId);
+      } else if (devices.length > 0) {
+        setSelectedDeviceId(devices[0].externalId);
+      }
+    }
+  }, [dashboard, devices, searchParams]);
+
   useEffect(() => {
     loadDashboard();
   }, []);
@@ -46,6 +77,14 @@ export const Dashboards: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeviceChange = (deviceId: string) => {
+    setSelectedDeviceId(deviceId);
+    // Update URL parameter
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('device', deviceId);
+    setSearchParams(newParams);
   };
 
   const handleDeleteWidget = async (widgetId: number) => {
@@ -112,7 +151,7 @@ export const Dashboards: React.FC = () => {
     <div className="p-6">
       {/* Dashboard Header */}
       <div className="mb-6 flex justify-between items-start">
-        <div>
+        <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-gray-800">{dashboard.name}</h1>
             {/* WebSocket Status Indicator */}
@@ -126,7 +165,29 @@ export const Dashboards: React.FC = () => {
           {dashboard.description && (
             <p className="text-gray-600 mt-1">{dashboard.description}</p>
           )}
+
+          {/* Device Selector */}
+          {devices.length > 1 && (
+            <div className="mt-3 flex items-center gap-2">
+              <label htmlFor="device-selector" className="text-sm font-medium text-gray-700">
+                Device:
+              </label>
+              <select
+                id="device-selector"
+                value={selectedDeviceId || ''}
+                onChange={(e) => handleDeviceChange(e.target.value)}
+                className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                {devices.map((device) => (
+                  <option key={device.externalId} value={device.externalId}>
+                    {device.name} ({device.externalId})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
+
         <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -164,6 +225,7 @@ export const Dashboards: React.FC = () => {
             >
               <WidgetRenderer
                 widget={widget}
+                contextDeviceId={selectedDeviceId || undefined}
                 latestData={widget.deviceId ? latestData.get(widget.deviceId) : undefined}
                 onDelete={() => handleDeleteWidget(widget.id)}
                 onEdit={() => {

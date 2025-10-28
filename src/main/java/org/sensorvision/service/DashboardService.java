@@ -144,6 +144,9 @@ public class DashboardService {
         if (request.description() != null) {
             dashboard.setDescription(request.description());
         }
+        if (request.defaultDeviceId() != null) {
+            dashboard.setDefaultDeviceId(request.defaultDeviceId());
+        }
         if (request.isDefault() != null) {
             // If setting this as default, unset any existing default for this organization
             if (Boolean.TRUE.equals(request.isDefault())) {
@@ -226,6 +229,8 @@ public class DashboardService {
         widget.setHeight(request.height() != null ? request.height() : 4);
         widget.setDeviceId(request.deviceId());
         widget.setVariableName(request.variableName());
+        widget.setUseContextDevice(request.useContextDevice() != null ? request.useContextDevice() : false);
+        widget.setDeviceLabel(request.deviceLabel());
         widget.setAggregation(request.aggregation() != null ? request.aggregation() : org.sensorvision.model.WidgetAggregation.NONE);
         widget.setTimeRangeMinutes(request.timeRangeMinutes());
         widget.setConfig(request.config() != null ? request.config() : objectMapper.createObjectNode());
@@ -275,6 +280,12 @@ public class DashboardService {
         }
         if (request.variableName() != null) {
             widget.setVariableName(request.variableName());
+        }
+        if (request.useContextDevice() != null) {
+            widget.setUseContextDevice(request.useContextDevice());
+        }
+        if (request.deviceLabel() != null) {
+            widget.setDeviceLabel(request.deviceLabel());
         }
         if (request.aggregation() != null) {
             widget.setAggregation(request.aggregation());

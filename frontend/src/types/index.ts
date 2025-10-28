@@ -107,6 +107,8 @@ export interface Widget {
   height: number;
   deviceId?: string;
   variableName?: string;
+  useContextDevice?: boolean;
+  deviceLabel?: string;
   aggregation: WidgetAggregation;
   timeRangeMinutes?: number;
   config: WidgetConfig;
@@ -119,6 +121,7 @@ export interface Dashboard {
   name: string;
   description?: string;
   isDefault: boolean;
+  defaultDeviceId?: string;
   layoutConfig: {
     cols: number;
     rowHeight: number;
@@ -137,6 +140,8 @@ export interface WidgetCreateRequest {
   height?: number;
   deviceId?: string;
   variableName?: string;
+  useContextDevice?: boolean;
+  deviceLabel?: string;
   aggregation?: WidgetAggregation;
   timeRangeMinutes?: number;
   config?: WidgetConfig;
