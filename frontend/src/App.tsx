@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LayoutV1 } from './components/LayoutV1';
@@ -34,8 +35,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <WebSocketProvider url={config.webSocketUrl}>
-        <Toaster
+      <ThemeProvider>
+        <WebSocketProvider url={config.webSocketUrl}>
+          <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,
@@ -102,7 +104,8 @@ function App() {
           }
         />
       </Routes>
-      </WebSocketProvider>
+        </WebSocketProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

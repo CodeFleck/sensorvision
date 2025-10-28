@@ -208,6 +208,7 @@ public class AuthService {
                 .enabled(user.getEnabled())
                 .avatarUrl(user.getAvatarUrl())
                 .avatarVersion(user.getAvatarVersion())
+                .themePreference(user.getThemePreference())
                 .build();
     }
 
@@ -325,5 +326,60 @@ public class AuthService {
 
         // Send verification email
         emailNotificationService.sendVerificationEmail(user.getEmail(), verificationToken);
+    }
+
+    @Transactional
+    public UserResponse updateUserPreferences(String themePreference) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        User user;
+
+        // Handle OAuth2 JWT authentication
+        if (authentication.getPrincipal() instanceof Jwt) {
+            Jwt jwt = (Jwt) authentication.getPrincipal();
+            String username = jwt.getSubject();
+
+            user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+        }
+        // Handle UserPrincipal authentication
+        else if (authentication.getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+
+            user = userRepository.findById(userPrincipal.getId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        }
+        else {
+            throw new RuntimeException("Invalid authentication principal type: " +
+                authentication.getPrincipal().getClass().getName());
+        }
+
+        // Validate theme preference
+        if (!themePreference.matches("^(light|dark|system)$")) {
+            throw new BadRequestException("Invalid theme preference. Must be 'light', 'dark', or 'system'");
+        }
+
+        // Update theme preference
+        user.setThemePreference(themePreference);
+        userRepository.save(user);
+
+        // Reload user with associations for response
+        user = userRepository.findByIdWithOrganizationAndRoles(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .organizationId(user.getOrganization().getId())
+                .organizationName(user.getOrganization().getName())
+                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
+                .enabled(user.getEnabled())
+                .avatarUrl(user.getAvatarUrl())
+                .avatarVersion(user.getAvatarVersion())
+                .themePreference(user.getThemePreference())
+                .build();
     }
 }
