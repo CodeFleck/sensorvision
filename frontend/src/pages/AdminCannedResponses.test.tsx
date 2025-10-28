@@ -15,7 +15,7 @@ vi.mock('react-hot-toast', () => ({
 }));
 
 // Mock window.confirm
-global.confirm = vi.fn();
+window.confirm = vi.fn();
 
 describe('AdminCannedResponses', () => {
   const mockTemplates = [
@@ -43,7 +43,7 @@ describe('AdminCannedResponses', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.confirm as any).mockReturnValue(true);
+    (window.confirm as any).mockReturnValue(true);
     vi.mocked(apiService.getCannedResponses).mockResolvedValue(mockTemplates);
     vi.mocked(apiService.createCannedResponse).mockResolvedValue(mockTemplates[0]);
     vi.mocked(apiService.updateCannedResponse).mockResolvedValue(mockTemplates[0]);
