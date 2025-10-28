@@ -216,8 +216,8 @@ describe('CannedResponsePicker', () => {
     });
 
     // Click backdrop
-    const backdrop = document.querySelector('.fixed.inset-0.z-\\[100\\]');
-    fireEvent.click(backdrop!);
+    const backdrop = screen.getByTestId('canned-response-backdrop');
+    fireEvent.click(backdrop);
 
     await waitFor(() => {
       expect(screen.queryByText('Canned Responses')).not.toBeInTheDocument();

@@ -78,12 +78,13 @@ export const CannedResponsePicker: React.FC<CannedResponsePickerProps> = ({
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40"
+            data-testid="canned-response-backdrop"
+            className="fixed inset-0 z-[100]"
             onClick={() => setIsOpen(false)}
           />
 
           {/* Dropdown */}
-          <div className="absolute left-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden flex flex-col">
+          <div className="absolute left-0 mt-2 w-[500px] bg-white rounded-lg shadow-2xl border border-gray-200 z-[110] max-h-[600px] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="p-3 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between mb-2">
@@ -147,7 +148,7 @@ export const CannedResponsePicker: React.FC<CannedResponsePickerProps> = ({
                           {template.category.replace('_', ' ')}
                         </div>
                       )}
-                      <div className="text-sm text-gray-600 line-clamp-2">
+                      <div className="text-sm text-gray-600 line-clamp-4">
                         {template.body}
                       </div>
                     </button>
