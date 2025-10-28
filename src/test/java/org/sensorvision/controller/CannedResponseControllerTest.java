@@ -163,6 +163,25 @@ class CannedResponseControllerTest {
     }
 
     @Test
+    void getAllActive_withSortByPopularityAndIncludeInactive_shouldReturnAllSorted() {
+        // Given
+        List<CannedResponseDto> responses = Arrays.asList(testDto2, testDto1);
+        when(cannedResponseService.getAllByPopularity()).thenReturn(responses);
+
+        // When
+        ResponseEntity<List<CannedResponseDto>> result =
+            cannedResponseController.getAllActive(null, true, true);
+
+        // Then
+        assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getBody()).hasSize(2);
+        assertThat(result.getBody().get(0).useCount()).isEqualTo(10);
+        verify(cannedResponseService).getAllByPopularity();
+        verify(cannedResponseService, never()).getAllActiveByPopularity();
+        verify(cannedResponseService, never()).getAll();
+    }
+
+    @Test
     void getById_shouldReturnResponse_whenExists() {
         // Given
         Long responseId = 1L;

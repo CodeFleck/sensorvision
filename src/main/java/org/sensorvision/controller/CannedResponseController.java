@@ -39,12 +39,19 @@ public class CannedResponseController {
         List<CannedResponseDto> responses;
 
         if (category != null && !category.isBlank()) {
+            // Category filter takes precedence
             responses = cannedResponseService.getByCategory(category, includeInactive);
+        } else if (sortByPopularity && includeInactive) {
+            // Sort by popularity including inactive templates
+            responses = cannedResponseService.getAllByPopularity();
         } else if (sortByPopularity) {
+            // Sort by popularity, active only
             responses = cannedResponseService.getAllActiveByPopularity();
         } else if (includeInactive) {
+            // All templates including inactive
             responses = cannedResponseService.getAll();
         } else {
+            // Default: active only
             responses = cannedResponseService.getAllActive();
         }
 

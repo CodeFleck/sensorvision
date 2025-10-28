@@ -111,6 +111,31 @@ class CannedResponseServiceTest {
     }
 
     @Test
+    void getAllByPopularity_shouldReturnAllResponsesOrderedByUseCount() {
+        // Given
+        CannedResponse inactiveResponse = new CannedResponse();
+        inactiveResponse.setId(3L);
+        inactiveResponse.setTitle("Inactive Template");
+        inactiveResponse.setActive(false);
+        inactiveResponse.setUseCount(7);
+        inactiveResponse.setCreatedBy(testUser);
+
+        List<CannedResponse> allByPopularity = Arrays.asList(testResponse2, inactiveResponse, testResponse);
+        when(cannedResponseRepository.findAllByOrderByUseCountDesc()).thenReturn(allByPopularity);
+
+        // When
+        List<CannedResponseDto> result = cannedResponseService.getAllByPopularity();
+
+        // Then
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).useCount()).isEqualTo(10);
+        assertThat(result.get(1).useCount()).isEqualTo(7);
+        assertThat(result.get(1).active()).isFalse();
+        assertThat(result.get(2).useCount()).isEqualTo(5);
+        verify(cannedResponseRepository).findAllByOrderByUseCountDesc();
+    }
+
+    @Test
     void getAll_shouldReturnAllResponsesIncludingInactive() {
         // Given
         CannedResponse inactiveResponse = new CannedResponse();

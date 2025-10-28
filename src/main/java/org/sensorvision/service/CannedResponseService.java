@@ -61,6 +61,16 @@ public class CannedResponseService {
     }
 
     /**
+     * Get all canned responses (including inactive) ordered by popularity
+     */
+    @Transactional(readOnly = true)
+    public List<CannedResponseDto> getAllByPopularity() {
+        return cannedResponseRepository.findAllByOrderByUseCountDesc().stream()
+            .map(CannedResponseDto::fromEntity)
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Get canned responses by category
      * @param category the category to filter by
      * @param includeInactive if true, includes inactive templates

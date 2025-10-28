@@ -25,7 +25,12 @@ public interface CannedResponseRepository extends JpaRepository<CannedResponse, 
     List<CannedResponse> findByCategory(String category);
 
     /**
-     * Find canned responses ordered by use count (most used first)
+     * Find active canned responses ordered by use count (most used first)
      */
     List<CannedResponse> findByActiveTrueOrderByUseCountDesc();
+
+    /**
+     * Find all canned responses ordered by use count (including inactive)
+     */
+    List<CannedResponse> findAllByOrderByUseCountDesc();
 }
