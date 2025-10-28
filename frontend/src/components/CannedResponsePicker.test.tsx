@@ -216,7 +216,7 @@ describe('CannedResponsePicker', () => {
     });
 
     // Click backdrop
-    const backdrop = document.querySelector('.fixed.inset-0.z-40');
+    const backdrop = document.querySelector('.fixed.inset-0.z-\\[100\\]');
     fireEvent.click(backdrop!);
 
     await waitFor(() => {

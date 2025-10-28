@@ -74,7 +74,10 @@ describe('AdminCannedResponses', () => {
     fireEvent.change(dropdown, { target: { value: 'AUTHENTICATION' } });
 
     await waitFor(() => {
-      expect(apiService.getCannedResponses).toHaveBeenCalledWith({ category: 'AUTHENTICATION' });
+      expect(apiService.getCannedResponses).toHaveBeenCalledWith({
+        category: 'AUTHENTICATION',
+        includeInactive: true
+      });
     });
   });
 
