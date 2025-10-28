@@ -27,6 +27,9 @@ public class EmailNotificationService {
     @Value("${notification.email.from:noreply@sensorvision.com}")
     private String fromEmail;
 
+    @Value("${app.base-url:http://localhost:3001}")
+    private String appBaseUrl;
+
     @Autowired(required = false)
     public EmailNotificationService(JavaMailSender mailSender, EmailTemplateService templateService) {
         this.mailSender = mailSender;
@@ -469,12 +472,8 @@ public class EmailNotificationService {
     }
 
     private String generateTicketReplyEmailBody(org.sensorvision.model.IssueSubmission issue, String replyMessage) {
-        // Get base URL from environment or use default
-        String baseUrl = System.getenv("APP_BASE_URL");
-        if (baseUrl == null || baseUrl.isEmpty()) {
-            baseUrl = "http://35.88.65.186:8080";
-        }
-        String ticketUrl = String.format("%s/my-tickets", baseUrl);
+        // Use configured base URL from application properties
+        String ticketUrl = String.format("%s/my-tickets", appBaseUrl);
 
         StringBuilder body = new StringBuilder();
         body.append("<html><body style='font-family: Arial, sans-serif;'>");

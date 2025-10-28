@@ -34,4 +34,13 @@ public abstract class AuditableEntity {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
+
+    /**
+     * Manually set the updatedAt timestamp
+     * Useful when you need to trigger an update without modifying entity fields
+     * (e.g., when child entities are updated but parent needs to reflect the change)
+     */
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

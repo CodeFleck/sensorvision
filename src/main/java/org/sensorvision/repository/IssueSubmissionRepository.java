@@ -1,5 +1,6 @@
 package org.sensorvision.repository;
 
+import org.sensorvision.dto.IssueTimestampProjection;
 import org.sensorvision.model.IssueCategory;
 import org.sensorvision.model.IssueStatus;
 import org.sensorvision.model.IssueSubmission;
@@ -62,4 +63,12 @@ public interface IssueSubmissionRepository extends JpaRepository<IssueSubmission
      */
     @Query("SELECT COUNT(i) FROM IssueSubmission i WHERE i.user = :user AND i.createdAt >= :since")
     long countByUserSince(@Param("user") User user, @Param("since") Instant since);
+
+    /**
+     * Find timestamp projections for all issues by user (optimized for unread count)
+     * Only selects id, updatedAt, lastViewedAt, createdAt - avoids loading screenshot blobs
+     */
+    @Query("SELECT i.id AS id, i.updatedAt AS updatedAt, i.lastViewedAt AS lastViewedAt, i.createdAt AS createdAt " +
+           "FROM IssueSubmission i WHERE i.user = :user")
+    List<IssueTimestampProjection> findTimestampProjectionsByUser(@Param("user") User user);
 }

@@ -203,20 +203,23 @@ public class IssueSubmissionService {
      * A ticket has unread replies if:
      * - lastViewedAt is null (never viewed), OR
      * - updatedAt is after lastViewedAt (new activity since last view)
+     *
+     * Uses lightweight projection to avoid loading screenshot blobs and other heavy fields
      */
     @Transactional(readOnly = true)
     public long getUnreadTicketCount() {
         User currentUser = securityUtils.getCurrentUser();
-        List<IssueSubmission> userIssues = issueSubmissionRepository.findByUserOrderByCreatedAtDesc(currentUser);
+        // Use projection to only load timestamps, not screenshot data or other heavy fields
+        var timestamps = issueSubmissionRepository.findTimestampProjectionsByUser(currentUser);
 
-        return userIssues.stream()
-            .filter(issue -> {
-                // If never viewed, it's unread
-                if (issue.getLastViewedAt() == null) {
-                    return issue.getUpdatedAt().isAfter(issue.getCreatedAt()); // Has updates
+        return timestamps.stream()
+            .filter(projection -> {
+                // If never viewed, check if it has been updated since creation
+                if (projection.getLastViewedAt() == null) {
+                    return projection.getUpdatedAt().isAfter(projection.getCreatedAt());
                 }
-                // If updated after last view, it's unread
-                return issue.getUpdatedAt().isAfter(issue.getLastViewedAt());
+                // Otherwise, check if updated since last view
+                return projection.getUpdatedAt().isAfter(projection.getLastViewedAt());
             })
             .count();
     }

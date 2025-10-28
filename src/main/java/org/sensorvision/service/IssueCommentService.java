@@ -58,6 +58,11 @@ public class IssueCommentService {
         IssueComment savedComment = commentRepository.save(comment);
         logger.info("User {} added comment to issue {}", currentUser.getUsername(), issueId);
 
+        // Update the parent issue's updatedAt timestamp for activity tracking
+        issue.setUpdatedAt(java.time.Instant.now());
+        issueRepository.save(issue);
+        logger.debug("Updated parent issue #{} timestamp for activity tracking", issueId);
+
         return IssueCommentDto.fromEntity(savedComment);
     }
 
@@ -83,6 +88,15 @@ public class IssueCommentService {
             currentUser.getUsername(),
             request.internal() ? "internal" : "public",
             issueId);
+
+        // For public comments, update the parent issue's updatedAt timestamp
+        // This ensures the unread badge will show for users when support replies
+        if (!request.internal()) {
+            // Touch the issue to trigger AuditableEntity's updatedAt refresh
+            issue.setUpdatedAt(java.time.Instant.now());
+            issueRepository.save(issue);
+            logger.debug("Updated parent issue #{} timestamp for unread tracking", issueId);
+        }
 
         // Send email notification if this is a public reply (not internal)
         if (!request.internal()) {

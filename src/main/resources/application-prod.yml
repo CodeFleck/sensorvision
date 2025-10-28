@@ -129,6 +129,8 @@ simulator:
 
 # JWT Configuration
 app:
+  # Base URL for production (used in emails, links, etc.)
+  base-url: ${APP_BASE_URL:http://35.88.65.186.nip.io:8080}
   jwt:
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
