@@ -58,10 +58,9 @@ public class IssueCommentService {
         IssueComment savedComment = commentRepository.save(comment);
         logger.info("User {} added comment to issue {}", currentUser.getUsername(), issueId);
 
-        // Update the parent issue's updatedAt timestamp for activity tracking
-        issue.setUpdatedAt(java.time.Instant.now());
-        issueRepository.save(issue);
-        logger.debug("Updated parent issue #{} timestamp for activity tracking", issueId);
+        // Note: We intentionally DON'T update the parent issue's updatedAt here.
+        // User comments shouldn't trigger the unread badge - only support/admin replies should.
+        // This prevents the badge from lighting up when users reply to their own tickets.
 
         return IssueCommentDto.fromEntity(savedComment);
     }
