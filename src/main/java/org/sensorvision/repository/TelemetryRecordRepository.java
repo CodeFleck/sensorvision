@@ -63,4 +63,9 @@ public interface TelemetryRecordRepository extends JpaRepository<TelemetryRecord
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime
     );
+
+    /**
+     * Count telemetry records for a device after a specific timestamp (for health score calculation)
+     */
+    long countByDeviceIdAndTimestampAfter(UUID deviceId, LocalDateTime timestamp);
 }
