@@ -66,9 +66,9 @@ public interface IssueSubmissionRepository extends JpaRepository<IssueSubmission
 
     /**
      * Find timestamp projections for all issues by user (optimized for unread count)
-     * Only selects id, updatedAt, lastViewedAt, createdAt - avoids loading screenshot blobs
+     * Only selects id, updatedAt, lastViewedAt, createdAt, lastPublicReplyAt, status - avoids loading screenshot blobs
      */
-    @Query("SELECT i.id AS id, i.updatedAt AS updatedAt, i.lastViewedAt AS lastViewedAt, i.createdAt AS createdAt " +
+    @Query("SELECT i.id AS id, i.updatedAt AS updatedAt, i.lastViewedAt AS lastViewedAt, i.createdAt AS createdAt, i.lastPublicReplyAt AS lastPublicReplyAt, i.status AS status " +
            "FROM IssueSubmission i WHERE i.user = :user")
     List<IssueTimestampProjection> findTimestampProjectionsByUser(@Param("user") User user);
 }

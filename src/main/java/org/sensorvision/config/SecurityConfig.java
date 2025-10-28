@@ -94,7 +94,7 @@ public class SecurityConfig {
                         // OAuth2 login endpoints
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         // Static resources (frontend) - serve React app for these routes
-                        .requestMatchers("/", "/index.html", "/login", "/register", "/oauth2/callback", "/dashboard", "/devices", "/rules", "/analytics", "/how-it-works", "/assets/**", "/static/**", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg").permitAll()
+                        .requestMatchers("/", "/index.html", "/login", "/register", "/forgot-password", "/reset-password", "/oauth2/callback", "/dashboard", "/devices", "/rules", "/analytics", "/how-it-works", "/assets/**", "/static/**", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.svg").permitAll()
                         // Protected endpoints
                         .anyRequest().authenticated()
                 )

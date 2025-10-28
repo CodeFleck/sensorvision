@@ -88,13 +88,13 @@ public class IssueCommentService {
             request.internal() ? "internal" : "public",
             issueId);
 
-        // For public comments, update the parent issue's updatedAt timestamp
+        // For public comments, update the parent issue's lastPublicReplyAt timestamp
         // This ensures the unread badge will show for users when support replies
+        // Unlike updatedAt, this field ONLY changes when admins post public replies (not status changes)
         if (!request.internal()) {
-            // Touch the issue to trigger AuditableEntity's updatedAt refresh
-            issue.setUpdatedAt(java.time.Instant.now());
+            issue.setLastPublicReplyAt(java.time.Instant.now());
             issueRepository.save(issue);
-            logger.debug("Updated parent issue #{} timestamp for unread tracking", issueId);
+            logger.debug("Updated parent issue #{} lastPublicReplyAt for unread tracking", issueId);
         }
 
         // Send email notification if this is a public reply (not internal)
