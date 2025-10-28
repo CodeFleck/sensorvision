@@ -325,3 +325,35 @@ export interface IssueSubmission {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface AdminIssue {
+  id: number;
+  title: string;
+  description: string;
+  category: IssueCategory;
+  severity: IssueSeverity;
+  status: IssueStatus;
+  hasScreenshot: boolean;
+  username: string;
+  userEmail: string;
+  userId: number;
+  organizationName: string;
+  commentCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IssueComment {
+  id: number;
+  issueId: number;
+  authorId: number;
+  authorName: string;
+  message: string;
+  internal: boolean;
+  createdAt: string;
+}
+
+export interface IssueCommentRequest {
+  message: string;
+  internal?: boolean;
+}

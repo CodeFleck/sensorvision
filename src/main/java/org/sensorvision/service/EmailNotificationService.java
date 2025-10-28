@@ -27,6 +27,9 @@ public class EmailNotificationService {
     @Value("${notification.email.from:noreply@sensorvision.com}")
     private String fromEmail;
 
+    @Value("${app.base-url:http://localhost:3001}")
+    private String appBaseUrl;
+
     @Autowired(required = false)
     public EmailNotificationService(JavaMailSender mailSender, EmailTemplateService templateService) {
         this.mailSender = mailSender;
@@ -431,5 +434,106 @@ public class EmailNotificationService {
             .replace(">", "&gt;")
             .replace("\"", "&quot;")
             .replace("'", "&#39;");
+    }
+
+    /**
+     * Send email notification to user when support team replies to their ticket
+     */
+    public boolean sendTicketReplyEmail(org.sensorvision.model.IssueSubmission issue, String replyMessage, String recipientEmail) {
+        if (!emailEnabled) {
+            log.info("Email notifications disabled. Would have sent ticket reply email to: {}", recipientEmail);
+            return false;
+        }
+
+        try {
+            String subject = String.format("[SensorVision] Reply on your support ticket #%d", issue.getId());
+            String body = generateTicketReplyEmailBody(issue, replyMessage);
+
+            log.info("Sending ticket reply notification to: {}", recipientEmail);
+
+            if (mailSender != null) {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom(fromEmail);
+                helper.setTo(recipientEmail);
+                helper.setSubject(subject);
+                helper.setText(body, true); // true = isHtml
+                mailSender.send(message);
+                log.info("Ticket reply email sent successfully to {}", recipientEmail);
+            } else {
+                log.info("JavaMailSender not configured. Would send ticket reply to: {}", recipientEmail);
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to send ticket reply email to {}", recipientEmail, e);
+            return false;
+        }
+    }
+
+    private String generateTicketReplyEmailBody(org.sensorvision.model.IssueSubmission issue, String replyMessage) {
+        // Use configured base URL from application properties
+        String ticketUrl = String.format("%s/my-tickets", appBaseUrl);
+
+        StringBuilder body = new StringBuilder();
+        body.append("<html><body style='font-family: Arial, sans-serif;'>");
+        body.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+
+        // Header
+        body.append("<div style='background-color: #007bff; color: white; padding: 20px; border-radius: 5px 5px 0 0;'>");
+        body.append("<h2 style='margin: 0;'>🎧 Support Team Reply</h2>");
+        body.append("</div>");
+
+        // Content
+        body.append("<div style='background-color: #f8f9fa; padding: 20px; border: 1px solid #dee2e6; border-top: none;'>");
+
+        body.append("<p style='font-size: 16px; color: #333;'>Hi ").append(escapeHtml(issue.getUser().getFirstName())).append(",</p>");
+        body.append("<p style='color: #666;'>Our support team has replied to your ticket:</p>");
+
+        // Ticket Info
+        body.append("<div style='background-color: white; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;'>");
+        body.append("<strong style='color: #007bff; font-size: 14px;'>Ticket #").append(issue.getId()).append("</strong><br>");
+        body.append("<h3 style='margin: 10px 0; color: #333;'>").append(escapeHtml(issue.getTitle())).append("</h3>");
+        body.append("<p style='margin: 5px 0; color: #666; font-size: 13px;'>");
+        body.append("<strong>Status:</strong> <span style='color: ");
+
+        // Status color
+        String statusColor = switch (issue.getStatus()) {
+            case SUBMITTED -> "#007bff";
+            case IN_REVIEW -> "#ffc107";
+            case RESOLVED -> "#28a745";
+            case CLOSED -> "#6c757d";
+        };
+        body.append(statusColor).append(";'>").append(issue.getStatus().getDisplayName()).append("</span>");
+        body.append("</p>");
+        body.append("</div>");
+
+        // Reply Message
+        body.append("<div style='background-color: #d4edda; padding: 15px; border-left: 4px solid #28a745; margin: 20px 0;'>");
+        body.append("<p style='margin: 0 0 5px 0; font-size: 12px; color: #155724; font-weight: bold;'>🎧 Support Team replied:</p>");
+        body.append("<p style='white-space: pre-wrap; margin: 0; color: #155724;'>").append(escapeHtml(replyMessage)).append("</p>");
+        body.append("</div>");
+
+        // Call to Action
+        body.append("<div style='text-align: center; margin: 30px 0;'>");
+        body.append("<a href='").append(ticketUrl).append("' style='display: inline-block; padding: 12px 30px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;'>View Full Conversation</a>");
+        body.append("</div>");
+
+        body.append("<p style='color: #666; font-size: 13px; margin-top: 30px;'>You can reply to this ticket by visiting your support dashboard.</p>");
+
+        body.append("</div>");
+
+        // Footer
+        body.append("<div style='background-color: #f8f9fa; padding: 15px; text-align: center; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px;'>");
+        body.append("<p style='color: #666; font-size: 12px; margin: 5px 0;'>");
+        body.append("This is an automated notification from SensorVision Support<br>");
+        body.append("You're receiving this because you submitted ticket #").append(issue.getId());
+        body.append("</p>");
+        body.append("</div>");
+
+        body.append("</div>");
+        body.append("</body></html>");
+
+        return body.toString();
     }
 }

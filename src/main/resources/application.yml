@@ -134,6 +134,11 @@ telemetry:
     enabled: ${TELEMETRY_AUTO_PROVISION_ENABLED:true}
 
 app:
+  # Base URL for the application (used in emails, links, etc.)
+  # IMPORTANT: Set this to the correct URL for each environment
+  # Local: http://localhost:3001
+  # Production: http://35.88.65.186.nip.io:8080
+  base-url: ${APP_BASE_URL:http://localhost:3001}
   jwt:
     # SECURITY: JWT secret MUST be set via JWT_SECRET environment variable
     secret: ${JWT_SECRET:}

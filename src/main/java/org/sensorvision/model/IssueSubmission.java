@@ -57,6 +57,9 @@ public class IssueSubmission extends AuditableEntity {
     @Column(name = "screen_resolution", length = 50)
     private String screenResolution;
 
+    @Column(name = "last_viewed_at")
+    private java.time.Instant lastViewedAt;
+
     // Constructors
     public IssueSubmission() {
     }
@@ -190,5 +193,13 @@ public class IssueSubmission extends AuditableEntity {
 
     public void setScreenResolution(String screenResolution) {
         this.screenResolution = screenResolution;
+    }
+
+    public java.time.Instant getLastViewedAt() {
+        return lastViewedAt;
+    }
+
+    public void setLastViewedAt(java.time.Instant lastViewedAt) {
+        this.lastViewedAt = lastViewedAt;
     }
 }

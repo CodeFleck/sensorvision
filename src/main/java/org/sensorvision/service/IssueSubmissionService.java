@@ -182,4 +182,45 @@ public class IssueSubmissionService {
         User currentUser = securityUtils.getCurrentUser();
         return issueSubmissionRepository.countByUser(currentUser);
     }
+
+    /**
+     * Mark ticket as viewed by current user
+     */
+    @Transactional
+    public void markAsViewed(Long issueId) {
+        User currentUser = securityUtils.getCurrentUser();
+        IssueSubmission issue = issueSubmissionRepository.findByIdAndUser(issueId, currentUser)
+            .orElseThrow(() -> new RuntimeException("Issue not found with id: " + issueId));
+
+        issue.setLastViewedAt(Instant.now());
+        issueSubmissionRepository.save(issue);
+
+        logger.debug("Marked issue {} as viewed by user {}", issueId, currentUser.getUsername());
+    }
+
+    /**
+     * Get count of tickets with unread replies for current user
+     * A ticket has unread replies if:
+     * - lastViewedAt is null (never viewed), OR
+     * - updatedAt is after lastViewedAt (new activity since last view)
+     *
+     * Uses lightweight projection to avoid loading screenshot blobs and other heavy fields
+     */
+    @Transactional(readOnly = true)
+    public long getUnreadTicketCount() {
+        User currentUser = securityUtils.getCurrentUser();
+        // Use projection to only load timestamps, not screenshot data or other heavy fields
+        var timestamps = issueSubmissionRepository.findTimestampProjectionsByUser(currentUser);
+
+        return timestamps.stream()
+            .filter(projection -> {
+                // If never viewed, check if it has been updated since creation
+                if (projection.getLastViewedAt() == null) {
+                    return projection.getUpdatedAt().isAfter(projection.getCreatedAt());
+                }
+                // Otherwise, check if updated since last view
+                return projection.getUpdatedAt().isAfter(projection.getLastViewedAt());
+            })
+            .count();
+    }
 }

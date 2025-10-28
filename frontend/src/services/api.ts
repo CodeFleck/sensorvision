@@ -1,4 +1,4 @@
-import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -358,6 +358,72 @@ class ApiService {
 
   async getUserIssueCount(): Promise<{ count: number }> {
     return this.request<{ count: number }>('/support/issues/count');
+  }
+
+  // Issue Comments (User)
+  async getUserIssueComments(issueId: number): Promise<IssueComment[]> {
+    return this.request<IssueComment[]>(`/support/issues/${issueId}/comments`);
+  }
+
+  async addUserComment(issueId: number, comment: IssueCommentRequest): Promise<IssueComment> {
+    return this.request<IssueComment>(`/support/issues/${issueId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(comment),
+    });
+  }
+
+  async markTicketAsViewed(issueId: number): Promise<void> {
+    await this.request<void>(`/support/issues/${issueId}/mark-viewed`, {
+      method: 'POST',
+    });
+  }
+
+  async getUnreadTicketCount(): Promise<{ unreadCount: number }> {
+    return this.request<{ unreadCount: number }>('/support/issues/unread-count');
+  }
+
+  // Admin Issue Management
+  async getAdminIssues(status?: IssueStatus): Promise<AdminIssue[]> {
+    const query = status ? `?status=${status}` : '';
+    return this.request<AdminIssue[]>(`/admin/support/issues${query}`);
+  }
+
+  async getAdminIssueById(id: number): Promise<IssueSubmission> {
+    return this.request<IssueSubmission>(`/admin/support/issues/${id}`);
+  }
+
+  async updateIssueStatus(id: number, status: IssueStatus): Promise<IssueSubmission> {
+    return this.request<IssueSubmission>(`/admin/support/issues/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async getAdminIssueComments(issueId: number): Promise<IssueComment[]> {
+    return this.request<IssueComment[]>(`/admin/support/issues/${issueId}/comments`);
+  }
+
+  async addAdminComment(issueId: number, comment: IssueCommentRequest): Promise<IssueComment> {
+    return this.request<IssueComment>(`/admin/support/issues/${issueId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify(comment),
+    });
+  }
+
+  async getIssueScreenshot(issueId: number): Promise<Blob> {
+    const token = localStorage.getItem('accessToken');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE}/admin/support/issues/${issueId}/screenshot`, {
+      headers,
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch screenshot');
+    }
+    return response.blob();
   }
 }
 
