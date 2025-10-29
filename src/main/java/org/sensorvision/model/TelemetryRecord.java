@@ -72,6 +72,11 @@ public class TelemetryRecord extends AuditableEntity {
     @Column(name = "metadata", columnDefinition = "jsonb")
     private Map<String, Object> metadata;
 
+    // Data retention field (added by V35 migration)
+    @Builder.Default
+    @Column(name = "archived", nullable = false)
+    private Boolean archived = false;
+
     @PrePersist
     void ensureId() {
         if (this.id == null) {
