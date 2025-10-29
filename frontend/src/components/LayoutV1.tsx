@@ -25,6 +25,7 @@ import {
   MessageSquare,
   Archive,
   TestTube,
+  Terminal,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -102,6 +103,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Variables', href: '/variables', icon: Database, adminOnly: true },
       { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
       { name: 'Webhook Tester', href: '/webhook-tester', icon: TestTube, adminOnly: true },
+      { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: true },
     ],
   },
   {
