@@ -1,4 +1,4 @@
-import api from './api';
+import { apiService } from './api';
 
 export interface DataRetentionPolicy {
   id: number;
@@ -51,28 +51,27 @@ export interface PageResponse<T> {
 
 const dataRetentionService = {
   async getPolicy(): Promise<DataRetentionPolicy> {
-    const response = await api.get<DataRetentionPolicy>('/api/v1/retention-policies');
+    const response = await apiService.get<DataRetentionPolicy>('/retention-policies');
     return response.data;
   },
 
   async createOrUpdatePolicy(policy: CreateRetentionPolicyRequest): Promise<DataRetentionPolicy> {
-    const response = await api.put<DataRetentionPolicy>('/api/v1/retention-policies', policy);
+    const response = await apiService.put<DataRetentionPolicy>('/retention-policies', policy);
     return response.data;
   },
 
   async deletePolicy(): Promise<void> {
-    await api.delete('/api/v1/retention-policies');
+    await apiService.delete('/retention-policies');
   },
 
   async executeArchival(): Promise<ArchiveExecution> {
-    const response = await api.post<ArchiveExecution>('/api/v1/retention-policies/execute');
+    const response = await apiService.post<ArchiveExecution>('/retention-policies/execute');
     return response.data;
   },
 
   async getExecutions(page: number = 0, size: number = 20): Promise<PageResponse<ArchiveExecution>> {
-    const response = await api.get<PageResponse<ArchiveExecution>>(
-      `/api/v1/retention-policies/executions`,
-      { params: { page, size } }
+    const response = await apiService.get<PageResponse<ArchiveExecution>>(
+      `/retention-policies/executions?page=${page}&size=${size}`
     );
     return response.data;
   },
