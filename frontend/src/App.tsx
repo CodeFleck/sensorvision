@@ -25,6 +25,7 @@ import DeviceTags from './pages/DeviceTags';
 import DataExport from './pages/DataExport';
 import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
+import WebhookTester from './pages/WebhookTester';
 import { AdminSupportTickets } from './pages/AdminSupportTickets';
 import { AdminCannedResponses } from './pages/AdminCannedResponses';
 import { MyTickets } from './pages/MyTickets';
@@ -96,6 +97,7 @@ function App() {
                   <Route path="/data-export" element={<ProtectedRoute adminOnly={true}><DataExport /></ProtectedRoute>} />
                   <Route path="/variables" element={<ProtectedRoute adminOnly={true}><Variables /></ProtectedRoute>} />
                   <Route path="/data-retention" element={<ProtectedRoute adminOnly={true}><DataRetention /></ProtectedRoute>} />
+                  <Route path="/webhook-tester" element={<ProtectedRoute adminOnly={true}><WebhookTester /></ProtectedRoute>} />
                   <Route path="/admin/support-tickets" element={<ProtectedRoute adminOnly={true}><AdminSupportTickets /></ProtectedRoute>} />
                   <Route path="/admin/canned-responses" element={<ProtectedRoute adminOnly={true}><AdminCannedResponses /></ProtectedRoute>} />
                 </Routes>
