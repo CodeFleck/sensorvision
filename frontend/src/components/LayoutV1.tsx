@@ -26,6 +26,7 @@ import {
   Archive,
   TestTube,
   Terminal,
+  Mail,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -104,6 +105,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
       { name: 'Webhook Tester', href: '/webhook-tester', icon: TestTube, adminOnly: true },
       { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: true },
+      { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
     ],
   },
   {
@@ -115,6 +117,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'My Tickets', href: '/my-tickets', icon: MessageSquare, adminOnly: false },
       { name: 'Support Tickets', href: '/admin/support-tickets', icon: Headphones, adminOnly: true },
       { name: 'Canned Responses', href: '/admin/canned-responses', icon: MessageSquare, adminOnly: true },
+      { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
     ],
   },
 ];
