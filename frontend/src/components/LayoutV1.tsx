@@ -23,6 +23,7 @@ import {
   BookOpen,
   Headphones,
   MessageSquare,
+  Mail,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -109,6 +110,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'My Tickets', href: '/my-tickets', icon: MessageSquare, adminOnly: false },
       { name: 'Support Tickets', href: '/admin/support-tickets', icon: Headphones, adminOnly: true },
       { name: 'Canned Responses', href: '/admin/canned-responses', icon: MessageSquare, adminOnly: true },
+      { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
     ],
   },
 ];
