@@ -23,6 +23,7 @@ import {
   BookOpen,
   Headphones,
   MessageSquare,
+  Code,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -74,6 +75,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: true },
       { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: true },
       { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
+      { name: 'Serverless Functions', href: '/serverless-functions', icon: Code, adminOnly: false },
     ],
   },
   {
