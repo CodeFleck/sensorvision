@@ -160,7 +160,7 @@ public class PythonFunctionExecutor implements FunctionExecutor {
             # User code
             %s
 
-            def main():
+            def __sensorvision_wrapper():
                 try:
                     # Read input
                     with open(sys.argv[1], 'r') as f:
@@ -180,7 +180,7 @@ public class PythonFunctionExecutor implements FunctionExecutor {
                     sys.exit(1)
 
             if __name__ == '__main__':
-                main()
+                __sensorvision_wrapper()
             """, userCode, handlerName);
     }
 
