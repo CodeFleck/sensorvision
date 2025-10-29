@@ -23,6 +23,8 @@ import {
   BookOpen,
   Headphones,
   MessageSquare,
+  Archive,
+  TestTube,
   Terminal,
 } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -99,6 +101,8 @@ const navigationSections: NavigationSection[] = [
       { name: 'Data Import', href: '/data-import', icon: FileUp, adminOnly: true },
       { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: true },
       { name: 'Variables', href: '/variables', icon: Database, adminOnly: true },
+      { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
+      { name: 'Webhook Tester', href: '/webhook-tester', icon: TestTube, adminOnly: true },
       { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: true },
     ],
   },
