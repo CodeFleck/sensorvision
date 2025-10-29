@@ -23,6 +23,7 @@ import {
   BookOpen,
   Headphones,
   MessageSquare,
+  TestTube,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -98,6 +99,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Data Import', href: '/data-import', icon: FileUp, adminOnly: true },
       { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: true },
       { name: 'Variables', href: '/variables', icon: Database, adminOnly: true },
+      { name: 'Webhook Tester', href: '/webhook-tester', icon: TestTube, adminOnly: true },
     ],
   },
   {
