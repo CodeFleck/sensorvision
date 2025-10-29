@@ -26,6 +26,7 @@ import DataExport from './pages/DataExport';
 import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
 import ServerlessFunctions from './pages/ServerlessFunctions';
+import DataPlugins from './pages/DataPlugins';
 import { AdminSupportTickets } from './pages/AdminSupportTickets';
 import { AdminCannedResponses } from './pages/AdminCannedResponses';
 import { MyTickets } from './pages/MyTickets';
@@ -80,6 +81,7 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/integration-wizard" element={<IntegrationWizard />} />
                   <Route path="/serverless-functions" element={<ServerlessFunctions />} />
+                  <Route path="/data-plugins" element={<DataPlugins />} />
                   <Route path="/dashboards" element={<Dashboards />} />
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/analytics" element={<Analytics />} />

@@ -91,6 +91,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/*/avatar").permitAll()
                         // Device data ingestion (uses device token authentication in controller)
                         .requestMatchers("/api/v1/ingest/**").permitAll()
+                        // Webhook endpoints for data plugins (public for external systems)
+                        .requestMatchers("/api/v1/webhooks/**").permitAll()
                         // OAuth2 login endpoints
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         // Static resources (frontend) - serve React app for these routes

@@ -24,6 +24,7 @@ import {
   Headphones,
   MessageSquare,
   Code,
+  Plug2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -76,6 +77,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: true },
       { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
       { name: 'Serverless Functions', href: '/serverless-functions', icon: Code, adminOnly: false },
+      { name: 'Data Plugins', href: '/data-plugins', icon: Plug2, adminOnly: false },
     ],
   },
   {
