@@ -27,7 +27,7 @@ public class ServerlessFunction extends AuditableEntity {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private FunctionRuntime runtime;
 
     @Column(nullable = false, columnDefinition = "TEXT")

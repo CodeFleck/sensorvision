@@ -20,7 +20,7 @@ public class FunctionTrigger {
     private ServerlessFunction function;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "trigger_type", nullable = false)
+    @Column(name = "trigger_type", nullable = false, length = 50)
     private FunctionTriggerType triggerType;
 
     @JdbcTypeCode(SqlTypes.JSON)
