@@ -20,7 +20,7 @@ public class DataArchivalScheduler {
      * Execute archival for all enabled policies
      * Runs daily at 2 AM by default
      */
-    @Scheduled(cron = "${app.archival.schedule:0 2 * * *}")
+    @Scheduled(cron = "${app.archival.schedule:0 0 2 * * *}")
     public void executeScheduledArchival() {
         log.info("Starting scheduled data archival execution");
 
