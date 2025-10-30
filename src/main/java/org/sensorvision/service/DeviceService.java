@@ -32,6 +32,7 @@ public class DeviceService {
     private final PasswordEncoder passwordEncoder;
     private final DeviceTokenService deviceTokenService;
     private final SecurityUtils securityUtils;
+    private final DeviceHealthService deviceHealthService;
 
     @Transactional(readOnly = true)
     public List<DeviceResponse> getAllDevices() {
@@ -216,6 +217,9 @@ public class DeviceService {
     }
 
     private DeviceResponse toResponse(Device device) {
+        Integer healthScore = device.getHealthScore() != null ? device.getHealthScore() : 100;
+        String healthStatus = deviceHealthService.getHealthStatus(healthScore);
+
         return new DeviceResponse(
                 device.getExternalId(),
                 device.getName(),
@@ -223,7 +227,10 @@ public class DeviceService {
                 device.getSensorType(),
                 device.getFirmwareVersion(),
                 device.getStatus(),
-                device.getLastSeenAt()
+                device.getLastSeenAt(),
+                healthScore,
+                healthStatus,
+                device.getLastHealthCheckAt()
         );
     }
 }

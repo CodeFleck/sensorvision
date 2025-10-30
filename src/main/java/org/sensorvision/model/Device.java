@@ -72,6 +72,14 @@ public class Device extends AuditableEntity {
     @Column(name = "token_last_used_at")
     private LocalDateTime tokenLastUsedAt;
 
+    // Device Health Score (0-100)
+    @Column(name = "health_score")
+    @Builder.Default
+    private Integer healthScore = 100;
+
+    @Column(name = "last_health_check_at")
+    private LocalDateTime lastHealthCheckAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;

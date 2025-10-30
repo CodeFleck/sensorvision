@@ -9,6 +9,9 @@ export interface Device {
   latitude?: number;
   longitude?: number;
   altitude?: number;
+  healthScore?: number;
+  healthStatus?: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR' | 'CRITICAL';
+  lastHealthCheckAt?: string;
 }
 
 export interface DeviceTokenResponse {
