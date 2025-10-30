@@ -134,6 +134,7 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
   const { unreadCount } = useUnreadTickets();
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Initialize collapsed sections from localStorage, default to all expanded
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => {
@@ -297,13 +298,13 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                 </div>
                 <div className="ml-3 flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {user?.username || 'User'}
                     </p>
                     {isAdmin && (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 flex-shrink-0">
-                        <Shield className="h-3 w-3 text-amber-600" />
-                        <span className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide">
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 flex-shrink-0">
+                        <Shield className="h-3 w-3 text-amber-600 dark:text-amber-500" />
+                        <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
                           Admin
                         </span>
                       </span>
@@ -336,14 +337,77 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                 {/* Future: Add breadcrumbs or page title here */}
               </div>
               <div className="flex items-center space-x-4">
-                <ThemeToggle />
                 <Link
                   to="/how-it-works"
-                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
                 >
                   <BookOpen className="h-5 w-5" />
                   <span>Documentation</span>
                 </Link>
+
+                {/* User Menu Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    {user && <UserAvatar user={user} size="sm" />}
+                    <div className="flex flex-col items-start">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {user?.username || 'User'}
+                        </span>
+                        {isAdmin && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
+                            <Shield className="h-3 w-3 text-amber-600 dark:text-amber-500" />
+                            <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+                              Admin
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isUserMenuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-20 animate-fadeIn">
+                        <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {user?.username || 'User'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {user?.organizationName || 'No Organization'}
+                          </p>
+                        </div>
+
+                        <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+                          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                            Theme
+                          </div>
+                          <ThemeToggle />
+                        </div>
+
+                        <div className="p-2">
+                          <button
+                            onClick={() => {
+                              setIsUserMenuOpen(false);
+                              setIsAvatarModalOpen(true);
+                            }}
+                            className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                          >
+                            Edit Profile
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </header>
