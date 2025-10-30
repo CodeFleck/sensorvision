@@ -13,6 +13,7 @@ import { OAuth2Callback } from './pages/OAuth2Callback';
 import HowItWorks from './pages/HowItWorks';
 import { Dashboard } from './pages/Dashboard';
 import { Dashboards } from './pages/Dashboards';
+import { DashboardTemplates } from './pages/DashboardTemplates';
 import { Devices } from './pages/Devices';
 import { Analytics } from './pages/Analytics';
 import { Rules } from './pages/Rules';
@@ -85,6 +86,7 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/integration-wizard" element={<IntegrationWizard />} />
                   <Route path="/dashboards" element={<Dashboards />} />
+                  <Route path="/dashboard-templates" element={<DashboardTemplates />} />
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/rules" element={<Rules />} />
