@@ -47,7 +47,7 @@ export const DashboardTemplates: React.FC = () => {
         : `/dashboard-templates/category/${selectedCategory}`;
 
       const data = await apiService.get<DashboardTemplate[]>(url);
-      setTemplates(data);
+      setTemplates(data.data);
     } catch (error) {
       console.error('Error loading templates:', error);
       toast.error('Failed to load dashboard templates');
@@ -81,7 +81,7 @@ export const DashboardTemplates: React.FC = () => {
 
       toast.success('Dashboard created successfully!');
       setShowInstantiateModal(false);
-      navigate(`/dashboards/${response.id}`);
+      navigate(`/dashboards/${response.data.id}`);
     } catch (error) {
       console.error('Error instantiating template:', error);
       toast.error('Failed to create dashboard');
