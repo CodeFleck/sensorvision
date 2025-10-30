@@ -122,8 +122,8 @@ const HowItWorks = () => {
     { id: 'rules-engine', title: 'Rules Engine', level: 2 },
     { id: 'synthetic-variables', title: 'Synthetic Variables', level: 2 },
     { id: 'analytics', title: 'Analytics', level: 2 },
+    { id: 'platform-features', title: 'Platform Features', level: 1 },
     { id: 'architecture', title: 'Architecture', level: 1 },
-    { id: 'recent-updates', title: 'Recent Updates', level: 1 },
     { id: 'resources', title: 'Resources', level: 1 },
   ];
 
@@ -893,6 +893,191 @@ await client.disconnect();`}
             </div>
           </section>
 
+          {/* Platform Features Section */}
+          <section id="platform-features" className="mb-12 scroll-mt-24">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-cyan-500 pb-2">Platform Features</h2>
+
+            <p className="text-gray-700 mb-6">
+              SensorVision is more than just data ingestion. Discover our comprehensive suite of enterprise-grade features designed to help you build, manage, and scale your IoT solution.
+            </p>
+
+            {/* Device Management */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Box className="w-5 h-5 text-cyan-600" />
+                Device Management
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Device Health Scoring</h4>
+                  <p className="text-sm text-gray-600">Automated health scores (0-100) based on uptime, alerts, data quality, and status. Recalculated every 5 minutes with health categories (EXCELLENT, GOOD, FAIR, POOR, CRITICAL).</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Device Groups & Tags</h4>
+                  <p className="text-sm text-gray-600">Organize devices with hierarchical groups and custom tags. Supports bulk operations, filtering, and tag-based queries for efficient fleet management.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Device Commands (MQTT)</h4>
+                  <p className="text-sm text-gray-600">Send commands to devices via MQTT for bidirectional communication. Supports custom command/payload structures with device ownership verification.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Location Tracking & Geofencing</h4>
+                  <p className="text-sm text-gray-600">Real-time GPS tracking with location history. Create circular/polygon geofences with entry/exit alerts for location-based monitoring.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Data Management */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Database className="w-5 h-5 text-green-600" />
+                Data Management
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Data Retention Policies</h4>
+                  <p className="text-sm text-gray-600">Automated data archival and deletion. Set retention periods, archive to S3/Azure Blob, schedule with cron expressions, and track execution history.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Import/Export</h4>
+                  <p className="text-sm text-gray-600">Bulk import telemetry via CSV, export data to Excel/CSV formats. Time range filtering, device bulk import, and error reporting.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Variable Management</h4>
+                  <p className="text-sm text-gray-600">Define variable metadata, units of measurement, data types, and display configuration. Centralized variable catalog for consistency.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Events System</h4>
+                  <p className="text-sm text-gray-600">Comprehensive event logging with audit trail. Track device creation, telemetry ingestion, alerts, and system events with filtering and search.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Extensibility */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Code className="w-5 h-5 text-purple-600" />
+                Extensibility & Automation
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Serverless Functions</h4>
+                  <p className="text-sm text-gray-600">Write JavaScript functions triggered by events (telemetry, alerts, schedules, webhooks). Custom code execution with input/output tracking and execution history.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Data Plugins</h4>
+                  <p className="text-sm text-gray-600">Extensible plugin system for custom data ingestion. Built-in plugins: HTTP Webhook, LoRaWAN TTN, CSV Import. Create your own plugins with validation framework.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Scheduled Reports</h4>
+                  <p className="text-sm text-gray-600">Automated report generation with cron scheduling. Export to PDF/Excel/CSV, email delivery, execution history, and multiple report types (telemetry, analytics, alerts).</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Scheduled Tasks</h4>
+                  <p className="text-sm text-gray-600">Cron-based task scheduling for automated operations. Configure recurring tasks for data processing, cleanup, and reporting.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Notifications */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                Multi-Channel Notifications
+              </h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Email Notifications</h4>
+                  <p className="text-sm text-gray-600">SMTP-based email alerts with customizable templates</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">SMS (Twilio)</h4>
+                  <p className="text-sm text-gray-600">Text message alerts via Twilio integration</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Slack Webhooks</h4>
+                  <p className="text-sm text-gray-600">Send alerts to Slack channels</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Microsoft Teams</h4>
+                  <p className="text-sm text-gray-600">Teams channel webhook integration</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Custom Webhooks</h4>
+                  <p className="text-sm text-gray-600">HTTP webhooks to any endpoint</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Email Templates</h4>
+                  <p className="text-sm text-gray-600">Visual email template builder with variable substitution and preview</p>
+                </div>
+              </div>
+              <Callout type="info" title="Notification Preferences">
+                Users can configure notification preferences per channel with delivery tracking and notification logs. Set up notification routing based on alert severity and type.
+              </Callout>
+            </div>
+
+            {/* Dashboards & Visualization */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-cyan-600" />
+                Dashboards & Visualization
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Dashboard Templates</h4>
+                  <p className="text-sm text-gray-600">Pre-built industry-specific dashboard templates. Instant setup from template marketplace with system and user-created templates.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Dashboard Sharing</h4>
+                  <p className="text-sm text-gray-600">Share dashboards with public/private links, permissions management, and embed capability for external sites.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Developer Tools */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Terminal className="w-5 h-5 text-blue-600" />
+                Developer Tools
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">API Playground</h4>
+                  <p className="text-sm text-gray-600">Interactive API testing tool within the UI. Pre-populated endpoints for devices, telemetry, rules, analytics with request history and code examples.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Webhook Tester</h4>
+                  <p className="text-sm text-gray-600">Test webhook endpoints with configurable HTTP methods, custom headers, request bodies, response capture, and execution history.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Support & Admin */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Info className="w-5 h-5 text-orange-600" />
+                Support & Administration
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Support Ticket System</h4>
+                  <p className="text-sm text-gray-600">Complete ticketing workflow with user submissions, admin management, status tracking (NEW, IN_PROGRESS, RESOLVED, CLOSED), comments, and screenshot attachments.</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <h4 className="font-semibold text-gray-900 mb-2">Canned Responses</h4>
+                  <p className="text-sm text-gray-600">Pre-written response templates for support tickets with category-based organization and quick insertion for efficient support.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg p-6 border border-cyan-200">
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">All Features Included</h4>
+              <p className="text-sm text-gray-700">
+                Every feature listed above is production-ready and available to all users. Access these capabilities through the main navigation menu, REST API, or integration SDKs. Need help implementing a specific feature? Check out the <Link to="/integration-wizard" className="text-cyan-600 hover:text-cyan-800 font-medium underline">Integration Wizard</Link> or contact support.
+              </p>
+            </div>
+          </section>
+
           {/* Architecture Overview Section */}
           <section id="architecture" className="mb-12 scroll-mt-24">
             <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-cyan-500 pb-2">Architecture Overview</h2>
@@ -965,258 +1150,6 @@ await client.disconnect();`}
                 <h4 className="font-semibold text-gray-900 mb-2">Frontend</h4>
                 <p className="text-sm text-gray-600">React + TypeScript + Vite</p>
               </div>
-            </div>
-          </section>
-
-          {/* Recent Updates Section */}
-          <section id="recent-updates" className="mb-12 scroll-mt-24">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-cyan-500 pb-2">Recent Updates</h2>
-
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-6 rounded-r-lg mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Latest Production Releases</h3>
-              <p className="text-gray-700">
-                View our recent improvements and bug fixes that have been deployed to production.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {/* PR #52 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
-                    #52
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Fix: Correct inverted CPU usage formula in Grafana dashboard
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Fixed a bug where the Grafana dashboard was displaying inverted CPU usage values (showing 99.7% when actual usage was 0.8%). Updated the CPU Usage gauge formula to correctly display actual CPU percentage.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Merged: Oct 30, 2025</span>
-                      <a
-                        href="https://github.com/CodeFleck/sensorvision/pull/52"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
-                      >
-                        View PR <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PR #51 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
-                    #51
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Hotfix: Resolve telemetry ingestion and health score calculation errors
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Critical fix for two production issues: NULL constraint violation on organization_id in telemetry records, and LocalDateTime/Instant type mismatch in DeviceHealthService. Both issues were preventing telemetry ingestion and health score calculations.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Merged: Oct 30, 2025</span>
-                      <a
-                        href="https://github.com/CodeFleck/sensorvision/pull/51"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
-                      >
-                        View PR <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PR #48 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
-                    #48
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Fix: Add missing theme_preference column with IF NOT EXISTS check
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Added conditional column creation for theme_preference to handle existing production databases gracefully. Prevents migration failures when the column already exists.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Merged: Oct 30, 2025</span>
-                      <a
-                        href="https://github.com/CodeFleck/sensorvision/pull/48"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
-                      >
-                        View PR <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PR #47 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
-                    #47
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Fix: Disable Hibernate schema validation in production
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Disabled Hibernate DDL auto-schema validation in production profile to rely exclusively on Flyway for database schema management, preventing validation conflicts.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Merged: Oct 30, 2025</span>
-                      <a
-                        href="https://github.com/CodeFleck/sensorvision/pull/47"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
-                      >
-                        View PR <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PR #46 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
-                    #46
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Fix: Add DROP TABLE IF EXISTS to all recent migrations
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Updated Flyway migrations to safely drop tables before recreation, preventing conflicts when migrations are re-run or when tables already exist in the database.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Merged: Oct 30, 2025</span>
-                      <a
-                        href="https://github.com/CodeFleck/sensorvision/pull/46"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
-                      >
-                        View PR <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PR #45 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
-                    #45
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Hotfix: Fix duplicate dashboard_templates table creation
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Resolved database migration conflict caused by duplicate dashboard_templates table creation in different migration files, ensuring clean schema updates.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Merged: Oct 30, 2025</span>
-                      <a
-                        href="https://github.com/CodeFleck/sensorvision/pull/45"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
-                      >
-                        View PR <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PR #44 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
-                    #44
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Hotfix: Fix Flyway validation settings in production profile
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Temporarily disabled Flyway validation and enabled out-of-order migration execution to resolve migration conflicts in production environment, allowing for more flexible schema management.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Merged: Oct 30, 2025</span>
-                      <a
-                        href="https://github.com/CodeFleck/sensorvision/pull/44"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
-                      >
-                        View PR <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* PR #43 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-3">
-                  <div className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
-                    #43
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      Hotfix: Temporarily disable Flyway validation to handle V26 migration conflict
-                    </h4>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Emergency fix to disable Flyway validation on migrate, addressing V26 migration conflict that was blocking production deployments. Allows the system to handle migration discrepancies gracefully.
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>Merged: Oct 30, 2025</span>
-                      <a
-                        href="https://github.com/CodeFleck/sensorvision/pull/43"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
-                      >
-                        View PR <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 bg-cyan-50 rounded-lg p-4 border border-cyan-200">
-              <p className="text-sm text-gray-700">
-                <strong>Note:</strong> All changes listed above have been tested, reviewed, and deployed to production. For the complete list of changes and to track upcoming features, visit our{' '}
-                <a
-                  href="https://github.com/CodeFleck/sensorvision/pulls?q=is%3Apr+is%3Amerged"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1"
-                >
-                  GitHub Pull Requests <ExternalLink className="w-3 h-3" />
-                </a>.
-              </p>
             </div>
           </section>
 
