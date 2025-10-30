@@ -67,6 +67,10 @@ public class User extends AuditableEntity {
     @Builder.Default
     private Long avatarVersion = 0L;
 
+    @Column(name = "email_notifications_enabled")
+    @Builder.Default
+    private Boolean emailNotificationsEnabled = true;
+
     @Column(name = "theme_preference", length = 20)
     @Builder.Default
     private String themePreference = "system";

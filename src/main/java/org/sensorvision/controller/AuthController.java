@@ -65,7 +65,7 @@ public class AuthController {
 
     @PutMapping("/preferences")
     public ResponseEntity<UserResponse> updateUserPreferences(@Valid @RequestBody UpdateUserPreferencesRequest request) {
-        UserResponse response = authService.updateUserPreferences(request.getThemePreference());
-        return ResponseEntity.ok(response);
+        UserResponse user = authService.updateUserPreferences(request);
+        return ResponseEntity.ok(user);
     }
 }

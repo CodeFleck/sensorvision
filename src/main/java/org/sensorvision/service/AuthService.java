@@ -3,6 +3,7 @@ package org.sensorvision.service;
 import org.sensorvision.dto.JwtAuthenticationResponse;
 import org.sensorvision.dto.LoginRequest;
 import org.sensorvision.dto.RegisterRequest;
+import org.sensorvision.dto.UpdateUserPreferencesRequest;
 import org.sensorvision.dto.UserResponse;
 import org.sensorvision.exception.BadRequestException;
 import org.sensorvision.model.Organization;
@@ -328,39 +329,46 @@ public class AuthService {
         emailNotificationService.sendVerificationEmail(user.getEmail(), verificationToken);
     }
 
+    /**
+     * Update user preferences (theme, email notifications, etc.)
+     */
     @Transactional
-    public UserResponse updateUserPreferences(String themePreference) {
+    public UserResponse updateUserPreferences(UpdateUserPreferencesRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         User user;
 
         // Handle OAuth2 JWT authentication
         if (authentication.getPrincipal() instanceof Jwt) {
             Jwt jwt = (Jwt) authentication.getPrincipal();
             String username = jwt.getSubject();
-
             user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
         }
         // Handle UserPrincipal authentication
         else if (authentication.getPrincipal() instanceof UserPrincipal) {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-
             user = userRepository.findById(userPrincipal.getId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
         }
         else {
             throw new RuntimeException("Invalid authentication principal type: " +
                 authentication.getPrincipal().getClass().getName());
         }
 
-        // Validate theme preference
-        if (!themePreference.matches("^(light|dark|system)$")) {
-            throw new BadRequestException("Invalid theme preference. Must be 'light', 'dark', or 'system'");
+        // Update theme preference if provided
+        if (request.themePreference() != null) {
+            // Validate theme preference
+            if (!request.themePreference().matches("^(light|dark|system)$")) {
+                throw new BadRequestException("Invalid theme preference. Must be 'light', 'dark', or 'system'");
+            }
+            user.setThemePreference(request.themePreference());
         }
 
-        // Update theme preference
-        user.setThemePreference(themePreference);
+        // Update email notification preference if provided
+        if (request.emailNotificationsEnabled() != null) {
+            user.setEmailNotificationsEnabled(request.emailNotificationsEnabled());
+        }
+
         userRepository.save(user);
 
         // Reload user with associations for response
