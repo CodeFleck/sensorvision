@@ -12,13 +12,12 @@ import {
   Cpu,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   TrendingUp,
   BarChart3,
   Edit2,
   Camera
 } from 'lucide-react';
-import ApiService from '../services/ApiService';
+import { apiService } from '../services/api';
 
 interface UserStats {
   totalDevices: number;
@@ -44,8 +43,8 @@ export const Profile = () => {
     try {
       setLoading(true);
       const [devicesResponse, alertsResponse] = await Promise.all([
-        ApiService.getDevices(),
-        ApiService.getAlerts()
+        apiService.getDevices(),
+        apiService.getAlerts()
       ]);
 
       const devices = devicesResponse.data || [];

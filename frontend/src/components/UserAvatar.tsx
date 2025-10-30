@@ -4,7 +4,7 @@ import { getInitials, getAvatarColor, getAvatarTextColor, getAvatarUrl } from '.
 
 interface UserAvatarProps {
   user: User;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   editable?: boolean;
   onClick?: () => void;
 }
@@ -28,6 +28,7 @@ export const UserAvatar = ({ user, size = 'md', editable = false, onClick }: Use
     sm: 'h-8 w-8 text-xs',
     md: 'h-10 w-10 text-sm',
     lg: 'h-20 w-20 text-2xl',
+    xl: 'h-24 w-24 text-3xl',
   };
 
   const hasAvatar = user.avatarUrl && !imageError;
