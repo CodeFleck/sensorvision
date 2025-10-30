@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
@@ -128,7 +129,7 @@ public class DeviceHealthService {
      */
     private double calculateDataQualityScore(Device device) {
         // Count telemetry records in last 24 hours
-        LocalDateTime oneDayAgo = LocalDateTime.now().minusDays(1);
+        Instant oneDayAgo = Instant.now().minus(1, ChronoUnit.DAYS);
         long telemetryCount = telemetryRecordRepository.countByDeviceIdAndTimestampAfter(
                 device.getId(), oneDayAgo);
 
