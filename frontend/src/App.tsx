@@ -36,6 +36,7 @@ import { AdminSupportTickets } from './pages/AdminSupportTickets';
 import { AdminCannedResponses } from './pages/AdminCannedResponses';
 import { MyTickets } from './pages/MyTickets';
 import DataRetention from './pages/DataRetention';
+import Profile from './pages/Profile';
 import { config } from './config';
 
 function App() {
@@ -97,6 +98,7 @@ function App() {
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/my-tickets" element={<MyTickets />} />
+                  <Route path="/profile" element={<Profile />} />
 
                   {/* Admin-only routes */}
                   <Route path="/device-groups" element={<ProtectedRoute adminOnly={true}><DeviceGroups /></ProtectedRoute>} />
