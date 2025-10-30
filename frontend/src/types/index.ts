@@ -168,6 +168,7 @@ export interface User {
   enabled: boolean;
   avatarUrl?: string;
   avatarVersion?: number;
+  themePreference?: 'light' | 'dark' | 'system';
 }
 
 export interface LoginRequest {

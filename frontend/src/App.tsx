@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LayoutV1 } from './components/LayoutV1';
@@ -25,17 +26,22 @@ import DeviceTags from './pages/DeviceTags';
 import DataExport from './pages/DataExport';
 import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
+import WebhookTester from './pages/WebhookTester';
+import ApiPlayground from './pages/ApiPlayground';
+import EmailTemplateBuilder from './pages/EmailTemplateBuilder';
 import { AdminSupportTickets } from './pages/AdminSupportTickets';
 import { AdminCannedResponses } from './pages/AdminCannedResponses';
 import { MyTickets } from './pages/MyTickets';
+import DataRetention from './pages/DataRetention';
 import { config } from './config';
 
 function App() {
 
   return (
     <AuthProvider>
-      <WebSocketProvider url={config.webSocketUrl}>
-        <Toaster
+      <ThemeProvider>
+        <WebSocketProvider url={config.webSocketUrl}>
+          <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,
@@ -94,6 +100,10 @@ function App() {
                   <Route path="/data-import" element={<ProtectedRoute adminOnly={true}><DataImport /></ProtectedRoute>} />
                   <Route path="/data-export" element={<ProtectedRoute adminOnly={true}><DataExport /></ProtectedRoute>} />
                   <Route path="/variables" element={<ProtectedRoute adminOnly={true}><Variables /></ProtectedRoute>} />
+                  <Route path="/data-retention" element={<ProtectedRoute adminOnly={true}><DataRetention /></ProtectedRoute>} />
+                  <Route path="/webhook-tester" element={<ProtectedRoute adminOnly={true}><WebhookTester /></ProtectedRoute>} />
+                  <Route path="/api-playground" element={<ProtectedRoute adminOnly={true}><ApiPlayground /></ProtectedRoute>} />
+                  <Route path="/email-templates" element={<ProtectedRoute adminOnly={true}><EmailTemplateBuilder /></ProtectedRoute>} />
                   <Route path="/admin/support-tickets" element={<ProtectedRoute adminOnly={true}><AdminSupportTickets /></ProtectedRoute>} />
                   <Route path="/admin/canned-responses" element={<ProtectedRoute adminOnly={true}><AdminCannedResponses /></ProtectedRoute>} />
                 </Routes>
@@ -102,7 +112,8 @@ function App() {
           }
         />
       </Routes>
-      </WebSocketProvider>
+        </WebSocketProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

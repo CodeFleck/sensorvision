@@ -40,6 +40,10 @@ public class TelemetryRecord extends AuditableEntity {
     @JoinColumn(name = "device_id")
     private Device device;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
     @Column(name = "measurement_timestamp", nullable = false)
     private Instant timestamp;
 
@@ -71,6 +75,11 @@ public class TelemetryRecord extends AuditableEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
     private Map<String, Object> metadata;
+
+    // Data retention field (added by V35 migration)
+    @Builder.Default
+    @Column(name = "archived", nullable = false)
+    private Boolean archived = false;
 
     @PrePersist
     void ensureId() {
