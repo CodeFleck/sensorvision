@@ -1,6 +1,10 @@
 -- V35: Data Retention Policies
 -- Automatically archive old telemetry data to reduce database size
 
+-- Drop existing tables if they exist (handles partial migrations from failed deployments)
+DROP TABLE IF EXISTS data_archive_executions CASCADE;
+DROP TABLE IF EXISTS data_retention_policies CASCADE;
+
 CREATE TABLE IF NOT EXISTS data_retention_policies (
     id BIGSERIAL PRIMARY KEY,
     organization_id BIGINT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
