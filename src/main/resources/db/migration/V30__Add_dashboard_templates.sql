@@ -1,6 +1,9 @@
 -- Migration V30: Add dashboard templates system
 -- Enables pre-built dashboard templates for common use cases
 
+-- Drop old dashboard_templates table from V13 (if exists) and recreate with new structure
+DROP TABLE IF EXISTS dashboard_templates CASCADE;
+
 CREATE TABLE dashboard_templates (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
