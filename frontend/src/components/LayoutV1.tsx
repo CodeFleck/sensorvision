@@ -287,45 +287,6 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
               );
             })}
           </nav>
-
-          {/* User info and actions */}
-          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <div className="p-4">
-              <div className="flex items-start mb-3 group cursor-pointer hover:bg-white dark:hover:bg-gray-800 rounded-lg p-2 -m-2 transition-colors"
-                   onClick={() => setIsAvatarModalOpen(true)}>
-                <div className="flex-shrink-0">
-                  {user && <UserAvatar user={user} size="md" editable={true} />}
-                </div>
-                <div className="ml-3 flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {user?.username || 'User'}
-                    </p>
-                    {isAdmin && (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 flex-shrink-0">
-                        <Shield className="h-3 w-3 text-amber-600 dark:text-amber-500" />
-                        <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
-                          Admin
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate" title={user?.organizationName}>
-                    {user?.organizationName || 'No Organization'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Sign Out Button */}
-              <button
-                onClick={logout}
-                className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Main content */}
@@ -394,14 +355,22 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                         </div>
 
                         <div className="p-2">
-                          <button
-                            onClick={() => {
-                              setIsUserMenuOpen(false);
-                              setIsAvatarModalOpen(true);
-                            }}
+                          <Link
+                            to="/profile"
+                            onClick={() => setIsUserMenuOpen(false)}
                             className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                           >
                             Edit Profile
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setIsUserMenuOpen(false);
+                              logout();
+                            }}
+                            className="w-full flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                          >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sign Out
                           </button>
                         </div>
                       </div>

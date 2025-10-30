@@ -174,6 +174,7 @@ export interface User {
   avatarUrl?: string;
   avatarVersion?: number;
   themePreference?: 'light' | 'dark' | 'system';
+  createdAt?: string;
 }
 
 export interface LoginRequest {
