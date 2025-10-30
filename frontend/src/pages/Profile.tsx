@@ -42,13 +42,10 @@ export const Profile = () => {
   const fetchUserStats = async () => {
     try {
       setLoading(true);
-      const [devicesResponse, alertsResponse] = await Promise.all([
+      const [devices, alerts] = await Promise.all([
         apiService.getDevices(),
         apiService.getAlerts()
       ]);
-
-      const devices = devicesResponse.data || [];
-      const alerts = alertsResponse.data || [];
 
       const onlineDevices = devices.filter((d: any) => d.status === 'ONLINE').length;
       const unacknowledgedAlerts = alerts.filter((a: any) => !a.acknowledged).length;
