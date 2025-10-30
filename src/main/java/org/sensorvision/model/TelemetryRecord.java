@@ -40,6 +40,10 @@ public class TelemetryRecord extends AuditableEntity {
     @JoinColumn(name = "device_id")
     private Device device;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
     @Column(name = "measurement_timestamp", nullable = false)
     private Instant timestamp;
 
