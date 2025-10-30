@@ -557,6 +557,7 @@ class AuthServiceTest {
         SecurityContextHolder.setContext(securityContext);
 
         when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(testUser.getId())).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // When
@@ -593,6 +594,7 @@ class AuthServiceTest {
         SecurityContextHolder.setContext(securityContext);
 
         when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(testUser.getId())).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // When
