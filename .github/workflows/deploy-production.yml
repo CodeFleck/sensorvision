@@ -126,7 +126,7 @@ jobs:
           EMAIL_ENABLED=${{ secrets.EMAIL_ENABLED }}
           EMAIL_FROM=${{ secrets.EMAIL_FROM }}
           SMTP_HOST=${{ secrets.SMTP_HOST }}
-          SMTP_SMTP_PORT=${{ secrets.SMTP_PORT }}
+          SMTP_PORT=${{ secrets.SMTP_PORT }}
           SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
           SMS_ENABLED=${{ secrets.SMS_ENABLED }}
