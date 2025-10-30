@@ -12,6 +12,7 @@ public record DashboardResponse(
     String name,
     String description,
     Boolean isDefault,
+    String defaultDeviceId,
     JsonNode layoutConfig,
     List<WidgetResponse> widgets,
     Instant createdAt,
@@ -23,6 +24,7 @@ public record DashboardResponse(
             dashboard.getName(),
             dashboard.getDescription(),
             dashboard.getIsDefault(),
+            dashboard.getDefaultDeviceId(),
             dashboard.getLayoutConfig(),
             dashboard.getWidgets().stream()
                 .map(WidgetResponse::fromEntity)
@@ -38,6 +40,7 @@ public record DashboardResponse(
             dashboard.getName(),
             dashboard.getDescription(),
             dashboard.getIsDefault(),
+            dashboard.getDefaultDeviceId(),
             dashboard.getLayoutConfig(),
             null,
             dashboard.getCreatedAt(),

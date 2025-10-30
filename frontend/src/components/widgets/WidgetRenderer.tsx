@@ -15,12 +15,20 @@ import { MapWidget } from './MapWidget';
 
 interface WidgetRendererProps {
   widget: Widget;
+  contextDeviceId?: string;
   latestData?: TelemetryPoint;
   onDelete?: () => void;
   onEdit?: () => void;
 }
 
-export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ widget, latestData, onDelete, onEdit }) => {
+export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ widget, contextDeviceId, latestData, onDelete, onEdit }) => {
+  // Determine effective device ID: use context device if widget is configured for it
+  // TODO: Use this for fetching device-specific data in widgets
+  // @ts-ignore - Intentionally unused, reserved for future implementation
+  const effectiveDeviceId = widget.useContextDevice && contextDeviceId
+    ? contextDeviceId
+    : widget.deviceId;
+
   const renderWidgetContent = () => {
     switch (widget.type) {
       case 'GAUGE':

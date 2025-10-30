@@ -13,6 +13,8 @@ public record WidgetUpdateRequest(
     Integer height,
     String deviceId,
     String variableName,
+    Boolean useContextDevice,
+    String deviceLabel,
     WidgetAggregation aggregation,
     Integer timeRangeMinutes,
     JsonNode config

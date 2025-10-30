@@ -44,6 +44,13 @@ public class Widget extends AuditableEntity {
     @Column(name = "variable_name")
     private String variableName;
 
+    // Dynamic dashboard support
+    @Column(name = "use_context_device", nullable = false)
+    private Boolean useContextDevice = false;
+
+    @Column(name = "device_label")
+    private String deviceLabel;
+
     @Enumerated(EnumType.STRING)
     @Column
     private WidgetAggregation aggregation = WidgetAggregation.NONE;
@@ -168,5 +175,21 @@ public class Widget extends AuditableEntity {
 
     public void setConfig(JsonNode config) {
         this.config = config;
+    }
+
+    public Boolean getUseContextDevice() {
+        return useContextDevice;
+    }
+
+    public void setUseContextDevice(Boolean useContextDevice) {
+        this.useContextDevice = useContextDevice;
+    }
+
+    public String getDeviceLabel() {
+        return deviceLabel;
+    }
+
+    public void setDeviceLabel(String deviceLabel) {
+        this.deviceLabel = deviceLabel;
     }
 }

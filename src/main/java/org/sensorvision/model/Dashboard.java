@@ -26,6 +26,9 @@ public class Dashboard extends AuditableEntity {
     @Column(name = "is_default")
     private Boolean isDefault = false;
 
+    @Column(name = "default_device_id")
+    private String defaultDeviceId;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "layout_config", columnDefinition = "jsonb")
     private JsonNode layoutConfig;
@@ -99,6 +102,14 @@ public class Dashboard extends AuditableEntity {
 
     public void setIsDefault(Boolean isDefault) {
         this.isDefault = isDefault;
+    }
+
+    public String getDefaultDeviceId() {
+        return defaultDeviceId;
+    }
+
+    public void setDefaultDeviceId(String defaultDeviceId) {
+        this.defaultDeviceId = defaultDeviceId;
     }
 
     public JsonNode getLayoutConfig() {
