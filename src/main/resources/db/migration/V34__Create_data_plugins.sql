@@ -1,6 +1,10 @@
 -- Migration V34: Create Data Plugins / Protocol Parsers System
 -- Allows extensible data ingestion from multiple sources and formats
 
+-- Drop existing tables if they exist (handles partial migrations from failed deployments)
+DROP TABLE IF EXISTS plugin_executions CASCADE;
+DROP TABLE IF EXISTS data_plugins CASCADE;
+
 -- Data Plugins table - stores plugin configurations
 CREATE TABLE data_plugins (
     id BIGSERIAL PRIMARY KEY,

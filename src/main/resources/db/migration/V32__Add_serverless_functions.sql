@@ -1,6 +1,13 @@
 -- Migration V32: Add serverless functions support
 -- Enables users to run custom Python/Node.js code in response to events
 
+-- Drop existing objects if they exist (handles partial migrations from failed deployments)
+DROP TABLE IF EXISTS function_executions CASCADE;
+DROP TABLE IF EXISTS function_triggers CASCADE;
+DROP TABLE IF EXISTS serverless_functions CASCADE;
+DROP TYPE IF EXISTS function_trigger_type;
+DROP TYPE IF EXISTS function_runtime;
+
 -- Function runtime types
 CREATE TYPE function_runtime AS ENUM ('PYTHON_3_11', 'NODEJS_18');
 

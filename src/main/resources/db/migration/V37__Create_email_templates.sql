@@ -1,6 +1,9 @@
 -- Email Templates System
 -- Allows admins to create and manage customizable email templates for various notification types
 
+-- Drop table if it exists (handles case where previous deployment partially created it)
+DROP TABLE IF EXISTS email_templates;
+
 CREATE TABLE email_templates (
     id BIGSERIAL PRIMARY KEY,
     organization_id BIGINT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,

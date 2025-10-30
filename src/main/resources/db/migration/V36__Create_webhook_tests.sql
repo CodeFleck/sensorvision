@@ -1,6 +1,9 @@
 -- V36: Webhook Testing Tool
 -- Store webhook test history for debugging and auditing
 
+-- Drop existing table if it exists (handles partial migrations from failed deployments)
+DROP TABLE IF EXISTS webhook_tests CASCADE;
+
 CREATE TABLE webhook_tests (
     id BIGSERIAL PRIMARY KEY,
     organization_id BIGINT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
