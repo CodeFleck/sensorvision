@@ -11,9 +11,12 @@ import org.sensorvision.security.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,18 +28,20 @@ public class DashboardService {
     private final ObjectMapper objectMapper;
     private final DefaultDashboardInitializer defaultDashboardInitializer;
     private final SecurityUtils securityUtils;
-
+    private final PasswordEncoder passwordEncoder;
 
     public DashboardService(DashboardRepository dashboardRepository,
                           WidgetRepository widgetRepository,
                           ObjectMapper objectMapper,
                           DefaultDashboardInitializer defaultDashboardInitializer,
-                          SecurityUtils securityUtils) {
+                          SecurityUtils securityUtils,
+                          PasswordEncoder passwordEncoder) {
         this.dashboardRepository = dashboardRepository;
         this.widgetRepository = widgetRepository;
         this.objectMapper = objectMapper;
         this.defaultDashboardInitializer = defaultDashboardInitializer;
         this.securityUtils = securityUtils;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -339,6 +344,111 @@ public class DashboardService {
         return widgetRepository.findByDashboardId(dashboardId).stream()
             .map(WidgetResponse::fromEntity)
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Enable or update dashboard sharing
+     */
+    @Transactional
+    public DashboardShareResponse configureDashboardSharing(Long dashboardId, DashboardShareRequest request) {
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
+        Dashboard dashboard = dashboardRepository.findById(dashboardId)
+            .orElseThrow(() -> new RuntimeException("Dashboard not found with id: " + dashboardId));
+
+        // Verify dashboard belongs to user's organization
+        if (!dashboard.getOrganization().getId().equals(userOrg.getId())) {
+            throw new AccessDeniedException("Access denied to dashboard: " + dashboardId);
+        }
+
+        dashboard.setIsPublic(request.getIsPublic());
+        dashboard.setAllowAnonymousView(request.getAllowAnonymousView());
+        dashboard.setShareExpiresAt(request.getExpiresAt());
+
+        if (request.getIsPublic()) {
+            // Generate share token if enabling sharing
+            if (dashboard.getPublicShareToken() == null) {
+                dashboard.setPublicShareToken(UUID.randomUUID().toString());
+            }
+
+            // Set password hash if password provided
+            if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+                dashboard.setSharePasswordHash(passwordEncoder.encode(request.getPassword()));
+            } else {
+                dashboard.setSharePasswordHash(null); // Remove password if not provided
+            }
+        } else {
+            // Disable sharing
+            dashboard.setPublicShareToken(null);
+            dashboard.setSharePasswordHash(null);
+            dashboard.setShareExpiresAt(null);
+        }
+
+        Dashboard saved = dashboardRepository.save(dashboard);
+
+        String shareUrl = saved.getPublicShareToken() != null
+            ? "/public/dashboards/" + saved.getPublicShareToken()
+            : null;
+
+        return DashboardShareResponse.builder()
+            .dashboardId(saved.getId())
+            .dashboardName(saved.getName())
+            .isPublic(saved.getIsPublic())
+            .shareUrl(shareUrl)
+            .shareToken(saved.getPublicShareToken())
+            .expiresAt(saved.getShareExpiresAt())
+            .isPasswordProtected(saved.getSharePasswordHash() != null)
+            .allowAnonymousView(saved.getAllowAnonymousView())
+            .message(saved.getIsPublic() ? "Dashboard sharing enabled" : "Dashboard sharing disabled")
+            .build();
+    }
+
+    /**
+     * Get public dashboard by share token (for anonymous access)
+     */
+    @Transactional(readOnly = true)
+    public DashboardResponse getPublicDashboard(String shareToken, String password) {
+        Dashboard dashboard = dashboardRepository.findByPublicShareToken(shareToken)
+            .orElseThrow(() -> new RuntimeException("Dashboard not found or not shared"));
+
+        // Check if dashboard is actually public
+        if (!dashboard.getIsPublic()) {
+            throw new AccessDeniedException("Dashboard is not publicly shared");
+        }
+
+        // Check if share has expired
+        if (dashboard.getShareExpiresAt() != null && LocalDateTime.now().isAfter(dashboard.getShareExpiresAt())) {
+            throw new AccessDeniedException("Share link has expired");
+        }
+
+        // Check password if required
+        if (dashboard.getSharePasswordHash() != null) {
+            if (password == null || !passwordEncoder.matches(password, dashboard.getSharePasswordHash())) {
+                throw new AccessDeniedException("Invalid password");
+            }
+        }
+
+        return DashboardResponse.fromEntity(dashboard);
+    }
+
+    /**
+     * Disable dashboard sharing
+     */
+    @Transactional
+    public void disableDashboardSharing(Long dashboardId) {
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
+        Dashboard dashboard = dashboardRepository.findById(dashboardId)
+            .orElseThrow(() -> new RuntimeException("Dashboard not found with id: " + dashboardId));
+
+        if (!dashboard.getOrganization().getId().equals(userOrg.getId())) {
+            throw new AccessDeniedException("Access denied to dashboard: " + dashboardId);
+        }
+
+        dashboard.setIsPublic(false);
+        dashboard.setPublicShareToken(null);
+        dashboard.setSharePasswordHash(null);
+        dashboard.setShareExpiresAt(null);
+
+        dashboardRepository.save(dashboard);
     }
 
 }

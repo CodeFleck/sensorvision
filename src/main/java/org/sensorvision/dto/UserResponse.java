@@ -23,4 +23,5 @@ public class UserResponse {
     private Boolean enabled;
     private String avatarUrl;
     private Long avatarVersion;
+    private String themePreference;
 }

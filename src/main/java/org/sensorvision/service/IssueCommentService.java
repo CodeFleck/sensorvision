@@ -98,22 +98,29 @@ public class IssueCommentService {
         }
 
         // Send email notification if this is a public reply (not internal)
+        // Honor user's email notification preference
         if (!request.internal()) {
-            try {
-                String userEmail = issue.getUser().getEmail();
-                boolean emailSent = emailNotificationService.sendTicketReplyEmail(
-                    issue,
-                    request.message(),
-                    userEmail
-                );
-                if (emailSent) {
-                    logger.info("Email notification sent to {} for ticket #{}", userEmail, issueId);
-                } else {
-                    logger.warn("Email notification failed or disabled for ticket #{}", issueId);
+            User ticketOwner = issue.getUser();
+
+            // Check if user has opted in to email notifications
+            if (Boolean.TRUE.equals(ticketOwner.getEmailNotificationsEnabled())) {
+                try {
+                    String userEmail = ticketOwner.getEmail();
+
+                    // Email is sent asynchronously - won't block HTTP response
+                    emailNotificationService.sendTicketReplyEmail(
+                        issue,
+                        request.message(),
+                        userEmail
+                    );
+
+                    logger.info("Async email notification queued for {} on ticket #{}", userEmail, issueId);
+                } catch (Exception e) {
+                    logger.error("Error queuing email notification for ticket #{}: {}", issueId, e.getMessage(), e);
+                    // Don't fail the comment creation if email queueing fails
                 }
-            } catch (Exception e) {
-                logger.error("Error sending email notification for ticket #{}: {}", issueId, e.getMessage(), e);
-                // Don't fail the comment creation if email fails
+            } else {
+                logger.info("Email notification skipped for ticket #{} - user opted out", issueId);
             }
         }
 

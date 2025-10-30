@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LayoutV1 } from './components/LayoutV1';
@@ -12,6 +13,7 @@ import { OAuth2Callback } from './pages/OAuth2Callback';
 import HowItWorks from './pages/HowItWorks';
 import { Dashboard } from './pages/Dashboard';
 import { Dashboards } from './pages/Dashboards';
+import { DashboardTemplates } from './pages/DashboardTemplates';
 import { Devices } from './pages/Devices';
 import { Analytics } from './pages/Analytics';
 import { Rules } from './pages/Rules';
@@ -27,17 +29,22 @@ import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
 import ServerlessFunctions from './pages/ServerlessFunctions';
 import DataPlugins from './pages/DataPlugins';
+import WebhookTester from './pages/WebhookTester';
+import ApiPlayground from './pages/ApiPlayground';
+import EmailTemplateBuilder from './pages/EmailTemplateBuilder';
 import { AdminSupportTickets } from './pages/AdminSupportTickets';
 import { AdminCannedResponses } from './pages/AdminCannedResponses';
 import { MyTickets } from './pages/MyTickets';
+import DataRetention from './pages/DataRetention';
 import { config } from './config';
 
 function App() {
 
   return (
     <AuthProvider>
-      <WebSocketProvider url={config.webSocketUrl}>
-        <Toaster
+      <ThemeProvider>
+        <WebSocketProvider url={config.webSocketUrl}>
+          <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,
@@ -83,6 +90,7 @@ function App() {
                   <Route path="/serverless-functions" element={<ServerlessFunctions />} />
                   <Route path="/data-plugins" element={<DataPlugins />} />
                   <Route path="/dashboards" element={<Dashboards />} />
+                  <Route path="/dashboard-templates" element={<DashboardTemplates />} />
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/rules" element={<Rules />} />
@@ -98,6 +106,10 @@ function App() {
                   <Route path="/data-import" element={<ProtectedRoute adminOnly={true}><DataImport /></ProtectedRoute>} />
                   <Route path="/data-export" element={<ProtectedRoute adminOnly={true}><DataExport /></ProtectedRoute>} />
                   <Route path="/variables" element={<ProtectedRoute adminOnly={true}><Variables /></ProtectedRoute>} />
+                  <Route path="/data-retention" element={<ProtectedRoute adminOnly={true}><DataRetention /></ProtectedRoute>} />
+                  <Route path="/webhook-tester" element={<ProtectedRoute adminOnly={true}><WebhookTester /></ProtectedRoute>} />
+                  <Route path="/api-playground" element={<ProtectedRoute adminOnly={true}><ApiPlayground /></ProtectedRoute>} />
+                  <Route path="/email-templates" element={<ProtectedRoute adminOnly={true}><EmailTemplateBuilder /></ProtectedRoute>} />
                   <Route path="/admin/support-tickets" element={<ProtectedRoute adminOnly={true}><AdminSupportTickets /></ProtectedRoute>} />
                   <Route path="/admin/canned-responses" element={<ProtectedRoute adminOnly={true}><AdminCannedResponses /></ProtectedRoute>} />
                 </Routes>
@@ -106,7 +118,8 @@ function App() {
           }
         />
       </Routes>
-      </WebSocketProvider>
+        </WebSocketProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.sensorvision.dto.JwtAuthenticationResponse;
 import org.sensorvision.dto.LoginRequest;
 import org.sensorvision.dto.RegisterRequest;
+import org.sensorvision.dto.UpdateUserPreferencesRequest;
 import org.sensorvision.dto.UserResponse;
 import org.sensorvision.exception.BadRequestException;
 import org.sensorvision.model.Organization;
@@ -528,5 +529,111 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.refreshToken(accessToken))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Token is not a refresh token");
+    }
+
+    // ===== USER PREFERENCES TESTS =====
+
+    @Test
+    void updateUserPreferences_shouldUpdateEmailNotifications_whenUserPrincipalAuthentication() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest(null, false);
+
+        // Setup authentication with UserPrincipal
+        UserPrincipal userPrincipal = new UserPrincipal(
+            testUser.getId(),
+            testUser.getUsername(),
+            testUser.getEmail(),
+            testUser.getPasswordHash(),
+            testUser.getOrganization().getId(),
+            true,  // enabled
+            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(userPrincipal);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        UserResponse response = authService.updateUserPreferences(request);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(savedUser.getEmailNotificationsEnabled()).isFalse();
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    void updateUserPreferences_shouldUpdateEmailNotifications_whenOnlyEmailNotificationProvided() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest(null, true);
+
+        UserPrincipal userPrincipal = new UserPrincipal(
+            testUser.getId(),
+            testUser.getUsername(),
+            testUser.getEmail(),
+            testUser.getPasswordHash(),
+            testUser.getOrganization().getId(),
+            true,  // enabled
+            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(userPrincipal);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        authService.updateUserPreferences(request);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(savedUser.getEmailNotificationsEnabled()).isTrue();
+    }
+
+    @Test
+    void updateUserPreferences_shouldThrowException_whenUserNotFound() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest(null, true);
+
+        UserPrincipal userPrincipal = new UserPrincipal(
+            999L,  // Non-existent user
+            "nonexistent",
+            "nonexistent@test.com",
+            "hash",
+            1L,
+            true,  // enabled
+            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(userPrincipal);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> authService.updateUserPreferences(request))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("User not found");
+
+        verify(userRepository, never()).save(any(User.class));
     }
 }

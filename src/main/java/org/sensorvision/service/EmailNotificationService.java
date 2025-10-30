@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -438,12 +439,16 @@ public class EmailNotificationService {
 
     /**
      * Send email notification to user when support team replies to their ticket
+     * This method runs asynchronously to avoid blocking the HTTP request thread
      */
-    public boolean sendTicketReplyEmail(org.sensorvision.model.IssueSubmission issue, String replyMessage, String recipientEmail) {
+    @Async
+    public void sendTicketReplyEmail(org.sensorvision.model.IssueSubmission issue, String replyMessage, String recipientEmail) {
         if (!emailEnabled) {
             log.info("Email notifications disabled. Would have sent ticket reply email to: {}", recipientEmail);
-            return false;
+            return;
         }
+
+        log.info("[ASYNC] Sending ticket reply email in background thread: {}", Thread.currentThread().getName());
 
         try {
             String subject = String.format("[SensorVision] Reply on your support ticket #%d", issue.getId());
@@ -463,11 +468,9 @@ public class EmailNotificationService {
             } else {
                 log.info("JavaMailSender not configured. Would send ticket reply to: {}", recipientEmail);
             }
-
-            return true;
         } catch (Exception e) {
             log.error("Failed to send ticket reply email to {}", recipientEmail, e);
-            return false;
+            // Exception will be caught by AsyncUncaughtExceptionHandler
         }
     }
 

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +45,19 @@ public class Dashboard extends AuditableEntity {
 
     @Column(name = "public_share_token", unique = true)
     private String publicShareToken;
+
+    @Column(name = "share_expires_at")
+    private LocalDateTime shareExpiresAt;
+
+    @Column(name = "allow_anonymous_view")
+    private Boolean allowAnonymousView = false;
+
+    @Column(name = "share_password_hash")
+    private String sharePasswordHash;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "share_settings", columnDefinition = "jsonb")
+    private JsonNode shareSettings;
 
     @OneToMany(mappedBy = "dashboard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DashboardPermission> permissions = new ArrayList<>();
@@ -163,6 +177,38 @@ public class Dashboard extends AuditableEntity {
 
     public void setPublicShareToken(String publicShareToken) {
         this.publicShareToken = publicShareToken;
+    }
+
+    public LocalDateTime getShareExpiresAt() {
+        return shareExpiresAt;
+    }
+
+    public void setShareExpiresAt(LocalDateTime shareExpiresAt) {
+        this.shareExpiresAt = shareExpiresAt;
+    }
+
+    public Boolean getAllowAnonymousView() {
+        return allowAnonymousView;
+    }
+
+    public void setAllowAnonymousView(Boolean allowAnonymousView) {
+        this.allowAnonymousView = allowAnonymousView;
+    }
+
+    public String getSharePasswordHash() {
+        return sharePasswordHash;
+    }
+
+    public void setSharePasswordHash(String sharePasswordHash) {
+        this.sharePasswordHash = sharePasswordHash;
+    }
+
+    public JsonNode getShareSettings() {
+        return shareSettings;
+    }
+
+    public void setShareSettings(JsonNode shareSettings) {
+        this.shareSettings = shareSettings;
     }
 
     public List<DashboardPermission> getPermissions() {

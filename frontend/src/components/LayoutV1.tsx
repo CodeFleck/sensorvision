@@ -25,6 +25,10 @@ import {
   MessageSquare,
   Code,
   Plug2,
+  Archive,
+  TestTube,
+  Terminal,
+  Mail,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,6 +37,7 @@ import { SubmitIssueModal } from './SubmitIssueModal';
 import { AvatarUploadModal } from './AvatarUploadModal';
 import { UserAvatar } from './UserAvatar';
 import { Footer } from './Footer';
+import ThemeToggle from './ThemeToggle';
 import { useState, useEffect } from 'react';
 
 interface LayoutProps {
@@ -44,6 +49,7 @@ interface NavigationItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   adminOnly: boolean;
+  excludeForAdmin?: boolean; // Hide this item from admins
 }
 
 interface NavigationSection {
@@ -102,6 +108,10 @@ const navigationSections: NavigationSection[] = [
       { name: 'Data Import', href: '/data-import', icon: FileUp, adminOnly: true },
       { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: true },
       { name: 'Variables', href: '/variables', icon: Database, adminOnly: true },
+      { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
+      { name: 'Webhook Tester', href: '/webhook-tester', icon: TestTube, adminOnly: true },
+      { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: true },
+      { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
     ],
   },
   {
@@ -110,9 +120,10 @@ const navigationSections: NavigationSection[] = [
     iconColor: 'text-pink-600',
     adminOnly: false,
     items: [
-      { name: 'My Tickets', href: '/my-tickets', icon: MessageSquare, adminOnly: false },
+      { name: 'My Tickets', href: '/my-tickets', icon: MessageSquare, adminOnly: false, excludeForAdmin: true },
       { name: 'Support Tickets', href: '/admin/support-tickets', icon: Headphones, adminOnly: true },
       { name: 'Canned Responses', href: '/admin/canned-responses', icon: MessageSquare, adminOnly: true },
+      { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
     ],
   },
 ];
@@ -156,7 +167,17 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
     return navigationSections
       .map(section => {
         // Filter items within section
-        const visibleItems = section.items.filter(item => !item.adminOnly || isAdmin);
+        const visibleItems = section.items.filter(item => {
+          // Hide admin-only items from non-admins
+          if (item.adminOnly && !isAdmin) {
+            return false;
+          }
+          // Hide items marked as excludeForAdmin from admins
+          if (item.excludeForAdmin && isAdmin) {
+            return false;
+          }
+          return true;
+        });
 
         // If section is admin-only and user is not admin, hide entire section
         if (section.adminOnly && !isAdmin) {
@@ -176,15 +197,15 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
   const visibleSections = getVisibleSections();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex">
         {/* Sidebar */}
-        <div className="w-64 bg-white shadow-sm flex flex-col h-screen">
+        <div className="w-64 bg-white dark:bg-gray-800 shadow-sm flex flex-col h-screen border-r border-gray-200 dark:border-gray-700">
           <div className="flex-shrink-0">
             <div className="p-6">
               <div className="flex items-center space-x-2">
-                <Activity className="h-8 w-8 text-blue-600" />
-                <h1 className="text-xl font-bold text-gray-900">SensorVision</h1>
+                <Activity className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">SensorVision</h1>
               </div>
             </div>
           </div>
@@ -204,7 +225,7 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                     onClick={() => toggleSection(section.name)}
                     onMouseEnter={() => setHoveredSection(section.name)}
                     onMouseLeave={() => setHoveredSection(null)}
-                    className="w-full flex items-center px-3 py-2 mb-1 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-all duration-200 group"
+                    className="w-full flex items-center px-3 py-2 mb-1 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-all duration-200 group"
                   >
                     <SectionIcon className={clsx('h-4 w-4 mr-2 flex-shrink-0', section.iconColor)} />
                     <span className="flex-1 text-left tracking-wide">{section.name}</span>
@@ -234,8 +255,8 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                             className={clsx(
                               'flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200 relative',
                               isActive
-                                ? 'bg-blue-50 text-blue-700 shadow-sm'
-                                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm'
+                                : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
                             )}
                           >
                             <ItemIcon
@@ -267,9 +288,9 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
           </nav>
 
           {/* User info and actions */}
-          <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50">
+          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             <div className="p-4">
-              <div className="flex items-start mb-3 group cursor-pointer hover:bg-white rounded-lg p-2 -m-2 transition-colors"
+              <div className="flex items-start mb-3 group cursor-pointer hover:bg-white dark:hover:bg-gray-800 rounded-lg p-2 -m-2 transition-colors"
                    onClick={() => setIsAvatarModalOpen(true)}>
                 <div className="flex-shrink-0">
                   {user && <UserAvatar user={user} size="md" editable={true} />}
@@ -309,12 +330,13 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
         {/* Main content */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="bg-white border-b border-gray-200 shadow-sm">
+          <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="flex items-center justify-between px-8 py-4">
               <div className="flex-1">
                 {/* Future: Add breadcrumbs or page title here */}
               </div>
               <div className="flex items-center space-x-4">
+                <ThemeToggle />
                 <Link
                   to="/how-it-works"
                   className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"

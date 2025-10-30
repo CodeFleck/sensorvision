@@ -84,4 +84,9 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime
     );
+
+    /**
+     * Count unacknowledged alerts for a specific device (for health score calculation)
+     */
+    long countByDeviceIdAndAcknowledgedFalse(UUID deviceId);
 }
