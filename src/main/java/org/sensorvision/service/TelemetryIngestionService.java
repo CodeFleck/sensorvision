@@ -124,6 +124,7 @@ public class TelemetryIngestionService {
 
         TelemetryRecord record = TelemetryRecord.builder()
                 .device(device)
+                .organization(device.getOrganization())
                 .timestamp(payload.timestamp())
                 .kwConsumption(kw)
                 .voltage(voltage)

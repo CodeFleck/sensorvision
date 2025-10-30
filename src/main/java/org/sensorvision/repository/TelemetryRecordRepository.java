@@ -67,7 +67,7 @@ public interface TelemetryRecordRepository extends JpaRepository<TelemetryRecord
     /**
      * Count telemetry records for a device after a specific timestamp (for health score calculation)
      */
-    long countByDeviceIdAndTimestampAfter(UUID deviceId, LocalDateTime timestamp);
+    long countByDeviceIdAndTimestampAfter(UUID deviceId, Instant timestamp);
 
     // Data retention queries
     @Query("SELECT t FROM TelemetryRecord t WHERE t.device.organization.id = :organizationId AND t.timestamp < :cutoffDate AND t.archived = false")
