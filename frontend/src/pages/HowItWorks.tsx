@@ -123,6 +123,7 @@ const HowItWorks = () => {
     { id: 'synthetic-variables', title: 'Synthetic Variables', level: 2 },
     { id: 'analytics', title: 'Analytics', level: 2 },
     { id: 'architecture', title: 'Architecture', level: 1 },
+    { id: 'recent-updates', title: 'Recent Updates', level: 1 },
     { id: 'resources', title: 'Resources', level: 1 },
   ];
 
@@ -964,6 +965,258 @@ await client.disconnect();`}
                 <h4 className="font-semibold text-gray-900 mb-2">Frontend</h4>
                 <p className="text-sm text-gray-600">React + TypeScript + Vite</p>
               </div>
+            </div>
+          </section>
+
+          {/* Recent Updates Section */}
+          <section id="recent-updates" className="mb-12 scroll-mt-24">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-cyan-500 pb-2">Recent Updates</h2>
+
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-6 rounded-r-lg mb-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Latest Production Releases</h3>
+              <p className="text-gray-700">
+                View our recent improvements and bug fixes that have been deployed to production.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {/* PR #52 */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
+                    #52
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Fix: Correct inverted CPU usage formula in Grafana dashboard
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Fixed a bug where the Grafana dashboard was displaying inverted CPU usage values (showing 99.7% when actual usage was 0.8%). Updated the CPU Usage gauge formula to correctly display actual CPU percentage.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Merged: Oct 30, 2025</span>
+                      <a
+                        href="https://github.com/CodeFleck/sensorvision/pull/52"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+                      >
+                        View PR <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PR #51 */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
+                    #51
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Hotfix: Resolve telemetry ingestion and health score calculation errors
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Critical fix for two production issues: NULL constraint violation on organization_id in telemetry records, and LocalDateTime/Instant type mismatch in DeviceHealthService. Both issues were preventing telemetry ingestion and health score calculations.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Merged: Oct 30, 2025</span>
+                      <a
+                        href="https://github.com/CodeFleck/sensorvision/pull/51"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+                      >
+                        View PR <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PR #48 */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
+                    #48
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Fix: Add missing theme_preference column with IF NOT EXISTS check
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Added conditional column creation for theme_preference to handle existing production databases gracefully. Prevents migration failures when the column already exists.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Merged: Oct 30, 2025</span>
+                      <a
+                        href="https://github.com/CodeFleck/sensorvision/pull/48"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+                      >
+                        View PR <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PR #47 */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
+                    #47
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Fix: Disable Hibernate schema validation in production
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Disabled Hibernate DDL auto-schema validation in production profile to rely exclusively on Flyway for database schema management, preventing validation conflicts.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Merged: Oct 30, 2025</span>
+                      <a
+                        href="https://github.com/CodeFleck/sensorvision/pull/47"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+                      >
+                        View PR <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PR #46 */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
+                    #46
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Fix: Add DROP TABLE IF EXISTS to all recent migrations
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Updated Flyway migrations to safely drop tables before recreation, preventing conflicts when migrations are re-run or when tables already exist in the database.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Merged: Oct 30, 2025</span>
+                      <a
+                        href="https://github.com/CodeFleck/sensorvision/pull/46"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+                      >
+                        View PR <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PR #45 */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
+                    #45
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Hotfix: Fix duplicate dashboard_templates table creation
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Resolved database migration conflict caused by duplicate dashboard_templates table creation in different migration files, ensuring clean schema updates.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Merged: Oct 30, 2025</span>
+                      <a
+                        href="https://github.com/CodeFleck/sensorvision/pull/45"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+                      >
+                        View PR <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PR #44 */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
+                    #44
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Hotfix: Fix Flyway validation settings in production profile
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Temporarily disabled Flyway validation and enabled out-of-order migration execution to resolve migration conflicts in production environment, allowing for more flexible schema management.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Merged: Oct 30, 2025</span>
+                      <a
+                        href="https://github.com/CodeFleck/sensorvision/pull/44"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+                      >
+                        View PR <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PR #43 */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-3">
+                  <div className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium flex-shrink-0">
+                    #43
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Hotfix: Temporarily disable Flyway validation to handle V26 migration conflict
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Emergency fix to disable Flyway validation on migrate, addressing V26 migration conflict that was blocking production deployments. Allows the system to handle migration discrepancies gracefully.
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Merged: Oct 30, 2025</span>
+                      <a
+                        href="https://github.com/CodeFleck/sensorvision/pull/43"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+                      >
+                        View PR <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 bg-cyan-50 rounded-lg p-4 border border-cyan-200">
+              <p className="text-sm text-gray-700">
+                <strong>Note:</strong> All changes listed above have been tested, reviewed, and deployed to production. For the complete list of changes and to track upcoming features, visit our{' '}
+                <a
+                  href="https://github.com/CodeFleck/sensorvision/pulls?q=is%3Apr+is%3Amerged"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1"
+                >
+                  GitHub Pull Requests <ExternalLink className="w-3 h-3" />
+                </a>.
+              </p>
             </div>
           </section>
 
