@@ -27,6 +27,8 @@ import DeviceTags from './pages/DeviceTags';
 import DataExport from './pages/DataExport';
 import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
+import ServerlessFunctions from './pages/ServerlessFunctions';
+import DataPlugins from './pages/DataPlugins';
 import WebhookTester from './pages/WebhookTester';
 import ApiPlayground from './pages/ApiPlayground';
 import EmailTemplateBuilder from './pages/EmailTemplateBuilder';
@@ -85,6 +87,8 @@ function App() {
                   {/* Standard user routes */}
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/integration-wizard" element={<IntegrationWizard />} />
+                  <Route path="/serverless-functions" element={<ServerlessFunctions />} />
+                  <Route path="/data-plugins" element={<DataPlugins />} />
                   <Route path="/dashboards" element={<Dashboards />} />
                   <Route path="/dashboard-templates" element={<DashboardTemplates />} />
                   <Route path="/devices" element={<Devices />} />

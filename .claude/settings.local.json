@@ -32,7 +32,19 @@
       "Bash(gh issue create:*)",
       "Bash(gh run list:*)",
       "Bash(gh run watch:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(python:*)",
+      "Bash(./gradlew bootRun:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(psql:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker ps:*)"
     ],
     "deny": [],
     "ask": []
