@@ -212,7 +212,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "100 * (1 - process_cpu_usage{application=\"sensorvision\"})",
+          "expr": "100 * process_cpu_usage{application=\"sensorvision\"}",
           "refId": "A"
         }
       ],
