@@ -1,141 +1,210 @@
 package org.sensorvision.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.sensorvision.model.Alert;
-import org.sensorvision.model.AlertSeverity;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
+import org.sensorvision.dto.EmailTemplateRequest;
+import org.sensorvision.dto.EmailTemplateResponse;
+import org.sensorvision.exception.ResourceNotFoundException;
+import org.sensorvision.model.EmailTemplate;
+import org.sensorvision.model.Organization;
+import org.sensorvision.model.User;
+import org.sensorvision.repository.EmailTemplateRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-@Slf4j
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class EmailTemplateService {
 
-    @Value("${app.frontend.url:http://localhost:3001}")
-    private String frontendUrl;
+    private final EmailTemplateRepository emailTemplateRepository;
+    private final ObjectMapper objectMapper;
+
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{\\s*(\\w+)\\s*\\}\\}");
+
+    @Transactional
+    public EmailTemplateResponse createTemplate(EmailTemplateRequest request, Organization organization, User user) {
+        if (request.isDefault()) {
+            emailTemplateRepository.findByOrganizationIdAndTemplateTypeAndIsDefault(
+                    organization.getId(),
+                    request.templateType(),
+                    true
+            ).ifPresent(existing -> {
+                throw new IllegalStateException(
+                        "A default template already exists for type: " + request.templateType()
+                );
+            });
+        }
+
+        EmailTemplate template = EmailTemplate.builder()
+                .organization(organization)
+                .name(request.name())
+                .description(request.description())
+                .templateType(request.templateType())
+                .subject(request.subject())
+                .body(request.body())
+                .variables(request.variables() != null ? request.variables() : objectMapper.createArrayNode())
+                .isDefault(request.isDefault())
+                .active(request.active())
+                .createdBy(user)
+                .build();
+
+        template = emailTemplateRepository.save(template);
+        log.info("Created email template {} for organization {}", template.getId(), organization.getId());
+
+        return mapToResponse(template);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmailTemplateResponse> getTemplates(
+            Organization organization,
+            String templateType,
+            Boolean active,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<EmailTemplate> templates = emailTemplateRepository.findByFilters(
+                organization.getId(),
+                templateType,
+                active,
+                pageable
+        );
+
+        return templates.map(this::mapToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public EmailTemplateResponse getTemplate(Long id, Organization organization) {
+        EmailTemplate template = emailTemplateRepository.findById(id)
+                .filter(t -> t.getOrganization().getId().equals(organization.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Email template not found with id: " + id));
+
+        return mapToResponse(template);
+    }
+
+    @Transactional
+    public EmailTemplateResponse updateTemplate(Long id, EmailTemplateRequest request, Organization organization) {
+        EmailTemplate template = emailTemplateRepository.findById(id)
+                .filter(t -> t.getOrganization().getId().equals(organization.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Email template not found with id: " + id));
+
+        if (request.isDefault() && !template.getIsDefault()) {
+            if (emailTemplateRepository.existsByOrganizationIdAndTemplateTypeAndIsDefaultAndIdNot(
+                    organization.getId(),
+                    request.templateType(),
+                    true,
+                    id
+            )) {
+                throw new IllegalStateException(
+                        "Another default template exists for type: " + request.templateType()
+                );
+            }
+        }
+
+        template.setName(request.name());
+        template.setDescription(request.description());
+        template.setTemplateType(request.templateType());
+        template.setSubject(request.subject());
+        template.setBody(request.body());
+        template.setVariables(request.variables() != null ? request.variables() : objectMapper.createArrayNode());
+        template.setIsDefault(request.isDefault());
+        template.setActive(request.active());
+
+        template = emailTemplateRepository.save(template);
+        log.info("Updated email template {} for organization {}", template.getId(), organization.getId());
+
+        return mapToResponse(template);
+    }
+
+    @Transactional
+    public void deleteTemplate(Long id, Organization organization) {
+        EmailTemplate template = emailTemplateRepository.findById(id)
+                .filter(t -> t.getOrganization().getId().equals(organization.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Email template not found with id: " + id));
+
+        emailTemplateRepository.delete(template);
+        log.info("Deleted email template {} for organization {}", id, organization.getId());
+    }
+
+    public String renderTemplate(String templateText, Map<String, Object> variables) {
+        if (templateText == null || variables == null) {
+            return templateText;
+        }
+
+        Matcher matcher = VARIABLE_PATTERN.matcher(templateText);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String variableName = matcher.group(1);
+            Object value = variables.get(variableName);
+            String replacement = value != null ? value.toString() : "{{" + variableName + "}}";
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, String> previewTemplate(Long id, Map<String, Object> sampleData, Organization organization) {
+        EmailTemplate template = emailTemplateRepository.findById(id)
+                .filter(t -> t.getOrganization().getId().equals(organization.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Email template not found with id: " + id));
+
+        String renderedSubject = renderTemplate(template.getSubject(), sampleData);
+        String renderedBody = renderTemplate(template.getBody(), sampleData);
+
+        return Map.of(
+                "subject", renderedSubject,
+                "body", renderedBody
+        );
+    }
+
+    private EmailTemplateResponse mapToResponse(EmailTemplate template) {
+        return EmailTemplateResponse.builder()
+                .id(template.getId())
+                .name(template.getName())
+                .description(template.getDescription())
+                .templateType(template.getTemplateType())
+                .subject(template.getSubject())
+                .body(template.getBody())
+                .variables(template.getVariables())
+                .isDefault(template.getIsDefault())
+                .active(template.getActive())
+                .createdBy(template.getCreatedBy() != null ? template.getCreatedBy().getUsername() : null)
+                .createdAt(template.getCreatedAt())
+                .updatedAt(template.getUpdatedAt())
+                .build();
+    }
 
     /**
-     * Generate password reset email HTML
+     * Generate alert notification email body
+     * TODO: Integrate with template management system
+     */
+    public String generateAlertNotificationEmail(Object alert) {
+        // Simple implementation - can be enhanced to use custom templates
+        return "<html><body><h2>Alert Notification</h2><p>An alert has been triggered in your system.</p></body></html>";
+    }
+
+    /**
+     * Generate password reset email body
+     * TODO: Integrate with template management system
      */
     public String generatePasswordResetEmail(String resetLink) {
-        try {
-            String template = loadTemplate("password-reset.html");
-            Map<String, String> variables = new HashMap<>();
-            variables.put("RESET_LINK", resetLink);
-            return replaceVariables(template, variables);
-        } catch (IOException e) {
-            log.error("Failed to load password reset template, using fallback", e);
-            return generatePasswordResetFallback(resetLink);
-        }
-    }
-
-    /**
-     * Generate alert notification email HTML
-     */
-    public String generateAlertNotificationEmail(Alert alert) {
-        try {
-            String template = loadTemplate("alert-notification.html");
-
-            String severityClass = switch (alert.getSeverity()) {
-                case CRITICAL -> "critical";
-                case HIGH -> "high";
-                case MEDIUM -> "medium";
-                case LOW -> "low";
-            };
-
-            String dashboardLink = frontendUrl + "/alerts";
-
-            Map<String, String> variables = new HashMap<>();
-            variables.put("SEVERITY", alert.getSeverity().name());
-            variables.put("SEVERITY_CLASS", severityClass);
-            variables.put("RULE_NAME", alert.getRule().getName());
-            variables.put("ALERT_MESSAGE", alert.getMessage());
-            variables.put("DEVICE_NAME", alert.getDevice().getName());
-            variables.put("TRIGGERED_VALUE", alert.getTriggeredValue() != null ? alert.getTriggeredValue().toString() : "N/A");
-            variables.put("CREATED_AT", alert.getCreatedAt() != null ? alert.getCreatedAt().toString() : "N/A");
-            variables.put("DASHBOARD_LINK", dashboardLink);
-
-            return replaceVariables(template, variables);
-        } catch (IOException e) {
-            log.error("Failed to load alert notification template, using fallback", e);
-            return generateAlertNotificationFallback(alert);
-        }
-    }
-
-    /**
-     * Load template from resources
-     */
-    private String loadTemplate(String templateName) throws IOException {
-        ClassPathResource resource = new ClassPathResource("templates/email/" + templateName);
-        return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Replace template variables
-     */
-    private String replaceVariables(String template, Map<String, String> variables) {
-        String result = template;
-        for (Map.Entry<String, String> entry : variables.entrySet()) {
-            result = result.replace("{{" + entry.getKey() + "}}", entry.getValue());
-        }
-        return result;
-    }
-
-    /**
-     * Fallback password reset email (if template fails to load)
-     */
-    private String generatePasswordResetFallback(String resetLink) {
-        return String.format("""
-                <html>
-                <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f3f4f6;">
-                    <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px;">
-                        <h2 style="color: #111827;">Password Reset Request</h2>
-                        <p>We received a request to reset your password for your SensorVision account.</p>
-                        <p>Click the link below to reset your password:</p>
-                        <p><a href="%s" style="display: inline-block; padding: 12px 24px; background-color: #3b82f6; color: white; text-decoration: none; border-radius: 6px;">Reset Password</a></p>
-                        <p>Or copy and paste this link into your browser:</p>
-                        <p style="background-color: #f3f4f6; padding: 10px; border-radius: 4px; word-break: break-all;">%s</p>
-                        <p><strong>This link will expire in 1 hour.</strong></p>
-                        <p>If you didn't request a password reset, you can safely ignore this email.</p>
-                        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-                        <p style="color: #6b7280; font-size: 14px;">This is an automated message from SensorVision IoT Platform</p>
-                    </div>
-                </body>
-                </html>
-                """, resetLink, resetLink);
-    }
-
-    /**
-     * Fallback alert notification email (if template fails to load)
-     */
-    private String generateAlertNotificationFallback(Alert alert) {
-        return String.format("""
-                <html>
-                <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f3f4f6;">
-                    <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px;">
-                        <h2 style="color: #111827;">Alert Notification</h2>
-                        <p><strong>Rule:</strong> %s</p>
-                        <p><strong>Device:</strong> %s</p>
-                        <p><strong>Severity:</strong> %s</p>
-                        <p><strong>Message:</strong> %s</p>
-                        <p><strong>Triggered Value:</strong> %s</p>
-                        <p><strong>Time:</strong> %s</p>
-                        <hr style="margin: 20px 0;">
-                        <p style="color: #6b7280; font-size: 14px;">This is an automated alert from SensorVision IoT Platform</p>
-                    </div>
-                </body>
-                </html>
-                """,
-                alert.getRule().getName(),
-                alert.getDevice().getName(),
-                alert.getSeverity(),
-                alert.getMessage(),
-                alert.getTriggeredValue(),
-                alert.getCreatedAt());
+        // Simple implementation - can be enhanced to use custom templates
+        return String.format(
+                "<html><body><h2>Password Reset Request</h2><p>Click the link below to reset your password:</p><p><a href=\"%s\">Reset Password</a></p></body></html>",
+                resetLink
+        );
     }
 }

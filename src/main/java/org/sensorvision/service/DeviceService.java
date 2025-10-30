@@ -1,11 +1,16 @@
 package org.sensorvision.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.sensorvision.dto.BulkDeviceOperationRequest;
+import org.sensorvision.dto.BulkDeviceOperationResponse;
 import org.sensorvision.dto.DeviceCreateRequest;
 import org.sensorvision.dto.DeviceResponse;
 import org.sensorvision.dto.DeviceUpdateRequest;
@@ -32,6 +37,7 @@ public class DeviceService {
     private final PasswordEncoder passwordEncoder;
     private final DeviceTokenService deviceTokenService;
     private final SecurityUtils securityUtils;
+    private final DeviceHealthService deviceHealthService;
 
     @Transactional(readOnly = true)
     public List<DeviceResponse> getAllDevices() {
@@ -215,7 +221,82 @@ public class DeviceService {
                 });
     }
 
+    /**
+     * Perform bulk operations on multiple devices
+     */
+    public BulkDeviceOperationResponse performBulkOperation(BulkDeviceOperationRequest request) {
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
+
+        List<String> successfulIds = new ArrayList<>();
+        Map<String, String> failures = new HashMap<>();
+
+        for (String deviceId : request.getDeviceIds()) {
+            try {
+                Device device = deviceRepository.findByExternalId(deviceId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + deviceId));
+
+                // Verify device belongs to user's organization
+                if (!device.getOrganization().getId().equals(userOrg.getId())) {
+                    failures.put(deviceId, "Access denied");
+                    continue;
+                }
+
+                // Perform the requested operation
+                switch (request.getOperation()) {
+                    case DELETE:
+                        deviceRepository.delete(device);
+                        eventService.emitDeviceLifecycleEvent(
+                                userOrg, deviceId, device.getName(), Event.EventType.DEVICE_DELETED);
+                        break;
+
+                    case ENABLE:
+                        device.setStatus(DeviceStatus.ONLINE);
+                        deviceRepository.save(device);
+                        break;
+
+                    case DISABLE:
+                        device.setStatus(DeviceStatus.OFFLINE);
+                        deviceRepository.save(device);
+                        break;
+
+                    case UPDATE_STATUS:
+                        if (request.getParameters() != null && request.getParameters().containsKey("status")) {
+                            String statusStr = (String) request.getParameters().get("status");
+                            device.setStatus(DeviceStatus.valueOf(statusStr));
+                            deviceRepository.save(device);
+                        }
+                        break;
+
+                    default:
+                        failures.put(deviceId, "Unsupported operation: " + request.getOperation());
+                        continue;
+                }
+
+                successfulIds.add(deviceId);
+
+            } catch (Exception e) {
+                log.error("Failed to perform bulk operation on device {}: {}", deviceId, e.getMessage());
+                failures.put(deviceId, e.getMessage());
+            }
+        }
+
+        String message = String.format("Bulk operation completed: %d succeeded, %d failed",
+                successfulIds.size(), failures.size());
+
+        return BulkDeviceOperationResponse.builder()
+                .totalRequested(request.getDeviceIds().size())
+                .successCount(successfulIds.size())
+                .failureCount(failures.size())
+                .successfulDeviceIds(successfulIds)
+                .failedDevices(failures)
+                .message(message)
+                .build();
+    }
+
     private DeviceResponse toResponse(Device device) {
+        Integer healthScore = device.getHealthScore() != null ? device.getHealthScore() : 100;
+        String healthStatus = deviceHealthService.getHealthStatus(healthScore);
+
         return new DeviceResponse(
                 device.getExternalId(),
                 device.getName(),
@@ -223,7 +304,10 @@ public class DeviceService {
                 device.getSensorType(),
                 device.getFirmwareVersion(),
                 device.getStatus(),
-                device.getLastSeenAt()
+                device.getLastSeenAt(),
+                healthScore,
+                healthStatus,
+                device.getLastHealthCheckAt()
         );
     }
 }

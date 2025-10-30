@@ -209,6 +209,7 @@ public class AuthService {
                 .enabled(user.getEnabled())
                 .avatarUrl(user.getAvatarUrl())
                 .avatarVersion(user.getAvatarVersion())
+                .themePreference(user.getThemePreference())
                 .build();
     }
 
@@ -336,17 +337,31 @@ public class AuthService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user;
 
+        // Handle OAuth2 JWT authentication
         if (authentication.getPrincipal() instanceof Jwt) {
             Jwt jwt = (Jwt) authentication.getPrincipal();
             String username = jwt.getSubject();
             user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        } else if (authentication.getPrincipal() instanceof UserPrincipal) {
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+        }
+        // Handle UserPrincipal authentication
+        else if (authentication.getPrincipal() instanceof UserPrincipal) {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        } else {
-            throw new RuntimeException("Invalid authentication principal type");
+        }
+        else {
+            throw new RuntimeException("Invalid authentication principal type: " +
+                authentication.getPrincipal().getClass().getName());
+        }
+
+        // Update theme preference if provided
+        if (request.themePreference() != null) {
+            // Validate theme preference
+            if (!request.themePreference().matches("^(light|dark|system)$")) {
+                throw new BadRequestException("Invalid theme preference. Must be 'light', 'dark', or 'system'");
+            }
+            user.setThemePreference(request.themePreference());
         }
 
         // Update email notification preference if provided
@@ -354,32 +369,25 @@ public class AuthService {
             user.setEmailNotificationsEnabled(request.emailNotificationsEnabled());
         }
 
-        // Note: Theme preference support is in a separate feature branch
-        // When that branch is merged, add:
-        // if (request.themePreference() != null) {
-        //     user.setThemePreference(request.themePreference());
-        // }
-
         userRepository.save(user);
 
-        return buildUserResponse(user);
-    }
+        // Reload user with associations for response
+        user = userRepository.findByIdWithOrganizationAndRoles(user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-    private UserResponse buildUserResponse(User user) {
         return UserResponse.builder()
-            .id(user.getId())
-            .username(user.getUsername())
-            .email(user.getEmail())
-            .firstName(user.getFirstName())
-            .lastName(user.getLastName())
-            .organizationId(user.getOrganization() != null ? user.getOrganization().getId() : null)
-            .organizationName(user.getOrganization() != null ? user.getOrganization().getName() : null)
-            .roles(user.getRoles().stream()
-                .map(Role::getName)
-                .collect(Collectors.toSet()))
-            .enabled(user.getEnabled())
-            .avatarUrl(user.getAvatarUrl())
-            .avatarVersion(user.getAvatarVersion())
-            .build();
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .organizationId(user.getOrganization().getId())
+                .organizationName(user.getOrganization().getName())
+                .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toSet()))
+                .enabled(user.getEnabled())
+                .avatarUrl(user.getAvatarUrl())
+                .avatarVersion(user.getAvatarVersion())
+                .themePreference(user.getThemePreference())
+                .build();
     }
 }

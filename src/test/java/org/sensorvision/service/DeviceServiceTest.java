@@ -24,6 +24,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 /**
@@ -44,6 +45,9 @@ class DeviceServiceTest {
 
     @Mock
     private SecurityUtils securityUtils;
+
+    @Mock
+    private DeviceHealthService deviceHealthService;
 
     @InjectMocks
     private DeviceService deviceService;
@@ -74,6 +78,9 @@ class DeviceServiceTest {
 
         // Mock security context to return test organization
         when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrganization);
+
+        // Mock health service to return a default health status (lenient for tests that don't use it)
+        lenient().when(deviceHealthService.getHealthStatus(anyInt())).thenReturn("EXCELLENT");
     }
 
     @Test

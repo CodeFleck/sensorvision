@@ -190,4 +190,28 @@ public class DashboardController {
     public void revokePermission(@PathVariable Long dashboardId, @PathVariable Long permissionId) {
         dashboardSharingService.revokePermission(dashboardId, permissionId);
     }
+
+    /**
+     * Configure public sharing for a dashboard
+     */
+    @PostMapping("/{dashboardId}/share")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @Operation(summary = "Configure dashboard sharing", description = "Enable or configure public sharing settings")
+    public ResponseEntity<DashboardShareResponse> configureDashboardSharing(
+            @PathVariable Long dashboardId,
+            @Valid @RequestBody DashboardShareRequest request) {
+        DashboardShareResponse response = dashboardService.configureDashboardSharing(dashboardId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Disable dashboard sharing
+     */
+    @DeleteMapping("/{dashboardId}/share")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @Operation(summary = "Disable dashboard sharing", description = "Stop public sharing of the dashboard")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void disableDashboardSharing(@PathVariable Long dashboardId) {
+        dashboardService.disableDashboardSharing(dashboardId);
+    }
 }

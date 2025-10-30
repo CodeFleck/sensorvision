@@ -71,6 +71,10 @@ public class User extends AuditableEntity {
     @Builder.Default
     private Boolean emailNotificationsEnabled = true;
 
+    @Column(name = "theme_preference", length = 20)
+    @Builder.Default
+    private String themePreference = "system";
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",

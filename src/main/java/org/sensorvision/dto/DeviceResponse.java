@@ -1,6 +1,7 @@
 package org.sensorvision.dto;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import org.sensorvision.model.DeviceStatus;
 
 public record DeviceResponse(
@@ -10,6 +11,9 @@ public record DeviceResponse(
         String sensorType,
         String firmwareVersion,
         DeviceStatus status,
-        Instant lastSeenAt
+        Instant lastSeenAt,
+        Integer healthScore,
+        String healthStatus,
+        LocalDateTime lastHealthCheckAt
 ) {
 }
