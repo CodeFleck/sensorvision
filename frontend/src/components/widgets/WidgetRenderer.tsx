@@ -23,7 +23,8 @@ interface WidgetRendererProps {
 
 export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ widget, contextDeviceId, latestData, onDelete, onEdit }) => {
   // Determine effective device ID: use context device if widget is configured for it
-  const effectiveDeviceId = widget.useContextDevice && contextDeviceId
+  // TODO: Use this for fetching device-specific data in widgets
+  const _effectiveDeviceId = widget.useContextDevice && contextDeviceId
     ? contextDeviceId
     : widget.deviceId;
 

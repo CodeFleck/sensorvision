@@ -1,4 +1,4 @@
-import api from './api';
+import { apiService } from './api';
 
 export interface DataPlugin {
   id: number;
@@ -70,55 +70,61 @@ const dataPluginsService = {
    * Get all data plugins
    */
   async getPlugins(page: number = 0, size: number = 20): Promise<PageResponse<DataPlugin>> {
-    const response = await api.get(`/api/v1/plugins`, { params: { page, size } });
-    return response.data;
+    const response = await apiService.request(`/plugins?page=${page}&size=${size}`, { method: 'GET' });
+    return response as unknown as PageResponse<DataPlugin>;
   },
 
   /**
    * Get a single plugin by ID
    */
   async getPlugin(id: number): Promise<DataPlugin> {
-    const response = await api.get(`/api/v1/plugins/${id}`);
-    return response.data;
+    const response = await apiService.request<DataPlugin>(`/plugins/${id}`, { method: 'GET' });
+    return response;
   },
 
   /**
    * Create a new plugin
    */
   async createPlugin(plugin: CreatePluginRequest): Promise<DataPlugin> {
-    const response = await api.post('/api/v1/plugins', plugin);
-    return response.data;
+    const response = await apiService.request<DataPlugin>('/plugins', {
+      method: 'POST',
+      body: JSON.stringify(plugin),
+    });
+    return response;
   },
 
   /**
    * Update an existing plugin
    */
   async updatePlugin(id: number, plugin: CreatePluginRequest): Promise<DataPlugin> {
-    const response = await api.put(`/api/v1/plugins/${id}`, plugin);
-    return response.data;
+    const response = await apiService.request<DataPlugin>(`/plugins/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(plugin),
+    });
+    return response;
   },
 
   /**
    * Delete a plugin
    */
   async deletePlugin(id: number): Promise<void> {
-    await api.delete(`/api/v1/plugins/${id}`);
+    await apiService.request<void>(`/plugins/${id}`, { method: 'DELETE' });
   },
 
   /**
    * Get execution history for a plugin
    */
   async getExecutions(pluginId: number, page: number = 0, size: number = 20): Promise<PageResponse<PluginExecution>> {
-    const response = await api.get(`/api/v1/plugins/${pluginId}/executions`, { params: { page, size } });
-    return response.data;
+    const response = await apiService.request(`/plugins/${pluginId}/executions?page=${page}&size=${size}`, { method: 'GET' });
+    return response as unknown as PageResponse<PluginExecution>;
   },
 
   /**
    * Get available plugin providers
    */
   async getProviders(): Promise<Record<string, string>> {
-    const response = await api.get('/api/v1/plugins/providers');
-    return response.data;
+    const response = await apiService.request<Record<string, string>>('/plugins/providers', { method: 'GET' });
+    return response;
   },
 };
 

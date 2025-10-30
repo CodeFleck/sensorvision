@@ -6,7 +6,6 @@ import {
   Power,
   PowerOff,
   History,
-  ExternalLink,
   Loader,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
