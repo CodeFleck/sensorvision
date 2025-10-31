@@ -37,7 +37,7 @@ test.describe('Dashboard and Real-Time Updates', () => {
 
   test('should display device statistics', async ({ page }) => {
     // Wait for stats to load
-    await page.waitForSelector('[data-testid="device-count"], text=/Total Devices|Devices:/i', { timeout: 10000 });
+    await page.locator('[data-testid="device-count"]').or(page.getByText(/Total Devices|Devices:/i)).waitFor({ timeout: 10000 });
 
     // Visual regression: Device statistics
     await expect(page).toHaveScreenshot('dashboard-statistics.png');

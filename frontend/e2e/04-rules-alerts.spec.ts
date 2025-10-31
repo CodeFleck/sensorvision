@@ -43,7 +43,7 @@ test.describe('Rules and Alerts', () => {
     await page.fill('input[name="name"]', `E2E Test Rule ${Date.now()}`);
 
     // Select device
-    await page.click('select[name="deviceId"], [data-testid="device-select"]');
+    await page.locator('select[name="deviceId"]').or(page.locator('[data-testid="device-select"]')).click();
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
 
@@ -75,7 +75,7 @@ test.describe('Rules and Alerts', () => {
 
   test('should edit an existing rule', async ({ page }) => {
     // Click edit button on first rule
-    await page.click('[aria-label="Edit"], button:has-text("Edit")', { first: true });
+    await page.locator('[aria-label="Edit"]').or(page.getByRole('button', { name: /Edit/i })).first().click();
 
     // Modify threshold
     await page.fill('input[name="threshold"]', '90');

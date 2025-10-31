@@ -28,7 +28,7 @@ test.describe('Device Management', () => {
 
   test('should display devices list', async ({ page }) => {
     // Wait for devices to load
-    await page.waitForSelector('[data-testid="device-list"], table, .device-card', { timeout: 10000 });
+    await page.locator('[data-testid="device-list"]').or(page.locator('table')).or(page.locator('.device-card')).first().waitFor({ timeout: 10000 });
 
     // Visual regression: Devices list page
     await expect(page).toHaveScreenshot('devices-list.png', {
@@ -91,7 +91,7 @@ test.describe('Device Management', () => {
     await page.click('button:has-text("Generate Token"), button:has-text("Create Token")');
 
     // Wait for token to be displayed
-    await page.waitForSelector('[data-testid="device-token"], input[readonly], code', { timeout: 10000 });
+    await page.locator('[data-testid="device-token"]').or(page.locator('input[readonly]')).or(page.locator('code')).first().waitFor({ timeout: 10000 });
 
     // Take screenshot with token visible
     await expect(page).toHaveScreenshot('device-token-generated.png');
@@ -118,7 +118,7 @@ test.describe('Device Management', () => {
 
   test('should display device details', async ({ page }) => {
     // Click on first device to view details
-    await page.click('[data-testid="device-row"], tr, .device-card', { first: true });
+    await page.locator('[data-testid="device-row"]').or(page.locator('tr')).or(page.locator('.device-card')).first().click();
 
     // Wait for details to load
     await page.waitForTimeout(2000);
