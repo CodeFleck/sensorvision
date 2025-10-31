@@ -46,10 +46,15 @@ export const Devices = () => {
 
   const handleToggleActive = async (device: Device) => {
     try {
+      // Use nullish coalescing to handle undefined/null values
+      // If device.active is null/undefined, treat as true (default)
+      const currentActive = device.active ?? true;
+      const nextActive = !currentActive;
+
       await apiService.updateDevice(device.externalId, {
         name: device.name,
         description: device.description,
-        active: !device.active,
+        active: nextActive,
         location: device.location,
         sensorType: device.sensorType,
         firmwareVersion: device.firmwareVersion,

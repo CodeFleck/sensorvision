@@ -345,4 +345,166 @@ class DeviceServiceTest {
 
         assertThat(response).isNotNull();
     }
+
+    /**
+     * Tests for active and description fields (regression test for toggle bug fix)
+     */
+    @Test
+    void createDevice_shouldDefaultActiveToTrue_whenNotProvided() {
+        // Given
+        DeviceCreateRequest request = new DeviceCreateRequest(
+                "default-active-device",
+                "Default Active Device",
+                null,  // description
+                null,  // active (should default to true)
+                null,  // location
+                null,  // sensorType
+                null   // firmwareVersion
+        );
+
+        when(deviceRepository.findByExternalId(request.externalId())).thenReturn(Optional.empty());
+        when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(deviceTokenService.assignTokenToDevice(any(Device.class))).thenReturn(testToken);
+
+        // When
+        deviceService.createDevice(request);
+
+        // Then
+        verify(deviceRepository).save(deviceCaptor.capture());
+        Device savedDevice = deviceCaptor.getValue();
+
+        assertThat(savedDevice.getActive()).isTrue();
+    }
+
+    @Test
+    void createDevice_shouldSetActiveToFalse_whenExplicitlyProvided() {
+        // Given
+        DeviceCreateRequest request = new DeviceCreateRequest(
+                "inactive-device",
+                "Inactive Device",
+                "Test description",
+                false,  // explicitly set to false
+                null,
+                null,
+                null
+        );
+
+        when(deviceRepository.findByExternalId(request.externalId())).thenReturn(Optional.empty());
+        when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(deviceTokenService.assignTokenToDevice(any(Device.class))).thenReturn(testToken);
+
+        // When
+        deviceService.createDevice(request);
+
+        // Then
+        verify(deviceRepository).save(deviceCaptor.capture());
+        Device savedDevice = deviceCaptor.getValue();
+
+        assertThat(savedDevice.getActive()).isFalse();
+        assertThat(savedDevice.getDescription()).isEqualTo("Test description");
+    }
+
+    @Test
+    void updateDevice_shouldToggleActiveStatus() {
+        // Given - device initially active
+        testDevice.setActive(true);
+
+        DeviceUpdateRequest updateRequest = new DeviceUpdateRequest(
+                "Test Device",
+                null,    // description
+                false,   // toggle to inactive
+                null,
+                null,
+                null
+        );
+
+        when(deviceRepository.findByExternalId("test-device-001"))
+                .thenReturn(Optional.of(testDevice));
+        when(deviceRepository.save(any(Device.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        deviceService.updateDevice("test-device-001", updateRequest);
+
+        // Then
+        verify(deviceRepository).save(deviceCaptor.capture());
+        Device updatedDevice = deviceCaptor.getValue();
+
+        assertThat(updatedDevice.getActive()).isFalse();
+    }
+
+    @Test
+    void updateDevice_shouldUpdateDescription() {
+        // Given
+        String newDescription = "Updated device description";
+        DeviceUpdateRequest updateRequest = new DeviceUpdateRequest(
+                "Test Device",
+                newDescription,
+                null,  // don't change active
+                null,
+                null,
+                null
+        );
+
+        when(deviceRepository.findByExternalId("test-device-001"))
+                .thenReturn(Optional.of(testDevice));
+        when(deviceRepository.save(any(Device.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        deviceService.updateDevice("test-device-001", updateRequest);
+
+        // Then
+        verify(deviceRepository).save(deviceCaptor.capture());
+        Device updatedDevice = deviceCaptor.getValue();
+
+        assertThat(updatedDevice.getDescription()).isEqualTo(newDescription);
+    }
+
+    @Test
+    void updateDevice_shouldNotChangeActive_whenNull() {
+        // Given - device initially active
+        testDevice.setActive(true);
+
+        DeviceUpdateRequest updateRequest = new DeviceUpdateRequest(
+                "Test Device",
+                null,
+                null,  // null means don't change
+                null,
+                null,
+                null
+        );
+
+        when(deviceRepository.findByExternalId("test-device-001"))
+                .thenReturn(Optional.of(testDevice));
+        when(deviceRepository.save(any(Device.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        deviceService.updateDevice("test-device-001", updateRequest);
+
+        // Then
+        verify(deviceRepository).save(deviceCaptor.capture());
+        Device updatedDevice = deviceCaptor.getValue();
+
+        // Active should remain true (unchanged)
+        assertThat(updatedDevice.getActive()).isTrue();
+    }
+
+    @Test
+    void toResponse_shouldIncludeDescriptionAndActive() {
+        // Given
+        testDevice.setDescription("Test description");
+        testDevice.setActive(false);
+
+        when(deviceRepository.findByExternalId("test-device-001"))
+                .thenReturn(Optional.of(testDevice));
+
+        // When
+        DeviceResponse response = deviceService.getDevice("test-device-001");
+
+        // Then
+        assertThat(response.description()).isEqualTo("Test description");
+        assertThat(response.active()).isFalse();
+    }
 }
