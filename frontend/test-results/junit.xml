@@ -1,0 +1,1200 @@
+<testsuites id="" name="" tests="33" failures="14" skipped="0" errors="0" time="159.010607">
+<testsuite name="01-authentication.spec.ts" timestamp="2025-10-31T19:52:50.479Z" hostname="chromium" tests="6" failures="0" skipped="0" time="18.604" errors="0">
+<testcase name="Authentication System › should display login page" classname="01-authentication.spec.ts" time="0.98">
+</testcase>
+<testcase name="Authentication System › should login successfully with valid credentials" classname="01-authentication.spec.ts" time="6.239">
+</testcase>
+<testcase name="Authentication System › should show error message with invalid credentials" classname="01-authentication.spec.ts" time="1.642">
+</testcase>
+<testcase name="Authentication System › should logout successfully" classname="01-authentication.spec.ts" time="4.484">
+</testcase>
+<testcase name="Authentication System › should redirect to login when accessing protected route without auth" classname="01-authentication.spec.ts" time="1.546">
+</testcase>
+<testcase name="Authentication System › should persist session after page reload" classname="01-authentication.spec.ts" time="3.713">
+</testcase>
+</testsuite>
+<testsuite name="02-device-management.spec.ts" timestamp="2025-10-31T19:52:50.479Z" hostname="chromium" tests="8" failures="5" skipped="0" time="627.335" errors="0">
+<testcase name="Device Management › should display devices list" classname="02-device-management.spec.ts" time="3.789">
+</testcase>
+<testcase name="Device Management › should create a new device" classname="02-device-management.spec.ts" time="120.432">
+<failure message="02-device-management.spec.ts:40:3 should create a new device" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:40:3 › Device Management › should create a new device ──
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="deviceId"]')
+
+
+      45 |     const timestamp = Date.now();
+      46 |     await page.fill('input[name="name"]', `E2E Test Device ${timestamp}`);
+    > 47 |     await page.fill('input[name="deviceId"]', `e2e-device-${timestamp}`);
+         |                ^
+      48 |     await page.fill('textarea[name="description"]', 'Created by E2E test');
+      49 |
+      50 |     // Take screenshot of create form
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:47:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="deviceId"]')
+
+
+      45 |     const timestamp = Date.now();
+      46 |     await page.fill('input[name="name"]', `E2E Test Device ${timestamp}`);
+    > 47 |     await page.fill('input[name="deviceId"]', `e2e-device-${timestamp}`);
+         |                ^
+      48 |     await page.fill('textarea[name="description"]', 'Created by E2E test');
+      49 |
+      50 |     // Take screenshot of create form
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:47:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should edit an existing device" classname="02-device-management.spec.ts" time="124.238">
+<failure message="02-device-management.spec.ts:69:3 should edit an existing device" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:69:3 › Device Management › should edit an existing device 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[aria-label="Edit"], button:has-text("Edit"), [data-action="edit"]')
+
+
+      69 |   test('should edit an existing device', async ({ page }) => {
+      70 |     // Find and click edit button for first device
+    > 71 |     await page.click('[aria-label="Edit"], button:has-text("Edit"), [data-action="edit"]', { first: true });
+         |                ^
+      72 |
+      73 |     // Modify device name
+      74 |     await page.fill('input[name="name"]', `Updated Device ${Date.now()}`);
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:71:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[aria-label="Edit"], button:has-text("Edit"), [data-action="edit"]')
+
+
+      69 |   test('should edit an existing device', async ({ page }) => {
+      70 |     // Find and click edit button for first device
+    > 71 |     await page.click('[aria-label="Edit"], button:has-text("Edit"), [data-action="edit"]', { first: true });
+         |                ^
+      72 |
+      73 |     // Modify device name
+      74 |     await page.fill('input[name="name"]', `Updated Device ${Date.now()}`);
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:71:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should generate device token" classname="02-device-management.spec.ts" time="124.335">
+<failure message="02-device-management.spec.ts:86:3 should generate device token" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:86:3 › Device Management › should generate device token 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[aria-label="Manage Token"], button:has-text("Token"), [data-action="token"]')
+
+
+      86 |   test('should generate device token', async ({ page }) => {
+      87 |     // Find first device and click manage tokens
+    > 88 |     await page.click('[aria-label="Manage Token"], button:has-text("Token"), [data-action="token"]', { first: true });
+         |                ^
+      89 |
+      90 |     // Click generate token button
+      91 |     await page.click('button:has-text("Generate Token"), button:has-text("Create Token")');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:88:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[aria-label="Manage Token"], button:has-text("Token"), [data-action="token"]')
+
+
+      86 |   test('should generate device token', async ({ page }) => {
+      87 |     // Find first device and click manage tokens
+    > 88 |     await page.click('[aria-label="Manage Token"], button:has-text("Token"), [data-action="token"]', { first: true });
+         |                ^
+      89 |
+      90 |     // Click generate token button
+      91 |     await page.click('button:has-text("Generate Token"), button:has-text("Create Token")');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:88:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should search for devices" classname="02-device-management.spec.ts" time="4.978">
+</testcase>
+<testcase name="Device Management › should display device details" classname="02-device-management.spec.ts" time="5.094">
+</testcase>
+<testcase name="Device Management › should toggle device active status" classname="02-device-management.spec.ts" time="124.125">
+<failure message="02-device-management.spec.ts:133:3 should toggle device active status" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:133:3 › Device Management › should toggle device active status 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.isChecked: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[role="switch"], input[type="checkbox"]').first()
+
+
+      134 |     // Find and click active/inactive toggle
+      135 |     const toggle = page.locator('[role="switch"], input[type="checkbox"]').first();
+    > 136 |     const initialState = await toggle.isChecked();
+          |                                       ^
+      137 |
+      138 |     await toggle.click();
+      139 |
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:136:39
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.isChecked: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[role="switch"], input[type="checkbox"]').first()
+
+
+      134 |     // Find and click active/inactive toggle
+      135 |     const toggle = page.locator('[role="switch"], input[type="checkbox"]').first();
+    > 136 |     const initialState = await toggle.isChecked();
+          |                                       ^
+      137 |
+      138 |     await toggle.click();
+      139 |
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:136:39
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should delete a device" classname="02-device-management.spec.ts" time="120.344">
+<failure message="02-device-management.spec.ts:148:3 should delete a device" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:148:3 › Device Management › should delete a device ─────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="deviceId"]')
+
+
+      151 |     const timestamp = Date.now();
+      152 |     await page.fill('input[name="name"]', `Delete Me ${timestamp}`);
+    > 153 |     await page.fill('input[name="deviceId"]', `delete-me-${timestamp}`);
+          |                ^
+      154 |     await page.click('button[type="submit"]:has-text("Create")');
+      155 |     await page.waitForSelector('text=/Success/', { timeout: 10000 });
+      156 |
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:153:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="deviceId"]')
+
+
+      151 |     const timestamp = Date.now();
+      152 |     await page.fill('input[name="name"]', `Delete Me ${timestamp}`);
+    > 153 |     await page.fill('input[name="deviceId"]', `delete-me-${timestamp}`);
+          |                ^
+      154 |     await page.click('button[type="submit"]:has-text("Create")');
+      155 |     await page.waitForSelector('text=/Success/', { timeout: 10000 });
+      156 |
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:153:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="03-dashboard-realtime.spec.ts" timestamp="2025-10-31T19:52:50.479Z" hostname="chromium" tests="11" failures="5" skipped="0" time="96.583" errors="0">
+<testcase name="Dashboard and Real-Time Updates › should display dashboard with widgets" classname="03-dashboard-realtime.spec.ts" time="11.788">
+<failure message="03-dashboard-realtime.spec.ts:24:3 should display dashboard with widgets" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:24:3 › Dashboard and Real-Time Updates › should display dashboard with widgets 
+
+    Error: locator._expect: expectedNumber: expected float, got object
+
+      27 |
+      28 |     // Check for common dashboard elements
+    > 29 |     await expect(page.locator('canvas, .chart, [data-testid="widget"]')).toHaveCount({ min: 1 });
+         |                                                                          ^
+      30 |
+      31 |     // Visual regression: Main dashboard
+      32 |     await expect(page).toHaveScreenshot('dashboard-main.png', {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:29:74
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: locator._expect: expectedNumber: expected float, got object
+
+      27 |
+      28 |     // Check for common dashboard elements
+    > 29 |     await expect(page.locator('canvas, .chart, [data-testid="widget"]')).toHaveCount({ min: 1 });
+         |                                                                          ^
+      30 |
+      31 |     // Visual regression: Main dashboard
+      32 |     await expect(page).toHaveScreenshot('dashboard-main.png', {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:29:74
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should display device statistics" classname="03-dashboard-realtime.spec.ts" time="2.671">
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should render charts correctly" classname="03-dashboard-realtime.spec.ts" time="26.289">
+<failure message="03-dashboard-realtime.spec.ts:46:3 should render charts correctly" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:46:3 › Dashboard and Real-Time Updates › should render charts correctly 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('canvas') to be visible
+
+
+      46 |   test('should render charts correctly', async ({ page }) => {
+      47 |     // Wait for charts to load
+    > 48 |     await page.waitForSelector('canvas', { timeout: 10000 });
+         |                ^
+      49 |
+      50 |     // Get canvas elements
+      51 |     const canvasCount = await page.locator('canvas').count();
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:48:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('canvas') to be visible
+
+
+      46 |   test('should render charts correctly', async ({ page }) => {
+      47 |     // Wait for charts to load
+    > 48 |     await page.waitForSelector('canvas', { timeout: 10000 });
+         |                ^
+      49 |
+      50 |     // Get canvas elements
+      51 |     const canvasCount = await page.locator('canvas').count();
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:48:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should update charts in real-time" classname="03-dashboard-realtime.spec.ts" time="26.404">
+<failure message="03-dashboard-realtime.spec.ts:64:3 should update charts in real-time" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:64:3 › Dashboard and Real-Time Updates › should update charts in real-time 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('canvas') to be visible
+
+
+      64 |   test('should update charts in real-time', async ({ page }) => {
+      65 |     // Wait for initial chart render
+    > 66 |     await page.waitForSelector('canvas', { timeout: 10000 });
+         |                ^
+      67 |     await page.waitForTimeout(2000);
+      68 |
+      69 |     // Take initial screenshot
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:66:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('canvas') to be visible
+
+
+      64 |   test('should update charts in real-time', async ({ page }) => {
+      65 |     // Wait for initial chart render
+    > 66 |     await page.waitForSelector('canvas', { timeout: 10000 });
+         |                ^
+      67 |     await page.waitForTimeout(2000);
+      68 |
+      69 |     // Take initial screenshot
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:66:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should handle device selector" classname="03-dashboard-realtime.spec.ts" time="2.499">
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should display recent alerts" classname="03-dashboard-realtime.spec.ts" time="5.189">
+<failure message="03-dashboard-realtime.spec.ts:114:3 should display recent alerts" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:114:3 › Dashboard and Real-Time Updates › should display recent alerts 
+
+    Error: locator.count: Unexpected token "=" while parsing css selector "[data-testid="alerts"], [data-testid="recent-alerts"], text=/Recent Alerts|Alerts/i". Did you mean to CSS.escape it?
+
+      116 |     const alertsSection = page.locator('[data-testid="alerts"], [data-testid="recent-alerts"], text=/Recent Alerts|Alerts/i');
+      117 |
+    > 118 |     if (await alertsSection.count() > 0) {
+          |                             ^
+      119 |       await alertsSection.first().scrollIntoViewIfNeeded();
+      120 |
+      121 |       // Visual regression: Alerts section
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:118:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: locator.count: Unexpected token "=" while parsing css selector "[data-testid="alerts"], [data-testid="recent-alerts"], text=/Recent Alerts|Alerts/i". Did you mean to CSS.escape it?
+
+      116 |     const alertsSection = page.locator('[data-testid="alerts"], [data-testid="recent-alerts"], text=/Recent Alerts|Alerts/i');
+      117 |
+    > 118 |     if (await alertsSection.count() > 0) {
+          |                             ^
+      119 |       await alertsSection.first().scrollIntoViewIfNeeded();
+      120 |
+      121 |       // Visual regression: Alerts section
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:118:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should navigate between dashboard views" classname="03-dashboard-realtime.spec.ts" time="2.526">
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should display WebSocket connection status" classname="03-dashboard-realtime.spec.ts" time="11.573">
+<failure message="03-dashboard-realtime.spec.ts:145:3 should display WebSocket connection status" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:145:3 › Dashboard and Real-Time Updates › should display WebSocket connection status 
+
+    Error: locator.count: Unexpected token "=" while parsing css selector "[data-testid="ws-status"], .ws-indicator, text=/Connected|Connecting/i". Did you mean to CSS.escape it?
+
+      150 |     await page.waitForTimeout(3000);
+      151 |
+    > 152 |     if (await wsStatus.count() > 0) {
+          |                        ^
+      153 |       // Visual regression: WebSocket status
+      154 |       await expect(page).toHaveScreenshot('dashboard-ws-status.png');
+      155 |
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:152:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: locator.count: Unexpected token "=" while parsing css selector "[data-testid="ws-status"], .ws-indicator, text=/Connected|Connecting/i". Did you mean to CSS.escape it?
+
+      150 |     await page.waitForTimeout(3000);
+      151 |
+    > 152 |     if (await wsStatus.count() > 0) {
+          |                        ^
+      153 |       // Visual regression: WebSocket status
+      154 |       await expect(page).toHaveScreenshot('dashboard-ws-status.png');
+      155 |
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:152:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should refresh data manually" classname="03-dashboard-realtime.spec.ts" time="2.534">
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should display time range selector" classname="03-dashboard-realtime.spec.ts" time="2.546">
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should handle empty state when no devices exist" classname="03-dashboard-realtime.spec.ts" time="2.564">
+</testcase>
+</testsuite>
+<testsuite name="04-rules-alerts.spec.ts" timestamp="2025-10-31T19:52:50.479Z" hostname="chromium" tests="8" failures="4" skipped="0" time="508.767" errors="0">
+<testcase name="Rules and Alerts › should display rules list" classname="04-rules-alerts.spec.ts" time="4.71">
+</testcase>
+<testcase name="Rules and Alerts › should create a new rule" classname="04-rules-alerts.spec.ts" time="122.938">
+<failure message="04-rules-alerts.spec.ts:38:3 should create a new rule" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:38:3 › Rules and Alerts › should create a new rule ──────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="variableName"], select[name="variableName"]')
+
+
+      49 |
+      50 |     // Select variable
+    > 51 |     await page.fill('input[name="variableName"], select[name="variableName"]', 'temperature');
+         |                ^
+      52 |
+      53 |     // Select operator
+      54 |     await page.click('select[name="operator"]');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:51:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="variableName"], select[name="variableName"]')
+
+
+      49 |
+      50 |     // Select variable
+    > 51 |     await page.fill('input[name="variableName"], select[name="variableName"]', 'temperature');
+         |                ^
+      52 |
+      53 |     // Select operator
+      54 |     await page.click('select[name="operator"]');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:51:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should edit an existing rule" classname="04-rules-alerts.spec.ts" time="123.816">
+<failure message="04-rules-alerts.spec.ts:76:3 should edit an existing rule" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:76:3 › Rules and Alerts › should edit an existing rule ──────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[aria-label="Edit"]').or(getByRole('button', { name: /Edit/i })).first()
+
+
+      76 |   test('should edit an existing rule', async ({ page }) => {
+      77 |     // Click edit button on first rule
+    > 78 |     await page.locator('[aria-label="Edit"]').or(page.getByRole('button', { name: /Edit/i })).first().click();
+         |                                                                                                       ^
+      79 |
+      80 |     // Modify threshold
+      81 |     await page.fill('input[name="threshold"]', '90');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:78:103
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[aria-label="Edit"]').or(getByRole('button', { name: /Edit/i })).first()
+
+
+      76 |   test('should edit an existing rule', async ({ page }) => {
+      77 |     // Click edit button on first rule
+    > 78 |     await page.locator('[aria-label="Edit"]').or(page.getByRole('button', { name: /Edit/i })).first().click();
+         |                                                                                                       ^
+      79 |
+      80 |     // Modify threshold
+      81 |     await page.fill('input[name="threshold"]', '90');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:78:103
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should toggle rule active status" classname="04-rules-alerts.spec.ts" time="124.06">
+<failure message="04-rules-alerts.spec.ts:93:3 should toggle rule active status" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:93:3 › Rules and Alerts › should toggle rule active status ──
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.isChecked: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[role="switch"], input[type="checkbox"]').first()
+
+
+       95 |     const toggle = page.locator('[role="switch"], input[type="checkbox"]').first();
+       96 |
+    >  97 |     const initialState = await toggle.isChecked();
+          |                                       ^
+       98 |     await toggle.click();
+       99 |
+      100 |     // Wait for update
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:97:39
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: locator.isChecked: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('[role="switch"], input[type="checkbox"]').first()
+
+
+       95 |     const toggle = page.locator('[role="switch"], input[type="checkbox"]').first();
+       96 |
+    >  97 |     const initialState = await toggle.isChecked();
+          |                                       ^
+       98 |     await toggle.click();
+       99 |
+      100 |     // Wait for update
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:97:39
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should view alerts page" classname="04-rules-alerts.spec.ts" time="4.711">
+</testcase>
+<testcase name="Rules and Alerts › should filter alerts by severity" classname="04-rules-alerts.spec.ts" time="2.568">
+</testcase>
+<testcase name="Rules and Alerts › should acknowledge an alert" classname="04-rules-alerts.spec.ts" time="2.53">
+</testcase>
+<testcase name="Rules and Alerts › should delete a rule" classname="04-rules-alerts.spec.ts" time="123.434">
+<failure message="04-rules-alerts.spec.ts:164:3 should delete a rule" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:164:3 › Rules and Alerts › should delete a rule ─────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="variableName"]')
+
+
+      172 |     await page.keyboard.press('ArrowDown');
+      173 |     await page.keyboard.press('Enter');
+    > 174 |     await page.fill('input[name="variableName"]', 'temp');
+          |                ^
+      175 |     await page.click('select[name="operator"]');
+      176 |     await page.selectOption('select[name="operator"]', 'GT');
+      177 |     await page.fill('input[name="threshold"]', '50');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:174:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="variableName"]')
+
+
+      172 |     await page.keyboard.press('ArrowDown');
+      173 |     await page.keyboard.press('Enter');
+    > 174 |     await page.fill('input[name="variableName"]', 'temp');
+          |                ^
+      175 |     await page.click('select[name="operator"]');
+      176 |     await page.selectOption('select[name="operator"]', 'GT');
+      177 |     await page.fill('input[name="threshold"]', '50');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:174:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|..\test-artifacts\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

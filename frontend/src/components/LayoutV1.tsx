@@ -26,7 +26,7 @@ import {
   Code,
   Plug2,
   Archive,
-  TestTube,
+  Webhook,
   Terminal,
   Mail,
 } from 'lucide-react';
@@ -109,7 +109,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: true },
       { name: 'Variables', href: '/variables', icon: Database, adminOnly: true },
       { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
-      { name: 'Webhook Tester', href: '/webhook-tester', icon: TestTube, adminOnly: true },
+      { name: 'Webhook Tester', href: '/webhook-tester', icon: Webhook, adminOnly: true },
       { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: true },
       { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
     ],
@@ -300,6 +300,8 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
               <div className="flex items-center space-x-4">
                 <Link
                   to="/how-it-works"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
                 >
                   <BookOpen className="h-5 w-5" />
