@@ -49,7 +49,12 @@
       "Bash(chmod:*)",
       "Bash(git branch:*)",
       "Bash(gh issue list:*)",
-      "Bash(gh issue comment:*)"
+      "Bash(gh issue comment:*)",
+      "Bash(npm run dev:*)",
+      "Bash(bash run-regression-tests.sh:*)",
+      "Bash(docker logs:*)",
+      "Bash(dir /b \"C:\\sensorvision\\src\\main\\java\\org\\sensorvision\\dto\")",
+      "Bash(./gradlew compileTestJava:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,3048 @@
+<testsuites id="" name="" tests="33" failures="30" skipped="0" errors="0" time="394.50956899999994">
+<testsuite name="01-authentication.spec.ts" timestamp="2025-10-31T18:43:34.279Z" hostname="chromium" tests="6" failures="3" skipped="0" time="285.679" errors="0">
+<testcase name="Authentication System › should display login page" classname="01-authentication.spec.ts" time="1.68">
+</testcase>
+<testcase name="Authentication System › should login successfully with valid credentials" classname="01-authentication.spec.ts" time="22.652">
+<failure message="01-authentication.spec.ts:29:3 should login successfully with valid credentials" type="FAILURE">
+<![CDATA[  [chromium] › 01-authentication.spec.ts:29:3 › Authentication System › should login successfully with valid credentials 
+
+    TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      39 |
+      40 |     // Wait for navigation to dashboard
+    > 41 |     await page.waitForURL('**/dashboard', { timeout: 10000 });
+         |                ^
+      42 |
+      43 |     // Verify we're on dashboard
+      44 |     await expect(page).toHaveURL(/dashboard/);
+        at C:\sensorvision\frontend\e2e\01-authentication.spec.ts:41:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      39 |
+      40 |     // Wait for navigation to dashboard
+    > 41 |     await page.waitForURL('**/dashboard', { timeout: 10000 });
+         |                ^
+      42 |
+      43 |     // Verify we're on dashboard
+      44 |     await expect(page).toHaveURL(/dashboard/);
+        at C:\sensorvision\frontend\e2e\01-authentication.spec.ts:41:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium\video.webm]]
+
+[[ATTACHMENT|01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium\error-context.md]]
+
+[[ATTACHMENT|01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|01-authentication-Authenti-1b993-ully-with-valid-credentials-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication System › should show error message with invalid credentials" classname="01-authentication.spec.ts" time="2.01">
+</testcase>
+<testcase name="Authentication System › should logout successfully" classname="01-authentication.spec.ts" time="128.636">
+<failure message="01-authentication.spec.ts:66:3 should logout successfully" type="FAILURE">
+<![CDATA[  [chromium] › 01-authentication.spec.ts:66:3 › Authentication System › should logout successfully ─
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      69 |     await page.fill('input[name="password"]', 'admin123');
+      70 |     await page.click('button[type="submit"]');
+    > 71 |     await page.waitForURL('**/dashboard');
+         |                ^
+      72 |
+      73 |     // Find and click logout button
+      74 |     await page.click('[aria-label="Logout"], text=/Logout|Sign Out/i');
+        at C:\sensorvision\frontend\e2e\01-authentication.spec.ts:71:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-87bcb--should-logout-successfully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-87bcb--should-logout-successfully-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\01-authentication-Authenti-87bcb--should-logout-successfully-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      69 |     await page.fill('input[name="password"]', 'admin123');
+      70 |     await page.click('button[type="submit"]');
+    > 71 |     await page.waitForURL('**/dashboard');
+         |                ^
+      72 |
+      73 |     // Find and click logout button
+      74 |     await page.click('[aria-label="Logout"], text=/Logout|Sign Out/i');
+        at C:\sensorvision\frontend\e2e\01-authentication.spec.ts:71:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-87bcb--should-logout-successfully-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-87bcb--should-logout-successfully-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\01-authentication-Authenti-87bcb--should-logout-successfully-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-87bcb--should-logout-successfully-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\01-authentication-Authenti-87bcb--should-logout-successfully-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|01-authentication-Authenti-87bcb--should-logout-successfully-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|01-authentication-Authenti-87bcb--should-logout-successfully-chromium\video.webm]]
+
+[[ATTACHMENT|01-authentication-Authenti-87bcb--should-logout-successfully-chromium\error-context.md]]
+
+[[ATTACHMENT|01-authentication-Authenti-87bcb--should-logout-successfully-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|01-authentication-Authenti-87bcb--should-logout-successfully-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|01-authentication-Authenti-87bcb--should-logout-successfully-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|01-authentication-Authenti-87bcb--should-logout-successfully-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication System › should redirect to login when accessing protected route without auth" classname="01-authentication.spec.ts" time="1.65">
+</testcase>
+<testcase name="Authentication System › should persist session after page reload" classname="01-authentication.spec.ts" time="129.051">
+<failure message="01-authentication.spec.ts:89:3 should persist session after page reload" type="FAILURE">
+<![CDATA[  [chromium] › 01-authentication.spec.ts:89:3 › Authentication System › should persist session after page reload 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      92 |     await page.fill('input[name="password"]', 'admin123');
+      93 |     await page.click('button[type="submit"]');
+    > 94 |     await page.waitForURL('**/dashboard');
+         |                ^
+      95 |
+      96 |     // Reload page
+      97 |     await page.reload();
+        at C:\sensorvision\frontend\e2e\01-authentication.spec.ts:94:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      92 |     await page.fill('input[name="password"]', 'admin123');
+      93 |     await page.click('button[type="submit"]');
+    > 94 |     await page.waitForURL('**/dashboard');
+         |                ^
+      95 |
+      96 |     // Reload page
+      97 |     await page.reload();
+        at C:\sensorvision\frontend\e2e\01-authentication.spec.ts:94:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium\video.webm]]
+
+[[ATTACHMENT|01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium\error-context.md]]
+
+[[ATTACHMENT|01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|01-authentication-Authenti-e58cd-t-session-after-page-reload-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="02-device-management.spec.ts" timestamp="2025-10-31T18:43:34.279Z" hostname="chromium" tests="8" failures="8" skipped="0" time="1034.694" errors="0">
+<testcase name="Device Management › should display devices list" classname="02-device-management.spec.ts" time="129.095">
+<failure message="02-device-management.spec.ts:29:3 should display devices list" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:29:3 › Device Management › should display devices list ─
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8cf71-should-display-devices-list-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8cf71-should-display-devices-list-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-8cf71-should-display-devices-list-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8cf71-should-display-devices-list-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8cf71-should-display-devices-list-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-8cf71-should-display-devices-list-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8cf71-should-display-devices-list-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\02-device-management-Devic-8cf71-should-display-devices-list-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|02-device-management-Devic-8cf71-should-display-devices-list-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-8cf71-should-display-devices-list-chromium\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-8cf71-should-display-devices-list-chromium\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-8cf71-should-display-devices-list-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-8cf71-should-display-devices-list-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-8cf71-should-display-devices-list-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-8cf71-should-display-devices-list-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should create a new device" classname="02-device-management.spec.ts" time="128.619">
+<failure message="02-device-management.spec.ts:40:3 should create a new device" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:40:3 › Device Management › should create a new device ──
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-d2b89--should-create-a-new-device-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-d2b89--should-create-a-new-device-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-d2b89--should-create-a-new-device-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|02-device-management-Devic-d2b89--should-create-a-new-device-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-d2b89--should-create-a-new-device-chromium\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-d2b89--should-create-a-new-device-chromium\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-d2b89--should-create-a-new-device-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should edit an existing device" classname="02-device-management.spec.ts" time="128.719">
+<failure message="02-device-management.spec.ts:69:3 should edit an existing device" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:69:3 › Device Management › should edit an existing device 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-259ab-uld-edit-an-existing-device-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should generate device token" classname="02-device-management.spec.ts" time="129.03">
+<failure message="02-device-management.spec.ts:86:3 should generate device token" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:86:3 › Device Management › should generate device token 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-f0ad3-hould-generate-device-token-chromium\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-f0ad3-hould-generate-device-token-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should search for devices" classname="02-device-management.spec.ts" time="128.889">
+<failure message="02-device-management.spec.ts:105:3 should search for devices" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:105:3 › Device Management › should search for devices ──
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-7eb71-t-should-search-for-devices-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-7eb71-t-should-search-for-devices-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-7eb71-t-should-search-for-devices-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-7eb71-t-should-search-for-devices-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-7eb71-t-should-search-for-devices-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-7eb71-t-should-search-for-devices-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-7eb71-t-should-search-for-devices-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\02-device-management-Devic-7eb71-t-should-search-for-devices-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|02-device-management-Devic-7eb71-t-should-search-for-devices-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-7eb71-t-should-search-for-devices-chromium\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-7eb71-t-should-search-for-devices-chromium\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-7eb71-t-should-search-for-devices-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-7eb71-t-should-search-for-devices-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-7eb71-t-should-search-for-devices-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-7eb71-t-should-search-for-devices-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should display device details" classname="02-device-management.spec.ts" time="129.9">
+<failure message="02-device-management.spec.ts:119:3 should display device details" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:119:3 › Device Management › should display device details 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8e636-ould-display-device-details-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8e636-ould-display-device-details-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-8e636-ould-display-device-details-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8e636-ould-display-device-details-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8e636-ould-display-device-details-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-8e636-ould-display-device-details-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-8e636-ould-display-device-details-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\02-device-management-Devic-8e636-ould-display-device-details-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|02-device-management-Devic-8e636-ould-display-device-details-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-8e636-ould-display-device-details-chromium\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-8e636-ould-display-device-details-chromium\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-8e636-ould-display-device-details-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-8e636-ould-display-device-details-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-8e636-ould-display-device-details-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-8e636-ould-display-device-details-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should toggle device active status" classname="02-device-management.spec.ts" time="130.053">
+<failure message="02-device-management.spec.ts:133:3 should toggle device active status" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:133:3 › Device Management › should toggle device active status 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-b64cc-toggle-device-active-status-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-b64cc-toggle-device-active-status-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-b64cc-toggle-device-active-status-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|02-device-management-Devic-b64cc-toggle-device-active-status-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-b64cc-toggle-device-active-status-chromium\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-b64cc-toggle-device-active-status-chromium\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-b64cc-toggle-device-active-status-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Device Management › should delete a device" classname="02-device-management.spec.ts" time="130.389">
+<failure message="02-device-management.spec.ts:148:3 should delete a device" type="FAILURE">
+<![CDATA[  [chromium] › 02-device-management.spec.ts:148:3 › Device Management › should delete a device ─────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      14 |
+      15 | test.describe('Device Management', () => {
+    > 16 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      17 |     // Login
+      18 |     await page.goto('/login');
+      19 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:16:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      20 |     await page.fill('input[name="password"]', 'admin123');
+      21 |     await page.click('button[type="submit"]');
+    > 22 |     await page.waitForURL('**/dashboard');
+         |                ^
+      23 |
+      24 |     // Navigate to devices page
+      25 |     await page.click('a[href="/devices"], text=/Devices/i');
+        at C:\sensorvision\frontend\e2e\02-device-management.spec.ts:22:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|02-device-management-Devic-74ee7-ment-should-delete-a-device-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="03-dashboard-realtime.spec.ts" timestamp="2025-10-31T18:43:34.279Z" hostname="chromium" tests="11" failures="11" skipped="0" time="1408.093" errors="0">
+<testcase name="Dashboard and Real-Time Updates › should display dashboard with widgets" classname="03-dashboard-realtime.spec.ts" time="124.823">
+<failure message="03-dashboard-realtime.spec.ts:24:3 should display dashboard with widgets" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:24:3 › Dashboard and Real-Time Updates › should display dashboard with widgets 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-99550-play-dashboard-with-widgets-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should display device statistics" classname="03-dashboard-realtime.spec.ts" time="126.97">
+<failure message="03-dashboard-realtime.spec.ts:38:3 should display device statistics" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:38:3 › Dashboard and Real-Time Updates › should display device statistics 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-d-display-device-statistics-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should render charts correctly" classname="03-dashboard-realtime.spec.ts" time="127.04">
+<failure message="03-dashboard-realtime.spec.ts:46:3 should render charts correctly" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:46:3 › Dashboard and Real-Time Updates › should render charts correctly 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b8dd8-uld-render-charts-correctly-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should update charts in real-time" classname="03-dashboard-realtime.spec.ts" time="126.924">
+<failure message="03-dashboard-realtime.spec.ts:64:3 should update charts in real-time" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:64:3 › Dashboard and Real-Time Updates › should update charts in real-time 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7fa91--update-charts-in-real-time-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should handle device selector" classname="03-dashboard-realtime.spec.ts" time="127.791">
+<failure message="03-dashboard-realtime.spec.ts:88:3 should handle device selector" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:88:3 › Dashboard and Real-Time Updates › should handle device selector 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ab266-ould-handle-device-selector-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should display recent alerts" classname="03-dashboard-realtime.spec.ts" time="128.767">
+<failure message="03-dashboard-realtime.spec.ts:114:3 should display recent alerts" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:114:3 › Dashboard and Real-Time Updates › should display recent alerts 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-d58bd-hould-display-recent-alerts-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should navigate between dashboard views" classname="03-dashboard-realtime.spec.ts" time="128.826">
+<failure message="03-dashboard-realtime.spec.ts:126:3 should navigate between dashboard views" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:126:3 › Dashboard and Real-Time Updates › should navigate between dashboard views 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-97de5-ate-between-dashboard-views-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should display WebSocket connection status" classname="03-dashboard-realtime.spec.ts" time="129.118">
+<failure message="03-dashboard-realtime.spec.ts:145:3 should display WebSocket connection status" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:145:3 › Dashboard and Real-Time Updates › should display WebSocket connection status 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-7c69e-WebSocket-connection-status-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should refresh data manually" classname="03-dashboard-realtime.spec.ts" time="129.361">
+<failure message="03-dashboard-realtime.spec.ts:162:3 should refresh data manually" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:162:3 › Dashboard and Real-Time Updates › should refresh data manually 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-b7ae1-hould-refresh-data-manually-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should display time range selector" classname="03-dashboard-realtime.spec.ts" time="129.203">
+<failure message="03-dashboard-realtime.spec.ts:181:3 should display time range selector" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:181:3 › Dashboard and Real-Time Updates › should display time range selector 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-8c529-display-time-range-selector-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard and Real-Time Updates › should handle empty state when no devices exist" classname="03-dashboard-realtime.spec.ts" time="129.27">
+<failure message="03-dashboard-realtime.spec.ts:202:3 should handle empty state when no devices exist" type="FAILURE">
+<![CDATA[  [chromium] › 03-dashboard-realtime.spec.ts:202:3 › Dashboard and Real-Time Updates › should handle empty state when no devices exist 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      13 |
+      14 | test.describe('Dashboard and Real-Time Updates', () => {
+    > 15 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      16 |     // Login
+      17 |     await page.goto('/login');
+      18 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:15:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      19 |     await page.fill('input[name="password"]', 'admin123');
+      20 |     await page.click('button[type="submit"]');
+    > 21 |     await page.waitForURL('**/dashboard');
+         |                ^
+      22 |   });
+      23 |
+      24 |   test('should display dashboard with widgets', async ({ page }) => {
+        at C:\sensorvision\frontend\e2e\03-dashboard-realtime.spec.ts:21:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|03-dashboard-realtime-Dash-ea9f0-state-when-no-devices-exist-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="04-rules-alerts.spec.ts" timestamp="2025-10-31T18:43:34.279Z" hostname="chromium" tests="8" failures="8" skipped="0" time="1008.887" errors="0">
+<testcase name="Rules and Alerts › should display rules list" classname="04-rules-alerts.spec.ts" time="124.979">
+<failure message="04-rules-alerts.spec.ts:27:3 should display rules list" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:27:3 › Rules and Alerts › should display rules list ─────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-display-rules-list-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should create a new rule" classname="04-rules-alerts.spec.ts" time="125.778">
+<failure message="04-rules-alerts.spec.ts:38:3 should create a new rule" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:38:3 › Rules and Alerts › should create a new rule ──────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-create-a-new-rule-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should edit an existing rule" classname="04-rules-alerts.spec.ts" time="125.819">
+<failure message="04-rules-alerts.spec.ts:76:3 should edit an existing rule" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:76:3 › Rules and Alerts › should edit an existing rule ──────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--8ce22-hould-edit-an-existing-rule-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should toggle rule active status" classname="04-rules-alerts.spec.ts" time="126.146">
+<failure message="04-rules-alerts.spec.ts:93:3 should toggle rule active status" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:93:3 › Rules and Alerts › should toggle rule active status ──
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--6e362-d-toggle-rule-active-status-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should view alerts page" classname="04-rules-alerts.spec.ts" time="126.543">
+<failure message="04-rules-alerts.spec.ts:107:3 should view alerts page" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:107:3 › Rules and Alerts › should view alerts page ──────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-view-alerts-page-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should filter alerts by severity" classname="04-rules-alerts.spec.ts" time="126.668">
+<failure message="04-rules-alerts.spec.ts:122:3 should filter alerts by severity" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:122:3 › Rules and Alerts › should filter alerts by severity ─
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and--24f67-d-filter-alerts-by-severity-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should acknowledge an alert" classname="04-rules-alerts.spec.ts" time="126.5">
+<failure message="04-rules-alerts.spec.ts:145:3 should acknowledge an alert" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:145:3 › Rules and Alerts › should acknowledge an alert ──────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-acknowledge-an-alert-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rules and Alerts › should delete a rule" classname="04-rules-alerts.spec.ts" time="126.454">
+<failure message="04-rules-alerts.spec.ts:164:3 should delete a rule" type="FAILURE">
+<![CDATA[  [chromium] › 04-rules-alerts.spec.ts:164:3 › Rules and Alerts › should delete a rule ─────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      12 |
+      13 | test.describe('Rules and Alerts', () => {
+    > 14 |   test.beforeEach(async ({ page }) => {
+         |        ^
+      15 |     // Login
+      16 |     await page.goto('/login');
+      17 |     await page.fill('input[name="username"]', 'admin');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:14:8
+
+    Error: page.waitForURL: Test timeout of 60000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      18 |     await page.fill('input[name="password"]', 'admin123');
+      19 |     await page.click('button[type="submit"]');
+    > 20 |     await page.waitForURL('**/dashboard');
+         |                ^
+      21 |
+      22 |     // Navigate to rules page
+      23 |     await page.click('a[href="/rules"], text=/Rules/i');
+        at C:\sensorvision\frontend\e2e\04-rules-alerts.spec.ts:20:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ..\test-results\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ..\test-results\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\trace.zip
+    Usage:
+
+        npx playwright show-trace ..\test-results\04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\test-failed-1.png]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\video.webm]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\error-context.md]]
+
+[[ATTACHMENT|04-rules-alerts-Rules-and-Alerts-should-delete-a-rule-chromium-retry1\trace.zip]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

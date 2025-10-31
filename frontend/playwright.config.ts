@@ -14,6 +14,9 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
 
+  // Test results output directory (artifacts like videos, traces)
+  outputDir: 'test-artifacts',
+
   // Maximum time one test can run
   timeout: 60 * 1000,
 
