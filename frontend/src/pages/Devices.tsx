@@ -44,6 +44,22 @@ export const Devices = () => {
     setIsTokenModalOpen(true);
   };
 
+  const handleToggleActive = async (device: Device) => {
+    try {
+      await apiService.updateDevice(device.externalId, {
+        name: device.name,
+        description: device.description,
+        active: !device.active,
+        location: device.location,
+        sensorType: device.sensorType,
+        firmwareVersion: device.firmwareVersion,
+      });
+      await fetchDevices();
+    } catch (error) {
+      console.error('Failed to toggle device active status:', error);
+    }
+  };
+
   const handleDelete = async (externalId: string) => {
     if (window.confirm('Are you sure you want to delete this device?')) {
       try {
@@ -121,6 +137,9 @@ export const Devices = () => {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Active
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Location
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -152,6 +171,18 @@ export const Devices = () => {
                   >
                     {device.status}
                   </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={device.active !== false}
+                      onChange={() => handleToggleActive(device)}
+                      className="sr-only peer"
+                      aria-label="Toggle Active Status"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {device.location || '-'}
