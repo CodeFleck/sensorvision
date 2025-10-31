@@ -181,11 +181,26 @@ public class EmailNotificationService {
 
             if (mailSender != null) {
                 MimeMessage message = mailSender.createMimeMessage();
+                // Use multipart mode to support both plain text and HTML
                 MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
                 helper.setFrom(fromEmail);
                 helper.setTo(email);
                 helper.setSubject(subject);
-                helper.setText(body, true); // true = isHtml
+
+                // Set plain text version for email clients that don't support HTML
+                String plainText = String.format(
+                    "Password Reset Request\n\n" +
+                    "Click the link below to reset your password:\n%s\n\n" +
+                    "This link will expire in 1 hour for security reasons.\n\n" +
+                    "If you didn't request a password reset, you can safely ignore this email.\n\n" +
+                    "---\n" +
+                    "SensorVision - IoT Monitoring Platform",
+                    resetLink
+                );
+
+                // Set both plain text and HTML versions
+                helper.setText(plainText, body);
+
                 mailSender.send(message);
                 log.info("Password reset email sent successfully to {}", email);
             } else {
