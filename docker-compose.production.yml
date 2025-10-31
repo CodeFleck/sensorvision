@@ -99,6 +99,9 @@ services:
       SUPPORT_ISSUE_EMAIL: ${SUPPORT_ISSUE_EMAIL:-support@sensorvision.com}
       SUPPORT_ISSUE_ENABLED: ${SUPPORT_ISSUE_ENABLED:-true}
 
+      # Application Base URL (for email links)
+      APP_BASE_URL: ${APP_BASE_URL:-http://35.88.65.186.nip.io:8080}
+
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
       interval: 30s

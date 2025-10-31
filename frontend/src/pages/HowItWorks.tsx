@@ -959,11 +959,149 @@ await client.disconnect();`}
                 <Code className="w-5 h-5 text-purple-600" />
                 Extensibility & Automation
               </h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <h4 className="font-semibold text-gray-900 mb-2">Serverless Functions</h4>
-                  <p className="text-sm text-gray-600">Write JavaScript functions triggered by events (telemetry, alerts, schedules, webhooks). Custom code execution with input/output tracking and execution history.</p>
+
+              {/* Serverless Functions - Expanded Section */}
+              <div className="mb-6">
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-6 border border-purple-200 mb-4">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-purple-600" />
+                    Serverless Functions
+                  </h4>
+                  <p className="text-gray-700 mb-4">
+                    Extend SensorVision with custom JavaScript code that runs in response to platform events. Write functions that process telemetry data, respond to alerts, run on schedules, or handle webhooks—without managing any infrastructure.
+                  </p>
+
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <div className="bg-white rounded-lg p-4 border border-purple-100">
+                      <h5 className="font-semibold text-gray-900 mb-2 text-sm">Event Triggers</h5>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• <strong>Telemetry Ingestion:</strong> Process every data point</li>
+                        <li>• <strong>Alert Triggered:</strong> Custom alert handling</li>
+                        <li>• <strong>Schedule (Cron):</strong> Periodic execution</li>
+                        <li>• <strong>HTTP Webhook:</strong> External API calls</li>
+                      </ul>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-purple-100">
+                      <h5 className="font-semibold text-gray-900 mb-2 text-sm">Key Features</h5>
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• Pay-per-execution pricing model</li>
+                        <li>• Automatic scaling to zero</li>
+                        <li>• Input/output tracking</li>
+                        <li>• Execution history & logs</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="font-semibold text-gray-900 mb-2 text-sm">Example: Temperature Anomaly Detection</h5>
+                      <CodeBlock
+                        language="javascript"
+                        code={`// Triggered on telemetry ingestion
+export async function onTelemetry(event) {
+  const { deviceId, variables, timestamp } = event.data;
+
+  // Detect temperature anomalies
+  if (variables.temperature > 30 || variables.temperature < 10) {
+    // Send custom notification
+    await fetch('https://api.slack.com/webhook', {
+      method: 'POST',
+      body: JSON.stringify({
+        text: \`⚠️ Anomaly: Device \${deviceId} temperature is \${variables.temperature}°C\`
+      })
+    });
+
+    // Log to external system
+    console.log('Anomaly detected', { deviceId, temperature: variables.temperature });
+  }
+
+  return { processed: true, anomalyDetected: variables.temperature > 30 };
+}`}
+                      />
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-gray-900 mb-2 text-sm">Example: Scheduled Data Aggregation</h5>
+                      <CodeBlock
+                        language="javascript"
+                        code={`// Triggered daily at midnight (cron: 0 0 * * *)
+export async function dailyReport(event) {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // Fetch analytics data
+  const response = await fetch(\`\${process.env.API_URL}/api/v1/analytics/sensor-42?
+    variable=temperature&
+    aggregation=AVG&
+    interval=HOURLY&
+    from=\${yesterday.toISOString()}\`);
+
+  const data = await response.json();
+
+  // Send email report
+  await sendEmail({
+    to: 'admin@company.com',
+    subject: 'Daily Temperature Report',
+    body: \`Average temperature: \${data.avgTemperature}°C\`
+  });
+
+  return { reportGenerated: true, dataPoints: data.length };
+}`}
+                      />
+                    </div>
+
+                    <div>
+                      <h5 className="font-semibold text-gray-900 mb-2 text-sm">Example: Alert Response Handler</h5>
+                      <CodeBlock
+                        language="javascript"
+                        code={`// Triggered when an alert fires
+export async function onAlert(event) {
+  const { alertId, deviceId, severity, message } = event.data;
+
+  // Route alerts based on severity
+  if (severity === 'CRITICAL') {
+    // Send SMS via Twilio
+    await sendSMS({
+      to: '+1234567890',
+      message: \`CRITICAL ALERT: \${message}\`
+    });
+  } else {
+    // Send email for non-critical
+    await sendEmail({
+      to: 'support@company.com',
+      subject: \`Alert: \${deviceId}\`,
+      body: message
+    });
+  }
+
+  // Create support ticket
+  await createTicket({
+    title: \`Device \${deviceId} Alert\`,
+    description: message,
+    priority: severity
+  });
+
+  return { notificationsSent: 2, ticketCreated: true };
+}`}
+                      />
+                    </div>
+                  </div>
+
+                  <Callout type="tip" title="Common Use Cases">
+                    <ul className="text-sm space-y-1">
+                      <li>• Data enrichment and transformation</li>
+                      <li>• Integration with external APIs (CRM, ERP, notification services)</li>
+                      <li>• Custom business logic and validation</li>
+                      <li>• Automated reporting and analytics</li>
+                      <li>• Multi-system data synchronization</li>
+                      <li>• Custom alert routing and escalation</li>
+                    </ul>
+                  </Callout>
                 </div>
+              </div>
+
+              {/* Other extensibility features */}
+              <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <h4 className="font-semibold text-gray-900 mb-2">Data Plugins</h4>
                   <p className="text-sm text-gray-600">Extensible plugin system for custom data ingestion. Built-in plugins: HTTP Webhook, LoRaWAN TTN, CSV Import. Create your own plugins with validation framework.</p>
