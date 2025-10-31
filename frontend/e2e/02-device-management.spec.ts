@@ -22,7 +22,7 @@ test.describe('Device Management', () => {
     await page.waitForTimeout(2000); // Wait for login
 
     // Navigate to devices page
-    await page.locator('a[href="/devices"]').or(page.getByText(/Devices/i)).click();
+    await page.getByRole('link', { name: 'Devices', exact: true }).click();
     await page.waitForURL('**/devices');
   });
 

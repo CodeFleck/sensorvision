@@ -70,8 +70,13 @@ test.describe('Authentication System', () => {
     await page.click('button[type="submit"]');
     await page.waitForTimeout(2000); // Wait for login
 
-    // Find and click logout button
-    await page.locator('[aria-label="Logout"]').or(page.getByText(/Logout|Sign Out/i)).click();
+    // Find and click logout button (look for user menu dropdown first)
+    const userMenu = page.locator('button:has-text("admin"), [data-testid="user-menu"]');
+    if (await userMenu.count() > 0) {
+      await userMenu.first().click();
+      await page.waitForTimeout(500);
+    }
+    await page.getByRole('button', { name: /logout|sign out/i }).click();
 
     // Should redirect to login
     await page.waitForURL('**/login', { timeout: 5000 });

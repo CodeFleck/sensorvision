@@ -20,7 +20,7 @@ test.describe('Rules and Alerts', () => {
     await page.waitForTimeout(2000); // Wait for login
 
     // Navigate to rules page
-    await page.locator('a[href="/rules"]').or(page.getByText(/Rules/i)).click();
+    await page.getByRole('link', { name: 'Rules', exact: true }).click();
     await page.waitForLoadState('networkidle');
   });
 
@@ -106,7 +106,7 @@ test.describe('Rules and Alerts', () => {
 
   test('should view alerts page', async ({ page }) => {
     // Navigate to alerts page
-    await page.locator('a[href="/alerts"]').or(page.getByText(/Alerts/i)).click();
+    await page.getByRole('link', { name: 'Alerts', exact: true }).click();
     await page.waitForLoadState('networkidle');
 
     // Wait for alerts to load
@@ -121,7 +121,7 @@ test.describe('Rules and Alerts', () => {
 
   test('should filter alerts by severity', async ({ page }) => {
     // Navigate to alerts
-    await page.locator('a[href="/alerts"]').or(page.getByText(/Alerts/i)).click();
+    await page.getByRole('link', { name: 'Alerts', exact: true }).click();
     await page.waitForLoadState('networkidle');
 
     // Find severity filter
@@ -144,7 +144,7 @@ test.describe('Rules and Alerts', () => {
 
   test('should acknowledge an alert', async ({ page }) => {
     // Navigate to alerts
-    await page.locator('a[href="/alerts"]').or(page.getByText(/Alerts/i)).click();
+    await page.getByRole('link', { name: 'Alerts', exact: true }).click();
     await page.waitForLoadState('networkidle');
 
     // Find and click acknowledge button
