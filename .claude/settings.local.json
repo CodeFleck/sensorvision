@@ -54,7 +54,10 @@
       "Bash(bash run-regression-tests.sh:*)",
       "Bash(docker logs:*)",
       "Bash(dir /b \"C:\\sensorvision\\src\\main\\java\\org\\sensorvision\\dto\")",
-      "Bash(./gradlew compileTestJava:*)"
+      "Bash(./gradlew compileTestJava:*)",
+      "Bash(git push:*)",
+      "Bash(tee:*)",
+      "Bash(npx playwright test:*)"
     ],
     "deny": [],
     "ask": []
