@@ -71,7 +71,7 @@ test.describe('Authentication System', () => {
     await page.waitForTimeout(2000); // Wait for login
 
     // Find and click logout button
-    await page.click('[aria-label="Logout"], text=/Logout|Sign Out/i');
+    await page.locator('[aria-label="Logout"]').or(page.getByText(/Logout|Sign Out/i)).click();
 
     // Should redirect to login
     await page.waitForURL('**/login', { timeout: 5000 });
