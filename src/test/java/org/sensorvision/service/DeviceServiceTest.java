@@ -89,9 +89,11 @@ class DeviceServiceTest {
         DeviceCreateRequest request = new DeviceCreateRequest(
                 "new-device-001",
                 "New Device",
-                null,
-                null,
-                null
+                null,  // description
+                null,  // active (will default to true)
+                null,  // location
+                null,  // sensorType
+                null   // firmwareVersion
         );
 
         Device savedDevice = Device.builder()
@@ -134,9 +136,11 @@ class DeviceServiceTest {
         DeviceCreateRequest request = new DeviceCreateRequest(
                 "existing-device",
                 "Existing Device",
-                null,
-                null,
-                null
+                null,  // description
+                null,  // active (will default to true)
+                null,  // location
+                null,  // sensorType
+                null   // firmwareVersion
         );
 
         when(deviceRepository.findByExternalId(request.externalId()))
@@ -160,9 +164,11 @@ class DeviceServiceTest {
         DeviceCreateRequest request = new DeviceCreateRequest(
                 "org-test-device",
                 "Organization Test Device",
-                null,
-                null,
-                null
+                null,  // description
+                null,  // active (will default to true)
+                null,  // location
+                null,  // sensorType
+                null   // firmwareVersion
         );
 
         when(deviceRepository.findByExternalId(request.externalId())).thenReturn(Optional.empty());
@@ -185,9 +191,11 @@ class DeviceServiceTest {
         DeviceCreateRequest request = new DeviceCreateRequest(
                 "status-test-device",
                 "Status Test Device",
-                null,
-                null,
-                null
+                null,  // description
+                null,  // active (will default to true)
+                null,  // location
+                null,  // sensorType
+                null   // firmwareVersion
         );
 
         when(deviceRepository.findByExternalId(request.externalId())).thenReturn(Optional.empty());
@@ -236,6 +244,8 @@ class DeviceServiceTest {
         // Given
         DeviceUpdateRequest updateRequest = new DeviceUpdateRequest(
                 "Updated Device Name",
+                null,  // description
+                null,  // active
                 "New Location",
                 "NewSensorType",
                 "v2.0.0"
@@ -302,9 +312,11 @@ class DeviceServiceTest {
         DeviceCreateRequest request = new DeviceCreateRequest(
                 "auto-token-device",
                 "Auto Token Device",
-                null,
-                null,
-                null
+                null,  // description
+                null,  // active (will default to true)
+                null,  // location
+                null,  // sensorType
+                null   // firmwareVersion
         );
 
         Device savedDevice = Device.builder()
