@@ -16,6 +16,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.StreamUtils;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -105,6 +108,42 @@ public class GlobalExceptionHandler {
         problem.setTitle("Access Denied");
         problem.setDetail("You don't have permission to access this resource.");
         problem.setProperty("developerMessage", ex.getMessage());
+        return problem;
+    }
+
+    /**
+     * Handle authentication exceptions - user account disabled
+     */
+    @ExceptionHandler(DisabledException.class)
+    public ProblemDetail handleDisabled(DisabledException ex) {
+        logger.warn("Login attempt with disabled account");
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+        problem.setTitle("Account Disabled");
+        problem.setDetail("Your account has been disabled. Please contact support for assistance.");
+        return problem;
+    }
+
+    /**
+     * Handle authentication exceptions - user not found
+     */
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ProblemDetail handleUsernameNotFound(UsernameNotFoundException ex) {
+        logger.warn("Login attempt with non-existent username");
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+        problem.setTitle("Invalid Credentials");
+        problem.setDetail("Invalid username or password. Please check your credentials and try again.");
+        return problem;
+    }
+
+    /**
+     * Handle authentication exceptions - bad credentials (wrong password or username)
+     */
+    @ExceptionHandler(BadCredentialsException.class)
+    public ProblemDetail handleBadCredentials(BadCredentialsException ex) {
+        logger.warn("Login attempt with invalid credentials");
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.UNAUTHORIZED);
+        problem.setTitle("Invalid Credentials");
+        problem.setDetail("Invalid username or password. Please check your credentials and try again.");
         return problem;
     }
 
