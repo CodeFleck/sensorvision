@@ -44,7 +44,12 @@
       "Bash(taskkill:*)",
       "Bash(psql:*)",
       "Bash(docker exec:*)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(npm install:*)",
+      "Bash(chmod:*)",
+      "Bash(git branch:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue comment:*)"
     ],
     "deny": [],
     "ask": []
