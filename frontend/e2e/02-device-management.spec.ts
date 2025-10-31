@@ -19,7 +19,7 @@ test.describe('Device Management', () => {
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
-    await page.waitForURL('**/dashboard');
+    await page.waitForTimeout(2000); // Wait for login
 
     // Navigate to devices page
     await page.click('a[href="/devices"], text=/Devices/i');

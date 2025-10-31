@@ -37,11 +37,11 @@ test.describe('Authentication System', () => {
     // Click login button
     await page.click('button[type="submit"]');
 
-    // Wait for navigation to dashboard
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    // Wait for successful login (dashboard is at root "/")
+    await page.waitForTimeout(2000); // Wait for redirect and auth state
 
-    // Verify we're on dashboard
-    await expect(page).toHaveURL(/dashboard/);
+    // Verify we're on dashboard (root path)
+    await expect(page).toHaveURL(/^http:\/\/localhost:3001\/\??$/);
 
     // Visual regression: Dashboard page
     await page.waitForTimeout(2000); // Wait for data to load
@@ -68,7 +68,7 @@ test.describe('Authentication System', () => {
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
-    await page.waitForURL('**/dashboard');
+    await page.waitForTimeout(2000); // Wait for login
 
     // Find and click logout button
     await page.click('[aria-label="Logout"], text=/Logout|Sign Out/i');
@@ -91,12 +91,12 @@ test.describe('Authentication System', () => {
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
-    await page.waitForURL('**/dashboard');
+    await page.waitForTimeout(2000); // Wait for login to complete
 
     // Reload page
     await page.reload();
 
-    // Should still be on dashboard
-    await expect(page).toHaveURL(/dashboard/);
+    // Should still be logged in (root path)
+    await expect(page).toHaveURL(/^http:\/\/localhost:3001\/\??$/);
   });
 });

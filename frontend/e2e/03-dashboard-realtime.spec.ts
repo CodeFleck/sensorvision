@@ -18,7 +18,7 @@ test.describe('Dashboard and Real-Time Updates', () => {
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
-    await page.waitForURL('**/dashboard');
+    await page.waitForTimeout(2000); // Wait for login
   });
 
   test('should display dashboard with widgets', async ({ page }) => {

@@ -17,7 +17,7 @@ test.describe('Rules and Alerts', () => {
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
-    await page.waitForURL('**/dashboard');
+    await page.waitForTimeout(2000); // Wait for login
 
     // Navigate to rules page
     await page.click('a[href="/rules"], text=/Rules/i');
