@@ -168,6 +168,7 @@ export const Devices = () => {
                       onClick={() => handleManageToken(device)}
                       className="text-green-600 hover:text-green-900 p-1"
                       title="Manage API Token"
+                      aria-label="Manage Token"
                     >
                       <Key className="h-4 w-4" />
                     </button>
@@ -175,6 +176,7 @@ export const Devices = () => {
                       onClick={() => handleEdit(device)}
                       className="text-blue-600 hover:text-blue-900 p-1"
                       title="Edit Device"
+                      aria-label="Edit"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -182,6 +184,7 @@ export const Devices = () => {
                       onClick={() => handleDelete(device.externalId)}
                       className="text-red-600 hover:text-red-900 p-1"
                       title="Delete Device"
+                      aria-label="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
