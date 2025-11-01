@@ -19,6 +19,10 @@ export const Dashboards: React.FC = () => {
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
   const [latestData, setLatestData] = useState<Map<string, TelemetryPoint>>(new Map());
 
+  // Kiosk mode & auto-refresh parameters
+  const kioskMode = searchParams.get('kiosk') === 'true';
+  const refreshInterval = parseInt(searchParams.get('refresh') || '0', 10) * 1000; // Convert to ms
+
   // WebSocket connection for real-time updates
   const { lastMessage, connectionStatus } = useWebSocket('ws://localhost:8080/ws/telemetry');
 
@@ -63,6 +67,17 @@ export const Dashboards: React.FC = () => {
   useEffect(() => {
     loadDashboard();
   }, []);
+
+  // Auto-refresh logic
+  useEffect(() => {
+    if (refreshInterval > 0) {
+      const interval = setInterval(() => {
+        loadDashboard();
+      }, refreshInterval);
+
+      return () => clearInterval(interval);
+    }
+  }, [refreshInterval]);
 
   const loadDashboard = async () => {
     try {
@@ -148,56 +163,58 @@ export const Dashboards: React.FC = () => {
   const rowHeight = dashboard.layoutConfig.rowHeight || 100;
 
   return (
-    <div className="p-6">
-      {/* Dashboard Header */}
-      <div className="mb-6 flex justify-between items-start">
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-800">{dashboard.name}</h1>
-            {/* WebSocket Status Indicator */}
-            <div className="flex items-center gap-2 text-sm">
-              <div className={`w-2 h-2 rounded-full ${connectionStatus === 'Open' ? 'bg-green-500' : 'bg-gray-400'}`} />
-              <span className="text-gray-600">
-                {connectionStatus === 'Open' ? 'Live' : connectionStatus}
-              </span>
+    <div className={kioskMode ? 'p-0' : 'p-6'}>
+      {/* Dashboard Header (hidden in kiosk mode) */}
+      {!kioskMode && (
+        <div className="mb-6 flex justify-between items-start">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-800">{dashboard.name}</h1>
+              {/* WebSocket Status Indicator */}
+              <div className="flex items-center gap-2 text-sm">
+                <div className={`w-2 h-2 rounded-full ${connectionStatus === 'Open' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                <span className="text-gray-600">
+                  {connectionStatus === 'Open' ? 'Live' : connectionStatus}
+                </span>
+              </div>
             </div>
+            {dashboard.description && (
+              <p className="text-gray-600 mt-1">{dashboard.description}</p>
+            )}
+
+            {/* Device Selector */}
+            {devices.length > 1 && (
+              <div className="mt-3 flex items-center gap-2">
+                <label htmlFor="device-selector" className="text-sm font-medium text-gray-700">
+                  Device:
+                </label>
+                <select
+                  id="device-selector"
+                  value={selectedDeviceId || ''}
+                  onChange={(e) => handleDeviceChange(e.target.value)}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  {devices.map((device) => (
+                    <option key={device.externalId} value={device.externalId}>
+                      {device.name} ({device.externalId})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
-          {dashboard.description && (
-            <p className="text-gray-600 mt-1">{dashboard.description}</p>
-          )}
 
-          {/* Device Selector */}
-          {devices.length > 1 && (
-            <div className="mt-3 flex items-center gap-2">
-              <label htmlFor="device-selector" className="text-sm font-medium text-gray-700">
-                Device:
-              </label>
-              <select
-                id="device-selector"
-                value={selectedDeviceId || ''}
-                onChange={(e) => handleDeviceChange(e.target.value)}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              >
-                {devices.map((device) => (
-                  <option key={device.externalId} value={device.externalId}>
-                    {device.name} ({device.externalId})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Widget
+          </button>
         </div>
-
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Widget
-        </button>
-      </div>
+      )}
 
       {/* Widgets Grid */}
       {dashboard.widgets.length === 0 ? (
@@ -210,7 +227,7 @@ export const Dashboards: React.FC = () => {
         </div>
       ) : (
         <div
-          className="grid gap-4"
+          className={kioskMode ? 'grid gap-2 h-screen p-2' : 'grid gap-4'}
           style={{
             gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
           }}
@@ -227,8 +244,8 @@ export const Dashboards: React.FC = () => {
                 widget={widget}
                 contextDeviceId={selectedDeviceId || undefined}
                 latestData={widget.deviceId ? latestData.get(widget.deviceId) : undefined}
-                onDelete={() => handleDeleteWidget(widget.id)}
-                onEdit={() => {
+                onDelete={kioskMode ? undefined : () => handleDeleteWidget(widget.id)}
+                onEdit={kioskMode ? undefined : () => {
                   setEditingWidget(widget);
                   setShowEditModal(true);
                 }}
