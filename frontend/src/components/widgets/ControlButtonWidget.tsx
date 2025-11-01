@@ -15,9 +15,10 @@ interface CommandConfig {
 
 interface ControlButtonWidgetProps {
   widget: Widget;
+  deviceId?: string;
 }
 
-export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget }) => {
+export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget, deviceId }) => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [lastResult, setLastResult] = useState<{ success: boolean; message: string } | null>(null);
 
@@ -30,7 +31,7 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
       const command = (widget.config.command as CommandConfig | undefined) || {};
       const { commandType, payload, method = 'mqtt' } = command;
 
-      if (!widget.deviceId) {
+      if (!deviceId) {
         setLastResult({
           success: false,
           message: 'No device ID configured for this widget',
@@ -44,7 +45,7 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
 
         try {
           const response = await apiService.post(
-            `/devices/${widget.deviceId}/commands`,
+            `/devices/${deviceId}/commands`,
             {
               command: commandName,
               payload: payload || null,

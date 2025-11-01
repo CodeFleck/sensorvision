@@ -4,10 +4,11 @@ import { apiService } from '../../services/api';
 
 interface TableWidgetProps {
   widget: Widget;
+  deviceId?: string;
   latestData?: TelemetryPoint;
 }
 
-export const TableWidget: React.FC<TableWidgetProps> = ({ widget, latestData }) => {
+export const TableWidget: React.FC<TableWidgetProps> = ({ widget, deviceId, latestData }) => {
   const [data, setData] = useState<TelemetryPoint | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,13 +23,13 @@ export const TableWidget: React.FC<TableWidgetProps> = ({ widget, latestData }) 
   // Initial data fetch and fallback polling
   useEffect(() => {
     const fetchData = async () => {
-      if (!widget.deviceId) {
+      if (!deviceId) {
         setLoading(false);
         return;
       }
 
       try {
-        const telemetryData = await apiService.getLatestForDevice(widget.deviceId);
+        const telemetryData = await apiService.getLatestForDevice(deviceId);
         setData(telemetryData);
       } catch (error) {
         console.error('Error fetching table data:', error);
@@ -40,7 +41,7 @@ export const TableWidget: React.FC<TableWidgetProps> = ({ widget, latestData }) 
     fetchData();
     const interval = setInterval(fetchData, (widget.config.refreshInterval as number | undefined) ?? 30000);
     return () => clearInterval(interval);
-  }, [widget]);
+  }, [deviceId, widget.config.refreshInterval]);
 
   if (loading) {
     return (

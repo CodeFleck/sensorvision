@@ -4,10 +4,11 @@ import { apiService } from '../../services/api';
 
 interface MetricCardWidgetProps {
   widget: Widget;
+  deviceId?: string;
   latestData?: TelemetryPoint;
 }
 
-export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, latestData }) => {
+export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, deviceId, latestData }) => {
   const [value, setValue] = useState<number>(0);
   const [previousValue, setPreviousValue] = useState<number>(0);
   const [loading, setLoading] = useState(true);
@@ -31,13 +32,13 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, late
   // Initial data fetch and fallback polling
   useEffect(() => {
     const fetchData = async () => {
-      if (!widget.deviceId || !widget.variableName) {
+      if (!deviceId || !widget.variableName) {
         setLoading(false);
         return;
       }
 
       try {
-        const data = await apiService.getLatestForDevice(widget.deviceId);
+        const data = await apiService.getLatestForDevice(deviceId);
         const varName = widget.variableName as keyof typeof data;
         const newValue = data[varName] as number ?? 0;
 
@@ -54,7 +55,7 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, late
     const interval = setInterval(fetchData, (widget.config.refreshInterval as number | undefined) ?? 30000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [widget]);
+  }, [deviceId, widget.variableName, widget.config.refreshInterval]);
 
   if (loading) {
     return (

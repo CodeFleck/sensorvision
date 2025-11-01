@@ -15,10 +15,11 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface PieChartWidgetProps {
   widget: Widget;
+  deviceId?: string;
   latestData?: TelemetryPoint;
 }
 
-export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, latestData }) => {
+export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, deviceId, latestData }) => {
   const [data, setData] = useState<ChartData<'pie'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -32,14 +33,14 @@ export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, latestDa
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!widget.deviceId) {
+      if (!deviceId) {
         setLoading(false);
         return;
       }
 
       try {
         // For pie chart, we'll show the distribution of all variables for a device
-        const telemetryData = await apiService.getLatestForDevice(widget.deviceId);
+        const telemetryData = await apiService.getLatestForDevice(deviceId);
 
         // Define variables to include in the pie chart
         const variables = [
@@ -95,7 +96,7 @@ export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, latestDa
     fetchData();
     const interval = setInterval(fetchData, widget.config.refreshInterval || 30000);
     return () => clearInterval(interval);
-  }, [widget, refreshTrigger]);
+  }, [deviceId, widget.config.variables, widget.config.colors, widget.config.refreshInterval, refreshTrigger]);
 
   if (loading) {
     return (

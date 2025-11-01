@@ -4,24 +4,25 @@ import { apiService } from '../../services/api';
 
 interface IndicatorWidgetProps {
   widget: Widget;
+  deviceId?: string;
   latestData?: TelemetryPoint;
 }
 
-export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, latestData }) => {
+export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, deviceId, latestData }) => {
   const [currentValue, setCurrentValue] = useState<number | null>(null);
   const [status, setStatus] = useState<'off' | 'normal' | 'warning' | 'critical'>('off');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!widget.deviceId || !widget.variableName) {
+      if (!deviceId || !widget.variableName) {
         setLoading(false);
         return;
       }
 
       try {
         // Fetch latest value for the device
-        const telemetryData = await apiService.getLatestForDevice(widget.deviceId);
+        const telemetryData = await apiService.getLatestForDevice(deviceId);
         const value = telemetryData[widget.variableName] as number;
 
         if (value !== null && value !== undefined) {
@@ -39,7 +40,7 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, latest
     const interval = setInterval(fetchData, (widget.config.refreshInterval as number | undefined) || 5000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [widget, latestData]);
+  }, [deviceId, widget.variableName, widget.config.refreshInterval, latestData]);
 
   const calculateStatus = (value: number) => {
     // Status calculation based on thresholds in config

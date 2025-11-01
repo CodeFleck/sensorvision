@@ -4,10 +4,11 @@ import { apiService } from '../../services/api';
 
 interface GaugeWidgetProps {
   widget: Widget;
+  deviceId?: string;
   latestData?: TelemetryPoint;
 }
 
-export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, latestData }) => {
+export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, deviceId, latestData }) => {
   const [value, setValue] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
@@ -28,13 +29,13 @@ export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, latestData }) 
   // Initial data fetch and fallback polling
   useEffect(() => {
     const fetchData = async () => {
-      if (!widget.deviceId || !widget.variableName) {
+      if (!deviceId || !widget.variableName) {
         setLoading(false);
         return;
       }
 
       try {
-        const data = await apiService.getLatestForDevice(widget.deviceId);
+        const data = await apiService.getLatestForDevice(deviceId);
         const varName = widget.variableName as keyof typeof data;
         const newValue = data[varName] as number ?? 0;
         setValue(newValue);
@@ -49,7 +50,7 @@ export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, latestData }) 
     // Only poll if we don't have real-time data
     const interval = setInterval(fetchData, widget.config.refreshInterval ?? 30000);
     return () => clearInterval(interval);
-  }, [widget]);
+  }, [deviceId, widget.variableName, widget.config.refreshInterval]);
 
   if (loading) {
     return (

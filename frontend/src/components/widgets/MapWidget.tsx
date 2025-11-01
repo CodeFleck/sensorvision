@@ -18,6 +18,7 @@ L.Icon.Default.mergeOptions({
 
 interface MapWidgetProps {
   widget: Widget;
+  deviceId?: string;
   latestData?: TelemetryPoint;
 }
 
@@ -40,7 +41,7 @@ function MapRecenter({ center }: { center: [number, number] }) {
   return null;
 }
 
-export const MapWidget: React.FC<MapWidgetProps> = ({ widget, latestData }) => {
+export const MapWidget: React.FC<MapWidgetProps> = ({ widget, deviceId, latestData }) => {
   const [devices, setDevices] = useState<DeviceLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,14 +62,14 @@ export const MapWidget: React.FC<MapWidgetProps> = ({ widget, latestData }) => {
       try {
         setError(null);
 
-        if (widget.deviceId) {
+        if (deviceId) {
           // Single device mode
-          const telemetry = await apiService.getLatestForDevice(widget.deviceId);
+          const telemetry = await apiService.getLatestForDevice(deviceId);
 
           if (telemetry.latitude !== null && telemetry.longitude !== null) {
             setDevices([{
-              deviceId: widget.deviceId,
-              name: widget.deviceId,
+              deviceId: deviceId,
+              name: deviceId,
               latitude: telemetry.latitude || 0,
               longitude: telemetry.longitude || 0,
               altitude: telemetry.altitude,
@@ -111,7 +112,7 @@ export const MapWidget: React.FC<MapWidgetProps> = ({ widget, latestData }) => {
     fetchDeviceLocations();
     const interval = setInterval(fetchDeviceLocations, widget.config.refreshInterval || 30000);
     return () => clearInterval(interval);
-  }, [widget, latestData]);
+  }, [deviceId, widget.config.refreshInterval, latestData]);
 
   if (loading) {
     return (
