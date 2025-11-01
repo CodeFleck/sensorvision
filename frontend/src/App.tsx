@@ -37,6 +37,8 @@ import { AdminCannedResponses } from './pages/AdminCannedResponses';
 import { MyTickets } from './pages/MyTickets';
 import DataRetention from './pages/DataRetention';
 import Profile from './pages/Profile';
+import { Playlists } from './pages/Playlists';
+import { PlaylistPlayer } from './pages/PlaylistPlayer';
 import { config } from './config';
 
 function App() {
@@ -78,6 +80,16 @@ function App() {
         <Route path="/oauth2/callback" element={<OAuth2Callback />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
 
+        {/* Fullscreen Playlist Player (outside layout) */}
+        <Route
+          path="/playlist-player/:playlistId"
+          element={
+            <ProtectedRoute>
+              <PlaylistPlayer />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Protected routes */}
         <Route
           path="/*"
@@ -92,6 +104,7 @@ function App() {
                   <Route path="/data-plugins" element={<DataPlugins />} />
                   <Route path="/dashboards" element={<Dashboards />} />
                   <Route path="/dashboard-templates" element={<DashboardTemplates />} />
+                  <Route path="/playlists" element={<Playlists />} />
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/rules" element={<Rules />} />
