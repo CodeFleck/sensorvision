@@ -25,6 +25,8 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
     height: 4,
     deviceId: '',
     variableName: 'kwConsumption',
+    useContextDevice: false,
+    deviceLabel: undefined,
     aggregation: 'LAST',
     timeRangeMinutes: 60,
     config: {},
@@ -67,6 +69,8 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
         height: 4,
         deviceId: devices[0]?.externalId || '',
         variableName: 'kwConsumption',
+        useContextDevice: false,
+        deviceLabel: undefined,
         aggregation: 'LAST',
         timeRangeMinutes: 60,
         config: {},
@@ -142,23 +146,49 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
             </select>
           </div>
 
-          {/* Device Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Device *
+          {/* Use Context Device Toggle */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.useContextDevice || false}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  useContextDevice: e.target.checked,
+                  deviceId: e.target.checked ? '' : (devices[0]?.externalId || '')
+                })}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <div className="ml-3">
+                <span className="text-sm font-medium text-gray-900">
+                  Use dashboard's selected device
+                </span>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  This widget will display data from the device selected in the dashboard dropdown
+                </p>
+              </div>
             </label>
-            <select
-              value={formData.deviceId}
-              onChange={(e) => setFormData({ ...formData, deviceId: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {devices.map((device) => (
-                <option key={device.externalId} value={device.externalId}>
-                  {device.name} ({device.externalId})
-                </option>
-              ))}
-            </select>
           </div>
+
+          {/* Device Selection */}
+          {!formData.useContextDevice && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Device *
+              </label>
+              <select
+                value={formData.deviceId}
+                onChange={(e) => setFormData({ ...formData, deviceId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {devices.map((device) => (
+                  <option key={device.externalId} value={device.externalId}>
+                    {device.name} ({device.externalId})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Variable */}
           <div>

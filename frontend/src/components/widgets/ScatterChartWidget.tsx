@@ -17,6 +17,7 @@ ChartJS.register(LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
 interface ScatterChartWidgetProps {
   widget: Widget;
+  deviceId?: string;
   latestData?: TelemetryPoint;
 }
 
@@ -31,7 +32,7 @@ interface ScatterChartData {
   }>;
 }
 
-export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, latestData }) => {
+export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, deviceId, latestData }) => {
   const [data, setData] = useState<ScatterChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -45,7 +46,7 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!widget.deviceId) {
+      if (!deviceId) {
         setLoading(false);
         return;
       }
@@ -58,7 +59,7 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
 
         // Fetch historical data
         const telemetryData = await apiService.queryTelemetry(
-          widget.deviceId,
+          deviceId,
           from.toISOString(),
           now.toISOString()
         );
@@ -111,7 +112,7 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
     fetchData();
     const interval = setInterval(fetchData, widget.config.refreshInterval || 30000);
     return () => clearInterval(interval);
-  }, [widget, refreshTrigger]);
+  }, [deviceId, widget.variableName, widget.timeRangeMinutes, widget.config.xVariable, widget.config.yVariable, widget.config.refreshInterval, refreshTrigger]);
 
   if (loading) {
     return (
