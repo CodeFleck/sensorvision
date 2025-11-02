@@ -1,6 +1,8 @@
 export interface Device {
   externalId: string;
   name: string;
+  description?: string;
+  active?: boolean;
   location?: string;
   sensorType?: string;
   firmwareVersion?: string;
@@ -109,9 +111,11 @@ export interface Widget {
   width: number;
   height: number;
   deviceId?: string;
+  secondDeviceId?: string; // For dual-device widgets
   variableName?: string;
-  useContextDevice?: boolean;
+  secondVariableName?: string; // Variable for second device
   deviceLabel?: string;
+  secondDeviceLabel?: string; // Label for second device
   aggregation: WidgetAggregation;
   timeRangeMinutes?: number;
   config: WidgetConfig;
@@ -142,9 +146,11 @@ export interface WidgetCreateRequest {
   width?: number;
   height?: number;
   deviceId?: string;
+  secondDeviceId?: string;
   variableName?: string;
-  useContextDevice?: boolean;
+  secondVariableName?: string;
   deviceLabel?: string;
+  secondDeviceLabel?: string;
   aggregation?: WidgetAggregation;
   timeRangeMinutes?: number;
   config?: WidgetConfig;
@@ -366,4 +372,55 @@ export interface IssueComment {
 export interface IssueCommentRequest {
   message: string;
   internal?: boolean;
+}
+
+// Playlist types
+export type TransitionEffect = 'fade' | 'slide' | 'none';
+
+export interface PlaylistItem {
+  id: number;
+  playlistId: number;
+  dashboard: Dashboard;
+  dashboardId: number;
+  position: number;
+  displayDurationSeconds: number;
+  createdAt: string;
+}
+
+export interface Playlist {
+  id: number;
+  name: string;
+  description?: string;
+  createdBy?: User;
+  isPublic: boolean;
+  publicShareToken?: string;
+  shareExpiresAt?: string;
+  loopEnabled: boolean;
+  transitionEffect: TransitionEffect;
+  items: PlaylistItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlaylistCreateRequest {
+  name: string;
+  description?: string;
+  isPublic?: boolean;
+  loopEnabled?: boolean;
+  transitionEffect?: TransitionEffect;
+}
+
+export interface PlaylistItemCreateRequest {
+  dashboardId: number;
+  position: number;
+  displayDurationSeconds: number;
+}
+
+export interface PlaylistUpdateRequest {
+  name?: string;
+  description?: string;
+  isPublic?: boolean;
+  loopEnabled?: boolean;
+  transitionEffect?: TransitionEffect;
+  items?: PlaylistItemCreateRequest[];
 }

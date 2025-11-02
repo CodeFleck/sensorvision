@@ -502,6 +502,8 @@ export const LayoutV3 = ({ children }: LayoutProps) => {
               <div className="flex items-center space-x-4">
                 <Link
                   to="/how-it-works"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
                 >
                   <BookOpen className="h-5 w-5" />

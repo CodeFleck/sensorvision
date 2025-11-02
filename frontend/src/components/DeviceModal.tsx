@@ -10,27 +10,45 @@ interface DeviceModalProps {
 
 export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
   const [formData, setFormData] = useState({
-    externalId: device?.externalId || '',
+    deviceId: device?.externalId || '',
     name: device?.name || '',
+    description: device?.description || '',
     location: device?.location || '',
     sensorType: device?.sensorType || '',
     firmwareVersion: device?.firmwareVersion || '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deviceIdError, setDeviceIdError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent submission if device ID has validation errors
+    if (deviceIdError) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
+      // Map deviceId back to externalId for API
+      const apiData = {
+        externalId: formData.deviceId,
+        name: formData.name,
+        description: formData.description,
+        location: formData.location,
+        sensorType: formData.sensorType,
+        firmwareVersion: formData.firmwareVersion,
+      };
+
       if (device) {
         // Update existing device
-        await apiService.updateDevice(device.externalId, formData);
+        await apiService.updateDevice(device.externalId, apiData);
       } else {
         // Create new device
-        await apiService.createDevice(formData);
+        await apiService.createDevice(apiData);
       }
       onClose();
     } catch (error) {
@@ -40,10 +58,21 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+
+    // Validate device ID for spaces
+    if (name === 'deviceId') {
+      if (/\s/.test(value)) {
+        setDeviceIdError('Device ID cannot contain spaces. Use hyphens or underscores instead.');
+      } else {
+        setDeviceIdError(null);
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
   };
 
@@ -70,20 +99,25 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="externalId" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="deviceId" className="block text-sm font-medium text-gray-700 mb-1">
               Device ID *
             </label>
             <input
               type="text"
-              id="externalId"
-              name="externalId"
+              id="deviceId"
+              name="deviceId"
               required
               disabled={!!device} // Can't change ID for existing devices
-              value={formData.externalId}
+              value={formData.deviceId}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 ${
+                deviceIdError ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="e.g., meter-001"
             />
+            {deviceIdError && (
+              <p className="mt-1 text-sm text-red-600">{deviceIdError}</p>
+            )}
           </div>
 
           <div>
@@ -99,6 +133,21 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g., Smart Meter 1"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., Production floor monitoring device"
             />
           </div>
 

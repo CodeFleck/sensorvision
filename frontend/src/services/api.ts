@@ -1,4 +1,4 @@
-import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -479,6 +479,35 @@ class ApiService {
   async markCannedResponseAsUsed(id: number): Promise<void> {
     await this.request(`/admin/canned-responses/${id}/use`, {
       method: 'POST',
+    });
+  }
+
+  // Playlist Management
+  async getPlaylists(): Promise<Playlist[]> {
+    return this.request<Playlist[]>('/playlists');
+  }
+
+  async getPlaylist(id: number): Promise<Playlist> {
+    return this.request<Playlist>(`/playlists/${id}`);
+  }
+
+  async createPlaylist(data: PlaylistCreateRequest): Promise<Playlist> {
+    return this.request<Playlist>('/playlists', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updatePlaylist(id: number, data: PlaylistUpdateRequest): Promise<Playlist> {
+    return this.request<Playlist>(`/playlists/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deletePlaylist(id: number): Promise<void> {
+    await this.request(`/playlists/${id}`, {
+      method: 'DELETE',
     });
   }
 }

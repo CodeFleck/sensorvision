@@ -27,10 +27,11 @@ ChartJS.register(
 
 interface LineChartWidgetProps {
   widget: Widget;
+  deviceId?: string;
   latestData?: TelemetryPoint;
 }
 
-export const LineChartWidget: React.FC<LineChartWidgetProps> = ({ widget, latestData }) => {
+export const LineChartWidget: React.FC<LineChartWidgetProps> = ({ widget, deviceId, latestData }) => {
   const [data, setData] = useState<ChartData<'line'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -44,7 +45,7 @@ export const LineChartWidget: React.FC<LineChartWidgetProps> = ({ widget, latest
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!widget.deviceId || !widget.variableName) {
+      if (!deviceId || !widget.variableName) {
         setLoading(false);
         return;
       }
@@ -57,7 +58,7 @@ export const LineChartWidget: React.FC<LineChartWidgetProps> = ({ widget, latest
 
         // Fetch historical data
         const telemetryData = await apiService.queryTelemetry(
-          widget.deviceId,
+          deviceId,
           from.toISOString(),
           now.toISOString()
         );
@@ -92,7 +93,7 @@ export const LineChartWidget: React.FC<LineChartWidgetProps> = ({ widget, latest
     fetchData();
     const interval = setInterval(fetchData, widget.config.refreshInterval || 30000);
     return () => clearInterval(interval);
-  }, [widget, refreshTrigger]);
+  }, [deviceId, widget.variableName, widget.timeRangeMinutes, widget.config.refreshInterval, refreshTrigger]);
 
   if (loading) {
     return (

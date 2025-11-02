@@ -34,9 +34,10 @@ delete (window as any).location;
   href: 'http://localhost:3000',
 };
 
-// Mock navigator.clipboard
+// Mock navigator.clipboard - make it configurable so userEvent can override it
 Object.defineProperty(navigator, 'clipboard', {
   writable: true,
+  configurable: true, // Allow userEvent to redefine this
   value: {
     writeText: async (_text: string) => {
       return Promise.resolve();

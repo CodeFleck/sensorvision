@@ -72,6 +72,8 @@ public class DeviceService {
         Device device = Device.builder()
                 .externalId(request.externalId())
                 .name(request.name())
+                .description(request.description())
+                .active(request.active() != null ? request.active() : true)
                 .location(request.location())
                 .sensorType(request.sensorType())
                 .firmwareVersion(request.firmwareVersion())
@@ -112,6 +114,10 @@ public class DeviceService {
         }
 
         device.setName(request.name());
+        device.setDescription(request.description());
+        if (request.active() != null) {
+            device.setActive(request.active());
+        }
         device.setLocation(request.location());
         device.setSensorType(request.sensorType());
         device.setFirmwareVersion(request.firmwareVersion());
@@ -200,6 +206,7 @@ public class DeviceService {
                     Device device = Device.builder()
                             .externalId(externalId)
                             .name(externalId)  // Use externalId as default name
+                            .active(true)
                             .status(DeviceStatus.UNKNOWN)
                             .organization(organization)
                             .build();
@@ -300,6 +307,8 @@ public class DeviceService {
         return new DeviceResponse(
                 device.getExternalId(),
                 device.getName(),
+                device.getDescription(),
+                device.getActive(),
                 device.getLocation(),
                 device.getSensorType(),
                 device.getFirmwareVersion(),
