@@ -57,7 +57,14 @@
       "Bash(./gradlew compileTestJava:*)",
       "Bash(git push:*)",
       "Bash(tee:*)",
-      "Bash(npx playwright test:*)"
+      "Bash(npx playwright test:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm test:*)",
+      "Bash(/tmp/AddWidgetModal_clean.tsx)",
+      "Bash(/tmp/WidgetRenderer_clean.tsx)",
+      "Bash(/tmp/Dashboards_clean.tsx)"
     ],
     "deny": [],
     "ask": []

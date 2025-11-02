@@ -12,9 +12,11 @@ public record WidgetUpdateRequest(
     Integer width,
     Integer height,
     String deviceId,
+    String secondDeviceId,
     String variableName,
-    Boolean useContextDevice,
+    String secondVariableName,
     String deviceLabel,
+    String secondDeviceLabel,
     WidgetAggregation aggregation,
     Integer timeRangeMinutes,
     JsonNode config

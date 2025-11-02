@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Comprehensive tests for Dynamic Dashboard functionality.
- * Tests widget context device support, device label binding, and dashboard default device.
+ * Tests dual device support, device label binding, and dashboard default device.
  */
 @ExtendWith(MockitoExtension.class)
 class DynamicDashboardTest {
@@ -68,16 +68,18 @@ class DynamicDashboardTest {
     }
 
     @Test
-    void createWidget_shouldSetUseContextDevice_whenProvidedInRequest() {
+    void createWidget_shouldSetDualDeviceFields_whenProvidedInRequest() {
         // Arrange
         WidgetCreateRequest request = new WidgetCreateRequest(
-            "Power Widget",
-            WidgetType.GAUGE,
+            "Comparison Widget",
+            WidgetType.LINE_CHART,
             0, 0, 4, 4,
-            null,  // no fixed deviceId
-            "kwConsumption",
-            true,  // useContextDevice = true
-            null,
+            "device-001",        // primary device
+            "device-002",        // second device
+            "kwConsumption",     // primary variable
+            "kwConsumption",     // second variable
+            null,                // deviceLabel
+            null,                // secondDeviceLabel
             WidgetAggregation.NONE,
             null,
             null
@@ -97,22 +99,27 @@ class DynamicDashboardTest {
         verify(widgetRepository).save(widgetCaptor.capture());
 
         Widget savedWidget = widgetCaptor.getValue();
-        assertThat(savedWidget.getUseContextDevice()).isTrue();
-        assertThat(savedWidget.getDeviceId()).isNull();
-        assertThat(response.useContextDevice()).isTrue();
+        assertThat(savedWidget.getDeviceId()).isEqualTo("device-001");
+        assertThat(savedWidget.getSecondDeviceId()).isEqualTo("device-002");
+        assertThat(savedWidget.getVariableName()).isEqualTo("kwConsumption");
+        assertThat(savedWidget.getSecondVariableName()).isEqualTo("kwConsumption");
+        assertThat(response.deviceId()).isEqualTo("device-001");
+        assertThat(response.secondDeviceId()).isEqualTo("device-002");
     }
 
     @Test
-    void createWidget_shouldSetDeviceLabel_whenProvidedInRequest() {
+    void createWidget_shouldSetDeviceLabels_whenProvidedInRequest() {
         // Arrange
         WidgetCreateRequest request = new WidgetCreateRequest(
-            "Primary Meter Widget",
+            "Labeled Comparison Widget",
             WidgetType.METRIC_CARD,
             0, 0, 3, 2,
-            null,
+            "device-001",
+            "device-002",
             "kwConsumption",
-            false,
-            "primary_meter",  // deviceLabel
+            "kwConsumption",
+            "Primary Meter",   // deviceLabel
+            "Backup Meter",    // secondDeviceLabel
             WidgetAggregation.NONE,
             null,
             null
@@ -132,20 +139,24 @@ class DynamicDashboardTest {
         verify(widgetRepository).save(widgetCaptor.capture());
 
         Widget savedWidget = widgetCaptor.getValue();
-        assertThat(savedWidget.getDeviceLabel()).isEqualTo("primary_meter");
-        assertThat(response.deviceLabel()).isEqualTo("primary_meter");
+        assertThat(savedWidget.getDeviceLabel()).isEqualTo("Primary Meter");
+        assertThat(savedWidget.getSecondDeviceLabel()).isEqualTo("Backup Meter");
+        assertThat(response.deviceLabel()).isEqualTo("Primary Meter");
+        assertThat(response.secondDeviceLabel()).isEqualTo("Backup Meter");
     }
 
     @Test
-    void createWidget_shouldDefaultUseContextDeviceToFalse_whenNotProvided() {
+    void createWidget_shouldCreateSingleDeviceWidget_whenSecondDeviceNotProvided() {
         // Arrange
         WidgetCreateRequest request = new WidgetCreateRequest(
-            "Fixed Device Widget",
+            "Single Device Widget",
             WidgetType.LINE_CHART,
             0, 0, 6, 4,
             "device-123",
+            null,  // no second device
             "voltage",
-            null,  // useContextDevice not provided
+            null,  // no second variable
+            null,
             null,
             WidgetAggregation.AVG,
             60,
@@ -166,26 +177,31 @@ class DynamicDashboardTest {
         verify(widgetRepository).save(widgetCaptor.capture());
 
         Widget savedWidget = widgetCaptor.getValue();
-        assertThat(savedWidget.getUseContextDevice()).isFalse();
         assertThat(savedWidget.getDeviceId()).isEqualTo("device-123");
+        assertThat(savedWidget.getSecondDeviceId()).isNull();
+        assertThat(savedWidget.getVariableName()).isEqualTo("voltage");
+        assertThat(savedWidget.getSecondVariableName()).isNull();
     }
 
     @Test
-    void updateWidget_shouldUpdateUseContextDevice_whenProvided() {
+    void updateWidget_shouldUpdateSecondDevice_whenProvided() {
         // Arrange
         Widget existingWidget = new Widget();
         existingWidget.setId(100L);
         existingWidget.setDashboard(testDashboard);
         existingWidget.setName("Test Widget");
         existingWidget.setType(WidgetType.GAUGE);
-        existingWidget.setUseContextDevice(false);
         existingWidget.setDeviceId("device-001");
+        existingWidget.setVariableName("kwConsumption");
 
         WidgetUpdateRequest request = new WidgetUpdateRequest(
             null, null, null, null, null, null,
+            null,
+            "device-002",      // add second device
+            null,
+            "kwConsumption",   // add second variable
             null, null,
-            true,  // change to use context device
-            null, null, null, null
+            null, null, null
         );
 
         lenient().when(widgetRepository.findById(100L)).thenReturn(Optional.of(existingWidget));
@@ -199,24 +215,28 @@ class DynamicDashboardTest {
         verify(widgetRepository).save(widgetCaptor.capture());
 
         Widget updatedWidget = widgetCaptor.getValue();
-        assertThat(updatedWidget.getUseContextDevice()).isTrue();
-        assertThat(response.useContextDevice()).isTrue();
+        assertThat(updatedWidget.getSecondDeviceId()).isEqualTo("device-002");
+        assertThat(updatedWidget.getSecondVariableName()).isEqualTo("kwConsumption");
+        assertThat(response.secondDeviceId()).isEqualTo("device-002");
+        assertThat(response.secondVariableName()).isEqualTo("kwConsumption");
     }
 
     @Test
-    void updateWidget_shouldUpdateDeviceLabel_whenProvided() {
+    void updateWidget_shouldUpdateDeviceLabels_whenProvided() {
         // Arrange
         Widget existingWidget = new Widget();
         existingWidget.setId(101L);
         existingWidget.setDashboard(testDashboard);
         existingWidget.setName("Labeled Widget");
         existingWidget.setType(WidgetType.METRIC_CARD);
-        existingWidget.setDeviceLabel("old_label");
+        existingWidget.setDeviceLabel("Old Primary");
+        existingWidget.setSecondDeviceLabel("Old Secondary");
 
         WidgetUpdateRequest request = new WidgetUpdateRequest(
             null, null, null, null, null, null,
-            null, null, null,
-            "new_label",  // update device label
+            null, null, null, null,
+            "New Primary",   // update primary device label
+            "New Secondary", // update secondary device label
             null, null, null
         );
 
@@ -231,8 +251,10 @@ class DynamicDashboardTest {
         verify(widgetRepository).save(widgetCaptor.capture());
 
         Widget updatedWidget = widgetCaptor.getValue();
-        assertThat(updatedWidget.getDeviceLabel()).isEqualTo("new_label");
-        assertThat(response.deviceLabel()).isEqualTo("new_label");
+        assertThat(updatedWidget.getDeviceLabel()).isEqualTo("New Primary");
+        assertThat(updatedWidget.getSecondDeviceLabel()).isEqualTo("New Secondary");
+        assertThat(response.deviceLabel()).isEqualTo("New Primary");
+        assertThat(response.secondDeviceLabel()).isEqualTo("New Secondary");
     }
 
     @Test
@@ -279,16 +301,18 @@ class DynamicDashboardTest {
     }
 
     @Test
-    void createWidget_shouldAllowBothUseContextDeviceAndDeviceLabel() {
+    void createWidget_shouldSupportDualDeviceWithLabels() {
         // Arrange
         WidgetCreateRequest request = new WidgetCreateRequest(
-            "Flexible Widget",
+            "Dual Device Labeled Widget",
             WidgetType.GAUGE,
             0, 0, 4, 4,
-            null,
+            "device-001",
+            "device-002",
             "temperature",
-            true,              // useContextDevice
-            "sensor_group_a", // deviceLabel for fallback/filtering
+            "temperature",
+            "Sensor A",        // deviceLabel
+            "Sensor B",        // secondDeviceLabel
             WidgetAggregation.AVG,
             30,
             null
@@ -308,22 +332,26 @@ class DynamicDashboardTest {
         verify(widgetRepository).save(widgetCaptor.capture());
 
         Widget savedWidget = widgetCaptor.getValue();
-        assertThat(savedWidget.getUseContextDevice()).isTrue();
-        assertThat(savedWidget.getDeviceLabel()).isEqualTo("sensor_group_a");
-        assertThat(response.useContextDevice()).isTrue();
-        assertThat(response.deviceLabel()).isEqualTo("sensor_group_a");
+        assertThat(savedWidget.getDeviceId()).isEqualTo("device-001");
+        assertThat(savedWidget.getSecondDeviceId()).isEqualTo("device-002");
+        assertThat(savedWidget.getDeviceLabel()).isEqualTo("Sensor A");
+        assertThat(savedWidget.getSecondDeviceLabel()).isEqualTo("Sensor B");
+        assertThat(response.deviceLabel()).isEqualTo("Sensor A");
+        assertThat(response.secondDeviceLabel()).isEqualTo("Sensor B");
     }
 
     @Test
-    void createWidget_shouldPreserveDeviceId_whenUseContextDeviceIsFalse() {
+    void createWidget_shouldCreateWidgetWithPrimaryDeviceOnly() {
         // Arrange
         WidgetCreateRequest request = new WidgetCreateRequest(
-            "Static Widget",
+            "Single Device Widget",
             WidgetType.BAR_CHART,
             0, 0, 5, 3,
             "static-device-456",
+            null,  // no second device
             "current",
-            false,  // explicitly false
+            null,  // no second variable
+            null,
             null,
             WidgetAggregation.MAX,
             120,
@@ -344,9 +372,11 @@ class DynamicDashboardTest {
         verify(widgetRepository).save(widgetCaptor.capture());
 
         Widget savedWidget = widgetCaptor.getValue();
-        assertThat(savedWidget.getUseContextDevice()).isFalse();
         assertThat(savedWidget.getDeviceId()).isEqualTo("static-device-456");
-        assertThat(response.useContextDevice()).isFalse();
+        assertThat(savedWidget.getSecondDeviceId()).isNull();
+        assertThat(savedWidget.getVariableName()).isEqualTo("current");
+        assertThat(savedWidget.getSecondVariableName()).isNull();
         assertThat(response.deviceId()).isEqualTo("static-device-456");
+        assertThat(response.secondDeviceId()).isNull();
     }
 }

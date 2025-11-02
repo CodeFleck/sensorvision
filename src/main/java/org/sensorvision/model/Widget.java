@@ -41,15 +41,20 @@ public class Widget extends AuditableEntity {
     @Column(name = "device_id")
     private String deviceId;
 
+    @Column(name = "second_device_id")
+    private String secondDeviceId;
+
     @Column(name = "variable_name")
     private String variableName;
 
-    // Dynamic dashboard support
-    @Column(name = "use_context_device", nullable = false)
-    private Boolean useContextDevice = false;
+    @Column(name = "second_variable_name")
+    private String secondVariableName;
 
     @Column(name = "device_label")
     private String deviceLabel;
+
+    @Column(name = "second_device_label")
+    private String secondDeviceLabel;
 
     @Enumerated(EnumType.STRING)
     @Column
@@ -177,19 +182,35 @@ public class Widget extends AuditableEntity {
         this.config = config;
     }
 
-    public Boolean getUseContextDevice() {
-        return useContextDevice;
-    }
-
-    public void setUseContextDevice(Boolean useContextDevice) {
-        this.useContextDevice = useContextDevice;
-    }
-
     public String getDeviceLabel() {
         return deviceLabel;
     }
 
     public void setDeviceLabel(String deviceLabel) {
         this.deviceLabel = deviceLabel;
+    }
+
+    public String getSecondDeviceId() {
+        return secondDeviceId;
+    }
+
+    public void setSecondDeviceId(String secondDeviceId) {
+        this.secondDeviceId = secondDeviceId;
+    }
+
+    public String getSecondVariableName() {
+        return secondVariableName;
+    }
+
+    public void setSecondVariableName(String secondVariableName) {
+        this.secondVariableName = secondVariableName;
+    }
+
+    public String getSecondDeviceLabel() {
+        return secondDeviceLabel;
+    }
+
+    public void setSecondDeviceLabel(String secondDeviceLabel) {
+        this.secondDeviceLabel = secondDeviceLabel;
     }
 }

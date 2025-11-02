@@ -19,9 +19,16 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deviceIdError, setDeviceIdError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent submission if device ID has validation errors
+    if (deviceIdError) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -52,9 +59,20 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+
+    // Validate device ID for spaces
+    if (name === 'deviceId') {
+      if (/\s/.test(value)) {
+        setDeviceIdError('Device ID cannot contain spaces. Use hyphens or underscores instead.');
+      } else {
+        setDeviceIdError(null);
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
   };
 
@@ -92,9 +110,14 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
               disabled={!!device} // Can't change ID for existing devices
               value={formData.deviceId}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 ${
+                deviceIdError ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="e.g., meter-001"
             />
+            {deviceIdError && (
+              <p className="mt-1 text-sm text-red-600">{deviceIdError}</p>
+            )}
           </div>
 
           <div>

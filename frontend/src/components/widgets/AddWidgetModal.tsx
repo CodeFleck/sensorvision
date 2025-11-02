@@ -16,6 +16,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
   onSuccess,
 }) => {
   const [devices, setDevices] = useState<Device[]>([]);
+  const [enableDualDevice, setEnableDualDevice] = useState(false);
   const [formData, setFormData] = useState<WidgetCreateRequest>({
     name: '',
     type: 'GAUGE',
@@ -24,9 +25,11 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
     width: 4,
     height: 4,
     deviceId: '',
+    secondDeviceId: undefined,
     variableName: 'kwConsumption',
-    useContextDevice: false,
+    secondVariableName: undefined,
     deviceLabel: undefined,
+    secondDeviceLabel: undefined,
     aggregation: 'LAST',
     timeRangeMinutes: 60,
     config: {},
@@ -60,6 +63,7 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
       onSuccess();
       onClose();
       // Reset form
+      setEnableDualDevice(false);
       setFormData({
         name: '',
         type: 'GAUGE',
@@ -68,9 +72,11 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
         width: 4,
         height: 4,
         deviceId: devices[0]?.externalId || '',
+        secondDeviceId: undefined,
         variableName: 'kwConsumption',
-        useContextDevice: false,
+        secondVariableName: undefined,
         deviceLabel: undefined,
+        secondDeviceLabel: undefined,
         aggregation: 'LAST',
         timeRangeMinutes: 60,
         config: {},
@@ -146,54 +152,28 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
             </select>
           </div>
 
-          {/* Use Context Device Toggle */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.useContextDevice || false}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  useContextDevice: e.target.checked,
-                  deviceId: e.target.checked ? '' : (devices[0]?.externalId || '')
-                })}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <div className="ml-3">
-                <span className="text-sm font-medium text-gray-900">
-                  Use dashboard's selected device
-                </span>
-                <p className="text-xs text-gray-600 mt-0.5">
-                  This widget will display data from the device selected in the dashboard dropdown
-                </p>
-              </div>
-            </label>
-          </div>
-
-          {/* Device Selection */}
-          {!formData.useContextDevice && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Device *
-              </label>
-              <select
-                value={formData.deviceId}
-                onChange={(e) => setFormData({ ...formData, deviceId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {devices.map((device) => (
-                  <option key={device.externalId} value={device.externalId}>
-                    {device.name} ({device.externalId})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Variable */}
+          {/* Primary Device Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Variable *
+              Primary Device *
+            </label>
+            <select
+              value={formData.deviceId}
+              onChange={(e) => setFormData({ ...formData, deviceId: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {devices.map((device) => (
+                <option key={device.externalId} value={device.externalId}>
+                  {device.name} ({device.externalId})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Primary Variable */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Primary Variable *
             </label>
             <select
               value={formData.variableName}
@@ -207,6 +187,114 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
               ))}
             </select>
           </div>
+
+          {/* Primary Device Label */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Primary Device Label (optional)
+            </label>
+            <input
+              type="text"
+              value={formData.deviceLabel || ''}
+              onChange={(e) => setFormData({ ...formData, deviceLabel: e.target.value || undefined })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g., Sensor A, Line 1, etc."
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Custom label shown in chart legend (defaults to device ID if empty)
+            </p>
+          </div>
+
+          {/* Dual Device Toggle */}
+          {['LINE_CHART', 'BAR_CHART', 'AREA_CHART'].includes(formData.type) && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enableDualDevice}
+                  onChange={(e) => {
+                    setEnableDualDevice(e.target.checked);
+                    if (!e.target.checked) {
+                      setFormData({
+                        ...formData,
+                        secondDeviceId: undefined,
+                        secondVariableName: undefined,
+                        secondDeviceLabel: undefined,
+                      });
+                    }
+                  }}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                />
+                <div className="ml-3">
+                  <span className="text-sm font-medium text-gray-900">
+                    Compare two devices
+                  </span>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Display data from two different devices in the same chart for comparison
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
+
+          {/* Second Device Fields */}
+          {enableDualDevice && ['LINE_CHART', 'BAR_CHART', 'AREA_CHART'].includes(formData.type) && (
+            <>
+              {/* Second Device Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Second Device *
+                </label>
+                <select
+                  value={formData.secondDeviceId || ''}
+                  onChange={(e) => setFormData({ ...formData, secondDeviceId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Select a device...</option>
+                  {devices.map((device) => (
+                    <option key={device.externalId} value={device.externalId}>
+                      {device.name} ({device.externalId})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Second Variable */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Second Variable *
+                </label>
+                <select
+                  value={formData.secondVariableName || 'kwConsumption'}
+                  onChange={(e) => setFormData({ ...formData, secondVariableName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  {variables.map((variable) => (
+                    <option key={variable} value={variable}>
+                      {variable}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Second Device Label */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Second Device Label (optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.secondDeviceLabel || ''}
+                  onChange={(e) => setFormData({ ...formData, secondDeviceLabel: e.target.value || undefined })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="e.g., Sensor B, Line 2, etc."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Custom label for second device in chart legend
+                </p>
+              </div>
+            </>
+          )}
 
           {/* Size */}
           <div className="grid grid-cols-2 gap-4">

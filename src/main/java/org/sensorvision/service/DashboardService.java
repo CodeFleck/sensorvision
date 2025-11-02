@@ -233,9 +233,11 @@ public class DashboardService {
         widget.setWidth(request.width() != null ? request.width() : 4);
         widget.setHeight(request.height() != null ? request.height() : 4);
         widget.setDeviceId(request.deviceId());
+        widget.setSecondDeviceId(request.secondDeviceId());
         widget.setVariableName(request.variableName());
-        widget.setUseContextDevice(request.useContextDevice() != null ? request.useContextDevice() : false);
+        widget.setSecondVariableName(request.secondVariableName());
         widget.setDeviceLabel(request.deviceLabel());
+        widget.setSecondDeviceLabel(request.secondDeviceLabel());
         widget.setAggregation(request.aggregation() != null ? request.aggregation() : org.sensorvision.model.WidgetAggregation.NONE);
         widget.setTimeRangeMinutes(request.timeRangeMinutes());
         widget.setConfig(request.config() != null ? request.config() : objectMapper.createObjectNode());
@@ -283,14 +285,20 @@ public class DashboardService {
         if (request.deviceId() != null) {
             widget.setDeviceId(request.deviceId());
         }
+        if (request.secondDeviceId() != null) {
+            widget.setSecondDeviceId(request.secondDeviceId());
+        }
         if (request.variableName() != null) {
             widget.setVariableName(request.variableName());
         }
-        if (request.useContextDevice() != null) {
-            widget.setUseContextDevice(request.useContextDevice());
+        if (request.secondVariableName() != null) {
+            widget.setSecondVariableName(request.secondVariableName());
         }
         if (request.deviceLabel() != null) {
             widget.setDeviceLabel(request.deviceLabel());
+        }
+        if (request.secondDeviceLabel() != null) {
+            widget.setSecondDeviceLabel(request.secondDeviceLabel());
         }
         if (request.aggregation() != null) {
             widget.setAggregation(request.aggregation());
