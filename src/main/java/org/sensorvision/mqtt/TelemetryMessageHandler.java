@@ -16,6 +16,8 @@ import org.sensorvision.model.Device;
 import org.sensorvision.service.DeviceService;
 import org.sensorvision.service.DeviceTokenService;
 import org.sensorvision.service.TelemetryIngestionService;
+import org.sensorvision.service.triggers.MqttFunctionTriggerHandler;
+import org.sensorvision.service.triggers.TriggerContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
@@ -30,6 +32,7 @@ public class TelemetryMessageHandler {
     private final TelemetryIngestionService telemetryIngestionService;
     private final DeviceService deviceService;
     private final DeviceTokenService deviceTokenService;
+    private final MqttFunctionTriggerHandler mqttTriggerHandler;
 
     @Value("${mqtt.device-auth.required:true}")
     private boolean deviceAuthRequired;
@@ -73,11 +76,54 @@ public class TelemetryMessageHandler {
                 log.debug("Device {} authenticated via MQTT token", device.getExternalId());
             }
 
+            // Ingest telemetry data
             telemetryIngestionService.ingest(telemetryPayload);
+
+            // Trigger MQTT-based serverless functions
+            try {
+                String topic = (String) message.getHeaders().getOrDefault("mqtt_receivedTopic", "unknown");
+                triggerMqttFunctions(telemetryPayload, topic);
+            } catch (Exception ex) {
+                log.error("Error triggering MQTT functions: {}", ex.getMessage(), ex);
+                // Don't fail the whole telemetry ingestion if function triggers fail
+            }
         } catch (Exception ex) {
             String topic = (String) message.getHeaders().getOrDefault("mqtt_receivedTopic", "unknown");
             log.error("Failed to process telemetry message from topic {}: {}", topic, ex.getMessage(), ex);
         }
+    }
+
+    /**
+     * Trigger MQTT-based serverless functions for this telemetry message.
+     */
+    private void triggerMqttFunctions(TelemetryPayload payload, String topic) {
+        // Build event data from telemetry
+        Map<String, Object> eventData = new HashMap<>();
+        eventData.put("deviceId", payload.deviceId());
+        eventData.put("timestamp", payload.timestamp().toString());
+
+        // Add telemetry variables
+        Map<String, Object> telemetry = new HashMap<>();
+        payload.variables().forEach((key, value) -> telemetry.put(key, value.doubleValue()));
+        eventData.put("telemetry", telemetry);
+
+        // Add metadata if present
+        if (payload.metadata() != null && !payload.metadata().isEmpty()) {
+            eventData.put("metadata", payload.metadata());
+        }
+
+        JsonNode eventJson = objectMapper.valueToTree(eventData);
+
+        // Build trigger context
+        TriggerContext context = TriggerContext.builder()
+            .eventType("mqtt.message")
+            .eventSource(topic)
+            .timestamp(payload.timestamp().toEpochMilli())
+            .deviceId(payload.deviceId())
+            .build();
+
+        // Handle the event (will match against configured triggers)
+        mqttTriggerHandler.handleEvent(eventJson, context);
     }
 
     private TelemetryPayload toPayload(JsonNode root) {
