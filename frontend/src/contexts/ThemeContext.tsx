@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
-type ThemeMode = 'light' | 'dark' | 'system';
+// Extended theme options with dark mode variants
+type ThemeMode = 'light' | 'dark' | 'dark-dimmed' | 'dark-high-contrast' | 'system';
+type EffectiveTheme = 'light' | 'dark' | 'dark-dimmed' | 'dark-high-contrast';
 
 interface ThemeContextType {
   theme: ThemeMode;
-  effectiveTheme: 'light' | 'dark'; // Actual theme being applied
+  effectiveTheme: EffectiveTheme;
   setTheme: (theme: ThemeMode) => Promise<void>;
+  isLoading: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -36,9 +39,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const { user } = useAuth();
   const [theme, setThemeState] = useState<ThemeMode>('system');
   const [systemTheme, setSystemTheme] = useState<'light' | 'dark'>(getSystemTheme());
+  const [isLoading, setIsLoading] = useState(true);
 
   // Determine the effective theme
-  const effectiveTheme: 'light' | 'dark' = theme === 'system' ? systemTheme : theme;
+  const effectiveTheme: EffectiveTheme = theme === 'system' ? systemTheme : theme;
 
   // Listen for system theme changes
   useEffect(() => {
@@ -53,20 +57,37 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  // Apply theme to DOM
+  // Apply theme to DOM with smooth transition
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
+
+    // Add transitioning class for smooth fade
+    root.classList.add('theme-transitioning');
+
+    // Remove all theme classes
+    root.classList.remove('light', 'dark', 'dark-dimmed', 'dark-high-contrast');
+
+    // Add new theme class
     root.classList.add(effectiveTheme);
+
+    // Remove transitioning class after animation completes
+    const timer = setTimeout(() => {
+      root.classList.remove('theme-transitioning');
+      setIsLoading(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [effectiveTheme]);
 
   // Initialize theme from user preference or localStorage
   useEffect(() => {
-    if (user?.themePreference) {
-      setThemeState(user.themePreference);
+    const validThemes = ['light', 'dark', 'dark-dimmed', 'dark-high-contrast', 'system'];
+
+    if (user?.themePreference && validThemes.includes(user.themePreference)) {
+      setThemeState(user.themePreference as ThemeMode);
     } else {
       const stored = localStorage.getItem('theme') as ThemeMode | null;
-      if (stored && ['light', 'dark', 'system'].includes(stored)) {
+      if (stored && validThemes.includes(stored)) {
         setThemeState(stored);
       }
     }
@@ -102,6 +123,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     theme,
     effectiveTheme,
     setTheme,
+    isLoading,
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
