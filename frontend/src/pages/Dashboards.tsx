@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Dashboard, Widget, TelemetryPoint, Device } from '../types';
+import { Dashboard, Widget, TelemetryPoint } from '../types';
 import { apiService } from '../services/api';
 import { WidgetRenderer } from '../components/widgets/WidgetRenderer';
 import { AddWidgetModal } from '../components/widgets/AddWidgetModal';
@@ -26,7 +26,7 @@ export const Dashboards: React.FC = () => {
   const [showMultiWidgetFullscreen, setShowMultiWidgetFullscreen] = useState(false);
   const [latestData, setLatestData] = useState<Map<string, TelemetryPoint>>(new Map());
   const [showKioskControls, setShowKioskControls] = useState(false);
-  const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [controlsTimeout, setControlsTimeout] = useState<number | null>(null);
 
   // Kiosk mode & auto-refresh parameters
   const kioskMode = searchParams.get('kiosk') === 'true';

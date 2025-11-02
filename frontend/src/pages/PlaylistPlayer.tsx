@@ -4,7 +4,6 @@ import { Playlist, Dashboard, TelemetryPoint } from '../types';
 import { apiService } from '../services/api';
 import { useWebSocket } from '../hooks/useWebSocket';
 import GridLayout from 'react-grid-layout';
-import type { Layout } from 'react-grid-layout';
 import { WidgetRenderer } from '../components/widgets/WidgetRenderer';
 
 export const PlaylistPlayer: React.FC = () => {
@@ -17,7 +16,7 @@ export const PlaylistPlayer: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [showControls, setShowControls] = useState(false);
-  const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [controlsTimeout, setControlsTimeout] = useState<number | null>(null);
   const [latestData, setLatestData] = useState<Map<string, TelemetryPoint>>(new Map());
   const [timeRemaining, setTimeRemaining] = useState(0);
 

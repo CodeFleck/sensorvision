@@ -16,27 +16,22 @@ vi.mock('../../services/api', () => ({
 describe('EditWidgetModal', () => {
   const mockDevices: Device[] = [
     {
-      id: 1,
       externalId: 'device-001',
       name: 'Test Device 1',
-      description: 'Test device description',
-      active: true,
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z',
+      status: 'ONLINE' as const,
+      location: 'Building A',
     },
     {
-      id: 2,
       externalId: 'device-002',
       name: 'Test Device 2',
-      description: 'Another test device',
-      active: true,
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z',
+      status: 'ONLINE' as const,
+      location: 'Building B',
     },
   ];
 
   const mockWidget: Widget = {
     id: 1,
+    dashboardId: 1,
     name: 'Test Widget',
     type: 'GAUGE',
     positionX: 0,
@@ -48,6 +43,8 @@ describe('EditWidgetModal', () => {
     aggregation: 'LAST',
     timeRangeMinutes: 60,
     config: {},
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
   };
 
   const defaultProps = {
