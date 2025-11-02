@@ -6,10 +6,18 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.sensorvision.model.FunctionRuntime;
 import org.sensorvision.model.ServerlessFunction;
+import org.sensorvision.service.FunctionSecretsService;
+
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for NodeJsFunctionExecutor.
@@ -17,15 +25,20 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Note: These tests require Node.js 18+ to be installed on the system.
  * Tests will be skipped if Node.js is not available.
  */
+@ExtendWith(MockitoExtension.class)
 class NodeJsFunctionExecutorTest {
 
     private NodeJsFunctionExecutor executor;
     private ObjectMapper objectMapper;
 
+    @Mock
+    private FunctionSecretsService secretsService;
+
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        executor = new NodeJsFunctionExecutor(objectMapper);
+        when(secretsService.getDecryptedSecrets(anyLong())).thenReturn(Collections.emptyMap());
+        executor = new NodeJsFunctionExecutor(objectMapper, secretsService);
     }
 
     @Test
