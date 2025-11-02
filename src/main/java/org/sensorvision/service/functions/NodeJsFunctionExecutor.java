@@ -184,13 +184,34 @@ public class NodeJsFunctionExecutor implements FunctionExecutor {
      * Create user function module.
      */
     private String createUserFunction(String userCode, String handlerName) {
-        return String.format("""
-            // User code
-            %s
+        // Check if user code already exports the handler
+        if (userCode.contains("module.exports") || userCode.contains("exports." + handlerName)) {
+            // User code already handles exports - just ensure it's available at .handler
+            return String.format("""
+                // User code
+                %s
 
-            // Export handler
-            module.exports = { handler: %s };
-            """, userCode, handlerName);
+                // Ensure handler is available for wrapper
+                if (typeof module.exports.%s !== 'undefined') {
+                    module.exports.handler = module.exports.%s;
+                } else if (typeof exports.%s !== 'undefined') {
+                    module.exports = { handler: exports.%s };
+                } else if (typeof %s !== 'undefined') {
+                    module.exports = { handler: %s };
+                } else {
+                    throw new Error('Handler function "%s" not found. Please define it as: exports.%s = ...');
+                }
+                """, userCode, handlerName, handlerName, handlerName, handlerName, handlerName, handlerName, handlerName, handlerName);
+        } else {
+            // User code defines function but doesn't export it
+            return String.format("""
+                // User code
+                %s
+
+                // Export handler
+                module.exports = { handler: %s };
+                """, userCode, handlerName);
+        }
     }
 
     /**
