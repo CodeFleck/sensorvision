@@ -15,49 +15,42 @@ import { MapWidget } from './MapWidget';
 
 interface WidgetRendererProps {
   widget: Widget;
+  contextDeviceId?: string;
   latestData?: TelemetryPoint;
   onDelete?: () => void;
   onEdit?: () => void;
-  onFullscreen?: () => void;
-  isSelected?: boolean;
-  onSelect?: () => void;
-  selectionMode?: boolean;
 }
 
-export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
-  widget,
-  latestData,
-  onDelete,
-  onEdit,
-  onFullscreen,
-  isSelected,
-  onSelect,
-  selectionMode,
-}) => {
+export const WidgetRenderer: React.FC<WidgetRendererProps> = ({ widget, contextDeviceId, latestData, onDelete, onEdit }) => {
+  // Determine effective device ID: use context device if widget is configured for it
+  const effectiveDeviceId = widget.useContextDevice && contextDeviceId
+    ? contextDeviceId
+    : widget.deviceId;
+
   const renderWidgetContent = () => {
     switch (widget.type) {
       case 'GAUGE':
-        return <GaugeWidget widget={widget} deviceId={widget.deviceId} latestData={latestData} />;
+        return <GaugeWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       case 'METRIC_CARD':
-        return <MetricCardWidget widget={widget} deviceId={widget.deviceId} latestData={latestData} />;
+        return <MetricCardWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       case 'LINE_CHART':
-        return <LineChartWidget widget={widget} latestData={latestData} />;
+        return <LineChartWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       case 'BAR_CHART':
-        return <BarChartWidget widget={widget} latestData={latestData} />;
+        return <BarChartWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       case 'PIE_CHART':
-        return <PieChartWidget widget={widget} deviceId={widget.deviceId} latestData={latestData} />;
+        return <PieChartWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       case 'AREA_CHART':
-        return <AreaChartWidget widget={widget} latestData={latestData} />;
+        return <AreaChartWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       case 'SCATTER_CHART':
-        return <ScatterChartWidget widget={widget} deviceId={widget.deviceId} latestData={latestData} />;
+        return <ScatterChartWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       case 'INDICATOR':
-        return <IndicatorWidget widget={widget} deviceId={widget.deviceId} latestData={latestData} />;
+        return <IndicatorWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       case 'CONTROL_BUTTON':
-        return <ControlButtonWidget widget={widget} deviceId={widget.deviceId} />;
+        return <ControlButtonWidget widget={widget} deviceId={effectiveDeviceId} />;
       case 'MAP':
-        return <MapWidget widget={widget} deviceId={widget.deviceId} latestData={latestData} />;
+        return <MapWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       case 'TABLE':
-        return <TableWidget widget={widget} deviceId={widget.deviceId} latestData={latestData} />;
+        return <TableWidget widget={widget} deviceId={effectiveDeviceId} latestData={latestData} />;
       default:
         return (
           <div className="text-gray-400">
@@ -68,15 +61,7 @@ export const WidgetRenderer: React.FC<WidgetRendererProps> = ({
   };
 
   return (
-    <WidgetContainer
-      widget={widget}
-      onDelete={onDelete}
-      onEdit={onEdit}
-      onFullscreen={onFullscreen}
-      isSelected={isSelected}
-      onSelect={onSelect}
-      selectionMode={selectionMode}
-    >
+    <WidgetContainer widget={widget} onDelete={onDelete} onEdit={onEdit}>
       {renderWidgetContent()}
     </WidgetContainer>
   );

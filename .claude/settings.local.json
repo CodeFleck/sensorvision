@@ -44,7 +44,20 @@
       "Bash(taskkill:*)",
       "Bash(psql:*)",
       "Bash(docker exec:*)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(npm install:*)",
+      "Bash(chmod:*)",
+      "Bash(git branch:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue comment:*)",
+      "Bash(npm run dev:*)",
+      "Bash(bash run-regression-tests.sh:*)",
+      "Bash(docker logs:*)",
+      "Bash(dir /b \"C:\\sensorvision\\src\\main\\java\\org\\sensorvision\\dto\")",
+      "Bash(./gradlew compileTestJava:*)",
+      "Bash(git push:*)",
+      "Bash(tee:*)",
+      "Bash(npx playwright test:*)"
     ],
     "deny": [],
     "ask": []

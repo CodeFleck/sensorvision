@@ -1,0 +1,222 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e8]:
+      - img [ref=e9]
+      - heading "SensorVision" [level=1] [ref=e11]
+    - navigation [ref=e12]:
+      - generic [ref=e13]:
+        - button "CORE" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - generic [ref=e18]: CORE
+          - img [ref=e19]
+        - generic [ref=e22]:
+          - link "Dashboard" [ref=e23] [cursor=pointer]:
+            - /url: /
+            - img [ref=e24]
+            - generic [ref=e27]: Dashboard
+          - link "Widget Dashboards" [ref=e28] [cursor=pointer]:
+            - /url: /dashboards
+            - img [ref=e29]
+            - generic [ref=e34]: Widget Dashboards
+          - link "Analytics" [ref=e35] [cursor=pointer]:
+            - /url: /analytics
+            - img [ref=e36]
+            - generic [ref=e38]: Analytics
+      - generic [ref=e40]:
+        - button "DEVICES & DATA" [ref=e41] [cursor=pointer]:
+          - img [ref=e42]
+          - generic [ref=e45]: DEVICES & DATA
+          - img [ref=e46]
+        - generic [ref=e49]:
+          - link "Devices" [ref=e50] [cursor=pointer]:
+            - /url: /devices
+            - img [ref=e51]
+            - generic [ref=e54]: Devices
+          - link "Device Groups" [ref=e55] [cursor=pointer]:
+            - /url: /device-groups
+            - img [ref=e56]
+            - generic [ref=e61]: Device Groups
+          - link "Device Tags" [ref=e62] [cursor=pointer]:
+            - /url: /device-tags
+            - img [ref=e63]
+            - generic [ref=e65]: Device Tags
+          - link "Integration Wizard" [ref=e66] [cursor=pointer]:
+            - /url: /integration-wizard
+            - img [ref=e67]
+            - generic [ref=e69]: Integration Wizard
+          - link "Serverless Functions" [ref=e70] [cursor=pointer]:
+            - /url: /serverless-functions
+            - img [ref=e71]
+            - generic [ref=e74]: Serverless Functions
+          - link "Data Plugins" [ref=e75] [cursor=pointer]:
+            - /url: /data-plugins
+            - img [ref=e76]
+            - generic [ref=e78]: Data Plugins
+      - generic [ref=e80]:
+        - button "MONITORING" [ref=e81] [cursor=pointer]:
+          - img [ref=e82]
+          - generic [ref=e84]: MONITORING
+          - img [ref=e85]
+        - generic [ref=e88]:
+          - link "Rules" [ref=e89] [cursor=pointer]:
+            - /url: /rules
+            - img [ref=e90]
+            - generic [ref=e93]: Rules
+          - link "Alerts" [ref=e94] [cursor=pointer]:
+            - /url: /alerts
+            - img [ref=e95]
+            - generic [ref=e97]: Alerts
+          - link "Notifications" [ref=e98] [cursor=pointer]:
+            - /url: /notifications
+            - img [ref=e99]
+            - generic [ref=e102]: Notifications
+          - link "Events" [ref=e103] [cursor=pointer]:
+            - /url: /events
+            - img [ref=e104]
+            - generic [ref=e107]: Events
+      - generic [ref=e109]:
+        - button "DATA MANAGEMENT" [ref=e110] [cursor=pointer]:
+          - img [ref=e111]
+          - generic [ref=e115]: DATA MANAGEMENT
+          - img [ref=e116]
+        - generic [ref=e119]:
+          - link "Data Ingestion" [ref=e120] [cursor=pointer]:
+            - /url: /data-ingestion
+            - img [ref=e121]
+            - generic [ref=e124]: Data Ingestion
+          - link "Data Import" [ref=e125] [cursor=pointer]:
+            - /url: /data-import
+            - img [ref=e126]
+            - generic [ref=e130]: Data Import
+          - link "Data Export" [ref=e131] [cursor=pointer]:
+            - /url: /data-export
+            - img [ref=e132]
+            - generic [ref=e135]: Data Export
+          - link "Variables" [ref=e136] [cursor=pointer]:
+            - /url: /variables
+            - img [ref=e137]
+            - generic [ref=e141]: Variables
+          - link "Data Retention" [ref=e142] [cursor=pointer]:
+            - /url: /data-retention
+            - img [ref=e143]
+            - generic [ref=e146]: Data Retention
+          - link "Webhook Tester" [ref=e147] [cursor=pointer]:
+            - /url: /webhook-tester
+            - img [ref=e148]
+            - generic [ref=e152]: Webhook Tester
+          - link "API Playground" [ref=e153] [cursor=pointer]:
+            - /url: /api-playground
+            - img [ref=e154]
+            - generic [ref=e156]: API Playground
+          - link "Email Templates" [ref=e157] [cursor=pointer]:
+            - /url: /email-templates
+            - img [ref=e158]
+            - generic [ref=e161]: Email Templates
+      - generic [ref=e163]:
+        - button "HELP & SUPPORT" [ref=e164] [cursor=pointer]:
+          - img [ref=e165]
+          - generic [ref=e167]: HELP & SUPPORT
+          - img [ref=e168]
+        - generic [ref=e171]:
+          - link "Support Tickets" [ref=e172] [cursor=pointer]:
+            - /url: /admin/support-tickets
+            - img [ref=e173]
+            - generic [ref=e175]: Support Tickets
+          - link "Canned Responses" [ref=e176] [cursor=pointer]:
+            - /url: /admin/canned-responses
+            - img [ref=e177]
+            - generic [ref=e179]: Canned Responses
+          - link "Email Templates" [ref=e180] [cursor=pointer]:
+            - /url: /email-templates
+            - img [ref=e181]
+            - generic [ref=e184]: Email Templates
+  - generic [ref=e185]:
+    - banner [ref=e186]:
+      - generic [ref=e188]:
+        - link "Documentation" [ref=e189] [cursor=pointer]:
+          - /url: /how-it-works
+          - img [ref=e190]
+          - generic [ref=e193]: Documentation
+        - button "AD admin Admin" [ref=e195] [cursor=pointer]:
+          - generic [ref=e197]: AD
+          - generic [ref=e199]:
+            - generic [ref=e200]: admin
+            - generic [ref=e201]:
+              - img [ref=e202]
+              - generic [ref=e204]: Admin
+          - img [ref=e205]
+    - main [ref=e207]:
+      - generic [ref=e208]:
+        - generic [ref=e209]:
+          - generic [ref=e210]:
+            - heading "Rules & Automation" [level=1] [ref=e211]
+            - paragraph [ref=e212]: Create conditional rules to monitor your devices and trigger alerts
+          - button "Create Rule" [ref=e213] [cursor=pointer]:
+            - img [ref=e214]
+            - generic [ref=e215]: Create Rule
+        - generic [ref=e216]:
+          - table [ref=e217]:
+            - rowgroup [ref=e218]:
+              - row "Rule Device Condition Status Created Actions" [ref=e219]:
+                - cell "Rule" [ref=e220]
+                - cell "Device" [ref=e221]
+                - cell "Condition" [ref=e222]
+                - cell "Status" [ref=e223]
+                - cell "Created" [ref=e224]
+                - cell "Actions" [ref=e225]
+            - rowgroup
+          - generic [ref=e226]: No rules created yet. Create your first rule to get started with automation.
+        - generic [ref=e228]:
+          - generic [ref=e229]:
+            - heading "Create New Rule" [level=2] [ref=e230]
+            - button [ref=e231] [cursor=pointer]:
+              - img [ref=e232]
+          - generic [ref=e235]:
+            - generic [ref=e236]:
+              - generic [ref=e237]: Rule Name *
+              - textbox "Rule Name *" [ref=e238]:
+                - /placeholder: e.g., High Power Alert
+                - text: E2E Test Rule 1761940390436
+            - generic [ref=e239]:
+              - generic [ref=e240]: Description
+              - textbox "Description" [ref=e241]:
+                - /placeholder: Optional description
+            - generic [ref=e242]:
+              - generic [ref=e243]: Device *
+              - combobox "Device *" [active] [ref=e244]
+            - generic [ref=e245]:
+              - generic [ref=e246]:
+                - generic [ref=e247]: Variable *
+                - combobox "Variable *" [ref=e248]:
+                  - option "Power Consumption (kW)" [selected]
+                  - option "Voltage (V)"
+                  - option "Current (A)"
+                  - option "Power Factor"
+                  - option "Frequency (Hz)"
+              - generic [ref=e249]:
+                - generic [ref=e250]: Operator *
+                - combobox "Operator *" [ref=e251]:
+                  - option "Greater than (>)" [selected]
+                  - option "Greater than or equal (≥)"
+                  - option "Less than (<)"
+                  - option "Less than or equal (≤)"
+                  - option "Equal to (=)"
+              - generic [ref=e252]:
+                - generic [ref=e253]: Threshold *
+                - spinbutton "Threshold *" [ref=e254]
+            - generic [ref=e255]:
+              - checkbox "Enable rule immediately" [checked] [ref=e256]
+              - generic [ref=e257]: Enable rule immediately
+            - generic [ref=e258]:
+              - button "Cancel" [ref=e259] [cursor=pointer]
+              - button "Create" [ref=e260] [cursor=pointer]
+    - contentinfo [ref=e261]:
+      - generic [ref=e263]:
+        - paragraph [ref=e265]: © 2025 SensorVision. All rights reserved.
+        - button "Report Issue" [ref=e267] [cursor=pointer]:
+          - img [ref=e268]
+          - text: Report Issue
+```

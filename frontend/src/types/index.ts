@@ -1,6 +1,8 @@
 export interface Device {
   externalId: string;
   name: string;
+  description?: string;
+  active?: boolean;
   location?: string;
   sensorType?: string;
   firmwareVersion?: string;

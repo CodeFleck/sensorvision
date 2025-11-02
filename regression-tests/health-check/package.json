@@ -1,0 +1,19 @@
+{
+  "name": "sensorvision-health-check",
+  "version": "1.0.0",
+  "description": "Automated health check and monitoring system for SensorVision",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node health-check.js",
+    "check:continuous": "node health-check.js --continuous"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "express": "^4.18.2",
+    "mqtt": "^5.3.4",
+    "ws": "^8.16.0",
+    "chalk": "^5.3.0",
+    "pg": "^8.11.3"
+  }
+}

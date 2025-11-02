@@ -32,6 +32,13 @@ public class Device extends AuditableEntity {
     @Column(name = "name", nullable = false, length = 255)
     private String name;
 
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "active", nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
     @Column(name = "location", length = 255)
     private String location;
 

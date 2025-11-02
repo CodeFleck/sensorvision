@@ -7,6 +7,8 @@ import org.sensorvision.model.DeviceStatus;
 public record DeviceResponse(
         String externalId,
         String name,
+        String description,
+        Boolean active,
         String location,
         String sensorType,
         String firmwareVersion,
