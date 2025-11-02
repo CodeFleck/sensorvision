@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sensorvision.model.FunctionRuntime;
 import org.sensorvision.model.ServerlessFunction;
+import org.sensorvision.service.FunctionSecretsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 
@@ -28,10 +30,12 @@ public class NodeJsFunctionExecutor implements FunctionExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger(NodeJsFunctionExecutor.class);
     private final ObjectMapper objectMapper;
+    private final FunctionSecretsService secretsService;
     private static Boolean nodeAvailable = null;
 
-    public NodeJsFunctionExecutor(ObjectMapper objectMapper) {
+    public NodeJsFunctionExecutor(ObjectMapper objectMapper, FunctionSecretsService secretsService) {
         this.objectMapper = objectMapper;
+        this.secretsService = secretsService;
     }
 
     @Override
@@ -83,11 +87,23 @@ public class NodeJsFunctionExecutor implements FunctionExecutor {
             command.add(getNodeCommand());
             command.add(wrapperPath.toString());
 
-            // Execute with timeout
-            Process process = new ProcessBuilder(command)
+            // Get decrypted secrets and prepare environment variables
+            Map<String, String> secrets = secretsService.getDecryptedSecrets(function.getId());
+
+            // Execute with timeout and inject secrets as environment variables
+            ProcessBuilder processBuilder = new ProcessBuilder(command)
                 .directory(tempDir.toFile())
-                .redirectErrorStream(false)
-                .start();
+                .redirectErrorStream(false);
+
+            // Inject secrets as environment variables
+            if (!secrets.isEmpty()) {
+                Map<String, String> env = processBuilder.environment();
+                env.putAll(secrets);
+                logger.debug("Injected {} secrets as environment variables for function {}",
+                    secrets.size(), function.getId());
+            }
+
+            Process process = processBuilder.start();
 
             // Capture output and errors
             ExecutorService executor = Executors.newFixedThreadPool(2);
