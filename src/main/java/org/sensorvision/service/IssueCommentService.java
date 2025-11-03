@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 
 import java.io.IOException;
 import java.util.List;
@@ -63,7 +65,7 @@ public class IssueCommentService {
         IssueComment comment = new IssueComment();
         comment.setIssue(issue);
         comment.setAuthor(currentUser);
-        comment.setMessage(request.message());
+        comment.setMessage(sanitizeHtml(request.message()));
         comment.setInternal(false); // Users cannot create internal comments
 
         // Handle file attachment if provided
@@ -104,7 +106,7 @@ public class IssueCommentService {
         IssueComment comment = new IssueComment();
         comment.setIssue(issue);
         comment.setAuthor(currentUser);
-        comment.setMessage(request.message());
+        comment.setMessage(sanitizeHtml(request.message()));
         comment.setInternal(request.internal()); // Admins can set internal flag
 
         // Handle file attachment if provided
@@ -279,5 +281,30 @@ public class IssueCommentService {
                contentType.equals("application/zip") ||
                contentType.equals("application/x-gzip") ||
                contentType.equals("application/octet-stream"); // For .log files
+    }
+
+    /**
+     * Sanitize HTML content to prevent XSS attacks
+     * Allows basic formatting tags but strips dangerous elements
+     */
+    private String sanitizeHtml(String htmlContent) {
+        if (htmlContent == null) {
+            return null;
+        }
+
+        // Define allowed HTML tags for basic rich text formatting
+        Safelist safelist = Safelist.relaxed()
+            .addTags("code", "pre", "kbd", "samp", "var") // Code elements
+            .addAttributes("a", "target", "rel") // Allow links to open in new tab
+            .addAttributes("code", "class") // For syntax highlighting
+            .addAttributes("pre", "class"); // For code blocks
+
+        // Sanitize the HTML
+        String sanitized = Jsoup.clean(htmlContent, safelist);
+
+        logger.debug("Sanitized HTML content (original length: {}, sanitized length: {})",
+            htmlContent.length(), sanitized.length());
+
+        return sanitized;
     }
 }

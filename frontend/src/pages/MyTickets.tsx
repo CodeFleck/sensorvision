@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { IssueSubmission, IssueComment, IssueCommentRequest, IssueStatus } from '../types';
 import { getStatusInfo, getSeverityInfo } from '../utils/issueStatusHelpers';
 import { SubmitIssueModal } from '../components/SubmitIssueModal';
+import { RichTextEditor } from '../components/RichTextEditor';
+import { SafeHtmlDisplay } from '../components/SafeHtmlDisplay';
 
 export const MyTickets: React.FC = () => {
   const { user } = useAuth();
@@ -372,7 +374,7 @@ export const MyTickets: React.FC = () => {
                               {new Date(comment.createdAt).toLocaleString()}
                             </div>
                           </div>
-                          <div className="text-gray-700 whitespace-pre-wrap">{comment.message}</div>
+                          <SafeHtmlDisplay html={comment.message} className="text-gray-700" />
                           {comment.hasAttachment && comment.attachmentFilename && (
                             <div className="mt-3 pt-3 border-t border-gray-200">
                               <button
@@ -414,11 +416,9 @@ export const MyTickets: React.FC = () => {
                 {selectedTicket.status !== 'CLOSED' && (
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Add Reply</label>
-                    <textarea
+                    <RichTextEditor
                       value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onChange={setNewComment}
                       placeholder="Type your reply to the support team..."
                     />
 

@@ -5,6 +5,8 @@ import { apiService } from '../services/api';
 import { AdminIssue, IssueStatus, IssueSubmission, IssueComment, IssueCommentRequest } from '../types';
 import { CannedResponsePicker } from '../components/CannedResponsePicker';
 import { getStatusInfo, getSeverityInfo } from '../utils/issueStatusHelpers';
+import { RichTextEditor } from '../components/RichTextEditor';
+import { SafeHtmlDisplay } from '../components/SafeHtmlDisplay';
 
 export const AdminSupportTickets: React.FC = () => {
   const [issues, setIssues] = useState<AdminIssue[]>([]);
@@ -719,9 +721,7 @@ export const AdminSupportTickets: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <div className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
-                              {comment.message}
-                            </div>
+                            <SafeHtmlDisplay html={comment.message} className="text-gray-700 text-sm leading-relaxed" />
                           </div>
                         </div>
                       );
@@ -732,11 +732,9 @@ export const AdminSupportTickets: React.FC = () => {
                 {/* Add Comment */}
                 <div className="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 p-4 rounded-lg shadow-sm">
                   <label className="block text-sm font-semibold text-gray-700 mb-3">Add Response</label>
-                  <textarea
+                  <RichTextEditor
                     value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                    onChange={setNewComment}
                     placeholder="Type your response or select a template..."
                   />
                   <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
