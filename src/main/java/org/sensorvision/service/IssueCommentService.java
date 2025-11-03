@@ -13,7 +13,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,6 +46,15 @@ public class IssueCommentService {
      */
     @Transactional
     public IssueCommentDto addUserComment(Long issueId, IssueCommentRequest request) {
+        return addUserComment(issueId, request, null);
+    }
+
+    /**
+     * Add a comment with optional file attachment to an issue (user perspective)
+     * Users can only comment on their own issues and cannot create internal comments
+     */
+    @Transactional
+    public IssueCommentDto addUserComment(Long issueId, IssueCommentRequest request, MultipartFile attachment) {
         User currentUser = securityUtils.getCurrentUser();
 
         IssueSubmission issue = issueRepository.findByIdAndUser(issueId, currentUser)
@@ -54,6 +65,11 @@ public class IssueCommentService {
         comment.setAuthor(currentUser);
         comment.setMessage(request.message());
         comment.setInternal(false); // Users cannot create internal comments
+
+        // Handle file attachment if provided
+        if (attachment != null && !attachment.isEmpty()) {
+            processAttachment(comment, attachment);
+        }
 
         IssueComment savedComment = commentRepository.save(comment);
         logger.info("User {} added comment to issue {}", currentUser.getUsername(), issueId);
@@ -71,6 +87,15 @@ public class IssueCommentService {
      */
     @Transactional
     public IssueCommentDto addAdminComment(Long issueId, IssueCommentRequest request) {
+        return addAdminComment(issueId, request, null);
+    }
+
+    /**
+     * Add a comment with optional file attachment to an issue (admin perspective)
+     * Admins can comment on any issue and can create internal comments
+     */
+    @Transactional
+    public IssueCommentDto addAdminComment(Long issueId, IssueCommentRequest request, MultipartFile attachment) {
         User currentUser = securityUtils.getCurrentUser();
 
         IssueSubmission issue = issueRepository.findById(issueId)
@@ -81,6 +106,11 @@ public class IssueCommentService {
         comment.setAuthor(currentUser);
         comment.setMessage(request.message());
         comment.setInternal(request.internal()); // Admins can set internal flag
+
+        // Handle file attachment if provided
+        if (attachment != null && !attachment.isEmpty()) {
+            processAttachment(comment, attachment);
+        }
 
         IssueComment savedComment = commentRepository.save(comment);
         logger.info("Admin {} added {} comment to issue {}",
@@ -163,5 +193,52 @@ public class IssueCommentService {
     @Transactional(readOnly = true)
     public long getCommentCount(IssueSubmission issue) {
         return commentRepository.countPublicCommentsByIssue(issue);
+    }
+
+    /**
+     * Process and validate file attachment for a comment
+     */
+    private void processAttachment(IssueComment comment, MultipartFile file) {
+        final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB limit
+
+        try {
+            // Validate file size
+            if (file.getSize() > MAX_FILE_SIZE) {
+                throw new RuntimeException("File size exceeds maximum limit of 10 MB");
+            }
+
+            // Validate file type (allow common file types)
+            String contentType = file.getContentType();
+            if (contentType == null || !isAllowedFileType(contentType)) {
+                throw new RuntimeException("File type not allowed. Allowed types: images, text files, PDFs, JSON, XML, logs");
+            }
+
+            // Set attachment fields
+            comment.setAttachmentFilename(file.getOriginalFilename());
+            comment.setAttachmentData(file.getBytes());
+            comment.setAttachmentContentType(contentType);
+            comment.setAttachmentSizeBytes(file.getSize());
+
+            logger.info("Processed file attachment: {} ({} bytes)", file.getOriginalFilename(), file.getSize());
+
+        } catch (IOException e) {
+            logger.error("Failed to process file attachment", e);
+            throw new RuntimeException("Failed to process file attachment: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Check if the file type is allowed for attachments
+     */
+    private boolean isAllowedFileType(String contentType) {
+        return contentType.startsWith("image/") ||
+               contentType.startsWith("text/") ||
+               contentType.equals("application/pdf") ||
+               contentType.equals("application/json") ||
+               contentType.equals("application/xml") ||
+               contentType.equals("text/xml") ||
+               contentType.equals("application/zip") ||
+               contentType.equals("application/x-gzip") ||
+               contentType.equals("application/octet-stream"); // For .log files
     }
 }

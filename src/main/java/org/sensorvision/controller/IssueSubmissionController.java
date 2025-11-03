@@ -11,10 +11,15 @@ import org.sensorvision.service.IssueSubmissionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.sensorvision.model.IssueComment;
+import org.sensorvision.repository.IssueCommentRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -28,12 +33,15 @@ public class IssueSubmissionController {
 
     private final IssueSubmissionService issueSubmissionService;
     private final IssueCommentService commentService;
+    private final IssueCommentRepository commentRepository;
 
     @Autowired
     public IssueSubmissionController(IssueSubmissionService issueSubmissionService,
-                                    IssueCommentService commentService) {
+                                    IssueCommentService commentService,
+                                    IssueCommentRepository commentRepository) {
         this.issueSubmissionService = issueSubmissionService;
         this.commentService = commentService;
+        this.commentRepository = commentRepository;
     }
 
     /**
@@ -112,16 +120,49 @@ public class IssueSubmissionController {
     }
 
     /**
-     * Add a comment to an issue
+     * Add a comment to an issue (with optional file attachment)
      * POST /api/v1/support/issues/{id}/comments
+     *
+     * Accepts both JSON (for comments without attachments) and multipart/form-data (for comments with attachments)
      */
-    @PostMapping("/issues/{id}/comments")
+    @PostMapping(value = "/issues/{id}/comments", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<IssueCommentDto> addComment(
             @PathVariable Long id,
-            @Valid @RequestBody IssueCommentRequest request) {
-        logger.info("User adding comment to issue: {}", id);
-        IssueCommentDto comment = commentService.addUserComment(id, request);
+            @RequestParam("message") String message,
+            @RequestParam(value = "internal", defaultValue = "false") boolean internal,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+
+        logger.info("User adding comment to issue: {} (hasAttachment: {})", id, file != null && !file.isEmpty());
+
+        IssueCommentRequest request = new IssueCommentRequest(message, internal);
+        IssueCommentDto comment = commentService.addUserComment(id, request, file);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
+    }
+
+    /**
+     * Download a comment attachment
+     * GET /api/v1/support/comments/{commentId}/attachment
+     */
+    @GetMapping("/comments/{commentId}/attachment")
+    public ResponseEntity<byte[]> downloadCommentAttachment(@PathVariable Long commentId) {
+        logger.info("Downloading attachment for comment: {}", commentId);
+
+        IssueComment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new RuntimeException("Comment not found with id: " + commentId));
+
+        if (!comment.hasAttachment()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(comment.getAttachmentContentType()));
+        headers.setContentDispositionFormData("attachment", comment.getAttachmentFilename());
+        headers.setContentLength(comment.getAttachmentSizeBytes());
+
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body(comment.getAttachmentData());
     }
 
     /**
