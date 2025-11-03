@@ -15,7 +15,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * REST API for managing encrypted secrets for serverless functions.
@@ -36,10 +35,8 @@ public class FunctionSecretsController {
         // Validate function exists and user has access (enforces org scoping)
         ServerlessFunction function = functionService.getFunctionEntity(functionId);
 
-        List<FunctionSecret> secrets = secretsService.getSecretKeys(function);
-        return secrets.stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+        // Service returns DTOs directly
+        return secretsService.getSecretKeys(function);
     }
 
     /**

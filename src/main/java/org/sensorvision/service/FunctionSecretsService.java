@@ -1,6 +1,7 @@
 package org.sensorvision.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.sensorvision.dto.SecretResponse;
 import org.sensorvision.model.FunctionSecret;
 import org.sensorvision.model.ServerlessFunction;
 import org.sensorvision.model.User;
@@ -95,27 +96,20 @@ public class FunctionSecretsService {
 
     /**
      * Get all secrets for a function (encrypted values NOT included for security).
-     * Returns detached copies to prevent accidental modification of managed entities.
+     * Returns DTOs to avoid exposing entity internals and prevent accidental mutation.
      */
     @Transactional(readOnly = true)
-    public List<FunctionSecret> getSecretKeys(ServerlessFunction function) {
+    public List<SecretResponse> getSecretKeys(ServerlessFunction function) {
         List<FunctionSecret> secrets = secretRepository.findByFunctionId(function.getId());
 
-        // Return detached copies with encrypted values redacted
-        // IMPORTANT: Never mutate managed entities or changes will flush to database
+        // Map directly to response DTOs (encrypted values never included)
         return secrets.stream()
-                .map(secret -> {
-                    FunctionSecret copy = new FunctionSecret();
-                    copy.setId(secret.getId());
-                    copy.setFunction(secret.getFunction());
-                    copy.setSecretKey(secret.getSecretKey());
-                    copy.setEncryptedValue("[ENCRYPTED]"); // Redacted for security
-                    copy.setEncryptionVersion(secret.getEncryptionVersion());
-                    copy.setCreatedBy(secret.getCreatedBy());
-                    copy.setCreatedAt(secret.getCreatedAt());
-                    copy.setUpdatedAt(secret.getUpdatedAt());
-                    return copy;
-                })
+                .map(secret -> new SecretResponse(
+                        secret.getId(),
+                        secret.getSecretKey(),
+                        secret.getCreatedAt(),
+                        secret.getUpdatedAt()
+                ))
                 .toList();
     }
 
