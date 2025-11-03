@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
@@ -38,8 +39,27 @@ public class ScheduledFunctionExecutor {
     private final FunctionExecutionService executionService;
     private final ObjectMapper objectMapper;
 
-    // Map of trigger ID to scheduled task
-    private final Map<Long, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
+    // Map of trigger ID to scheduled task info
+    private final Map<Long, ScheduledTaskInfo> scheduledTasks = new ConcurrentHashMap<>();
+
+    /**
+     * Holds scheduled task metadata for change detection.
+     */
+    private static class ScheduledTaskInfo {
+        final ScheduledFuture<?> future;
+        final String cronExpression;
+        final String timezone;
+
+        ScheduledTaskInfo(ScheduledFuture<?> future, String cronExpression, String timezone) {
+            this.future = future;
+            this.cronExpression = cronExpression;
+            this.timezone = timezone;
+        }
+
+        boolean configChanged(String newCron, String newTimezone) {
+            return !Objects.equals(cronExpression, newCron) || !Objects.equals(timezone, newTimezone);
+        }
+    }
 
     /**
      * Initialize schedules when application starts.
@@ -54,6 +74,7 @@ public class ScheduledFunctionExecutor {
     /**
      * Reload schedules every minute to pick up changes.
      * This allows users to add/modify/delete scheduled triggers without restarting.
+     * Detects changes to cron expressions and timezones, and reschedules accordingly.
      */
     @Scheduled(fixedRate = 60000, initialDelay = 60000) // Every 1 minute
     public void reloadSchedules() {
@@ -65,16 +86,32 @@ public class ScheduledFunctionExecutor {
 
             // Add or update triggers
             for (FunctionTrigger trigger : triggers) {
+                String currentCron = getCronExpression(trigger);
+                String currentTimezone = getTimezone(trigger);
+
                 if (!scheduledTasks.containsKey(trigger.getId())) {
+                    // New trigger - schedule it
                     scheduleFunction(trigger);
                 } else {
-                    // Check if cron expression changed
-                    String currentCron = getCronExpression(trigger);
-                    ScheduledFuture<?> existing = scheduledTasks.get(trigger.getId());
+                    // Existing trigger - check if config changed
+                    ScheduledTaskInfo taskInfo = scheduledTasks.get(trigger.getId());
 
-                    // For simplicity, if trigger exists, we keep it
-                    // In a more advanced implementation, we could check if cron changed
-                    log.trace("Scheduled trigger {} already exists", trigger.getId());
+                    if (taskInfo.configChanged(currentCron, currentTimezone)) {
+                        log.info("Detected config change for trigger {} - rescheduling " +
+                                "(cron: {} -> {}, timezone: {} -> {})",
+                                trigger.getId(),
+                                taskInfo.cronExpression, currentCron,
+                                taskInfo.timezone, currentTimezone);
+
+                        // Cancel old task
+                        taskInfo.future.cancel(false);
+                        scheduledTasks.remove(trigger.getId());
+
+                        // Reschedule with new config
+                        scheduleFunction(trigger);
+                    } else {
+                        log.trace("Scheduled trigger {} config unchanged", trigger.getId());
+                    }
                 }
             }
 
@@ -85,7 +122,7 @@ public class ScheduledFunctionExecutor {
 
                 if (!exists) {
                     log.info("Cancelling scheduled trigger {} (deleted or disabled)", triggerId);
-                    entry.getValue().cancel(false);
+                    entry.getValue().future.cancel(false);
                     return true;
                 }
                 return false;
@@ -98,6 +135,7 @@ public class ScheduledFunctionExecutor {
 
     /**
      * Schedule a function to execute on a cron schedule.
+     * Stores task metadata to enable change detection on reload.
      */
     private void scheduleFunction(FunctionTrigger trigger) {
         try {
@@ -122,7 +160,9 @@ public class ScheduledFunctionExecutor {
                 executeScheduledFunction(trigger);
             }, cronTrigger);
 
-            scheduledTasks.put(trigger.getId(), scheduledTask);
+            // Store task with metadata for change detection
+            ScheduledTaskInfo taskInfo = new ScheduledTaskInfo(scheduledTask, cronExpression, timezone);
+            scheduledTasks.put(trigger.getId(), taskInfo);
 
             log.info("Scheduled function {} (ID: {}) with cron: {} (timezone: {})",
                 trigger.getFunction().getName(),
@@ -217,7 +257,7 @@ public class ScheduledFunctionExecutor {
      */
     public void cancelAllSchedules() {
         log.info("Cancelling all {} scheduled function triggers", scheduledTasks.size());
-        scheduledTasks.values().forEach(task -> task.cancel(false));
+        scheduledTasks.values().forEach(taskInfo -> taskInfo.future.cancel(false));
         scheduledTasks.clear();
     }
 

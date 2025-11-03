@@ -33,7 +33,10 @@ public class FunctionSecretsController {
      */
     @GetMapping
     public List<SecretResponse> getSecrets(@PathVariable Long functionId) {
-        List<FunctionSecret> secrets = secretsService.getSecretKeys(functionId);
+        // Validate function exists and user has access (enforces org scoping)
+        ServerlessFunction function = functionService.getFunctionEntity(functionId);
+
+        List<FunctionSecret> secrets = secretsService.getSecretKeys(function);
         return secrets.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -72,7 +75,10 @@ public class FunctionSecretsController {
             @PathVariable Long functionId,
             @PathVariable String secretKey
     ) {
-        secretsService.deleteSecret(functionId, secretKey);
+        // Validate function exists and user has access (enforces org scoping)
+        ServerlessFunction function = functionService.getFunctionEntity(functionId);
+
+        secretsService.deleteSecret(function, secretKey);
     }
 
     /**
@@ -83,7 +89,10 @@ public class FunctionSecretsController {
             @PathVariable Long functionId,
             @PathVariable String secretKey
     ) {
-        boolean exists = secretsService.secretExists(functionId, secretKey);
+        // Validate function exists and user has access (enforces org scoping)
+        ServerlessFunction function = functionService.getFunctionEntity(functionId);
+
+        boolean exists = secretsService.secretExists(function, secretKey);
         return ResponseEntity.ok(exists);
     }
 

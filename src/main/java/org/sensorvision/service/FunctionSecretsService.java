@@ -95,15 +95,28 @@ public class FunctionSecretsService {
 
     /**
      * Get all secrets for a function (encrypted values NOT included for security).
+     * Returns detached copies to prevent accidental modification of managed entities.
      */
     @Transactional(readOnly = true)
-    public List<FunctionSecret> getSecretKeys(Long functionId) {
-        List<FunctionSecret> secrets = secretRepository.findByFunctionId(functionId);
+    public List<FunctionSecret> getSecretKeys(ServerlessFunction function) {
+        List<FunctionSecret> secrets = secretRepository.findByFunctionId(function.getId());
 
-        // Clear encrypted values from response for security
-        secrets.forEach(secret -> secret.setEncryptedValue("[ENCRYPTED]"));
-
-        return secrets;
+        // Return detached copies with encrypted values redacted
+        // IMPORTANT: Never mutate managed entities or changes will flush to database
+        return secrets.stream()
+                .map(secret -> {
+                    FunctionSecret copy = new FunctionSecret();
+                    copy.setId(secret.getId());
+                    copy.setFunction(secret.getFunction());
+                    copy.setSecretKey(secret.getSecretKey());
+                    copy.setEncryptedValue("[ENCRYPTED]"); // Redacted for security
+                    copy.setEncryptionVersion(secret.getEncryptionVersion());
+                    copy.setCreatedBy(secret.getCreatedBy());
+                    copy.setCreatedAt(secret.getCreatedAt());
+                    copy.setUpdatedAt(secret.getUpdatedAt());
+                    return copy;
+                })
+                .toList();
     }
 
     /**
@@ -133,16 +146,16 @@ public class FunctionSecretsService {
      * Delete a secret.
      */
     @Transactional
-    public void deleteSecret(Long functionId, String secretKey) {
-        secretRepository.deleteByFunctionIdAndSecretKey(functionId, secretKey);
+    public void deleteSecret(ServerlessFunction function, String secretKey) {
+        secretRepository.deleteByFunctionIdAndSecretKey(function.getId(), secretKey);
     }
 
     /**
      * Check if a secret exists.
      */
     @Transactional(readOnly = true)
-    public boolean secretExists(Long functionId, String secretKey) {
-        return secretRepository.existsByFunctionIdAndSecretKey(functionId, secretKey);
+    public boolean secretExists(ServerlessFunction function, String secretKey) {
+        return secretRepository.existsByFunctionIdAndSecretKey(function.getId(), secretKey);
     }
 
     /**
@@ -212,6 +225,8 @@ public class FunctionSecretsService {
 
     /**
      * Generate a random 256-bit AES key.
+     * SECURITY NOTE: The generated key is NOT persisted and will be lost on restart.
+     * For production use, generate a key externally and set 'serverless.secrets.encryption-key'.
      */
     private SecretKey generateRandomKey() {
         try {
@@ -219,9 +234,9 @@ public class FunctionSecretsService {
             keyGenerator.init(256);
             SecretKey key = keyGenerator.generateKey();
 
-            String encodedKey = Base64.getEncoder().encodeToString(key.getEncoded());
-            log.info("Generated random encryption key. To persist this key, add to application.properties:");
-            log.info("serverless.secrets.encryption-key={}", encodedKey);
+            // DO NOT log the actual key - security vulnerability
+            log.warn("Generated ephemeral encryption key. This key will NOT persist across restarts. " +
+                    "Generate a production key with: openssl rand -base64 32");
 
             return key;
         } catch (Exception e) {
