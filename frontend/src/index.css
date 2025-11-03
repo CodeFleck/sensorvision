@@ -7,26 +7,183 @@
 @tailwind utilities;
 
 @layer base {
+  /* Light Theme - Default */
   :root {
+    /* Backgrounds */
+    --bg-canvas: #ffffff;
     --bg-primary: #ffffff;
-    --bg-secondary: #f9fafb;
-    --text-primary: #111827;
-    --text-secondary: #6b7280;
+    --bg-secondary: #f6f8fa;
+    --bg-tertiary: #f0f3f6;
+    --bg-overlay: rgba(255, 255, 255, 0.95);
+    --bg-hover: rgba(0, 0, 0, 0.04);
+    --bg-active: rgba(0, 0, 0, 0.08);
+
+    /* Text Colors */
+    --text-primary: #1f2937;
+    --text-secondary: #57606a;
+    --text-tertiary: #8b949e;
+    --text-link: #0969da;
+    --text-link-hover: #0550ae;
+    --text-danger: #cf222e;
+    --text-success: #1a7f37;
+    --text-warning: #9a6700;
+
+    /* Borders */
+    --border-default: #d0d7de;
+    --border-muted: #e5e7eb;
+    --border-subtle: #f3f4f6;
+
+    /* Accents */
+    --accent-primary: #0969da;
+    --accent-secondary: #6e7781;
+    --accent-success: #1a7f37;
+    --accent-warning: #bf8700;
+    --accent-danger: #cf222e;
+    --accent-info: #0969da;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
   }
 
+  /* Dark Theme - Balanced contrast (inspired by GitHub Dark) */
   .dark {
-    --bg-primary: #1f2937;
-    --bg-secondary: #111827;
-    --text-primary: #f9fafb;
-    --text-secondary: #9ca3af;
+    /* Backgrounds */
+    --bg-canvas: #0d1117;
+    --bg-primary: #161b22;
+    --bg-secondary: #1c2128;
+    --bg-tertiary: #22272e;
+    --bg-overlay: rgba(22, 27, 34, 0.95);
+    --bg-hover: rgba(177, 186, 196, 0.12);
+    --bg-active: rgba(177, 186, 196, 0.2);
+
+    /* Text Colors */
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-tertiary: #6e7681;
+    --text-link: #58a6ff;
+    --text-link-hover: #79c0ff;
+    --text-danger: #f85149;
+    --text-success: #3fb950;
+    --text-warning: #d29922;
+
+    /* Borders */
+    --border-default: #30363d;
+    --border-muted: #21262d;
+    --border-subtle: #1c2128;
+
+    /* Accents */
+    --accent-primary: #58a6ff;
+    --accent-secondary: #8b949e;
+    --accent-success: #3fb950;
+    --accent-warning: #d29922;
+    --accent-danger: #f85149;
+    --accent-info: #58a6ff;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Dark Dimmed - Softer, warmer tones (inspired by GitHub Dark Dimmed) */
+  .dark-dimmed {
+    /* Backgrounds */
+    --bg-canvas: #22272e;
+    --bg-primary: #2d333b;
+    --bg-secondary: #373e47;
+    --bg-tertiary: #444c56;
+    --bg-overlay: rgba(45, 51, 59, 0.95);
+    --bg-hover: rgba(177, 186, 196, 0.12);
+    --bg-active: rgba(177, 186, 196, 0.2);
+
+    /* Text Colors */
+    --text-primary: #adbac7;
+    --text-secondary: #768390;
+    --text-tertiary: #636e7b;
+    --text-link: #539bf5;
+    --text-link-hover: #6cb6ff;
+    --text-danger: #f47067;
+    --text-success: #57ab5a;
+    --text-warning: #c69026;
+
+    /* Borders */
+    --border-default: #444c56;
+    --border-muted: #373e47;
+    --border-subtle: #2d333b;
+
+    /* Accents */
+    --accent-primary: #539bf5;
+    --accent-secondary: #768390;
+    --accent-success: #57ab5a;
+    --accent-warning: #c69026;
+    --accent-danger: #f47067;
+    --accent-info: #539bf5;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.55);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.65);
+  }
+
+  /* Dark High Contrast - Maximum readability */
+  .dark-high-contrast {
+    /* Backgrounds */
+    --bg-canvas: #010409;
+    --bg-primary: #0a0c10;
+    --bg-secondary: #0e1116;
+    --bg-tertiary: #161b22;
+    --bg-overlay: rgba(10, 12, 16, 0.95);
+    --bg-hover: rgba(177, 186, 196, 0.15);
+    --bg-active: rgba(177, 186, 196, 0.25);
+
+    /* Text Colors */
+    --text-primary: #f0f3f6;
+    --text-secondary: #9ea7b3;
+    --text-tertiary: #7a828e;
+    --text-link: #71b7ff;
+    --text-link-hover: #91cbff;
+    --text-danger: #ff6a69;
+    --text-success: #4ae168;
+    --text-warning: #e09b13;
+
+    /* Borders */
+    --border-default: #3d444d;
+    --border-muted: #292e36;
+    --border-subtle: #1a1f27;
+
+    /* Accents */
+    --accent-primary: #71b7ff;
+    --accent-secondary: #9ea7b3;
+    --accent-success: #4ae168;
+    --accent-warning: #e09b13;
+    --accent-danger: #ff6a69;
+    --accent-info: #71b7ff;
+
+    /* Shadows */
+    --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.1);
+    --shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.15);
+    --shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.2);
+    --shadow-xl: 0 0 0 2px rgba(255, 255, 255, 0.25);
+  }
+
+  * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 
   body {
-    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
 @layer utilities {
+  /* Fade In Animation */
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -40,5 +197,62 @@
 
   .animate-fadeIn {
     animation: fadeIn 0.15s ease-in-out;
+  }
+
+  /* Slide In Animation */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-slideIn {
+    animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Pulse Animation */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Gradient Shift Animation */
+  @keyframes gradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+  }
+
+  /* Glow Effect */
+  .glow {
+    box-shadow: 0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary);
+  }
+
+  .glow-subtle {
+    box-shadow: 0 0 5px rgba(88, 166, 255, 0.3);
   }
 }
