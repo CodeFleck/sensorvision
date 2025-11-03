@@ -22,41 +22,59 @@ import java.util.UUID;
 import java.util.concurrent.*;
 
 /**
- * Executor for Python 3.11+ functions.
- * Executes Python code in a separate process with resource limits.
+ * Executor for Node.js 18+ functions.
+ * Executes JavaScript code in a separate process with resource limits.
  */
 @Component
-public class PythonFunctionExecutor implements FunctionExecutor {
+public class NodeJsFunctionExecutor implements FunctionExecutor {
 
-    private static final Logger logger = LoggerFactory.getLogger(PythonFunctionExecutor.class);
+    private static final Logger logger = LoggerFactory.getLogger(NodeJsFunctionExecutor.class);
     private final ObjectMapper objectMapper;
     private final FunctionSecretsService secretsService;
+    private static Boolean nodeAvailable = null;
 
-    public PythonFunctionExecutor(ObjectMapper objectMapper, FunctionSecretsService secretsService) {
+    public NodeJsFunctionExecutor(ObjectMapper objectMapper, FunctionSecretsService secretsService) {
         this.objectMapper = objectMapper;
         this.secretsService = secretsService;
     }
 
     @Override
     public boolean supports(FunctionRuntime runtime) {
-        return runtime == FunctionRuntime.PYTHON_3_11;
+        return runtime == FunctionRuntime.NODEJS_18;
     }
 
     @Override
     public FunctionExecutionResult execute(ServerlessFunction function, JsonNode input) throws FunctionExecutionException {
         long startTime = System.currentTimeMillis();
+
+        // Check if Node.js is available
+        if (!isNodeJsAvailable()) {
+            return FunctionExecutionResult.builder()
+                .success(false)
+                .errorMessage("Node.js is not installed or not available in PATH. " +
+                    "Please install Node.js 18 or later to use NODEJS_18 runtime.")
+                .durationMs(System.currentTimeMillis() - startTime)
+                .memoryUsedMb(0)
+                .build();
+        }
         Path tempDir = null;
 
         try {
             // Create temporary directory for function execution
             tempDir = Files.createTempDirectory("sensorvision-func-" + UUID.randomUUID());
-            Path scriptPath = tempDir.resolve("function.py");
+            Path functionPath = tempDir.resolve("function.js");
+            Path wrapperPath = tempDir.resolve("wrapper.js");
             Path inputPath = tempDir.resolve("input.json");
             Path outputPath = tempDir.resolve("output.json");
 
-            // Write function code to file
-            try (FileWriter writer = new FileWriter(scriptPath.toFile())) {
-                writer.write(createPythonWrapper(function.getCode(), function.getHandler()));
+            // Write user function code to file
+            try (FileWriter writer = new FileWriter(functionPath.toFile())) {
+                writer.write(createUserFunction(function.getCode(), function.getHandler()));
+            }
+
+            // Write wrapper code to file
+            try (FileWriter writer = new FileWriter(wrapperPath.toFile())) {
+                writer.write(createNodeWrapper(functionPath.toString(), inputPath.toString(), outputPath.toString()));
             }
 
             // Write input data to file
@@ -64,12 +82,10 @@ public class PythonFunctionExecutor implements FunctionExecutor {
                 objectMapper.writeValue(writer, input);
             }
 
-            // Build Python command
+            // Build Node.js command
             List<String> command = new ArrayList<>();
-            command.add("python3");  // or "python" depending on system
-            command.add(scriptPath.toString());
-            command.add(inputPath.toString());
-            command.add(outputPath.toString());
+            command.add(getNodeCommand());
+            command.add(wrapperPath.toString());
 
             // Get decrypted secrets and prepare environment variables
             Map<String, String> secrets = secretsService.getDecryptedSecrets(function.getId());
@@ -115,7 +131,7 @@ public class PythonFunctionExecutor implements FunctionExecutor {
             long duration = System.currentTimeMillis() - startTime;
 
             if (exitCode != 0) {
-                String errorMessage = "Python function failed with exit code " + exitCode;
+                String errorMessage = "Node.js function failed with exit code " + exitCode;
                 String errorDetails = stderr.isEmpty() ? stdout : stderr;
                 throw new FunctionExecutionException(errorMessage, errorDetails);
             }
@@ -144,7 +160,7 @@ public class PythonFunctionExecutor implements FunctionExecutor {
                 .build();
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
-            logger.error("Error executing Python function: {}", e.getMessage(), e);
+            logger.error("Error executing Node.js function: {}", e.getMessage(), e);
             return FunctionExecutionResult.builder()
                 .success(false)
                 .errorMessage("Execution error: " + e.getMessage())
@@ -165,39 +181,114 @@ public class PythonFunctionExecutor implements FunctionExecutor {
     }
 
     /**
-     * Create Python wrapper that handles input/output and calls user function.
+     * Create user function module.
      */
-    private String createPythonWrapper(String userCode, String handlerName) {
+    private String createUserFunction(String userCode, String handlerName) {
+        // Check if user code already exports the handler
+        if (userCode.contains("module.exports") || userCode.contains("exports." + handlerName)) {
+            // User code already handles exports - just ensure it's available at .handler
+            return String.format("""
+                // User code
+                %s
+
+                // Ensure handler is available for wrapper
+                if (typeof module.exports.%s !== 'undefined') {
+                    module.exports.handler = module.exports.%s;
+                } else if (typeof exports.%s !== 'undefined') {
+                    module.exports = { handler: exports.%s };
+                } else if (typeof %s !== 'undefined') {
+                    module.exports = { handler: %s };
+                } else {
+                    throw new Error('Handler function "%s" not found. Please define it as: exports.%s = ...');
+                }
+                """, userCode, handlerName, handlerName, handlerName, handlerName, handlerName, handlerName, handlerName, handlerName);
+        } else {
+            // User code defines function but doesn't export it
+            return String.format("""
+                // User code
+                %s
+
+                // Export handler
+                module.exports = { handler: %s };
+                """, userCode, handlerName);
+        }
+    }
+
+    /**
+     * Create Node.js wrapper that handles input/output and calls user function.
+     */
+    private String createNodeWrapper(String functionPath, String inputPath, String outputPath) {
         return String.format("""
-            import json
-            import sys
-            import traceback
+            const fs = require('fs');
 
-            # User code
-            %s
+            async function __sensorvision_wrapper() {
+                try {
+                    // Read input
+                    const event = JSON.parse(fs.readFileSync('%s', 'utf8'));
 
-            def __sensorvision_wrapper():
-                try:
-                    # Read input
-                    with open(sys.argv[1], 'r') as f:
-                        event = json.load(f)
+                    // Load user function
+                    const userModule = require('%s');
 
-                    # Call user function
-                    result = %s(event)
+                    // Call handler (support both sync and async)
+                    const result = await Promise.resolve(userModule.handler(event));
 
-                    # Write output
-                    with open(sys.argv[2], 'w') as f:
-                        json.dump(result, f)
+                    // Write output
+                    fs.writeFileSync('%s', JSON.stringify(result));
 
-                    sys.exit(0)
-                except Exception as e:
-                    print(f"Error: {str(e)}", file=sys.stderr)
-                    traceback.print_exc(file=sys.stderr)
-                    sys.exit(1)
+                    process.exit(0);
+                } catch (error) {
+                    console.error('Error:', error.message);
+                    if (error.stack) {
+                        console.error(error.stack);
+                    }
+                    process.exit(1);
+                }
+            }
 
-            if __name__ == '__main__':
-                __sensorvision_wrapper()
-            """, userCode, handlerName);
+            __sensorvision_wrapper();
+            """,
+            inputPath.replace("\\", "\\\\"),
+            functionPath.replace("\\", "\\\\"),
+            outputPath.replace("\\", "\\\\")
+        );
+    }
+
+    /**
+     * Check if Node.js is available in the system PATH.
+     */
+    private boolean isNodeJsAvailable() {
+        if (nodeAvailable != null) {
+            return nodeAvailable;
+        }
+
+        try {
+            Process process = new ProcessBuilder(getNodeCommand(), "--version")
+                .redirectErrorStream(true)
+                .start();
+
+            boolean completed = process.waitFor(5, TimeUnit.SECONDS);
+            if (completed && process.exitValue() == 0) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String version = reader.readLine();
+                    logger.info("Node.js detected: {}", version);
+                    nodeAvailable = true;
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Node.js not found in PATH: {}", e.getMessage());
+        }
+
+        nodeAvailable = false;
+        return false;
+    }
+
+    /**
+     * Get the Node.js command for the current platform.
+     */
+    private String getNodeCommand() {
+        // Try 'node' first (common on all platforms)
+        return "node";
     }
 
     private String readStream(java.io.InputStream inputStream) throws Exception {

@@ -76,6 +76,24 @@ public class ServerlessFunctionService {
     }
 
     /**
+     * Get function entity (for internal use by services).
+     */
+    @Transactional(readOnly = true)
+    public ServerlessFunction getFunctionEntity(Long id) {
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
+
+        ServerlessFunction function = functionRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Function not found with id: " + id));
+
+        // Verify function belongs to user's organization
+        if (!function.getOrganization().getId().equals(userOrg.getId())) {
+            throw new RuntimeException("Access denied to function: " + id);
+        }
+
+        return function;
+    }
+
+    /**
      * Create a new serverless function.
      */
     @Transactional

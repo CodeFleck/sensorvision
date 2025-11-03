@@ -31,17 +31,20 @@ public class FunctionExecutionService {
     private final FunctionExecutionRepository executionRepository;
     private final List<FunctionExecutor> executors;
     private final SecurityUtils securityUtils;
+    private final FunctionRateLimitService rateLimitService;
 
     public FunctionExecutionService(
         ServerlessFunctionRepository functionRepository,
         FunctionExecutionRepository executionRepository,
         List<FunctionExecutor> executors,
-        SecurityUtils securityUtils
+        SecurityUtils securityUtils,
+        FunctionRateLimitService rateLimitService
     ) {
         this.functionRepository = functionRepository;
         this.executionRepository = executionRepository;
         this.executors = executors;
         this.securityUtils = securityUtils;
+        this.rateLimitService = rateLimitService;
     }
 
     /**
@@ -61,6 +64,13 @@ public class FunctionExecutionService {
 
         if (!function.getEnabled()) {
             throw new RuntimeException("Function is disabled: " + function.getName());
+        }
+
+        // Check rate limit quota
+        if (!rateLimitService.checkAndIncrementQuota(userOrg)) {
+            logger.warn("Rate limit exceeded for organization {} attempting to execute function {}",
+                userOrg.getId(), function.getName());
+            throw new RuntimeException("Rate limit exceeded. Please try again later.");
         }
 
         // Create execution record
@@ -115,6 +125,13 @@ public class FunctionExecutionService {
             if (!function.getEnabled()) {
                 logger.warn("Skipping disabled function: {}", function.getName());
                 return;
+            }
+
+            // Check rate limit quota
+            if (!rateLimitService.checkAndIncrementQuota(function.getOrganization())) {
+                logger.warn("Rate limit exceeded for organization {} attempting to execute function {} (async)",
+                    function.getOrganization().getId(), function.getName());
+                return; // Silently skip execution if rate limited (don't fail triggers)
             }
 
             // Create execution record

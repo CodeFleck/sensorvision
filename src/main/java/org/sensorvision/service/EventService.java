@@ -1,9 +1,13 @@
 package org.sensorvision.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.sensorvision.model.Event;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.User;
 import org.sensorvision.repository.EventRepository;
+import org.sensorvision.service.triggers.DeviceEventFunctionTriggerHandler;
+import org.sensorvision.service.triggers.TriggerContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,6 +26,8 @@ import java.util.Map;
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final DeviceEventFunctionTriggerHandler deviceEventTriggerHandler;
+    private final ObjectMapper objectMapper;
 
     /**
      * Create an event with full details
@@ -234,6 +240,49 @@ public class EventService {
                 : Event.EventSeverity.INFO;
 
         createDeviceEvent(organization, deviceId, eventType, severity, title, null);
+
+        // Trigger device event-based serverless functions
+        try {
+            triggerDeviceEventFunctions(deviceId, deviceName, eventType);
+        } catch (Exception e) {
+            log.error("Error triggering device event functions for {}: {}",
+                deviceId, e.getMessage(), e);
+            // Don't fail the event creation if function triggers fail
+        }
+    }
+
+    /**
+     * Trigger device event-based serverless functions.
+     */
+    private void triggerDeviceEventFunctions(String deviceId, String deviceName, Event.EventType eventType) {
+        // Build event data
+        ObjectNode eventData = objectMapper.createObjectNode();
+        ObjectNode deviceInfo = objectMapper.createObjectNode();
+        deviceInfo.put("externalId", deviceId);
+        deviceInfo.put("name", deviceName);
+        eventData.set("device", deviceInfo);
+
+        // Map Event.EventType to function event type string
+        String functionEventType = switch (eventType) {
+            case DEVICE_CREATED -> "device.created";
+            case DEVICE_UPDATED -> "device.updated";
+            case DEVICE_DELETED -> "device.deleted";
+            case DEVICE_CONNECTED -> "device.connected";
+            case DEVICE_DISCONNECTED -> "device.disconnected";
+            case DEVICE_OFFLINE -> "device.offline";
+            default -> "device.event";
+        };
+
+        // Build trigger context
+        TriggerContext context = TriggerContext.builder()
+            .eventType(functionEventType)
+            .eventSource("device-lifecycle")
+            .timestamp(System.currentTimeMillis())
+            .deviceId(deviceId)
+            .build();
+
+        // Handle the event (will match against configured triggers)
+        deviceEventTriggerHandler.handleEvent(eventData, context);
     }
 
     /**

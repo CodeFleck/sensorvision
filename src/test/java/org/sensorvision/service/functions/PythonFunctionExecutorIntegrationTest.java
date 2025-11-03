@@ -5,13 +5,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.sensorvision.model.FunctionRuntime;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.ServerlessFunction;
+import org.sensorvision.service.FunctionSecretsService;
 
+import java.util.Collections;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 
 /**
  * Integration test for Python function execution.
@@ -20,15 +27,20 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Set PYTHON_AVAILABLE=true environment variable to enable these tests.
  */
 @EnabledIfEnvironmentVariable(named = "PYTHON_AVAILABLE", matches = "true")
+@ExtendWith(MockitoExtension.class)
 class PythonFunctionExecutorIntegrationTest {
 
     private PythonFunctionExecutor executor;
     private ObjectMapper objectMapper;
 
+    @Mock
+    private FunctionSecretsService secretsService;
+
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        executor = new PythonFunctionExecutor(objectMapper);
+        when(secretsService.getDecryptedSecrets(anyLong())).thenReturn(Collections.emptyMap());
+        executor = new PythonFunctionExecutor(objectMapper, secretsService);
     }
 
     @Test

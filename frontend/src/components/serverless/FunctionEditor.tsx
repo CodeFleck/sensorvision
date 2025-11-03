@@ -7,6 +7,7 @@ import serverlessFunctionsService, {
   CreateFunctionRequest,
   UpdateFunctionRequest
 } from '../../services/serverlessFunctionsService';
+import SecretsManager from './SecretsManager';
 
 interface FunctionEditorProps {
   open: boolean;
@@ -370,6 +371,11 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
               </div>
             )}
           </div>
+
+          {/* Encrypted Secrets Section - Only shown for existing functions */}
+          {editFunction && (
+            <SecretsManager functionId={editFunction.id} />
+          )}
         </div>
 
         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
