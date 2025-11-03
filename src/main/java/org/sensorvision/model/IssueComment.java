@@ -28,6 +28,9 @@ public class IssueComment extends AuditableEntity {
     @Column(name = "attachment_filename", length = 255)
     private String attachmentFilename;
 
+    // Lazy-loaded to avoid fetching large blobs when loading comment lists
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "attachment_data", columnDefinition = "bytea")
     private byte[] attachmentData;
 

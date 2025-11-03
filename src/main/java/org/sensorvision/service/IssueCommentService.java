@@ -196,6 +196,45 @@ public class IssueCommentService {
     }
 
     /**
+     * Get comment attachment with authorization checks
+     * Users can only download attachments from their own tickets' public comments
+     * Admins can download all attachments
+     */
+    @Transactional(readOnly = true)
+    public IssueComment getCommentWithAttachment(Long commentId) {
+        User currentUser = securityUtils.getCurrentUser();
+        boolean isAdmin = currentUser.getRoles().stream()
+            .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
+
+        IssueComment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new RuntimeException("Comment not found with id: " + commentId));
+
+        if (!comment.hasAttachment()) {
+            throw new RuntimeException("Comment has no attachment");
+        }
+
+        // Admins can access all attachments
+        if (isAdmin) {
+            return comment;
+        }
+
+        // Regular users can only access attachments from their own tickets' public comments
+        IssueSubmission issue = comment.getIssue();
+
+        // Check ownership
+        if (!issue.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You do not have permission to access this attachment");
+        }
+
+        // Check if comment is internal (users should not see internal attachments)
+        if (comment.isInternal()) {
+            throw new RuntimeException("You do not have permission to access this attachment");
+        }
+
+        return comment;
+    }
+
+    /**
      * Process and validate file attachment for a comment
      */
     private void processAttachment(IssueComment comment, MultipartFile file) {

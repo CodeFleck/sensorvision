@@ -19,7 +19,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.sensorvision.model.IssueComment;
-import org.sensorvision.repository.IssueCommentRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -33,15 +32,12 @@ public class IssueSubmissionController {
 
     private final IssueSubmissionService issueSubmissionService;
     private final IssueCommentService commentService;
-    private final IssueCommentRepository commentRepository;
 
     @Autowired
     public IssueSubmissionController(IssueSubmissionService issueSubmissionService,
-                                    IssueCommentService commentService,
-                                    IssueCommentRepository commentRepository) {
+                                    IssueCommentService commentService) {
         this.issueSubmissionService = issueSubmissionService;
         this.commentService = commentService;
-        this.commentRepository = commentRepository;
     }
 
     /**
@@ -120,13 +116,26 @@ public class IssueSubmissionController {
     }
 
     /**
-     * Add a comment to an issue (with optional file attachment)
+     * Add a comment to an issue (JSON - no attachment)
      * POST /api/v1/support/issues/{id}/comments
-     *
-     * Accepts both JSON (for comments without attachments) and multipart/form-data (for comments with attachments)
+     * Content-Type: application/json
      */
-    @PostMapping(value = "/issues/{id}/comments", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "/issues/{id}/comments", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<IssueCommentDto> addComment(
+            @PathVariable Long id,
+            @Valid @RequestBody IssueCommentRequest request) {
+        logger.info("User adding comment to issue: {}", id);
+        IssueCommentDto comment = commentService.addUserComment(id, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(comment);
+    }
+
+    /**
+     * Add a comment to an issue with file attachment
+     * POST /api/v1/support/issues/{id}/comments
+     * Content-Type: multipart/form-data
+     */
+    @PostMapping(value = "/issues/{id}/comments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<IssueCommentDto> addCommentWithAttachment(
             @PathVariable Long id,
             @RequestParam("message") String message,
             @RequestParam(value = "internal", defaultValue = "false") boolean internal,
@@ -134,26 +143,33 @@ public class IssueSubmissionController {
 
         logger.info("User adding comment to issue: {} (hasAttachment: {})", id, file != null && !file.isEmpty());
 
-        IssueCommentRequest request = new IssueCommentRequest(message, internal);
+        // Manual validation since we can't use @Valid with @RequestParam
+        if (message == null || message.trim().isEmpty()) {
+            throw new IllegalArgumentException("Message is required");
+        }
+        if (message.length() > 5000) {
+            throw new IllegalArgumentException("Message must not exceed 5000 characters");
+        }
+
+        IssueCommentRequest request = new IssueCommentRequest(message.trim(), internal);
         IssueCommentDto comment = commentService.addUserComment(id, request, file);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
     }
 
     /**
-     * Download a comment attachment
+     * Download a comment attachment (with authorization checks)
      * GET /api/v1/support/comments/{commentId}/attachment
+     *
+     * Security: Users can only download attachments from their own tickets' public comments
+     * Admins can download all attachments
      */
     @GetMapping("/comments/{commentId}/attachment")
     public ResponseEntity<byte[]> downloadCommentAttachment(@PathVariable Long commentId) {
         logger.info("Downloading attachment for comment: {}", commentId);
 
-        IssueComment comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new RuntimeException("Comment not found with id: " + commentId));
-
-        if (!comment.hasAttachment()) {
-            return ResponseEntity.notFound().build();
-        }
+        // Use service method with authorization checks
+        IssueComment comment = commentService.getCommentWithAttachment(commentId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(comment.getAttachmentContentType()));
