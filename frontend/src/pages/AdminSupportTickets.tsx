@@ -5,6 +5,7 @@ import { apiService } from '../services/api';
 import { AdminIssue, IssueStatus, IssueSubmission, IssueComment, IssueCommentRequest } from '../types';
 import { CannedResponsePicker } from '../components/CannedResponsePicker';
 import { getStatusInfo, getSeverityInfo } from '../utils/issueStatusHelpers';
+import { hasTextContent } from '../utils/htmlUtils';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { SafeHtmlDisplay } from '../components/SafeHtmlDisplay';
 import { useDraftComment } from '../hooks/useDraftComment';
@@ -125,7 +126,13 @@ export const AdminSupportTickets: React.FC = () => {
   };
 
   const submitComment = async () => {
-    if (!selectedIssue || !newComment.trim()) return;
+    // CRITICAL: Validate HTML content to prevent empty Quill markup like <p><br></p>
+    if (!selectedIssue || !hasTextContent(newComment)) {
+      if (!hasTextContent(newComment)) {
+        toast.error('Please enter a message');
+      }
+      return;
+    }
 
     try {
       setSubmittingComment(true);

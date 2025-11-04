@@ -125,6 +125,12 @@ public class IssueSubmissionController {
             @PathVariable Long id,
             @Valid @RequestBody IssueCommentRequest request) {
         logger.info("User adding comment to issue: {}", id);
+
+        // CRITICAL: Validate HTML content to prevent empty Quill markup like <p><br></p>
+        if (!org.sensorvision.util.HtmlUtils.hasTextContent(request.message())) {
+            throw new IllegalArgumentException("Message is required");
+        }
+
         IssueCommentDto comment = commentService.addUserComment(id, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
     }

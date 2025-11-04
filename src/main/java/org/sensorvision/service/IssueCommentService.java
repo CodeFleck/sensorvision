@@ -219,6 +219,12 @@ public class IssueCommentService {
             throw new BadRequestException("Comment has no attachment");
         }
 
+        // CRITICAL: Eagerly initialize the lazy-loaded attachmentData field BEFORE any return
+        // This prevents LazyInitializationException when OSIV is disabled
+        // The byte array must be loaded within the transaction boundary
+        // Must happen before both admin and user paths to ensure blob is loaded
+        Hibernate.initialize(comment.getAttachmentData());
+
         // Admins can access all attachments
         if (isAdmin) {
             return comment;
@@ -236,11 +242,6 @@ public class IssueCommentService {
         if (comment.isInternal()) {
             throw new AccessDeniedException("You do not have permission to access this attachment");
         }
-
-        // CRITICAL: Eagerly initialize the lazy-loaded attachmentData field
-        // This prevents LazyInitializationException when OSIV is disabled
-        // The byte array must be loaded within the transaction boundary
-        Hibernate.initialize(comment.getAttachmentData());
 
         return comment;
     }
