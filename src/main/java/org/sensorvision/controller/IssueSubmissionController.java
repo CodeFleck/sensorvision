@@ -144,7 +144,8 @@ public class IssueSubmissionController {
         logger.info("User adding comment to issue: {} (hasAttachment: {})", id, file != null && !file.isEmpty());
 
         // Manual validation since we can't use @Valid with @RequestParam
-        if (message == null || message.trim().isEmpty()) {
+        // CRITICAL: Use HTML-aware validation to prevent empty Quill markup like <p><br></p>
+        if (message == null || !org.sensorvision.util.HtmlUtils.hasTextContent(message)) {
             throw new IllegalArgumentException("Message is required");
         }
         if (message.length() > 5000) {

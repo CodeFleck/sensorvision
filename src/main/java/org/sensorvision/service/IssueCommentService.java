@@ -1,7 +1,10 @@
 package org.sensorvision.service;
 
+import org.hibernate.Hibernate;
 import org.sensorvision.dto.IssueCommentDto;
 import org.sensorvision.dto.IssueCommentRequest;
+import org.sensorvision.exception.BadRequestException;
+import org.sensorvision.exception.ResourceNotFoundException;
 import org.sensorvision.model.IssueComment;
 import org.sensorvision.model.IssueSubmission;
 import org.sensorvision.model.User;
@@ -11,6 +14,7 @@ import org.sensorvision.security.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,7 +64,7 @@ public class IssueCommentService {
         User currentUser = securityUtils.getCurrentUser();
 
         IssueSubmission issue = issueRepository.findByIdAndUser(issueId, currentUser)
-            .orElseThrow(() -> new RuntimeException("Issue not found with id: " + issueId));
+            .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
 
         IssueComment comment = new IssueComment();
         comment.setIssue(issue);
@@ -101,7 +105,7 @@ public class IssueCommentService {
         User currentUser = securityUtils.getCurrentUser();
 
         IssueSubmission issue = issueRepository.findById(issueId)
-            .orElseThrow(() -> new RuntimeException("Issue not found with id: " + issueId));
+            .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
 
         IssueComment comment = new IssueComment();
         comment.setIssue(issue);
@@ -168,7 +172,7 @@ public class IssueCommentService {
         User currentUser = securityUtils.getCurrentUser();
 
         IssueSubmission issue = issueRepository.findByIdAndUser(issueId, currentUser)
-            .orElseThrow(() -> new RuntimeException("Issue not found with id: " + issueId));
+            .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
 
         return commentRepository.findPublicCommentsByIssue(issue).stream()
             .map(IssueCommentDto::fromEntity)
@@ -182,7 +186,7 @@ public class IssueCommentService {
     @Transactional(readOnly = true)
     public List<IssueCommentDto> getAdminComments(Long issueId) {
         IssueSubmission issue = issueRepository.findById(issueId)
-            .orElseThrow(() -> new RuntimeException("Issue not found with id: " + issueId));
+            .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
 
         return commentRepository.findAllCommentsByIssue(issue).stream()
             .map(IssueCommentDto::fromEntity)
@@ -209,10 +213,10 @@ public class IssueCommentService {
             .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
 
         IssueComment comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new RuntimeException("Comment not found with id: " + commentId));
+            .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + commentId));
 
         if (!comment.hasAttachment()) {
-            throw new RuntimeException("Comment has no attachment");
+            throw new BadRequestException("Comment has no attachment");
         }
 
         // Admins can access all attachments
@@ -225,13 +229,18 @@ public class IssueCommentService {
 
         // Check ownership
         if (!issue.getUser().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("You do not have permission to access this attachment");
+            throw new AccessDeniedException("You do not have permission to access this attachment");
         }
 
         // Check if comment is internal (users should not see internal attachments)
         if (comment.isInternal()) {
-            throw new RuntimeException("You do not have permission to access this attachment");
+            throw new AccessDeniedException("You do not have permission to access this attachment");
         }
+
+        // CRITICAL: Eagerly initialize the lazy-loaded attachmentData field
+        // This prevents LazyInitializationException when OSIV is disabled
+        // The byte array must be loaded within the transaction boundary
+        Hibernate.initialize(comment.getAttachmentData());
 
         return comment;
     }
@@ -245,13 +254,13 @@ public class IssueCommentService {
         try {
             // Validate file size
             if (file.getSize() > MAX_FILE_SIZE) {
-                throw new RuntimeException("File size exceeds maximum limit of 10 MB");
+                throw new BadRequestException("File size exceeds maximum limit of 10 MB");
             }
 
             // Validate file type (allow common file types)
             String contentType = file.getContentType();
             if (contentType == null || !isAllowedFileType(contentType)) {
-                throw new RuntimeException("File type not allowed. Allowed types: images, text files, PDFs, JSON, XML, logs");
+                throw new BadRequestException("File type not allowed. Allowed types: images, text files, PDFs, JSON, XML, logs");
             }
 
             // Set attachment fields
@@ -264,7 +273,7 @@ public class IssueCommentService {
 
         } catch (IOException e) {
             logger.error("Failed to process file attachment", e);
-            throw new RuntimeException("Failed to process file attachment: " + e.getMessage(), e);
+            throw new BadRequestException("Failed to process file attachment: " + e.getMessage(), e);
         }
     }
 

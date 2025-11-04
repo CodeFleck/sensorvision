@@ -1,5 +1,9 @@
 package org.sensorvision.service;
 
+import org.sensorvision.exception.BadRequestException;
+import org.sensorvision.exception.ResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -549,5 +553,85 @@ class IssueCommentServiceTest {
         assertThatThrownBy(() -> commentService.getCommentWithAttachment(1L))
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Comment has no attachment");
+    }
+
+    // ========== REGRESSION: Proper Exception Types ==========
+    // Bug: Service was throwing generic RuntimeException instead of specific exceptions,
+    // causing global handler to return 500 instead of proper 404/400/403 status codes
+
+    @Test
+    void REGRESSION_addUserComment_shouldThrowResourceNotFoundException_whenIssueNotFound() {
+        // Given
+        IssueCommentRequest request = new IssueCommentRequest("Comment", false);
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(issueRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
+
+        // When/Then - Should throw ResourceNotFoundException (404) not RuntimeException (500)
+        assertThatThrownBy(() -> commentService.addUserComment(999L, request))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Issue not found");
+    }
+
+    @Test
+    void REGRESSION_getCommentWithAttachment_shouldThrowResourceNotFoundException_whenCommentNotFound() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(commentRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When/Then - Should throw ResourceNotFoundException (404)
+        assertThatThrownBy(() -> commentService.getCommentWithAttachment(999L))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .hasMessageContaining("Comment not found");
+    }
+
+    @Test
+    void REGRESSION_getCommentWithAttachment_shouldThrowBadRequestException_whenNoAttachment() {
+        // Given - Comment exists but has no attachment
+        testComment.setAttachmentData(null);
+        testComment.setAttachmentFilename(null);
+
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(commentRepository.findById(1L)).thenReturn(Optional.of(testComment));
+
+        // When/Then - Should throw BadRequestException (400) not RuntimeException (500)
+        assertThatThrownBy(() -> commentService.getCommentWithAttachment(1L))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessageContaining("Comment has no attachment");
+    }
+
+    @Test
+    void REGRESSION_getCommentWithAttachment_shouldThrowAccessDeniedException_whenUserDoesNotOwnTicket() {
+        // Given
+        testComment.setAttachmentFilename("test.txt");
+        testComment.setAttachmentData("data".getBytes());
+
+        User otherUser = new User();
+        otherUser.setId(99L);
+        otherUser.setUsername("other");
+        otherUser.setRoles(Collections.emptySet());
+
+        when(securityUtils.getCurrentUser()).thenReturn(otherUser);
+        when(commentRepository.findById(1L)).thenReturn(Optional.of(testComment));
+
+        // When/Then - Should throw AccessDeniedException (403) not RuntimeException (500)
+        assertThatThrownBy(() -> commentService.getCommentWithAttachment(1L))
+            .isInstanceOf(AccessDeniedException.class)
+            .hasMessageContaining("You do not have permission");
+    }
+
+    @Test
+    void REGRESSION_getCommentWithAttachment_shouldThrowAccessDeniedException_whenInternalComment() {
+        // Given
+        testComment.setAttachmentFilename("test.txt");
+        testComment.setAttachmentData("data".getBytes());
+        testComment.setInternal(true); // Internal comment
+
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(commentRepository.findById(1L)).thenReturn(Optional.of(testComment));
+
+        // When/Then - Should throw AccessDeniedException (403)
+        assertThatThrownBy(() -> commentService.getCommentWithAttachment(1L))
+            .isInstanceOf(AccessDeniedException.class)
+            .hasMessageContaining("You do not have permission");
     }
 }

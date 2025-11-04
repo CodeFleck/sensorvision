@@ -39,33 +39,72 @@ export const useDraftComment = ({
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const storageKey = ticketId ? `ticket-draft-${ticketId}` : null;
 
-  // Load draft from localStorage on mount
+  // Load draft from localStorage when ticketId changes
+  // CRITICAL: Always reset state to prevent draft inheritance between tickets
   useEffect(() => {
-    if (!storageKey) return;
+    if (!storageKey) {
+      // No storage key means we should reset to empty state
+      setDraftState('');
+      setStatus({
+        isSaving: false,
+        lastSaved: null,
+        hasDraft: false,
+      });
+      return;
+    }
+
+    // CRITICAL: Always determine final state, then update once
+    // This ensures tickets don't inherit each other's drafts
+    let finalDraft = '';
+    let finalStatus: DraftStatus = {
+      isSaving: false,
+      lastSaved: null,
+      hasDraft: false,
+    };
 
     try {
       const savedDraft = localStorage.getItem(storageKey);
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft);
-        setDraftState(parsed.content);
-        setStatus({
+        finalDraft = parsed.content;
+        finalStatus = {
           isSaving: false,
           lastSaved: new Date(parsed.timestamp),
           hasDraft: true,
-        });
+        };
       }
     } catch (error) {
       console.error('Failed to load draft from localStorage:', error);
+      // Keep empty state (already initialized above)
     }
+
+    // Single state update to avoid batching issues
+    setDraftState(finalDraft);
+    setStatus(finalStatus);
   }, [storageKey]);
 
   // Auto-save draft to localStorage (debounced)
   useEffect(() => {
-    if (!storageKey || !draft.trim()) return;
+    if (!storageKey) return;
 
     // Clear existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Handle empty draft: remove from localStorage to prevent resurrection
+    if (!draft.trim()) {
+      try {
+        localStorage.removeItem(storageKey);
+        setStatus({
+          isSaving: false,
+          lastSaved: null,
+          hasDraft: false,
+        });
+      } catch (error) {
+        console.error('Failed to remove draft from localStorage:', error);
+      }
+      return;
     }
 
     // Set saving indicator

@@ -5,6 +5,7 @@ import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { IssueSubmission, IssueComment, IssueCommentRequest, IssueStatus } from '../types';
 import { getStatusInfo, getSeverityInfo } from '../utils/issueStatusHelpers';
+import { hasTextContent } from '../utils/htmlUtils';
 import { SubmitIssueModal } from '../components/SubmitIssueModal';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { SafeHtmlDisplay } from '../components/SafeHtmlDisplay';
@@ -84,7 +85,14 @@ export const MyTickets: React.FC = () => {
   };
 
   const submitComment = async () => {
-    if (!selectedTicket || !newComment.trim()) return;
+    // Validate that comment has actual text content (not just HTML markup)
+    // This prevents submitting Quill's empty editor markup like <p><br></p>
+    if (!selectedTicket || !hasTextContent(newComment)) {
+      if (!hasTextContent(newComment)) {
+        toast.error('Please enter a message');
+      }
+      return;
+    }
 
     try {
       setSubmittingComment(true);
