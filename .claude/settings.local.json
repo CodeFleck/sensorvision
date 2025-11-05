@@ -64,7 +64,11 @@
       "Bash(npm test:*)",
       "Bash(/tmp/AddWidgetModal_clean.tsx)",
       "Bash(/tmp/WidgetRenderer_clean.tsx)",
-      "Bash(/tmp/Dashboards_clean.tsx)"
+      "Bash(/tmp/Dashboards_clean.tsx)",
+      "Bash(gh issue view:*)",
+      "Bash(aws ec2 describe-security-groups:*)",
+      "Bash(gh issue close:*)",
+      "Bash(enterprise-grade infrastructure and developer-friendly tools\"\n\nThis positioning:\n- Works for PyPI and npm package listings\n- Aligns with main platform messaging\n- Ready for commercial transition\n- Emphasizes developer experience and scalability\n\n🤖 Generated with Claude Code (https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

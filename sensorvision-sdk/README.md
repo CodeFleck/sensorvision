@@ -19,28 +19,38 @@ Build IoT applications with enterprise-grade infrastructure and developer-friend
 
 ## Installation
 
-### Basic Installation
+### Install from GitHub (Recommended)
 
 ```bash
-pip install sensorvision-sdk
+# Basic installation
+pip install git+https://github.com/CodeFleck/sensorvision.git#subdirectory=sensorvision-sdk
+
+# With async support
+pip install "git+https://github.com/CodeFleck/sensorvision.git#subdirectory=sensorvision-sdk[async]"
+
+# For Raspberry Pi projects
+pip install "git+https://github.com/CodeFleck/sensorvision.git#subdirectory=sensorvision-sdk[raspberry-pi]"
 ```
 
-### With Async Support
+### Install from PyPI (Coming Soon)
+
+Once published to PyPI, you'll be able to install with:
 
 ```bash
-pip install sensorvision-sdk[async]
-```
-
-### For Raspberry Pi Projects
-
-```bash
-pip install sensorvision-sdk[raspberry-pi]
+pip install sensorvision-sdk                    # Basic
+pip install sensorvision-sdk[async]            # With async support
+pip install sensorvision-sdk[raspberry-pi]     # Raspberry Pi extras
 ```
 
 ### Development Installation
 
 ```bash
-pip install sensorvision-sdk[dev]
+# Clone the repository
+git clone https://github.com/CodeFleck/sensorvision.git
+cd sensorvision/sensorvision-sdk
+
+# Install in editable mode with dev dependencies
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
