@@ -47,6 +47,9 @@
     "react-quill": "^2.0.0",
     "react-router-dom": "^6.8.1"
   },
+  "overrides": {
+    "quill": "^2.0.3"
+  },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.9.1",
