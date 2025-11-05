@@ -76,8 +76,14 @@ Production-ready Python client library for seamless IoT device integration:
 - Configurable retry logic with exponential backoff
 - Comprehensive error handling (authentication, validation, rate limiting)
 - Type hints and full documentation
-- pip installable package
+- **✅ Available on PyPI**: https://pypi.org/project/sensorvision-sdk/
 
+**Installation:**
+```bash
+pip install sensorvision-sdk
+```
+
+**Quick Start:**
 ```python
 from sensorvision import SensorVisionClient
 

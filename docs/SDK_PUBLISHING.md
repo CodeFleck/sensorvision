@@ -6,8 +6,9 @@ This guide explains how to publish SensorVision SDKs to PyPI (Python) and npm (J
 
 ## Current Status
 
-✅ **Available via GitHub** - Both SDKs can be installed directly from the repository
-⏳ **PyPI/npm Publishing** - Not yet published to package registries
+✅ **Python SDK Published to PyPI** - https://pypi.org/project/sensorvision-sdk/
+✅ **JavaScript SDK Available via GitHub** - Can be installed directly from repository
+⏳ **JavaScript SDK npm Publishing** - In progress
 
 ---
 
@@ -15,8 +16,16 @@ This guide explains how to publish SensorVision SDKs to PyPI (Python) and npm (J
 
 ### Prerequisites
 
+**Windows (Recommended - use `py` launcher):**
+```bash
+py -m pip install build twine
+```
+
+**Linux/macOS:**
 ```bash
 pip install build twine
+# or
+python3 -m pip install build twine
 ```
 
 ### Publishing Steps
@@ -27,9 +36,17 @@ pip install build twine
    ```
 
 2. **Build Distribution**:
+
+   **Windows:**
    ```bash
    cd sensorvision-sdk
-   python -m build
+   py -m build
+   ```
+
+   **Linux/macOS:**
+   ```bash
+   cd sensorvision-sdk
+   python3 -m build
    ```
 
    This creates:
@@ -37,8 +54,15 @@ pip install build twine
    - `dist/sensorvision_sdk-0.1.0-py3-none-any.whl` (wheel)
 
 3. **Test Upload to TestPyPI** (Recommended First):
+
+   **Windows:**
    ```bash
-   python -m twine upload --repository testpypi dist/*
+   py -m twine upload --repository testpypi dist/*
+   ```
+
+   **Linux/macOS:**
+   ```bash
+   python3 -m twine upload --repository testpypi dist/*
    ```
 
    Test installation:
@@ -47,8 +71,15 @@ pip install build twine
    ```
 
 4. **Upload to PyPI** (Production):
+
+   **Windows:**
    ```bash
-   python -m twine upload dist/*
+   py -m twine upload dist/*
+   ```
+
+   **Linux/macOS:**
+   ```bash
+   python3 -m twine upload dist/*
    ```
 
    Enter your PyPI credentials when prompted.
@@ -407,11 +438,19 @@ After first publish to PyPI/npm:
 
 ### "Build failed"
 
-**Python**:
+**Python (Windows):**
+```bash
+# Clear old builds
+rmdir /s /q dist build
+del /s /q *.egg-info
+py -m build
+```
+
+**Python (Linux/macOS):**
 ```bash
 # Clear old builds
 rm -rf dist/ build/ *.egg-info
-python -m build
+python3 -m build
 ```
 
 **npm**:
