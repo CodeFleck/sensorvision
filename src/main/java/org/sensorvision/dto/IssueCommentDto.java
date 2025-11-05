@@ -11,6 +11,10 @@ public record IssueCommentDto(
     String authorName,
     String message,
     boolean internal,
+    boolean hasAttachment,
+    String attachmentFilename,
+    String attachmentContentType,
+    Long attachmentSizeBytes,
     Instant createdAt
 ) {
     public static IssueCommentDto fromEntity(IssueComment comment) {
@@ -21,6 +25,10 @@ public record IssueCommentDto(
             comment.getAuthor().getFirstName() + " " + comment.getAuthor().getLastName(),
             comment.getMessage(),
             comment.isInternal(),
+            comment.hasAttachment(),
+            comment.getAttachmentFilename(),
+            comment.getAttachmentContentType(),
+            comment.getAttachmentSizeBytes(),
             comment.getCreatedAt()
         );
     }

@@ -380,11 +380,62 @@ class ApiService {
     return this.request<IssueComment[]>(`/support/issues/${issueId}/comments`);
   }
 
-  async addUserComment(issueId: number, comment: IssueCommentRequest): Promise<IssueComment> {
+  async addUserComment(issueId: number, comment: IssueCommentRequest, file?: File): Promise<IssueComment> {
+    // If there's a file, use FormData instead of JSON
+    if (file) {
+      const formData = new FormData();
+      formData.append('message', comment.message);
+      formData.append('internal', String(comment.internal || false));
+      formData.append('file', file);
+
+      const token = localStorage.getItem('accessToken');
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_BASE}/support/issues/${issueId}/comments`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('accessToken');
+          window.location.href = '/login';
+          throw new Error('Session expired. Please login again.');
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || 'Failed to add comment');
+      }
+
+      return response.json();
+    }
+
+    // No file - use regular JSON request
     return this.request<IssueComment>(`/support/issues/${issueId}/comments`, {
       method: 'POST',
       body: JSON.stringify(comment),
     });
+  }
+
+  async downloadCommentAttachment(commentId: number): Promise<Blob> {
+    const token = localStorage.getItem('accessToken');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE}/support/comments/${commentId}/attachment`, {
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to download attachment');
+    }
+
+    return response.blob();
   }
 
   async markTicketAsViewed(issueId: number): Promise<void> {

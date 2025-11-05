@@ -11,10 +11,14 @@ import org.sensorvision.service.IssueSubmissionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.sensorvision.model.IssueComment;
 
 import java.util.List;
 import java.util.Map;
@@ -112,16 +116,76 @@ public class IssueSubmissionController {
     }
 
     /**
-     * Add a comment to an issue
+     * Add a comment to an issue (JSON - no attachment)
      * POST /api/v1/support/issues/{id}/comments
+     * Content-Type: application/json
      */
-    @PostMapping("/issues/{id}/comments")
+    @PostMapping(value = "/issues/{id}/comments", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<IssueCommentDto> addComment(
             @PathVariable Long id,
             @Valid @RequestBody IssueCommentRequest request) {
         logger.info("User adding comment to issue: {}", id);
+
+        // CRITICAL: Validate HTML content to prevent empty Quill markup like <p><br></p>
+        if (!org.sensorvision.util.HtmlUtils.hasTextContent(request.message())) {
+            throw new IllegalArgumentException("Message is required");
+        }
+
         IssueCommentDto comment = commentService.addUserComment(id, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
+    }
+
+    /**
+     * Add a comment to an issue with file attachment
+     * POST /api/v1/support/issues/{id}/comments
+     * Content-Type: multipart/form-data
+     */
+    @PostMapping(value = "/issues/{id}/comments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<IssueCommentDto> addCommentWithAttachment(
+            @PathVariable Long id,
+            @RequestParam("message") String message,
+            @RequestParam(value = "internal", defaultValue = "false") boolean internal,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+
+        logger.info("User adding comment to issue: {} (hasAttachment: {})", id, file != null && !file.isEmpty());
+
+        // Manual validation since we can't use @Valid with @RequestParam
+        // CRITICAL: Use HTML-aware validation to prevent empty Quill markup like <p><br></p>
+        if (message == null || !org.sensorvision.util.HtmlUtils.hasTextContent(message)) {
+            throw new IllegalArgumentException("Message is required");
+        }
+        if (message.length() > 5000) {
+            throw new IllegalArgumentException("Message must not exceed 5000 characters");
+        }
+
+        IssueCommentRequest request = new IssueCommentRequest(message.trim(), internal);
+        IssueCommentDto comment = commentService.addUserComment(id, request, file);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(comment);
+    }
+
+    /**
+     * Download a comment attachment (with authorization checks)
+     * GET /api/v1/support/comments/{commentId}/attachment
+     *
+     * Security: Users can only download attachments from their own tickets' public comments
+     * Admins can download all attachments
+     */
+    @GetMapping("/comments/{commentId}/attachment")
+    public ResponseEntity<byte[]> downloadCommentAttachment(@PathVariable Long commentId) {
+        logger.info("Downloading attachment for comment: {}", commentId);
+
+        // Use service method with authorization checks
+        IssueComment comment = commentService.getCommentWithAttachment(commentId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(comment.getAttachmentContentType()));
+        headers.setContentDispositionFormData("attachment", comment.getAttachmentFilename());
+        headers.setContentLength(comment.getAttachmentSizeBytes());
+
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body(comment.getAttachmentData());
     }
 
     /**

@@ -24,6 +24,22 @@ public class IssueComment extends AuditableEntity {
     @Column(name = "is_internal", nullable = false)
     private boolean internal = false;
 
+    // File attachment fields
+    @Column(name = "attachment_filename", length = 255)
+    private String attachmentFilename;
+
+    // Lazy-loaded to avoid fetching large blobs when loading comment lists
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "attachment_data", columnDefinition = "bytea")
+    private byte[] attachmentData;
+
+    @Column(name = "attachment_content_type", length = 100)
+    private String attachmentContentType;
+
+    @Column(name = "attachment_size_bytes")
+    private Long attachmentSizeBytes;
+
     // Constructors
     public IssueComment() {
     }
@@ -74,5 +90,44 @@ public class IssueComment extends AuditableEntity {
 
     public void setInternal(boolean internal) {
         this.internal = internal;
+    }
+
+    public String getAttachmentFilename() {
+        return attachmentFilename;
+    }
+
+    public void setAttachmentFilename(String attachmentFilename) {
+        this.attachmentFilename = attachmentFilename;
+    }
+
+    public byte[] getAttachmentData() {
+        return attachmentData;
+    }
+
+    public void setAttachmentData(byte[] attachmentData) {
+        this.attachmentData = attachmentData;
+    }
+
+    public String getAttachmentContentType() {
+        return attachmentContentType;
+    }
+
+    public void setAttachmentContentType(String attachmentContentType) {
+        this.attachmentContentType = attachmentContentType;
+    }
+
+    public Long getAttachmentSizeBytes() {
+        return attachmentSizeBytes;
+    }
+
+    public void setAttachmentSizeBytes(Long attachmentSizeBytes) {
+        this.attachmentSizeBytes = attachmentSizeBytes;
+    }
+
+    /**
+     * Check if this comment has an attachment
+     */
+    public boolean hasAttachment() {
+        return attachmentFilename != null && attachmentData != null;
     }
 }

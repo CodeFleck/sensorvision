@@ -5,6 +5,10 @@ import { apiService } from '../services/api';
 import { AdminIssue, IssueStatus, IssueSubmission, IssueComment, IssueCommentRequest } from '../types';
 import { CannedResponsePicker } from '../components/CannedResponsePicker';
 import { getStatusInfo, getSeverityInfo } from '../utils/issueStatusHelpers';
+import { hasTextContent } from '../utils/htmlUtils';
+import { RichTextEditor } from '../components/RichTextEditor';
+import { SafeHtmlDisplay } from '../components/SafeHtmlDisplay';
+import { useDraftComment } from '../hooks/useDraftComment';
 
 export const AdminSupportTickets: React.FC = () => {
   const [issues, setIssues] = useState<AdminIssue[]>([]);
@@ -15,10 +19,15 @@ export const AdminSupportTickets: React.FC = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [selectedIssue, setSelectedIssue] = useState<IssueSubmission | null>(null);
   const [comments, setComments] = useState<IssueComment[]>([]);
-  const [newComment, setNewComment] = useState('');
   const [isInternalComment, setIsInternalComment] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+
+  // Auto-save comment drafts
+  const { draft: newComment, setDraft: setNewComment, clearDraft, status: draftStatus } = useDraftComment({
+    ticketId: selectedIssue?.id || null,
+    autoSaveDelay: 1000, // Save 1 second after user stops typing
+  });
 
   useEffect(() => {
     loadIssues();
@@ -94,7 +103,7 @@ export const AdminSupportTickets: React.FC = () => {
   const closeIssueDetails = () => {
     setSelectedIssue(null);
     setComments([]);
-    setNewComment('');
+    clearDraft(); // Clear auto-saved draft when closing ticket
     setIsInternalComment(false);
     if (screenshotUrl) {
       URL.revokeObjectURL(screenshotUrl);
@@ -117,7 +126,13 @@ export const AdminSupportTickets: React.FC = () => {
   };
 
   const submitComment = async () => {
-    if (!selectedIssue || !newComment.trim()) return;
+    // CRITICAL: Validate HTML content to prevent empty Quill markup like <p><br></p>
+    if (!selectedIssue || !hasTextContent(newComment)) {
+      if (!hasTextContent(newComment)) {
+        toast.error('Please enter a message');
+      }
+      return;
+    }
 
     try {
       setSubmittingComment(true);
@@ -127,7 +142,7 @@ export const AdminSupportTickets: React.FC = () => {
       };
       const comment = await apiService.addAdminComment(selectedIssue.id, commentRequest);
       setComments([...comments, comment]);
-      setNewComment('');
+      clearDraft(); // Clear auto-saved draft after successful submission
       setIsInternalComment(false);
       toast.success('Comment added successfully');
     } catch (error) {
@@ -719,9 +734,7 @@ export const AdminSupportTickets: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <div className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
-                              {comment.message}
-                            </div>
+                            <SafeHtmlDisplay html={comment.message} className="text-gray-700 text-sm leading-relaxed" />
                           </div>
                         </div>
                       );
@@ -731,12 +744,29 @@ export const AdminSupportTickets: React.FC = () => {
 
                 {/* Add Comment */}
                 <div className="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 p-4 rounded-lg shadow-sm">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Add Response</label>
-                  <textarea
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-semibold text-gray-700">Add Response</label>
+                    {draftStatus.hasDraft && (
+                      <span className="text-xs text-gray-500">
+                        {draftStatus.isSaving ? (
+                          <span className="flex items-center gap-1">
+                            <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Saving draft...
+                          </span>
+                        ) : draftStatus.lastSaved ? (
+                          <span className="text-green-600">
+                            Draft saved {new Date(draftStatus.lastSaved).toLocaleTimeString()}
+                          </span>
+                        ) : null}
+                      </span>
+                    )}
+                  </div>
+                  <RichTextEditor
                     value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                    onChange={setNewComment}
                     placeholder="Type your response or select a template..."
                   />
                   <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

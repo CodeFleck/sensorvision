@@ -1,7 +1,10 @@
 package org.sensorvision.service;
 
+import org.hibernate.Hibernate;
 import org.sensorvision.dto.IssueCommentDto;
 import org.sensorvision.dto.IssueCommentRequest;
+import org.sensorvision.exception.BadRequestException;
+import org.sensorvision.exception.ResourceNotFoundException;
 import org.sensorvision.model.IssueComment;
 import org.sensorvision.model.IssueSubmission;
 import org.sensorvision.model.User;
@@ -11,9 +14,14 @@ import org.sensorvision.security.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,16 +52,41 @@ public class IssueCommentService {
      */
     @Transactional
     public IssueCommentDto addUserComment(Long issueId, IssueCommentRequest request) {
+        return addUserComment(issueId, request, null);
+    }
+
+    /**
+     * Add a comment with optional file attachment to an issue (user perspective)
+     * Users can only comment on their own issues and cannot create internal comments
+     */
+    @Transactional
+    public IssueCommentDto addUserComment(Long issueId, IssueCommentRequest request, MultipartFile attachment) {
         User currentUser = securityUtils.getCurrentUser();
 
         IssueSubmission issue = issueRepository.findByIdAndUser(issueId, currentUser)
-            .orElseThrow(() -> new RuntimeException("Issue not found with id: " + issueId));
+            .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
+
+        // CRITICAL: Sanitize first, THEN validate the sanitized content
+        // Payloads like <script>alert(1)</script> contain text before sanitization
+        // but become empty after sanitization, and should be rejected
+        String sanitizedMessage = sanitizeHtml(request.message());
+
+        // Validate post-sanitization to prevent storing empty comments
+        if (!org.sensorvision.util.HtmlUtils.hasTextContent(sanitizedMessage)) {
+            throw new org.sensorvision.exception.BadRequestException(
+                "Message contains no valid content after sanitization");
+        }
 
         IssueComment comment = new IssueComment();
         comment.setIssue(issue);
         comment.setAuthor(currentUser);
-        comment.setMessage(request.message());
+        comment.setMessage(sanitizedMessage);
         comment.setInternal(false); // Users cannot create internal comments
+
+        // Handle file attachment if provided
+        if (attachment != null && !attachment.isEmpty()) {
+            processAttachment(comment, attachment);
+        }
 
         IssueComment savedComment = commentRepository.save(comment);
         logger.info("User {} added comment to issue {}", currentUser.getUsername(), issueId);
@@ -71,16 +104,41 @@ public class IssueCommentService {
      */
     @Transactional
     public IssueCommentDto addAdminComment(Long issueId, IssueCommentRequest request) {
+        return addAdminComment(issueId, request, null);
+    }
+
+    /**
+     * Add a comment with optional file attachment to an issue (admin perspective)
+     * Admins can comment on any issue and can create internal comments
+     */
+    @Transactional
+    public IssueCommentDto addAdminComment(Long issueId, IssueCommentRequest request, MultipartFile attachment) {
         User currentUser = securityUtils.getCurrentUser();
 
         IssueSubmission issue = issueRepository.findById(issueId)
-            .orElseThrow(() -> new RuntimeException("Issue not found with id: " + issueId));
+            .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
+
+        // CRITICAL: Sanitize first, THEN validate the sanitized content
+        // Payloads like <script>alert(1)</script> contain text before sanitization
+        // but become empty after sanitization, and should be rejected
+        String sanitizedMessage = sanitizeHtml(request.message());
+
+        // Validate post-sanitization to prevent storing empty comments
+        if (!org.sensorvision.util.HtmlUtils.hasTextContent(sanitizedMessage)) {
+            throw new org.sensorvision.exception.BadRequestException(
+                "Message contains no valid content after sanitization");
+        }
 
         IssueComment comment = new IssueComment();
         comment.setIssue(issue);
         comment.setAuthor(currentUser);
-        comment.setMessage(request.message());
+        comment.setMessage(sanitizedMessage);
         comment.setInternal(request.internal()); // Admins can set internal flag
+
+        // Handle file attachment if provided
+        if (attachment != null && !attachment.isEmpty()) {
+            processAttachment(comment, attachment);
+        }
 
         IssueComment savedComment = commentRepository.save(comment);
         logger.info("Admin {} added {} comment to issue {}",
@@ -136,7 +194,7 @@ public class IssueCommentService {
         User currentUser = securityUtils.getCurrentUser();
 
         IssueSubmission issue = issueRepository.findByIdAndUser(issueId, currentUser)
-            .orElseThrow(() -> new RuntimeException("Issue not found with id: " + issueId));
+            .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
 
         return commentRepository.findPublicCommentsByIssue(issue).stream()
             .map(IssueCommentDto::fromEntity)
@@ -150,7 +208,7 @@ public class IssueCommentService {
     @Transactional(readOnly = true)
     public List<IssueCommentDto> getAdminComments(Long issueId) {
         IssueSubmission issue = issueRepository.findById(issueId)
-            .orElseThrow(() -> new RuntimeException("Issue not found with id: " + issueId));
+            .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
 
         return commentRepository.findAllCommentsByIssue(issue).stream()
             .map(IssueCommentDto::fromEntity)
@@ -163,5 +221,122 @@ public class IssueCommentService {
     @Transactional(readOnly = true)
     public long getCommentCount(IssueSubmission issue) {
         return commentRepository.countPublicCommentsByIssue(issue);
+    }
+
+    /**
+     * Get comment attachment with authorization checks
+     * Users can only download attachments from their own tickets' public comments
+     * Admins can download all attachments
+     */
+    @Transactional(readOnly = true)
+    public IssueComment getCommentWithAttachment(Long commentId) {
+        User currentUser = securityUtils.getCurrentUser();
+        boolean isAdmin = currentUser.getRoles().stream()
+            .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
+
+        IssueComment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + commentId));
+
+        if (!comment.hasAttachment()) {
+            throw new BadRequestException("Comment has no attachment");
+        }
+
+        // CRITICAL: Eagerly initialize the lazy-loaded attachmentData field BEFORE any return
+        // This prevents LazyInitializationException when OSIV is disabled
+        // The byte array must be loaded within the transaction boundary
+        // Must happen before both admin and user paths to ensure blob is loaded
+        Hibernate.initialize(comment.getAttachmentData());
+
+        // Admins can access all attachments
+        if (isAdmin) {
+            return comment;
+        }
+
+        // Regular users can only access attachments from their own tickets' public comments
+        IssueSubmission issue = comment.getIssue();
+
+        // Check ownership
+        if (!issue.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You do not have permission to access this attachment");
+        }
+
+        // Check if comment is internal (users should not see internal attachments)
+        if (comment.isInternal()) {
+            throw new AccessDeniedException("You do not have permission to access this attachment");
+        }
+
+        return comment;
+    }
+
+    /**
+     * Process and validate file attachment for a comment
+     */
+    private void processAttachment(IssueComment comment, MultipartFile file) {
+        final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB limit
+
+        try {
+            // Validate file size
+            if (file.getSize() > MAX_FILE_SIZE) {
+                throw new BadRequestException("File size exceeds maximum limit of 10 MB");
+            }
+
+            // Validate file type (allow common file types)
+            String contentType = file.getContentType();
+            if (contentType == null || !isAllowedFileType(contentType)) {
+                throw new BadRequestException("File type not allowed. Allowed types: images, text files, PDFs, JSON, XML, logs");
+            }
+
+            // Set attachment fields
+            comment.setAttachmentFilename(file.getOriginalFilename());
+            comment.setAttachmentData(file.getBytes());
+            comment.setAttachmentContentType(contentType);
+            comment.setAttachmentSizeBytes(file.getSize());
+
+            logger.info("Processed file attachment: {} ({} bytes)", file.getOriginalFilename(), file.getSize());
+
+        } catch (IOException e) {
+            logger.error("Failed to process file attachment", e);
+            throw new BadRequestException("Failed to process file attachment: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Check if the file type is allowed for attachments
+     */
+    private boolean isAllowedFileType(String contentType) {
+        return contentType.startsWith("image/") ||
+               contentType.startsWith("text/") ||
+               contentType.equals("application/pdf") ||
+               contentType.equals("application/json") ||
+               contentType.equals("application/xml") ||
+               contentType.equals("text/xml") ||
+               contentType.equals("application/zip") ||
+               contentType.equals("application/x-gzip") ||
+               contentType.equals("application/octet-stream"); // For .log files
+    }
+
+    /**
+     * Sanitize HTML content to prevent XSS attacks
+     * Allows basic formatting tags but strips dangerous elements
+     */
+    private String sanitizeHtml(String htmlContent) {
+        if (htmlContent == null) {
+            return null;
+        }
+
+        // Define allowed HTML tags for basic rich text formatting
+        Safelist safelist = Safelist.relaxed()
+            .addTags("code", "pre", "kbd", "samp", "var") // Code elements
+            .addAttributes("a", "target", "rel") // Allow links to open in new tab
+            .addAttributes("code", "class") // For syntax highlighting
+            .addAttributes("pre", "class"); // For code blocks
+
+        // Sanitize the HTML
+        String sanitized = Jsoup.clean(htmlContent, safelist);
+
+        logger.debug("Sanitized HTML content (original length: {}, sanitized length: {})",
+            htmlContent.length(), sanitized.length());
+
+        return sanitized;
     }
 }

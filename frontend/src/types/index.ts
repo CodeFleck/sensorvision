@@ -366,6 +366,10 @@ export interface IssueComment {
   authorName: string;
   message: string;
   internal: boolean;
+  hasAttachment: boolean;
+  attachmentFilename?: string;
+  attachmentContentType?: string;
+  attachmentSizeBytes?: number;
   createdAt: string;
 }
 

@@ -144,6 +144,8 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
         callbacks: {
           label: function(context) {
             const point = context.parsed;
+            if (!point || point.x == null || point.y == null) return '';
+
             let xLabel = '';
 
             if (xVar === 'timestamp') {
