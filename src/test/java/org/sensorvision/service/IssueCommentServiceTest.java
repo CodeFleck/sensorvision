@@ -372,8 +372,8 @@ class IssueCommentServiceTest {
 
     @Test
     void htmlSanitization_shouldRemoveDangerousTags() {
-        // Given
-        String dangerousHtml = "<script>alert('xss')</script><iframe src='evil.com'></iframe><object data='bad'></object>";
+        // Given - Mix of valid content and dangerous tags
+        String dangerousHtml = "<p>Valid content</p><script>alert('xss')</script><iframe src='evil.com'></iframe><object data='bad'></object>";
         IssueCommentRequest request = new IssueCommentRequest(dangerousHtml, false);
 
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
@@ -387,6 +387,9 @@ class IssueCommentServiceTest {
         verify(commentRepository).save(commentCaptor.capture());
         IssueComment savedComment = commentCaptor.getValue();
 
+        // Valid content should be preserved
+        assertThat(savedComment.getMessage()).contains("Valid content");
+        // Dangerous tags should be removed
         assertThat(savedComment.getMessage()).doesNotContain("<script>");
         assertThat(savedComment.getMessage()).doesNotContain("<iframe>");
         assertThat(savedComment.getMessage()).doesNotContain("<object>");
@@ -413,6 +416,118 @@ class IssueCommentServiceTest {
         assertThat(savedComment.getMessage()).doesNotContain("onclick");
         assertThat(savedComment.getMessage()).doesNotContain("onerror");
         assertThat(savedComment.getMessage()).doesNotContain("alert");
+    }
+
+    // ========== REGRESSION: Post-Sanitization Validation ==========
+    // Bug: Validation was happening BEFORE sanitization, allowing payloads like
+    // <script>alert(1)</script> to pass (because they contain text) but then
+    // collapse to empty strings after sanitization, resulting in blank comments
+    // being stored in the database.
+
+    @Test
+    void REGRESSION_addUserComment_shouldRejectScriptTagsAfterSanitization() {
+        // Given - Script tag with text content
+        IssueCommentRequest request = new IssueCommentRequest("<script>alert('xss')</script>", false);
+
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(issueRepository.findByIdAndUser(1L, testUser)).thenReturn(Optional.of(testIssue));
+
+        // When/Then - Should throw BadRequestException after sanitization
+        // Even though input has text, sanitized result is empty
+        assertThatThrownBy(() -> commentService.addUserComment(1L, request))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessageContaining("no valid content after sanitization");
+
+        // Comment should NOT be saved
+        verify(commentRepository, never()).save(any());
+    }
+
+    @Test
+    void REGRESSION_addUserComment_shouldRejectEmptyIframeTagsAfterSanitization() {
+        // Given - Iframe tag with no text content (only attributes)
+        IssueCommentRequest request = new IssueCommentRequest("<iframe src='evil.com'></iframe>", false);
+
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(issueRepository.findByIdAndUser(1L, testUser)).thenReturn(Optional.of(testIssue));
+
+        // When/Then - Should throw BadRequestException
+        // iframe tags are not in Safelist.relaxed(), so they get stripped entirely
+        // With no text content, the result after sanitization is empty
+        assertThatThrownBy(() -> commentService.addUserComment(1L, request))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessageContaining("no valid content after sanitization");
+
+        verify(commentRepository, never()).save(any());
+    }
+
+    @Test
+    void REGRESSION_addUserComment_shouldRejectObjectTagsAfterSanitization() {
+        // Given - Object/embed tags that collapse to empty after sanitization
+        IssueCommentRequest request = new IssueCommentRequest("<object data='bad.swf'></object><embed src='evil.swf'>", false);
+
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(issueRepository.findByIdAndUser(1L, testUser)).thenReturn(Optional.of(testIssue));
+
+        // When/Then - Should throw BadRequestException
+        assertThatThrownBy(() -> commentService.addUserComment(1L, request))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessageContaining("no valid content after sanitization");
+
+        verify(commentRepository, never()).save(any());
+    }
+
+    @Test
+    void REGRESSION_addUserComment_shouldAcceptMixedContent_whenValidContentRemains() {
+        // Given - Mixed dangerous and safe tags
+        // After sanitization: script is removed, but <p>Valid text</p> remains
+        IssueCommentRequest request = new IssueCommentRequest("<p>Valid text</p><script>alert(1)</script>", false);
+
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(issueRepository.findByIdAndUser(1L, testUser)).thenReturn(Optional.of(testIssue));
+        when(commentRepository.save(any(IssueComment.class))).thenReturn(testComment);
+
+        // When - Should NOT throw (valid content remains after sanitization)
+        commentService.addUserComment(1L, request);
+
+        // Then
+        verify(commentRepository).save(commentCaptor.capture());
+        IssueComment savedComment = commentCaptor.getValue();
+
+        // Script removed, but valid content preserved
+        assertThat(savedComment.getMessage()).contains("Valid text");
+        assertThat(savedComment.getMessage()).doesNotContain("<script>");
+    }
+
+    @Test
+    void REGRESSION_addAdminComment_shouldRejectScriptTagsAfterSanitization() {
+        // Given - Same sanitization rules apply to admin comments
+        IssueCommentRequest request = new IssueCommentRequest("<script>console.log('test')</script>", false);
+
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(issueRepository.findById(1L)).thenReturn(Optional.of(testIssue));
+
+        // When/Then - Admin comments also validate post-sanitization
+        assertThatThrownBy(() -> commentService.addAdminComment(1L, request))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessageContaining("no valid content after sanitization");
+
+        verify(commentRepository, never()).save(any());
+    }
+
+    @Test
+    void REGRESSION_addAdminComment_shouldRejectInternalCommentsThatAreEmpty() {
+        // Given - Even internal comments must have content after sanitization
+        IssueCommentRequest request = new IssueCommentRequest("<script>alert(1)</script>", true);
+
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(issueRepository.findById(1L)).thenReturn(Optional.of(testIssue));
+
+        // When/Then - Internal flag doesn't bypass sanitization validation
+        assertThatThrownBy(() -> commentService.addAdminComment(1L, request))
+            .isInstanceOf(BadRequestException.class)
+            .hasMessageContaining("no valid content after sanitization");
+
+        verify(commentRepository, never()).save(any());
     }
 
     // ========== Comment Retrieval Tests ==========

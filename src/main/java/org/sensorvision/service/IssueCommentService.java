@@ -66,10 +66,21 @@ public class IssueCommentService {
         IssueSubmission issue = issueRepository.findByIdAndUser(issueId, currentUser)
             .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
 
+        // CRITICAL: Sanitize first, THEN validate the sanitized content
+        // Payloads like <script>alert(1)</script> contain text before sanitization
+        // but become empty after sanitization, and should be rejected
+        String sanitizedMessage = sanitizeHtml(request.message());
+
+        // Validate post-sanitization to prevent storing empty comments
+        if (!org.sensorvision.util.HtmlUtils.hasTextContent(sanitizedMessage)) {
+            throw new org.sensorvision.exception.BadRequestException(
+                "Message contains no valid content after sanitization");
+        }
+
         IssueComment comment = new IssueComment();
         comment.setIssue(issue);
         comment.setAuthor(currentUser);
-        comment.setMessage(sanitizeHtml(request.message()));
+        comment.setMessage(sanitizedMessage);
         comment.setInternal(false); // Users cannot create internal comments
 
         // Handle file attachment if provided
@@ -107,10 +118,21 @@ public class IssueCommentService {
         IssueSubmission issue = issueRepository.findById(issueId)
             .orElseThrow(() -> new ResourceNotFoundException("Issue not found with id: " + issueId));
 
+        // CRITICAL: Sanitize first, THEN validate the sanitized content
+        // Payloads like <script>alert(1)</script> contain text before sanitization
+        // but become empty after sanitization, and should be rejected
+        String sanitizedMessage = sanitizeHtml(request.message());
+
+        // Validate post-sanitization to prevent storing empty comments
+        if (!org.sensorvision.util.HtmlUtils.hasTextContent(sanitizedMessage)) {
+            throw new org.sensorvision.exception.BadRequestException(
+                "Message contains no valid content after sanitization");
+        }
+
         IssueComment comment = new IssueComment();
         comment.setIssue(issue);
         comment.setAuthor(currentUser);
-        comment.setMessage(sanitizeHtml(request.message()));
+        comment.setMessage(sanitizedMessage);
         comment.setInternal(request.internal()); // Admins can set internal flag
 
         // Handle file attachment if provided

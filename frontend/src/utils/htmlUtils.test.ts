@@ -58,6 +58,42 @@ describe('htmlUtils', () => {
       expect(hasTextContent('No tags at all')).toBe(true);
       // Note: <><> behavior with DOM parsing may vary
     });
+
+    // ========== REGRESSION: Frontend/Backend Consistency ==========
+    // Bug: Frontend used trim() while backend used isBlank()
+    // This caused confusing validation errors where frontend passed but backend rejected
+
+    it('REGRESSION: should reject non-breaking spaces only (nbsp)', () => {
+      // Multiple nbsp characters - common in rich text editors
+      expect(hasTextContent('<p>&nbsp;</p>')).toBe(false);
+      expect(hasTextContent('<p>&nbsp;&nbsp;&nbsp;</p>')).toBe(false);
+      expect(hasTextContent('<div>&nbsp;<span>&nbsp;</span></div>')).toBe(false);
+    });
+
+    it('REGRESSION: should reject zero-width spaces', () => {
+      // Zero-width space (U+200B) - invisible character
+      const zws = '\u200B';
+      expect(hasTextContent(`<p>${zws}</p>`)).toBe(false);
+      expect(hasTextContent(`<p>${zws}${zws}${zws}</p>`)).toBe(false);
+      expect(hasTextContent(`<p> ${zws} </p>`)).toBe(false);
+    });
+
+    it('REGRESSION: should reject other Unicode whitespace', () => {
+      // Thin space (U+2009), hair space (U+200A), ideographic space (U+3000)
+      expect(hasTextContent('<p>\u2009</p>')).toBe(false);
+      expect(hasTextContent('<p>\u200A</p>')).toBe(false);
+      expect(hasTextContent('<p>\u3000</p>')).toBe(false);
+
+      // Mixed Unicode whitespace
+      expect(hasTextContent('<p>&nbsp;\u2009\u200A</p>')).toBe(false);
+    });
+
+    it('REGRESSION: should accept text with Unicode whitespace inside', () => {
+      // Valid text that contains Unicode whitespace is still valid
+      expect(hasTextContent('<p>Hello&nbsp;World</p>')).toBe(true);
+      expect(hasTextContent('<p>Valid\u200BText</p>')).toBe(true);
+      expect(hasTextContent('<p>Japanese\u3000Space</p>')).toBe(true);
+    });
   });
 
   describe('stripHtmlTags', () => {
