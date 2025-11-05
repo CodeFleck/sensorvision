@@ -1,6 +1,8 @@
-# SensorVision IoT Monitoring Platform
+# SensorVision
 
-A comprehensive Ubidots-like IoT monitoring platform built on Spring Boot and MQTT that provides complete device management, real-time data visualization, alerting, and analytics capabilities.
+**The IoT Platform That Scales With You**
+
+Build once, deploy anywhere, scale infinitely. SensorVision is an enterprise-grade IoT monitoring platform built on modern architecture with developer-friendly tools. Get from zero to insights in minutes with real-time data visualization, intelligent alerting, and extensible plugin ecosystem.
 
 ## 🚀 Features
 
