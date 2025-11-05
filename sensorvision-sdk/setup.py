@@ -13,7 +13,7 @@ setup(
     version="0.1.0",
     author="SensorVision Team",
     author_email="support@sensorvision.io",
-    description="Python SDK for SensorVision IoT platform",
+    description="Python SDK for SensorVision - The IoT platform that scales with you",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/CodeFleck/sensorvision",

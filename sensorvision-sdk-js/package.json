@@ -1,7 +1,7 @@
 {
   "name": "sensorvision-sdk",
   "version": "0.1.0",
-  "description": "JavaScript/TypeScript SDK for SensorVision IoT platform",
+  "description": "JavaScript/TypeScript SDK for SensorVision - The IoT platform that scales with you",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "browser": "dist/index.umd.js",

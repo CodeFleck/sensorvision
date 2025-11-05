@@ -3,7 +3,9 @@
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Official Python SDK for the [SensorVision](https://github.com/CodeFleck/sensorvision) IoT monitoring platform. This SDK provides easy-to-use synchronous and asynchronous clients for sending telemetry data from IoT devices, Raspberry Pi projects, Python applications, and more.
+Official Python SDK for [SensorVision](https://github.com/CodeFleck/sensorvision) - The IoT platform that scales with you.
+
+Build IoT applications with enterprise-grade infrastructure and developer-friendly tools. This SDK provides simple, production-ready clients for sending telemetry data from IoT devices, Raspberry Pi projects, Python applications, and more.
 
 ## Features
 
