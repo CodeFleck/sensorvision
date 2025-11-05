@@ -36,7 +36,7 @@ export const useDraftComment = ({
     hasDraft: false,
   });
 
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const storageKey = ticketId ? `ticket-draft-${ticketId}` : null;
 
   // Load draft from localStorage when ticketId changes
