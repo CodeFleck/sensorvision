@@ -97,6 +97,12 @@ public class AdminIssueController {
         logger.info("Admin adding {} comment to issue: {}",
             request.internal() ? "internal" : "public", id);
 
+        // CRITICAL: Validate HTML content to prevent empty Quill markup like <p><br></p>
+        // Admins using REST API directly can bypass UI validation
+        if (!org.sensorvision.util.HtmlUtils.hasTextContent(request.message())) {
+            throw new IllegalArgumentException("Message is required");
+        }
+
         IssueCommentDto comment = commentService.addAdminComment(id, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
     }

@@ -36,6 +36,55 @@ class HtmlUtilsTest {
         assertThat(HtmlUtils.hasTextContent("<div><p></p></div>")).isFalse();
     }
 
+    // ========== REGRESSION: Unicode Whitespace Tests ==========
+    // Bug: trim() only strips ASCII whitespace ≤0x20, not Unicode whitespace
+    // Payloads like <p>&nbsp;</p> would pass validation and persist
+
+    @Test
+    void REGRESSION_hasTextContent_shouldRejectNonBreakingSpaces() {
+        // &nbsp; entity (U+00A0) - common in Quill/rich text editors
+        assertThat(HtmlUtils.hasTextContent("<p>&nbsp;</p>")).isFalse();
+        assertThat(HtmlUtils.hasTextContent("<p>&nbsp;&nbsp;&nbsp;</p>")).isFalse();
+
+        // Mixed with ASCII whitespace
+        assertThat(HtmlUtils.hasTextContent("<p> &nbsp; </p>")).isFalse();
+        assertThat(HtmlUtils.hasTextContent("<div>&nbsp;<span>&nbsp;</span>&nbsp;</div>")).isFalse();
+    }
+
+    @Test
+    void REGRESSION_hasTextContent_shouldRejectZeroWidthSpaces() {
+        // Zero-width space (U+200B)
+        String zeroWidthSpace = "\u200B";
+        assertThat(HtmlUtils.hasTextContent("<p>" + zeroWidthSpace + "</p>")).isFalse();
+        assertThat(HtmlUtils.hasTextContent("<p>" + zeroWidthSpace + zeroWidthSpace + "</p>")).isFalse();
+
+        // Mixed with other whitespace
+        assertThat(HtmlUtils.hasTextContent("<p> " + zeroWidthSpace + " </p>")).isFalse();
+    }
+
+    @Test
+    void REGRESSION_hasTextContent_shouldRejectOtherUnicodeWhitespace() {
+        // Various Unicode whitespace characters
+        String thinSpace = "\u2009";      // Thin space (U+2009)
+        String hairSpace = "\u200A";      // Hair space (U+200A)
+        String ideographicSpace = "\u3000"; // Ideographic space (U+3000)
+
+        assertThat(HtmlUtils.hasTextContent("<p>" + thinSpace + "</p>")).isFalse();
+        assertThat(HtmlUtils.hasTextContent("<p>" + hairSpace + "</p>")).isFalse();
+        assertThat(HtmlUtils.hasTextContent("<p>" + ideographicSpace + "</p>")).isFalse();
+
+        // Mixed Unicode whitespace
+        assertThat(HtmlUtils.hasTextContent("<p>&nbsp;" + thinSpace + hairSpace + "</p>")).isFalse();
+    }
+
+    @Test
+    void REGRESSION_hasTextContent_shouldAcceptTextWithUnicodeWhitespace() {
+        // Valid text that happens to contain Unicode whitespace
+        assertThat(HtmlUtils.hasTextContent("<p>Hello&nbsp;World</p>")).isTrue();
+        assertThat(HtmlUtils.hasTextContent("<p>Valid\u200BText</p>")).isTrue();
+        assertThat(HtmlUtils.hasTextContent("<p>Japanese\u3000Space</p>")).isTrue();
+    }
+
     // ========== Valid Content Tests ==========
 
     @Test
