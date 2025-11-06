@@ -271,12 +271,15 @@ git push origin js-sdk-v0.1.0
 
 ## Java SDK - Publishing to Maven Central
 
+**⚠️ Important**: As of January 2024, use the new **Central Portal** (not the old OSSRH/Jira system).
+
 ### Prerequisites
 
-**Create Sonatype OSSRH Account**:
-1. Register at: https://issues.sonatype.org/secure/Signup!default.jspa
-2. Create JIRA ticket to claim `io.sensorvision` namespace
-3. Wait for namespace approval (~2 business days)
+**Create Maven Central Portal Account**:
+1. Register at: https://central.sonatype.com/
+2. Verify your email
+3. Generate User Token at https://central.sonatype.com/account
+4. Claim namespace via GitHub verification or DNS
 
 **Setup GPG**:
 ```bash
@@ -295,14 +298,14 @@ gpg --keyserver keys.openpgp.org --send-keys YOUR_KEY_ID
 <settings>
   <servers>
     <server>
-      <id>ossrh</id>
-      <username>your-jira-username</username>
-      <password>your-jira-password</password>
+      <id>central</id>
+      <username>YOUR_CENTRAL_TOKEN_USERNAME</username>
+      <password>YOUR_CENTRAL_TOKEN_PASSWORD</password>
     </server>
   </servers>
   <profiles>
     <profile>
-      <id>ossrh</id>
+      <id>central</id>
       <properties>
         <gpg.executable>gpg</gpg.executable>
         <gpg.passphrase>your-gpg-passphrase</gpg.passphrase>
@@ -327,12 +330,12 @@ gpg --keyserver keys.openpgp.org --send-keys YOUR_KEY_ID
 
 3. **Deploy to Maven Central**:
    ```bash
-   mvn clean deploy -P release
+   mvn clean deploy
    ```
 
 4. **Verify Deployment**:
-   - Staging: https://s01.oss.sonatype.org/#stagingRepositories
-   - Maven Central (after ~2 hours): https://central.sonatype.com/artifact/io.sensorvision/sensorvision-sdk
+   - Central Portal: https://central.sonatype.com/publishing/deployments
+   - Maven Central (synced within ~30 minutes): https://central.sonatype.com/artifact/io.sensorvision/sensorvision-sdk
 
 ### Automated Publishing with GitHub Actions
 

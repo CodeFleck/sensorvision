@@ -1,29 +1,69 @@
 # Publishing Java SDK to Maven Central
 
-This guide explains how to publish the SensorVision Java SDK to Maven Central.
+This guide explains how to publish the SensorVision Java SDK to Maven Central using the **new Central Portal** (as of January 2024).
+
+**⚠️ Important**: The old OSSRH/Jira process has been decommissioned. Use the new Central Portal instead.
 
 ## Prerequisites
 
-### 1. Sonatype OSSRH Account
+### 1. Maven Central Portal Account
 
-Register at: https://issues.sonatype.org/secure/Signup!default.jspa
+**Register at Central Portal**: https://central.sonatype.com/
 
-Create a JIRA ticket to claim your `io.sensorvision` namespace:
-- **Project**: Community Support - Open Source Project Repository Hosting (OSSRH)
-- **Issue Type**: New Project
-- **Summary**: Request for io.sensorvision namespace
-- **Group Id**: io.sensorvision
-- **Project URL**: https://github.com/CodeFleck/sensorvision
-- **SCM URL**: https://github.com/CodeFleck/sensorvision.git
+1. Click "Sign Up" and create an account
+2. Verify your email address
+3. Login to the Central Portal
 
-### 2. GPG Setup
+### 2. Claim Your Namespace
+
+**Method 1: GitHub Verification (Recommended)**
+
+For `io.github.YOUR_USERNAME` namespace:
+- No verification needed if publishing under `io.github.codefleck`
+- Automatically verified via GitHub OAuth
+
+For custom namespace `io.sensorvision`:
+1. Navigate to: https://central.sonatype.com/publishing/namespaces
+2. Click "Add Namespace"
+3. Enter: `io.sensorvision`
+4. Choose verification method:
+   - **GitHub Repository**: Add `OSSRH-xxxxx` as a topic to https://github.com/CodeFleck/sensorvision
+   - **DNS TXT Record**: Add TXT record to `sensorvision.io` domain
+   - **Email**: Send verification email from `@sensorvision.io` address
+
+**Method 2: DNS Verification**
+
+Add TXT record to your domain:
+```
+Host: _maven-central-verification
+Value: [verification-code-from-portal]
+```
+
+**Method 3: Support Ticket**
+
+If you don't control the domain or GitHub org, email: central-support@sonatype.com
+
+### 3. Generate User Token
+
+**In Central Portal**:
+1. Go to: https://central.sonatype.com/account
+2. Click "Generate User Token"
+3. Copy the generated username and password
+
+**Save these credentials securely** - you'll need them for publishing.
+
+### 4. GPG Setup
 
 Install GPG:
 ```bash
 # Windows (via Chocolatey)
 choco install gpg4win
 
-# Or download from: https://gpg4win.org/download.html
+# macOS
+brew install gnupg
+
+# Linux (Ubuntu/Debian)
+sudo apt-get install gnupg
 ```
 
 Generate GPG key:
@@ -39,11 +79,11 @@ gpg --gen-key
 # List keys to get key ID
 gpg --list-keys
 
-# Publish key to keyserver
-gpg --keyserver keys.openpgp.org --send-keys YOUR_KEY_ID
+# Publish key to keyserver (required by Maven Central)
+gpg --keyserver keyserver.ubuntu.com --send-keys YOUR_KEY_ID
 ```
 
-### 3. Maven Settings
+### 5. Maven Settings
 
 Create/edit `~/.m2/settings.xml`:
 
@@ -51,15 +91,15 @@ Create/edit `~/.m2/settings.xml`:
 <settings>
   <servers>
     <server>
-      <id>ossrh</id>
-      <username>your-jira-username</username>
-      <password>your-jira-password</password>
+      <id>central</id>
+      <username>YOUR_CENTRAL_TOKEN_USERNAME</username>
+      <password>YOUR_CENTRAL_TOKEN_PASSWORD</password>
     </server>
   </servers>
 
   <profiles>
     <profile>
-      <id>ossrh</id>
+      <id>central</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
@@ -72,19 +112,19 @@ Create/edit `~/.m2/settings.xml`:
 </settings>
 ```
 
-**Security Best Practice**: Use environment variables instead:
+**Security Best Practice**: Use environment variables:
 ```bash
-export OSSRH_USERNAME="your-jira-username"
-export OSSRH_PASSWORD="your-jira-password"
+export CENTRAL_USERNAME="your-token-username"
+export CENTRAL_PASSWORD="your-token-password"
 export GPG_PASSPHRASE="your-gpg-passphrase"
 ```
 
 Update settings.xml:
 ```xml
 <server>
-  <id>ossrh</id>
-  <username>${env.OSSRH_USERNAME}</username>
-  <password>${env.OSSRH_PASSWORD}</password>
+  <id>central</id>
+  <username>${env.CENTRAL_USERNAME}</username>
+  <password>${env.CENTRAL_PASSWORD}</password>
 </server>
 ```
 
@@ -113,17 +153,29 @@ Ensure all tests pass before publishing.
 mvn clean package
 
 # Deploy to Maven Central (requires GPG key)
+mvn clean deploy
+
+# Or with release profile
 mvn clean deploy -P release
 
-# Or with explicit GPG passphrase
-mvn clean deploy -P release -Dgpg.passphrase=your-passphrase
+# With explicit GPG passphrase
+mvn clean deploy -Dgpg.passphrase=your-passphrase
 ```
 
 ### 4. Verify Deployment
 
-After deployment, the artifact will be available on:
-- Staging: https://s01.oss.sonatype.org/#stagingRepositories
-- Maven Central (after ~2 hours): https://central.sonatype.com/artifact/io.sensorvision/sensorvision-sdk
+The new Central Portal provides immediate feedback:
+
+1. **Check Deployment Status**:
+   - Visit: https://central.sonatype.com/publishing/deployments
+   - View your deployment status
+   - Artifacts are validated automatically
+
+2. **Published Artifacts**:
+   - Central Portal: https://central.sonatype.com/artifact/io.sensorvision/sensorvision-sdk
+   - Maven Central (synced within ~30 minutes): https://repo1.maven.org/maven2/io/sensorvision/sensorvision-sdk/
+
+**Note**: The new process is much faster than the old OSSRH system (minutes vs hours).
 
 ### 5. Test Installation
 
