@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Play, CheckCircle, AlertCircle, Info, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Editor from '@monaco-editor/react';
 import serverlessFunctionsService, {
   ServerlessFunction,
   InvokeFunctionRequest,
@@ -135,17 +136,29 @@ const FunctionInvokeModal: React.FC<FunctionInvokeModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Input Data (JSON)
             </label>
-            <textarea
-              value={inputJson}
-              onChange={(e) => handleInputChange(e.target.value)}
-              rows={12}
-              className={`w-full px-3 py-2 border rounded-md font-mono text-sm ${
-                inputError
-                  ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                  : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-              }`}
-              spellCheck={false}
-            />
+            <div className={`border rounded-md overflow-hidden ${
+              inputError ? 'border-red-300' : 'border-gray-300'
+            }`}>
+              <Editor
+                height="300px"
+                language="json"
+                value={inputJson}
+                onChange={(value) => handleInputChange(value || '')}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  lineNumbers: 'on',
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  tabSize: 2,
+                  insertSpaces: true,
+                  wordWrap: 'on',
+                  formatOnPaste: true,
+                  formatOnType: true,
+                }}
+                theme="vs"
+              />
+            </div>
             {inputError && (
               <p className="mt-1 text-sm text-red-600">{inputError}</p>
             )}

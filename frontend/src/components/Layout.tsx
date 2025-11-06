@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Zap,
   BookOpen,
+  Plug,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -57,6 +58,7 @@ const navigation: NavigationItem[] = [
   { name: 'Data Ingestion', href: '/data-ingestion', icon: Upload, adminOnly: true },
   { name: 'Data Import', href: '/data-import', icon: FileUp, adminOnly: true },
   { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: true },
+  { name: 'Data Plugins', href: '/data-plugins', icon: Plug, adminOnly: true },
   { name: 'Variables', href: '/variables', icon: Database, adminOnly: true },
 ];
 

@@ -10,10 +10,10 @@ long_description = (this_directory / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="sensorvision-sdk",
-    version="0.1.0",
+    version="0.1.1",
     author="SensorVision Team",
     author_email="support@sensorvision.io",
-    description="Python SDK for SensorVision IoT platform",
+    description="Python SDK for SensorVision - The IoT platform that scales with you",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/CodeFleck/sensorvision",

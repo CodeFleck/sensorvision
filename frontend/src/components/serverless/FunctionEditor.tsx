@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Plus, Trash2, ChevronDown, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Editor, { Monaco } from '@monaco-editor/react';
 import serverlessFunctionsService, {
   ServerlessFunction,
   FunctionRuntime,
@@ -59,6 +60,8 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
   const [envVars, setEnvVars] = useState<Array<{ key: string; value: string }>>([]);
   const [envVarsExpanded, setEnvVarsExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editorFullscreen, setEditorFullscreen] = useState(false);
+  const editorRef = useRef<any>(null);
 
   useEffect(() => {
     if (editFunction) {
@@ -120,6 +123,32 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
     const updated = [...envVars];
     updated[index][field] = value;
     setEnvVars(updated);
+  };
+
+  const handleEditorMount = (editor: any, monaco: Monaco) => {
+    editorRef.current = editor;
+
+    // Configure Monaco editor theme and settings
+    monaco.editor.defineTheme('sensorvision', {
+      base: 'vs',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.background': '#ffffff',
+      }
+    });
+    monaco.editor.setTheme('sensorvision');
+  };
+
+  const getEditorLanguage = (): string => {
+    switch (runtime) {
+      case FunctionRuntime.PYTHON_3_11:
+        return 'python';
+      case FunctionRuntime.NODEJS_18:
+        return 'javascript';
+      default:
+        return 'plaintext';
+    }
   };
 
   const handleSave = async () => {
@@ -249,17 +278,67 @@ const FunctionEditor: React.FC<FunctionEditorProps> = ({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Function Code <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              rows={18}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-              spellCheck={false}
-            />
+          <div className="relative">
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Function Code <span className="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setEditorFullscreen(!editorFullscreen)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title={editorFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              >
+                {editorFullscreen ? (
+                  <Minimize2 className="w-4 h-4 text-gray-600" />
+                ) : (
+                  <Maximize2 className="w-4 h-4 text-gray-600" />
+                )}
+              </button>
+            </div>
+            <div className={`border border-gray-300 rounded-md overflow-hidden ${editorFullscreen ? 'fixed inset-4 z-50 bg-white shadow-2xl flex flex-col' : ''}`}>
+              {editorFullscreen && (
+                <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
+                  <span className="text-sm font-medium text-gray-700">Code Editor - {name || 'New Function'}</span>
+                  <button
+                    onClick={() => setEditorFullscreen(false)}
+                    className="p-1 hover:bg-gray-200 rounded"
+                  >
+                    <X className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+              )}
+              <Editor
+                height={editorFullscreen ? "calc(100vh - 120px)" : "500px"}
+                language={getEditorLanguage()}
+                value={code}
+                onChange={(value) => setCode(value || '')}
+                onMount={handleEditorMount}
+                options={{
+                  minimap: { enabled: editorFullscreen },
+                  fontSize: 14,
+                  lineNumbers: 'on',
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  tabSize: runtime === FunctionRuntime.PYTHON_3_11 ? 4 : 2,
+                  insertSpaces: true,
+                  wordWrap: 'on',
+                  formatOnPaste: true,
+                  formatOnType: true,
+                  quickSuggestions: true,
+                  suggestOnTriggerCharacters: true,
+                  acceptSuggestionOnEnter: 'on',
+                  snippetSuggestions: 'top',
+                }}
+                theme="vs"
+                loading={<div className="flex items-center justify-center h-full"><div className="text-gray-500">Loading editor...</div></div>}
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              {runtime === FunctionRuntime.PYTHON_3_11
+                ? 'Define a main(event) function that takes input and returns a JSON-serializable result'
+                : 'Define an exports.handler async function that takes event and returns a result'}
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -4,7 +4,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Official JavaScript/TypeScript SDK for the [SensorVision](https://github.com/CodeFleck/sensorvision) IoT monitoring platform. Works in Node.js and browsers with full TypeScript support.
+Official JavaScript/TypeScript SDK for [SensorVision](https://github.com/CodeFleck/sensorvision) - The IoT platform that scales with you.
+
+Build IoT applications with enterprise-grade infrastructure and developer-friendly tools. This universal SDK works in Node.js and browsers with full TypeScript support and real-time WebSocket capabilities.
 
 ## Features
 
@@ -19,14 +21,32 @@ Official JavaScript/TypeScript SDK for the [SensorVision](https://github.com/Cod
 
 ## Installation
 
+### Install from npm (Recommended)
+
 ```bash
+# Using npm
 npm install sensorvision-sdk
+
+# Using yarn
+yarn add sensorvision-sdk
+
+# Using pnpm
+pnpm add sensorvision-sdk
 ```
 
-Or with Yarn:
+**Package URL:** https://www.npmjs.com/package/sensorvision-sdk
+
+### Install from GitHub (Development)
 
 ```bash
-yarn add sensorvision-sdk
+# Using npm
+npm install CodeFleck/sensorvision#main:sensorvision-sdk-js
+
+# Using yarn
+yarn add CodeFleck/sensorvision#main:sensorvision-sdk-js
+
+# Using pnpm
+pnpm add CodeFleck/sensorvision#main:sensorvision-sdk-js
 ```
 
 ## Quick Start

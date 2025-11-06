@@ -112,6 +112,8 @@ const DataPlugins: React.FC = () => {
         return 'bg-purple-100 text-purple-800';
       case PluginType.CSV_IMPORT:
         return 'bg-orange-100 text-orange-800';
+      case PluginType.POLLING:
+        return 'bg-indigo-100 text-indigo-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }

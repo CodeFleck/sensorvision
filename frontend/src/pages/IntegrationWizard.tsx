@@ -285,67 +285,123 @@ export const IntegrationWizard: React.FC = () => {
     switch (platform) {
       case 'esp32':
       case 'arduino':
-        code = `#include <WiFi.h>
-#include <HTTPClient.h>
+        code = `// ESP32/Arduino MQTT Example for SensorVision
+// Install library: PubSubClient by Nick O'Leary
+// Arduino IDE: Sketch -> Include Library -> Manage Libraries -> Search "PubSubClient"
+
+#include <WiFi.h>
+#include <PubSubClient.h>
 
 // WiFi credentials
 const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
-// SensorVision configuration
-const char* apiUrl = "${apiUrl}";
-const char* apiKey = "${token}";
+// SensorVision MQTT configuration
+const char* mqttServer = "${apiUrl.replace('http://', '').replace(':8080', '')}";  // Remove http:// and port
+const int mqttPort = 1883;
 const char* deviceId = "${devId}";
+const char* mqttTopic = "sensorvision/devices/${devId}/telemetry";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 void setup() {
   Serial.begin(115200);
 
   // Connect to WiFi
   WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
+    delay(500);
+    Serial.print(".");
   }
-  Serial.println("Connected to WiFi");
+  Serial.println("\\nWiFi connected!");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  // Setup MQTT
+  client.setServer(mqttServer, mqttPort);
+  connectMQTT();
 }
 
 void loop() {
-  // Read sensor data (example)
-  float temperature = 23.5;  // Replace with actual sensor reading
-  float humidity = 65.2;     // Replace with actual sensor reading
+  // Maintain MQTT connection
+  if (!client.connected()) {
+    connectMQTT();
+  }
+  client.loop();
 
-  // Send data to SensorVision
+  // Read sensor data (example - replace with actual sensor readings)
+  float temperature = 23.5 + (random(-20, 20) / 10.0);  // Simulated
+  float humidity = 65.2 + (random(-50, 50) / 10.0);     // Simulated
+
+  // Send data to SensorVision via MQTT
   sendData(temperature, humidity);
 
-  delay(60000); // Send data every minute
+  delay(60000); // Send data every 60 seconds
+}
+
+void connectMQTT() {
+  while (!client.connected()) {
+    Serial.print("Connecting to MQTT broker...");
+
+    // Connect to MQTT (no auth required for local broker)
+    if (client.connect(deviceId)) {
+      Serial.println("connected!");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" retrying in 5 seconds");
+      delay(5000);
+    }
+  }
 }
 
 void sendData(float temperature, float humidity) {
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
+  // Build JSON payload
+  // IMPORTANT: All variable values must be numeric (float/int)
+  // Format: {"deviceId":"xxx","timestamp":"ISO8601","variables":{"temp":23.5}}
 
-    // NOTE: If device ID contains special characters, URL-encode it
-    String url = String(apiUrl) + "/api/v1/ingest/" + String(deviceId);
-    http.begin(url);
-    http.addHeader("X-API-Key", apiKey);
-    http.addHeader("Content-Type", "application/json");
+  String timestamp = getISOTimestamp();  // See helper function below
 
-    // IMPORTANT: All values must be numeric (float/int)
-    // Do NOT send boolean (true/false) or string values
-    String payload = "{\\"temperature\\":" + String(temperature, 1) +
-                     ",\\"humidity\\":" + String(humidity, 1) + "}";
+  String payload = "{\\"deviceId\\":\\"" + String(deviceId) + "\\"," +
+                   "\\"timestamp\\":\\"" + timestamp + "\\"," +
+                   "\\"variables\\":{" +
+                   "\\"temperature\\":" + String(temperature, 1) + "," +
+                   "\\"humidity\\":" + String(humidity, 1) +
+                   "}}";
 
-    int httpCode = http.POST(payload);
+  Serial.print("Publishing: ");
+  Serial.println(payload);
 
-    if (httpCode == 200 || httpCode == 201) {
-      Serial.println("Data sent successfully");
-    } else {
-      Serial.printf("Error sending data: %d\\n", httpCode);
-    }
-
-    http.end();
+  // Publish to MQTT topic
+  if (client.publish(mqttTopic, payload.c_str())) {
+    Serial.println("✓ Data sent successfully via MQTT");
+  } else {
+    Serial.println("✗ Failed to send data");
   }
-}`;
+}
+
+// Helper: Generate ISO 8601 timestamp
+// For production, use NTP time sync (WiFiUdp + NTPClient library)
+String getISOTimestamp() {
+  // Simple timestamp - for production use NTP!
+  unsigned long seconds = millis() / 1000;
+  char timestamp[25];
+  sprintf(timestamp, "2024-01-01T%02lu:%02lu:%02luZ",
+          (seconds / 3600) % 24,
+          (seconds / 60) % 60,
+          seconds % 60);
+  return String(timestamp);
+}
+
+// PRODUCTION IMPROVEMENTS:
+// 1. Use NTP for accurate timestamps: WiFiUdp + NTPClient
+// 2. Read actual sensors (DHT22, BME280, etc.)
+// 3. Add deep sleep for battery-powered devices
+// 4. Implement reconnection logic with exponential backoff
+// 5. Store failed messages in SPIFFS and retry when reconnected`;
+
         break;
 
       case 'python':

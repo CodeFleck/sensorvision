@@ -1,6 +1,8 @@
-# SensorVision IoT Monitoring Platform
+# SensorVision
 
-A comprehensive Ubidots-like IoT monitoring platform built on Spring Boot and MQTT that provides complete device management, real-time data visualization, alerting, and analytics capabilities.
+**The IoT Platform That Scales With You**
+
+Build once, deploy anywhere, scale infinitely. SensorVision is an enterprise-grade IoT monitoring platform built on modern architecture with developer-friendly tools. Get from zero to insights in minutes with real-time data visualization, intelligent alerting, and extensible plugin ecosystem.
 
 ## 🚀 Features
 
@@ -74,8 +76,14 @@ Production-ready Python client library for seamless IoT device integration:
 - Configurable retry logic with exponential backoff
 - Comprehensive error handling (authentication, validation, rate limiting)
 - Type hints and full documentation
-- pip installable package
+- **✅ Available on PyPI**: https://pypi.org/project/sensorvision-sdk/
 
+**Installation:**
+```bash
+pip install sensorvision-sdk
+```
+
+**Quick Start:**
 ```python
 from sensorvision import SensorVisionClient
 
@@ -100,7 +108,14 @@ Cross-platform SDK for Node.js and browsers with WebSocket support:
 - Works in Node.js and browsers (UMD, CommonJS, ES Modules)
 - TypeScript definitions included
 - Automatic reconnection and retry logic
+- **✅ Available on npm**: https://www.npmjs.com/package/sensorvision-sdk
 
+**Installation:**
+```bash
+npm install sensorvision-sdk
+```
+
+**Quick Start:**
 ```typescript
 import { SensorVisionClient, WebSocketClient } from 'sensorvision-sdk';
 
@@ -129,6 +144,44 @@ wsClient.connect();
 ```
 
 📚 [Full JavaScript SDK Documentation](sensorvision-sdk-js/README.md)
+
+#### Java SDK (`sensorvision-sdk-java`)
+Enterprise-ready Java SDK for industrial IoT and Android devices:
+- Type-safe Java API with builder pattern
+- Automatic retry logic with exponential backoff
+- Comprehensive error handling with specific exception types
+- SLF4J logging integration
+- Java 17+ support
+- Perfect for Spring Boot integration and Android IoT devices
+
+**Installation (Maven):**
+```xml
+<dependency>
+    <groupId>io.sensorvision</groupId>
+    <artifactId>sensorvision-sdk</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+**Quick Start:**
+```java
+import io.sensorvision.sdk.SensorVisionClient;
+import java.util.Map;
+
+SensorVisionClient client = new SensorVisionClient.Builder()
+    .apiUrl("http://your-server:8080")
+    .apiKey("your-device-token")
+    .build();
+
+Map<String, Object> data = Map.of(
+    "temperature", 23.5,
+    "humidity", 65.2
+);
+
+client.sendData("my-device-001", data);
+```
+
+📚 [Full Java SDK Documentation](sensorvision-sdk-java/README.md)
 
 #### Frontend Integration Wizard
 Interactive 5-step wizard for zero-config device onboarding:

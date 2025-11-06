@@ -3,7 +3,9 @@
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Official Python SDK for the [SensorVision](https://github.com/CodeFleck/sensorvision) IoT monitoring platform. This SDK provides easy-to-use synchronous and asynchronous clients for sending telemetry data from IoT devices, Raspberry Pi projects, Python applications, and more.
+Official Python SDK for [SensorVision](https://github.com/CodeFleck/sensorvision) - The IoT platform that scales with you.
+
+Build IoT applications with enterprise-grade infrastructure and developer-friendly tools. This SDK provides simple, production-ready clients for sending telemetry data from IoT devices, Raspberry Pi projects, Python applications, and more.
 
 ## Features
 
@@ -17,28 +19,41 @@ Official Python SDK for the [SensorVision](https://github.com/CodeFleck/sensorvi
 
 ## Installation
 
-### Basic Installation
+### Install from PyPI (Recommended)
 
 ```bash
+# Basic installation
 pip install sensorvision-sdk
-```
 
-### With Async Support
-
-```bash
+# With async support
 pip install sensorvision-sdk[async]
+
+# For Raspberry Pi projects
+pip install sensorvision-sdk[raspberry-pi]
 ```
 
-### For Raspberry Pi Projects
+### Install from GitHub (Development)
 
 ```bash
-pip install sensorvision-sdk[raspberry-pi]
+# Basic installation
+pip install git+https://github.com/CodeFleck/sensorvision.git#subdirectory=sensorvision-sdk
+
+# With async support
+pip install "git+https://github.com/CodeFleck/sensorvision.git#subdirectory=sensorvision-sdk[async]"
+
+# For Raspberry Pi projects
+pip install "git+https://github.com/CodeFleck/sensorvision.git#subdirectory=sensorvision-sdk[raspberry-pi]"
 ```
 
 ### Development Installation
 
 ```bash
-pip install sensorvision-sdk[dev]
+# Clone the repository
+git clone https://github.com/CodeFleck/sensorvision.git
+cd sensorvision/sensorvision-sdk
+
+# Install in editable mode with dev dependencies
+pip install -e ".[dev]"
 ```
 
 ## Quick Start

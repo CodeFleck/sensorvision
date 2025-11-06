@@ -54,6 +54,9 @@ dependencies {
     // HTML sanitization for rich text content
     implementation("org.jsoup:jsoup:1.17.2")
 
+    // Modbus TCP client for industrial IoT integration
+    implementation("com.ghgande:j2mod:3.2.1")
+
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
