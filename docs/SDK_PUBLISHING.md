@@ -6,10 +6,11 @@ This guide explains how to publish SensorVision SDKs to PyPI (Python) and npm (J
 
 ## Current Status
 
-✅ **Python SDK Published to PyPI** - https://pypi.org/project/sensorvision-sdk/
-✅ **JavaScript SDK Published to npm** - https://www.npmjs.com/package/sensorvision-sdk
+✅ **Python SDK v0.1.1 Published to PyPI** - https://pypi.org/project/sensorvision-sdk/
+✅ **JavaScript SDK v0.1.1 Published to npm** - https://www.npmjs.com/package/sensorvision-sdk
+🔄 **Java SDK v0.1.0 Ready for Maven Central** - Configuration complete, awaiting deployment
 
-Both SDKs are now available on their respective package registries!
+All three official SDKs are ready for production use!
 
 ---
 
@@ -265,6 +266,121 @@ Store npm token as GitHub secret: `NPM_TOKEN`
 git tag js-sdk-v0.1.0
 git push origin js-sdk-v0.1.0
 ```
+
+---
+
+## Java SDK - Publishing to Maven Central
+
+### Prerequisites
+
+**Create Sonatype OSSRH Account**:
+1. Register at: https://issues.sonatype.org/secure/Signup!default.jspa
+2. Create JIRA ticket to claim `io.sensorvision` namespace
+3. Wait for namespace approval (~2 business days)
+
+**Setup GPG**:
+```bash
+# Install GPG (Windows via Chocolatey)
+choco install gpg4win
+
+# Generate key
+gpg --gen-key
+
+# Publish to keyserver
+gpg --keyserver keys.openpgp.org --send-keys YOUR_KEY_ID
+```
+
+**Configure Maven Settings** (`~/.m2/settings.xml`):
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>ossrh</id>
+      <username>your-jira-username</username>
+      <password>your-jira-password</password>
+    </server>
+  </servers>
+  <profiles>
+    <profile>
+      <id>ossrh</id>
+      <properties>
+        <gpg.executable>gpg</gpg.executable>
+        <gpg.passphrase>your-gpg-passphrase</gpg.passphrase>
+      </properties>
+    </profile>
+  </profiles>
+</settings>
+```
+
+### Publishing Steps
+
+1. **Update Version** (in `pom.xml`):
+   ```xml
+   <version>0.1.0</version>  <!-- Update this -->
+   ```
+
+2. **Run Tests**:
+   ```bash
+   cd sensorvision-sdk-java
+   mvn clean test
+   ```
+
+3. **Deploy to Maven Central**:
+   ```bash
+   mvn clean deploy -P release
+   ```
+
+4. **Verify Deployment**:
+   - Staging: https://s01.oss.sonatype.org/#stagingRepositories
+   - Maven Central (after ~2 hours): https://central.sonatype.com/artifact/io.sensorvision/sensorvision-sdk
+
+### Automated Publishing with GitHub Actions
+
+Create `.github/workflows/publish-java-sdk.yml`:
+
+```yaml
+name: Publish Java SDK to Maven Central
+
+on:
+  push:
+    tags:
+      - 'java-sdk-v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Import GPG key
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+
+      - name: Deploy to Maven Central
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          cd sensorvision-sdk-java
+          mvn clean deploy -P release -Dgpg.passphrase=$GPG_PASSPHRASE
+```
+
+Store secrets: `OSSRH_USERNAME`, `OSSRH_PASSWORD`, `GPG_PRIVATE_KEY`, `GPG_PASSPHRASE`
+
+**Publish with tag**:
+```bash
+git tag java-sdk-v0.1.0
+git push origin java-sdk-v0.1.0
+```
+
+📚 **Full Publishing Guide**: [sensorvision-sdk-java/PUBLISHING.md](../sensorvision-sdk-java/PUBLISHING.md)
 
 ---
 
