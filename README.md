@@ -145,6 +145,44 @@ wsClient.connect();
 
 📚 [Full JavaScript SDK Documentation](sensorvision-sdk-js/README.md)
 
+#### Java SDK (`sensorvision-sdk-java`)
+Enterprise-ready Java SDK for industrial IoT and Android devices:
+- Type-safe Java API with builder pattern
+- Automatic retry logic with exponential backoff
+- Comprehensive error handling with specific exception types
+- SLF4J logging integration
+- Java 17+ support
+- Perfect for Spring Boot integration and Android IoT devices
+
+**Installation (Maven):**
+```xml
+<dependency>
+    <groupId>io.sensorvision</groupId>
+    <artifactId>sensorvision-sdk</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+**Quick Start:**
+```java
+import io.sensorvision.sdk.SensorVisionClient;
+import java.util.Map;
+
+SensorVisionClient client = new SensorVisionClient.Builder()
+    .apiUrl("http://your-server:8080")
+    .apiKey("your-device-token")
+    .build();
+
+Map<String, Object> data = Map.of(
+    "temperature", 23.5,
+    "humidity", 65.2
+);
+
+client.sendData("my-device-001", data);
+```
+
+📚 [Full Java SDK Documentation](sensorvision-sdk-java/README.md)
+
 #### Frontend Integration Wizard
 Interactive 5-step wizard for zero-config device onboarding:
 - 🎨 Visual step-by-step setup process
