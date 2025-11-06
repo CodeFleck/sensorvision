@@ -55,7 +55,23 @@ const PluginFormDialog: React.FC<PluginFormDialogProps> = ({
   }, [plugin, open]);
 
   const handleProviderChange = (provider: PluginProvider) => {
-    setFormData((prev) => ({ ...prev, provider }));
+    // Determine plugin type from provider
+    const providerToType: Record<PluginProvider, PluginType> = {
+      [PluginProvider.HTTP_WEBHOOK]: PluginType.WEBHOOK,
+      [PluginProvider.LORAWAN_TTN]: PluginType.WEBHOOK,
+      [PluginProvider.MODBUS_TCP]: PluginType.POLLING,
+      [PluginProvider.CSV_FILE]: PluginType.CSV_IMPORT,
+      [PluginProvider.SIGFOX]: PluginType.WEBHOOK,
+      [PluginProvider.PARTICLE_CLOUD]: PluginType.WEBHOOK,
+      [PluginProvider.CUSTOM_PARSER]: PluginType.PROTOCOL_PARSER,
+      [PluginProvider.MQTT_CUSTOM]: PluginType.PROTOCOL_PARSER,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      provider,
+      pluginType: providerToType[provider] || PluginType.WEBHOOK,
+    }));
 
     // Set default configuration based on provider
     const defaultConfigs: Record<PluginProvider, any> = {
@@ -76,7 +92,25 @@ const PluginFormDialog: React.FC<PluginFormDialogProps> = ({
         skipHeader: true,
         variableColumns: [],
       },
-      [PluginProvider.MODBUS_TCP]: {},
+      [PluginProvider.MODBUS_TCP]: {
+        host: '192.168.1.100',
+        port: 502,
+        unitId: 1,
+        deviceId: 'plc-001',
+        pollingIntervalSeconds: 60,
+        timeout: 3000,
+        registers: [
+          {
+            type: 'HOLDING',
+            address: 40001,
+            count: 1,
+            variableName: 'temperature',
+            scale: 0.1,
+            offset: 0,
+            dataType: 'INT16',
+          },
+        ],
+      },
       [PluginProvider.SIGFOX]: {},
       [PluginProvider.PARTICLE_CLOUD]: {},
       [PluginProvider.CUSTOM_PARSER]: {},
@@ -190,6 +224,9 @@ const PluginFormDialog: React.FC<PluginFormDialogProps> = ({
                 </option>
                 <option value={PluginProvider.LORAWAN_TTN}>
                   LoRaWAN (The Things Network)
+                </option>
+                <option value={PluginProvider.MODBUS_TCP}>
+                  Modbus TCP
                 </option>
                 <option value={PluginProvider.CSV_FILE}>
                   CSV File Import

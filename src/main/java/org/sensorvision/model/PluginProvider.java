@@ -10,9 +10,9 @@ public enum PluginProvider {
     LORAWAN_TTN("LoRaWAN (The Things Network)", PluginType.WEBHOOK),
 
     /**
-     * Modbus TCP protocol parser
+     * Modbus TCP polling plugin
      */
-    MODBUS_TCP("Modbus TCP", PluginType.PROTOCOL_PARSER),
+    MODBUS_TCP("Modbus TCP", PluginType.POLLING),
 
     /**
      * Sigfox integration

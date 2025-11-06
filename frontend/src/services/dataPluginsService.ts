@@ -18,6 +18,7 @@ export enum PluginType {
   WEBHOOK = 'WEBHOOK',
   INTEGRATION = 'INTEGRATION',
   CSV_IMPORT = 'CSV_IMPORT',
+  POLLING = 'POLLING',
 }
 
 export enum PluginProvider {

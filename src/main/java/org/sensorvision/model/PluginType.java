@@ -25,5 +25,11 @@ public enum PluginType {
     /**
      * CSV import - imports historical data from CSV files
      */
-    CSV_IMPORT
+    CSV_IMPORT,
+
+    /**
+     * Polling - actively polls external devices/services on a schedule
+     * Examples: Modbus TCP, SNMP, REST API polling
+     */
+    POLLING
 }

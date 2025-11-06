@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -223,11 +224,11 @@ public class DataPluginController {
     @GetMapping("/providers")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, String>> getProviders() {
-        Map<String, String> providers = Map.of(
-                PluginProvider.HTTP_WEBHOOK.name(), PluginProvider.HTTP_WEBHOOK.getDisplayName(),
-                PluginProvider.LORAWAN_TTN.name(), PluginProvider.LORAWAN_TTN.getDisplayName(),
-                PluginProvider.CSV_FILE.name(), PluginProvider.CSV_FILE.getDisplayName()
-        );
+        Map<String, String> providers = new HashMap<>();
+        providers.put(PluginProvider.HTTP_WEBHOOK.name(), PluginProvider.HTTP_WEBHOOK.getDisplayName());
+        providers.put(PluginProvider.LORAWAN_TTN.name(), PluginProvider.LORAWAN_TTN.getDisplayName());
+        providers.put(PluginProvider.MODBUS_TCP.name(), PluginProvider.MODBUS_TCP.getDisplayName());
+        providers.put(PluginProvider.CSV_FILE.name(), PluginProvider.CSV_FILE.getDisplayName());
         return ResponseEntity.ok(providers);
     }
 
