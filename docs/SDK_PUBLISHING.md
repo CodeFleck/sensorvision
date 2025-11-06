@@ -7,8 +7,9 @@ This guide explains how to publish SensorVision SDKs to PyPI (Python) and npm (J
 ## Current Status
 
 ✅ **Python SDK Published to PyPI** - https://pypi.org/project/sensorvision-sdk/
-✅ **JavaScript SDK Available via GitHub** - Can be installed directly from repository
-⏳ **JavaScript SDK npm Publishing** - In progress
+✅ **JavaScript SDK Published to npm** - https://www.npmjs.com/package/sensorvision-sdk
+
+Both SDKs are now available on their respective package registries!
 
 ---
 

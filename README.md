@@ -108,7 +108,14 @@ Cross-platform SDK for Node.js and browsers with WebSocket support:
 - Works in Node.js and browsers (UMD, CommonJS, ES Modules)
 - TypeScript definitions included
 - Automatic reconnection and retry logic
+- **✅ Available on npm**: https://www.npmjs.com/package/sensorvision-sdk
 
+**Installation:**
+```bash
+npm install sensorvision-sdk
+```
+
+**Quick Start:**
 ```typescript
 import { SensorVisionClient, WebSocketClient } from 'sensorvision-sdk';
 

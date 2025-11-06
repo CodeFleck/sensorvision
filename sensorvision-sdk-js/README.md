@@ -21,7 +21,22 @@ Build IoT applications with enterprise-grade infrastructure and developer-friend
 
 ## Installation
 
-### Install from GitHub (Recommended)
+### Install from npm (Recommended)
+
+```bash
+# Using npm
+npm install sensorvision-sdk
+
+# Using yarn
+yarn add sensorvision-sdk
+
+# Using pnpm
+pnpm add sensorvision-sdk
+```
+
+**Package URL:** https://www.npmjs.com/package/sensorvision-sdk
+
+### Install from GitHub (Development)
 
 ```bash
 # Using npm
@@ -32,18 +47,6 @@ yarn add CodeFleck/sensorvision#main:sensorvision-sdk-js
 
 # Using pnpm
 pnpm add CodeFleck/sensorvision#main:sensorvision-sdk-js
-```
-
-### Install from npm (Coming Soon)
-
-Once published to npm, you'll be able to install with:
-
-```bash
-npm install sensorvision-sdk
-# or
-yarn add sensorvision-sdk
-# or
-pnpm add sensorvision-sdk
 ```
 
 ## Quick Start

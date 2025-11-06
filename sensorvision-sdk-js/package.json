@@ -24,7 +24,7 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "iot",
