@@ -90,13 +90,13 @@ def validate_device_id(device_id: str) -> None:
         device_id: Device identifier to validate
 
     Raises:
-        ValueError: If device ID is invalid
+        ValidationError: If device ID is invalid
     """
     if not device_id or not isinstance(device_id, str):
-        raise ValueError("Device ID must be a non-empty string")
+        raise ValidationError("Device ID must be a non-empty string")
 
     if len(device_id) > 255:
-        raise ValueError("Device ID must be less than 255 characters")
+        raise ValidationError("Device ID must be less than 255 characters")
 
 
 def validate_telemetry_data(data: dict) -> None:
@@ -107,20 +107,20 @@ def validate_telemetry_data(data: dict) -> None:
         data: Telemetry data dictionary to validate
 
     Raises:
-        ValueError: If telemetry data is invalid
+        ValidationError: If telemetry data is invalid
     """
     if not isinstance(data, dict):
-        raise ValueError("Telemetry data must be a dictionary")
+        raise ValidationError("Telemetry data must be a dictionary")
 
     if not data:
-        raise ValueError("Telemetry data cannot be empty")
+        raise ValidationError("Telemetry data cannot be empty")
 
     for key, value in data.items():
         if not isinstance(key, str):
-            raise ValueError(f"Telemetry key must be string, got {type(key)}")
+            raise ValidationError(f"Telemetry key must be string, got {type(key)}")
 
         if not isinstance(value, (int, float, bool)):
-            raise ValueError(
+            raise ValidationError(
                 f"Telemetry value for '{key}' must be numeric or boolean, "
                 f"got {type(value)}"
             )
