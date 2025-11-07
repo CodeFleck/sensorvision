@@ -17,6 +17,7 @@ import org.sensorvision.repository.DeviceRepository;
 import org.sensorvision.repository.PluginExecutionRepository;
 import org.sensorvision.security.DeviceTokenAuthenticationFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -88,9 +89,10 @@ public class PluginPollingSchedulerService {
     /**
      * Inject self-reference for proxy calls
      * Called by Spring after bean construction
+     * @Lazy breaks circular dependency during bean creation
      */
     @org.springframework.beans.factory.annotation.Autowired
-    public void setSelf(PluginPollingSchedulerService self) {
+    public void setSelf(@Lazy PluginPollingSchedulerService self) {
         this.self = self;
     }
 
