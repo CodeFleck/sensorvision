@@ -17,7 +17,13 @@
       "Bash(Select-String -Pattern \"(BUILD|Test|PASSED|FAILED|ExpressionEvaluator)\" -Context 0,2)",
       "Bash(./gradlew clean test:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(./gradlew bootRun)",
+      "Bash(docker-compose stop:*)",
+      "Bash(docker stop:*)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)"
     ],
     "deny": [],
     "ask": []
