@@ -5,11 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.model.*;
 import org.sensorvision.repository.NotificationLogRepository;
 import org.sensorvision.repository.UserNotificationPreferenceRepository;
+import org.sensorvision.repository.UserPhoneNumberRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -25,6 +28,7 @@ public class NotificationService {
     private final SlackNotificationService slackService;
     private final TeamsNotificationService teamsService;
     private final EventService eventService;
+    private final UserPhoneNumberRepository userPhoneNumberRepository;
 
     /**
      * Send notifications for an alert to all users with appropriate preferences
@@ -76,10 +80,62 @@ public class NotificationService {
             slackService.sendAlertNotification(alert);
             teamsService.sendAlertNotification(alert);
 
+            // Send rule-based SMS notifications
+            sendRuleBasedSmsNotifications(alert);
+
             log.info("Alert notification processing completed for alert: {}", alert.getId());
         } catch (Exception e) {
             log.error("Failed to process notifications for alert: {}", alert.getId(), e);
         }
+    }
+
+    /**
+     * Send SMS notifications based on rule configuration
+     */
+    private void sendRuleBasedSmsNotifications(Alert alert) {
+        Rule rule = alert.getRule();
+
+        // Check if SMS is enabled for this rule
+        if (rule.getSendSms() == null || !rule.getSendSms()) {
+            log.debug("SMS notifications not enabled for rule: {}", rule.getId());
+            return;
+        }
+
+        // Resolve phone numbers
+        List<String> phoneNumbers = resolvePhoneNumbers(alert, rule);
+
+        if (phoneNumbers.isEmpty()) {
+            log.warn("No phone numbers found for SMS notification on alert: {}", alert.getId());
+            return;
+        }
+
+        // Format and send SMS
+        String message = smsService.formatAlertMessage(alert);
+        smsService.sendSmsToMultiple(alert, phoneNumbers, message);
+
+        log.info("Sent {} rule-based SMS notifications for alert: {}", phoneNumbers.size(), alert.getId());
+    }
+
+    /**
+     * Resolve phone numbers from rule configuration
+     */
+    private List<String> resolvePhoneNumbers(Alert alert, Rule rule) {
+        List<String> phoneNumbers = new ArrayList<>();
+
+        if (rule.getSmsRecipients() == null || rule.getSmsRecipients().length == 0) {
+            // No recipients configured - no SMS will be sent
+            log.debug("No SMS recipients configured for rule: {}", rule.getId());
+            return phoneNumbers;
+        }
+
+        // Use configured recipients
+        for (String recipient : rule.getSmsRecipients()) {
+            // For now, only support explicit E.164 phone numbers
+            // Future enhancement: support "primary" or "all" by linking users to devices
+            phoneNumbers.add(recipient);
+        }
+
+        return phoneNumbers;
     }
 
     /**
@@ -125,7 +181,9 @@ public class NotificationService {
                                 user.getUsername());
                         yield false;
                     }
-                    yield smsService.sendAlertSms(user, alert, preference.getDestination());
+                    String message = smsService.formatAlertMessage(alert);
+                    SmsDeliveryLog deliveryLog = smsService.sendSms(alert, preference.getDestination(), message);
+                    yield deliveryLog != null && !"FAILED".equals(deliveryLog.getStatus());
                 }
                 case WEBHOOK -> {
                     if (preference.getDestination() == null) {

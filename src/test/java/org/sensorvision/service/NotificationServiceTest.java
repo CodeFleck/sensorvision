@@ -80,7 +80,8 @@ class NotificationServiceTest {
 
         // Default mock behavior - email service returns true (lenient for tests that don't use it)
         lenient().when(emailService.sendAlertEmail(any(), any(), anyString())).thenReturn(true);
-        lenient().when(smsService.sendAlertSms(any(), any(), anyString())).thenReturn(true);
+        lenient().when(smsService.formatAlertMessage(any())).thenReturn("Test SMS message");
+        lenient().when(smsService.sendSms(any(), anyString(), anyString())).thenReturn(null);
         lenient().when(webhookService.sendAlertWebhook(any(), any(), anyString())).thenReturn(true);
     }
 
@@ -213,7 +214,7 @@ class NotificationServiceTest {
 
         // Then - Should send to both channels
         verify(emailService).sendAlertEmail(eq(testUser), eq(criticalAlert), anyString());
-        verify(smsService).sendAlertSms(eq(testUser), eq(criticalAlert), eq("+1234567890"));
+        verify(smsService).sendSms(eq(criticalAlert), eq("+1234567890"), anyString());
         verify(notificationLogRepository, times(2)).save(any(NotificationLog.class));
     }
 
