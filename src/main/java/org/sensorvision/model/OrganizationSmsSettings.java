@@ -43,6 +43,13 @@ public class OrganizationSmsSettings {
     @Builder.Default
     private BigDecimal currentMonthCost = BigDecimal.ZERO;
 
+    @Column(name = "current_day_count", nullable = false)
+    @Builder.Default
+    private Integer currentDayCount = 0;
+
+    @Column(name = "last_reset_date")
+    private Instant lastResetDate;
+
     @Column(name = "alert_on_budget_threshold", nullable = false)
     @Builder.Default
     private Boolean alertOnBudgetThreshold = true;

@@ -217,6 +217,26 @@ public class PhoneNumberVerificationService {
     }
 
     /**
+     * Toggle phone number enabled status
+     */
+    @Transactional
+    public UserPhoneNumber togglePhoneNumberEnabled(User user, UUID phoneId) {
+        Optional<UserPhoneNumber> phoneOpt = phoneNumberRepository.findById(phoneId);
+        if (phoneOpt.isEmpty() || !phoneOpt.get().getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("Phone number not found");
+        }
+
+        UserPhoneNumber phone = phoneOpt.get();
+        phone.setEnabled(!phone.getEnabled());
+        UserPhoneNumber saved = phoneNumberRepository.save(phone);
+
+        log.info("Phone number {} toggled for user {}: enabled={}",
+            phone.getMaskedPhoneNumber(), user.getUsername(), phone.getEnabled());
+
+        return saved;
+    }
+
+    /**
      * Generate 6-digit verification code
      */
     private String generateVerificationCode() {

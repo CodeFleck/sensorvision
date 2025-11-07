@@ -1,15 +1,8 @@
 package org.sensorvision.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -63,6 +56,7 @@ public class Rule extends AuditableEntity {
     @Builder.Default
     private Boolean sendSms = false;
 
+    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "sms_recipients", columnDefinition = "TEXT[]")
     private String[] smsRecipients;
 

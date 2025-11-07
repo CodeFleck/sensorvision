@@ -385,4 +385,60 @@ class PhoneNumberVerificationServiceTest {
         // Then
         assertFalse(result.isPresent());
     }
+
+    @Test
+    void testTogglePhoneNumberEnabled_TogglesAndPersists() {
+        // Given
+        testPhoneNumber.setEnabled(true);
+        when(phoneNumberRepository.findById(testPhoneNumber.getId()))
+            .thenReturn(Optional.of(testPhoneNumber));
+        when(phoneNumberRepository.save(any(UserPhoneNumber.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        UserPhoneNumber result = verificationService.togglePhoneNumberEnabled(
+            testUser,
+            testPhoneNumber.getId()
+        );
+
+        // Then
+        assertNotNull(result);
+        assertFalse(result.getEnabled()); // Should be toggled from true to false
+        verify(phoneNumberRepository).save(argThat(phone ->
+            phone.getId().equals(testPhoneNumber.getId()) &&
+            phone.getEnabled() == false
+        ));
+    }
+
+    @Test
+    void testTogglePhoneNumberEnabled_PhoneNotFound_ThrowsException() {
+        // Given
+        when(phoneNumberRepository.findById(testPhoneNumber.getId()))
+            .thenReturn(Optional.empty());
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () ->
+            verificationService.togglePhoneNumberEnabled(testUser, testPhoneNumber.getId())
+        );
+
+        verify(phoneNumberRepository, never()).save(any());
+    }
+
+    @Test
+    void testTogglePhoneNumberEnabled_WrongUser_ThrowsException() {
+        // Given
+        User otherUser = new User();
+        otherUser.setId(999L);
+        otherUser.setUsername("otheruser");
+
+        when(phoneNumberRepository.findById(testPhoneNumber.getId()))
+            .thenReturn(Optional.of(testPhoneNumber));
+
+        // When / Then
+        assertThrows(IllegalArgumentException.class, () ->
+            verificationService.togglePhoneNumberEnabled(otherUser, testPhoneNumber.getId())
+        );
+
+        verify(phoneNumberRepository, never()).save(any());
+    }
 }

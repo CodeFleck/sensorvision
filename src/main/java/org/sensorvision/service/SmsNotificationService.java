@@ -93,8 +93,11 @@ public class SmsNotificationService {
             return null;
         }
 
+        // Reset daily counter if it's a new day
+        resetDailyCounterIfNeeded(settings);
+
         // Check daily limit
-        if (settings.getCurrentMonthCount() >= settings.getDailyLimit()) {
+        if (settings.getCurrentDayCount() >= settings.getDailyLimit()) {
             log.warn("Daily SMS limit reached for organization {}", organizationId);
             return createFailedLog(alert, phoneNumber, message, "DAILY_LIMIT_EXCEEDED", null);
         }
@@ -211,11 +214,28 @@ public class SmsNotificationService {
     }
 
     /**
+     * Reset daily counter if it's a new day
+     */
+    private void resetDailyCounterIfNeeded(OrganizationSmsSettings settings) {
+        Instant now = Instant.now();
+        Instant lastReset = settings.getLastResetDate();
+
+        // If never reset or if it's been more than 24 hours, reset the daily counter
+        if (lastReset == null || now.isAfter(lastReset.plus(24, java.time.temporal.ChronoUnit.HOURS))) {
+            settings.setCurrentDayCount(0);
+            settings.setLastResetDate(now);
+            smsSettingsRepository.save(settings);
+            log.info("Daily SMS counter reset for organization {}", settings.getOrganization().getId());
+        }
+    }
+
+    /**
      * Update organization SMS statistics
      */
     private void updateOrganizationStats(OrganizationSmsSettings settings, BigDecimal cost) {
         settings.setCurrentMonthCount(settings.getCurrentMonthCount() + 1);
         settings.setCurrentMonthCost(settings.getCurrentMonthCost().add(cost));
+        settings.setCurrentDayCount(settings.getCurrentDayCount() + 1);
 
         // Alert if approaching budget threshold
         if (settings.getAlertOnBudgetThreshold()) {

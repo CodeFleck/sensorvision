@@ -177,19 +177,7 @@ public class PhoneNumberController {
     public ResponseEntity<ApiResponse<PhoneNumberResponse>> togglePhoneNumber(@PathVariable UUID phoneId) {
         try {
             User currentUser = securityUtils.getCurrentUser();
-
-            // Find the phone number
-            List<UserPhoneNumber> userPhones = phoneNumberService.getUserPhoneNumbers(currentUser);
-            UserPhoneNumber phone = userPhones.stream()
-                .filter(p -> p.getId().equals(phoneId))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Phone number not found"));
-
-            phone.setEnabled(!phone.getEnabled());
-            // Note: We need to add an update method to the service
-
-            log.info("Phone number {} toggled for user {}: enabled={}",
-                phone.getMaskedPhoneNumber(), currentUser.getUsername(), phone.getEnabled());
+            UserPhoneNumber phone = phoneNumberService.togglePhoneNumberEnabled(currentUser, phoneId);
 
             return ResponseEntity.ok(ApiResponse.success(
                 toResponse(phone),
