@@ -429,34 +429,6 @@ Synthetic variables are calculated once per telemetry ingestion. Reuse the calcu
 
 ---
 
-## Coming Soon (Sprint 4 Phase 2)
-
-### Statistical Functions
-- `avg(variable, timeWindow)` - Moving average
-- `stddev(variable, timeWindow)` - Standard deviation
-- `percentile(variable, p, timeWindow)` - Nth percentile
-- `rateOfChange(variable, timeWindow)` - Rate of change
-- `delta(variable)` - Difference from previous value
-
-### Time Window Aggregations
-- Support for `5m`, `15m`, `1h`, `24h`, `7d`, `30d` time windows
-- Historical data lookups
-- Aggregation functions: `sum()`, `count()`, `min()`, `max()`, `avg()`
-
-### Example Preview
-```javascript
-// Spike detection with moving average baseline
-if(kwConsumption > avg(kwConsumption, 1h) * 1.5, 1, 0)
-
-// Total daily consumption
-sum(kwConsumption, 24h)
-
-// Temperature trend
-rateOfChange(temperature, 15m)
-```
-
----
-
 ## Support
 
 For questions or issues with synthetic variables:
