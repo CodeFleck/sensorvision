@@ -134,7 +134,7 @@ public class SmsNotificationService {
 
         } catch (TwilioException e) {
             log.error("Failed to send SMS to {}: {}", phoneNumber, e.getMessage(), e);
-            return createFailedLog(alert, phoneNumber, message, e.getCode() != null ? String.valueOf(e.getCode()) : null, e.getMessage());
+            return createFailedLog(alert, phoneNumber, message, "TWILIO_ERROR", e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error sending SMS to {}: {}", phoneNumber, e.getMessage(), e);
             return createFailedLog(alert, phoneNumber, message, "SYSTEM_ERROR", e.getMessage());

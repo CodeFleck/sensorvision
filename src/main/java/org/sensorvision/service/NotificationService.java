@@ -123,46 +123,16 @@ public class NotificationService {
         List<String> phoneNumbers = new ArrayList<>();
 
         if (rule.getSmsRecipients() == null || rule.getSmsRecipients().length == 0) {
-            // Default: Send to device owner's primary phone
-            User owner = alert.getDevice().getOwner();
-            if (owner != null) {
-                userPhoneNumberRepository.findByUserIdAndIsPrimaryTrue(owner.getId())
-                    .ifPresent(phone -> {
-                        if (phone.getVerified() && phone.getEnabled()) {
-                            phoneNumbers.add(phone.getPhoneNumber());
-                        }
-                    });
-            }
-        } else {
-            // Use configured recipients
-            for (String recipient : rule.getSmsRecipients()) {
-                if ("primary".equalsIgnoreCase(recipient)) {
-                    // Send to owner's primary phone
-                    User owner = alert.getDevice().getOwner();
-                    if (owner != null) {
-                        userPhoneNumberRepository.findByUserIdAndIsPrimaryTrue(owner.getId())
-                            .ifPresent(phone -> {
-                                if (phone.getVerified() && phone.getEnabled()) {
-                                    phoneNumbers.add(phone.getPhoneNumber());
-                                }
-                            });
-                    }
-                } else if ("all".equalsIgnoreCase(recipient)) {
-                    // Send to all verified phones for owner
-                    User owner = alert.getDevice().getOwner();
-                    if (owner != null) {
-                        userPhoneNumberRepository.findByUserIdAndVerifiedTrue(owner.getId())
-                            .forEach(phone -> {
-                                if (phone.getEnabled()) {
-                                    phoneNumbers.add(phone.getPhoneNumber());
-                                }
-                            });
-                    }
-                } else {
-                    // Assume it's a phone number in E.164 format
-                    phoneNumbers.add(recipient);
-                }
-            }
+            // No recipients configured - no SMS will be sent
+            log.debug("No SMS recipients configured for rule: {}", rule.getId());
+            return phoneNumbers;
+        }
+
+        // Use configured recipients
+        for (String recipient : rule.getSmsRecipients()) {
+            // For now, only support explicit E.164 phone numbers
+            // Future enhancement: support "primary" or "all" by linking users to devices
+            phoneNumbers.add(recipient);
         }
 
         return phoneNumbers;
