@@ -16,7 +16,8 @@
       "Bash(./gradlew clean build:*)",
       "Bash(Select-String -Pattern \"(BUILD|Test|PASSED|FAILED|ExpressionEvaluator)\" -Context 0,2)",
       "Bash(./gradlew clean test:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

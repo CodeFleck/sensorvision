@@ -75,4 +75,19 @@ public interface TelemetryRecordRepository extends JpaRepository<TelemetryRecord
             @Param("organizationId") Long organizationId,
             @Param("cutoffDate") Instant cutoffDate
     );
+
+    // Statistical aggregation queries for synthetic variables
+    @Query("SELECT t FROM TelemetryRecord t WHERE t.device.externalId = :deviceId AND t.timestamp BETWEEN :startTime AND :endTime ORDER BY t.timestamp ASC")
+    List<TelemetryRecord> findByDeviceExternalIdAndTimestampBetween(
+            @Param("deviceId") String deviceId,
+            @Param("startTime") Instant startTime,
+            @Param("endTime") Instant endTime
+    );
+
+    @Query("SELECT t FROM TelemetryRecord t WHERE t.device.externalId = :deviceId AND t.timestamp < :beforeTime ORDER BY t.timestamp DESC")
+    List<TelemetryRecord> findByDeviceExternalIdAndTimestampBeforeOrderByTimestampDesc(
+            @Param("deviceId") String deviceId,
+            @Param("beforeTime") Instant beforeTime,
+            Pageable pageable
+    );
 }
