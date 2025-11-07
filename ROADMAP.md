@@ -166,6 +166,65 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ---
 
+#### 2.4 SMS Alert Notifications ⚠️ HIGH PRIORITY
+**Effort**: 1 week | **Status**: 🚧 Planned for Q1 2025
+**GitHub Issue**: [#88](https://github.com/CodeFleck/sensorvision/issues/88)
+
+**Features**:
+- SMS notification channel for critical alerts
+- Twilio integration for SMS delivery
+- Per-alert SMS toggle (enable/disable SMS for each alert)
+- Phone number configuration per user
+- SMS delivery status tracking
+- Rate limiting to prevent SMS spam
+- Fallback to email if SMS fails
+- International phone number support
+
+**Use Cases**:
+- Critical equipment failures (immediate notification needed)
+- After-hours alerts (when email might not be checked)
+- Redundant notification (SMS + Email for critical alerts)
+- On-call engineer notifications
+
+**Configuration**:
+- User settings: Add/manage phone numbers
+- Alert settings: Toggle SMS notification per alert
+- Organization settings: SMS budget limits, rate limits
+
+**Cost Considerations**:
+- Twilio pricing: ~$0.0075 per SMS
+- Provide organization-level budget controls
+- Consider tiered plans (free tier: 100 SMS/month)
+
+---
+
+#### 2.5 Production Email Fix (AWS SES) 🔥 CRITICAL
+**Effort**: 2-3 days | **Status**: 🚧 Planned for Q1 2025
+**GitHub Issue**: [#66](https://github.com/CodeFleck/sensorvision/issues/66)
+
+**Problem**: Forgot password emails and alert notifications not working in production due to AWS security groups blocking SMTP ports.
+
+**Solution**: Migrate to AWS SES (Simple Email Service)
+
+**Implementation**:
+1. Set up AWS SES in us-west-2 region
+2. Verify sender email domain (sensorvision.io or nip.io)
+3. Request production access (move out of SES sandbox)
+4. Update Spring Boot configuration to use SES SMTP endpoint
+5. Add SES credentials to production environment variables
+6. Test all email flows: forgot password, alerts, support tickets
+
+**Benefits**:
+- No SMTP port blocking issues
+- Better email deliverability (verified sender)
+- Cost-effective ($0.10 per 1,000 emails)
+- Built-in bounce and complaint handling
+- Supports both SMTP and API interfaces
+
+**Related**: Issue #88 (SMS Alerts) should use AWS SNS
+
+---
+
 ### 🏢 Phase 3: Enterprise Features (Q3 2025 - 3 months)
 *Goal: Make SensorVision enterprise-ready for large deployments*
 
@@ -403,23 +462,28 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ---
 
-### Sprint 4: Advanced Synthetic Variables (Weeks 7-8)
+### Sprint 4: Advanced Synthetic Variables (Weeks 7-8) ✅ COMPLETE
 **Goal**: Powerful expression engine for derived metrics
 
 **Tasks** (Issue #80):
-1. Extend expression parser to support function calls
-2. Implement math functions (sqrt, pow, abs, log, exp, sin, cos, round, floor, ceil)
-3. Implement statistical functions (mean, stddev, percentile, moving average, rate of change)
-4. Add time window aggregations (5m, 15m, 1h, 24h, 7d, 30d)
-5. Implement conditional logic (if/then/else, AND/OR/NOT)
-6. Enhanced expression builder UI with autocomplete
-7. Expression validation and preview
+1. ✅ Extend expression parser to support function calls
+2. ✅ Implement math functions (sqrt, pow, abs, log, exp, sin, cos, round, floor, ceil)
+3. ⏸️ Implement statistical functions (mean, stddev, percentile, moving average, rate of change) - Deferred to Phase 2
+4. ⏸️ Add time window aggregations (5m, 15m, 1h, 24h, 7d, 30d) - Deferred to Phase 2
+5. ✅ Implement conditional logic (if/then/else, AND/OR/NOT)
+6. ⏸️ Enhanced expression builder UI with autocomplete - Planned for Phase 2
+7. ✅ Expression validation and error handling
 
 **Deliverables**:
-- ✅ 15+ math functions supported
-- ✅ 5+ statistical functions supported
-- ✅ Time window aggregations working efficiently
-- ✅ Comprehensive documentation with 10+ examples
+- ✅ 21 math & logic functions supported (17 Math + 4 Logic)
+- ✅ Comparison operators (>, <, >=, <=, ==, !=)
+- ✅ Nested function calls and complex expressions
+- ✅ Comprehensive documentation with 10+ examples (470 lines)
+- ✅ 42 unit tests with full coverage
+- ✅ REST API for function metadata
+
+**Sprint Duration**: 2 weeks | **Completion Date**: 2025-11-06 (Phase 1 only)
+**Note**: Statistical functions and time-series aggregations deferred to Sprint 4 Phase 2 due to architectural complexity
 
 ---
 
