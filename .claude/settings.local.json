@@ -3,7 +3,20 @@
     "allow": [
       "Bash(py:*)",
       "Bash(node --version:*)",
-      "Bash(npm:*)"
+      "Bash(npm:*)",
+      "Bash(gh run list:*)",
+      "Bash(./gradlew test:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run watch:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git checkout:*)",
+      "Bash(./gradlew clean build:*)",
+      "Bash(Select-String -Pattern \"(BUILD|Test|PASSED|FAILED|ExpressionEvaluator)\" -Context 0,2)",
+      "Bash(./gradlew clean test:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
