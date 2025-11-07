@@ -3,12 +3,13 @@ package org.sensorvision.service;
 import com.twilio.exception.TwilioException;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sensorvision.model.*;
 import org.sensorvision.repository.OrganizationSmsSettingsRepository;
@@ -33,7 +34,10 @@ class SmsNotificationServiceTest {
     @Mock
     private OrganizationSmsSettingsRepository smsSettingsRepository;
 
-    @InjectMocks
+    @Mock
+    private EmailNotificationService emailNotificationService;
+
+    private MeterRegistry meterRegistry;
     private SmsNotificationService smsNotificationService;
 
     private Alert testAlert;
@@ -44,6 +48,17 @@ class SmsNotificationServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Create SimpleMeterRegistry for testing
+        meterRegistry = new SimpleMeterRegistry();
+
+        // Construct service with mocked dependencies
+        smsNotificationService = new SmsNotificationService(
+            smsDeliveryLogRepository,
+            smsSettingsRepository,
+            emailNotificationService,
+            meterRegistry
+        );
+
         // Enable SMS for testing
         ReflectionTestUtils.setField(smsNotificationService, "smsEnabled", true);
         ReflectionTestUtils.setField(smsNotificationService, "fromNumber", "+15551234567");

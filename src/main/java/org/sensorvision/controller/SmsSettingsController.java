@@ -125,6 +125,8 @@ public class SmsSettingsController {
             settings.getMonthlyBudget(),
             settings.getCurrentMonthCount(),
             settings.getCurrentMonthCost(),
+            settings.getCurrentDayCount(),
+            settings.getLastResetDate(),
             settings.getAlertOnBudgetThreshold(),
             settings.getBudgetThresholdPercentage(),
             settings.getCreatedAt(),

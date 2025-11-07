@@ -31,6 +31,9 @@ public class EmailNotificationService {
     @Value("${app.base-url:http://localhost:3001}")
     private String appBaseUrl;
 
+    @Value("${notification.admin.email:admin@sensorvision.com}")
+    private String adminEmail;
+
     @Autowired(required = false)
     public EmailNotificationService(JavaMailSender mailSender, EmailTemplateService templateService) {
         this.mailSender = mailSender;
@@ -546,6 +549,133 @@ public class EmailNotificationService {
         body.append("<p style='color: #666; font-size: 12px; margin: 5px 0;'>");
         body.append("This is an automated notification from SensorVision Support<br>");
         body.append("You're receiving this because you submitted ticket #").append(issue.getId());
+        body.append("</p>");
+        body.append("</div>");
+
+        body.append("</div>");
+        body.append("</body></html>");
+
+        return body.toString();
+    }
+
+    /**
+     * Send budget threshold alert email to organization admins
+     * This notifies when an organization approaches their SMS budget limit
+     */
+    public boolean sendSmsBudgetThresholdAlert(org.sensorvision.model.OrganizationSmsSettings settings) {
+        if (!emailEnabled) {
+            log.info("Email notifications disabled. Would have sent budget alert for org: {}",
+                settings.getOrganization().getName());
+            return false;
+        }
+
+        try {
+            String subject = String.format("[SensorVision] SMS Budget Alert: %s reaching %d%% of budget",
+                settings.getOrganization().getName(),
+                settings.getBudgetThresholdPercentage());
+
+            String body = generateSmsBudgetAlertEmailBody(settings);
+
+            log.info("Sending SMS budget threshold alert for organization: {}",
+                settings.getOrganization().getName());
+
+            if (mailSender != null) {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom(fromEmail);
+                helper.setTo(adminEmail);
+                helper.setSubject(subject);
+                helper.setText(body, true); // true = isHtml
+                mailSender.send(message);
+                log.info("SMS budget alert email sent successfully to {}", adminEmail);
+            } else {
+                log.info("JavaMailSender not configured. Budget alert would be sent to: {}", adminEmail);
+            }
+
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to send SMS budget alert email for organization: {}",
+                settings.getOrganization().getName(), e);
+            return false;
+        }
+    }
+
+    private String generateSmsBudgetAlertEmailBody(org.sensorvision.model.OrganizationSmsSettings settings) {
+        java.math.BigDecimal thresholdPercentage = new java.math.BigDecimal(settings.getBudgetThresholdPercentage());
+        java.math.BigDecimal currentPercentage = settings.getCurrentMonthCost()
+            .divide(settings.getMonthlyBudget(), 2, java.math.RoundingMode.HALF_UP)
+            .multiply(new java.math.BigDecimal("100"));
+
+        StringBuilder body = new StringBuilder();
+        body.append("<html><body style='font-family: Arial, sans-serif;'>");
+        body.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>");
+
+        // Header with warning color
+        body.append("<div style='background-color: #ff9800; color: white; padding: 20px; border-radius: 5px 5px 0 0;'>");
+        body.append("<h2 style='margin: 0;'>⚠️ SMS Budget Alert</h2>");
+        body.append("</div>");
+
+        // Content
+        body.append("<div style='background-color: #fff3cd; padding: 20px; border: 1px solid #ffc107; border-top: none;'>");
+
+        body.append("<p style='font-size: 16px; color: #856404;'><strong>Organization: ");
+        body.append(escapeHtml(settings.getOrganization().getName())).append("</strong></p>");
+
+        body.append("<p style='color: #856404;'>Your organization is approaching its monthly SMS budget limit.</p>");
+
+        // Budget Stats Table
+        body.append("<div style='background-color: white; padding: 20px; border-radius: 5px; margin: 20px 0;'>");
+        body.append("<h3 style='margin-top: 0; color: #856404;'>Current Usage:</h3>");
+        body.append("<table style='width: 100%; border-collapse: collapse;'>");
+
+        addTableRow(body, "Monthly Budget", String.format("$%.2f", settings.getMonthlyBudget()));
+        addTableRow(body, "Current Spend", String.format("$%.2f", settings.getCurrentMonthCost()));
+        addTableRow(body, "Remaining Budget", String.format("$%.2f",
+            settings.getMonthlyBudget().subtract(settings.getCurrentMonthCost())));
+        addTableRow(body, "Messages Sent This Month", settings.getCurrentMonthCount().toString());
+        addTableRow(body, "Messages Sent Today", settings.getCurrentDayCount().toString());
+        addTableRow(body, "Daily Limit", settings.getDailyLimit().toString());
+
+        // Progress bar
+        body.append("<tr><td colspan='2' style='padding: 15px 8px;'>");
+        body.append("<div style='background-color: #e9ecef; height: 30px; border-radius: 15px; overflow: hidden;'>");
+        body.append("<div style='background-color: ");
+        body.append(currentPercentage.compareTo(new java.math.BigDecimal("90")) >= 0 ? "#dc3545" : "#ffc107");
+        body.append("; height: 100%; width: ").append(currentPercentage).append("%; ");
+        body.append("display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;'>");
+        body.append(String.format("%.1f%%", currentPercentage));
+        body.append("</div></div>");
+        body.append("</td></tr>");
+
+        body.append("</table>");
+        body.append("</div>");
+
+        // Warning message
+        body.append("<div style='background-color: #fff; padding: 15px; border-left: 4px solid #dc3545; margin: 20px 0;'>");
+        body.append("<p style='margin: 0; color: #721c24;'><strong>⚠️ Action Required:</strong></p>");
+        body.append("<p style='margin: 10px 0 0 0; color: #721c24;'>");
+        body.append("You have reached <strong>").append(settings.getBudgetThresholdPercentage());
+        body.append("%</strong> of your monthly SMS budget. ");
+        body.append("Please review your SMS usage and consider increasing your budget if needed.");
+        body.append("</p>");
+        body.append("</div>");
+
+        // Call to Action
+        body.append("<div style='text-align: center; margin: 30px 0;'>");
+        body.append("<a href='").append(appBaseUrl).append("/settings/sms' ");
+        body.append("style='display: inline-block; padding: 12px 30px; background-color: #007bff; ");
+        body.append("color: white; text-decoration: none; border-radius: 5px; font-weight: bold;'>");
+        body.append("Review SMS Settings</a>");
+        body.append("</div>");
+
+        body.append("</div>");
+
+        // Footer
+        body.append("<div style='background-color: #f8f9fa; padding: 15px; text-align: center; ");
+        body.append("border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px;'>");
+        body.append("<p style='color: #666; font-size: 12px; margin: 5px 0;'>");
+        body.append("This is an automated budget alert from SensorVision IoT Platform<br>");
+        body.append("You're receiving this because budget alerts are enabled for your organization");
         body.append("</p>");
         body.append("</div>");
 

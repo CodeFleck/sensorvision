@@ -4,6 +4,9 @@ import com.twilio.Twilio;
 import com.twilio.exception.TwilioException;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,8 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +34,6 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class SmsNotificationService {
 
     @Value("${notification.sms.enabled:false}")
@@ -49,6 +53,28 @@ public class SmsNotificationService {
 
     private final SmsDeliveryLogRepository smsDeliveryLogRepository;
     private final OrganizationSmsSettingsRepository smsSettingsRepository;
+    private final EmailNotificationService emailNotificationService;
+    private final MeterRegistry meterRegistry;
+
+    // Metrics
+    private final Counter smsSentCounter;
+    private final Counter smsFailedCounter;
+    private final ConcurrentHashMap<Long, AtomicInteger> orgDailyCountGauges = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, AtomicInteger> orgMonthlyCountGauges = new ConcurrentHashMap<>();
+
+    public SmsNotificationService(SmsDeliveryLogRepository smsDeliveryLogRepository,
+                                   OrganizationSmsSettingsRepository smsSettingsRepository,
+                                   EmailNotificationService emailNotificationService,
+                                   MeterRegistry meterRegistry) {
+        this.smsDeliveryLogRepository = smsDeliveryLogRepository;
+        this.smsSettingsRepository = smsSettingsRepository;
+        this.emailNotificationService = emailNotificationService;
+        this.meterRegistry = meterRegistry;
+
+        // Initialize counters
+        this.smsSentCounter = meterRegistry.counter("sms_sent_total");
+        this.smsFailedCounter = meterRegistry.counter("sms_failed_total");
+    }
 
     @PostConstruct
     public void init() {
@@ -132,6 +158,10 @@ public class SmsNotificationService {
             // Update organization SMS stats
             updateOrganizationStats(settings, costPerMessage);
 
+            // Update Prometheus metrics
+            smsSentCounter.increment();
+            updateOrganizationMetrics(organizationId, settings);
+
             log.info("SMS sent to {} for alert {}: SID={}", phoneNumber, alert.getId(), twilioMessage.getSid());
             return deliveryLog;
 
@@ -210,6 +240,10 @@ public class SmsNotificationService {
             .errorMessage(errorMessage)
             .sentAt(Instant.now())
             .build();
+
+        // Update failed counter metric
+        smsFailedCounter.increment();
+
         return smsDeliveryLogRepository.save(deliveryLog);
     }
 
@@ -233,8 +267,12 @@ public class SmsNotificationService {
      * Update organization SMS statistics
      */
     private void updateOrganizationStats(OrganizationSmsSettings settings, BigDecimal cost) {
+        // Calculate previous cost before updating
+        BigDecimal previousCost = settings.getCurrentMonthCost();
+
+        // Update stats
         settings.setCurrentMonthCount(settings.getCurrentMonthCount() + 1);
-        settings.setCurrentMonthCost(settings.getCurrentMonthCost().add(cost));
+        settings.setCurrentMonthCost(previousCost.add(cost));
         settings.setCurrentDayCount(settings.getCurrentDayCount() + 1);
 
         // Alert if approaching budget threshold
@@ -243,13 +281,24 @@ public class SmsNotificationService {
                 .multiply(new BigDecimal(settings.getBudgetThresholdPercentage()))
                 .divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
 
-            if (settings.getCurrentMonthCost().compareTo(threshold) >= 0) {
+            // Check if we just crossed the threshold (to avoid repeated emails)
+            boolean wasUnderThreshold = previousCost.compareTo(threshold) < 0;
+            boolean isNowOverThreshold = settings.getCurrentMonthCost().compareTo(threshold) >= 0;
+
+            if (wasUnderThreshold && isNowOverThreshold) {
                 log.warn("Organization {} has reached {}% of SMS budget ({}/{})",
                     settings.getOrganization().getId(),
                     settings.getBudgetThresholdPercentage(),
                     settings.getCurrentMonthCost(),
                     settings.getMonthlyBudget());
-                // TODO: Send admin notification via email
+
+                // Send admin notification via email
+                try {
+                    emailNotificationService.sendSmsBudgetThresholdAlert(settings);
+                } catch (Exception e) {
+                    log.error("Failed to send budget threshold alert email for org {}: {}",
+                        settings.getOrganization().getId(), e.getMessage(), e);
+                }
             }
         }
 
@@ -278,6 +327,46 @@ public class SmsNotificationService {
      */
     public OrganizationSmsSettings getOrganizationSettings(Long organizationId) {
         return smsSettingsRepository.findByOrganizationId(organizationId).orElse(null);
+    }
+
+    /**
+     * Update Prometheus metrics for organization SMS usage
+     */
+    private void updateOrganizationMetrics(Long organizationId, OrganizationSmsSettings settings) {
+        // Update or create daily count gauge
+        orgDailyCountGauges.computeIfAbsent(organizationId, id -> {
+            AtomicInteger gauge = new AtomicInteger(0);
+            meterRegistry.gauge("sms_daily_count",
+                Tags.of("organization_id", String.valueOf(id)),
+                gauge);
+            return gauge;
+        }).set(settings.getCurrentDayCount());
+
+        // Update or create monthly count gauge
+        orgMonthlyCountGauges.computeIfAbsent(organizationId, id -> {
+            AtomicInteger gauge = new AtomicInteger(0);
+            meterRegistry.gauge("sms_monthly_count",
+                Tags.of("organization_id", String.valueOf(id)),
+                gauge);
+            return gauge;
+        }).set(settings.getCurrentMonthCount());
+
+        // Also track monthly cost as a gauge
+        meterRegistry.gauge("sms_monthly_cost",
+            Tags.of("organization_id", String.valueOf(organizationId)),
+            settings.getCurrentMonthCost());
+
+        // Track budget utilization percentage
+        if (settings.getMonthlyBudget().compareTo(BigDecimal.ZERO) > 0) {
+            double budgetUtilization = settings.getCurrentMonthCost()
+                .divide(settings.getMonthlyBudget(), 4, RoundingMode.HALF_UP)
+                .multiply(new BigDecimal("100"))
+                .doubleValue();
+
+            meterRegistry.gauge("sms_budget_utilization_percent",
+                Tags.of("organization_id", String.valueOf(organizationId)),
+                budgetUtilization);
+        }
     }
 
     /**

@@ -14,6 +14,8 @@ public record SmsSettingsResponse(
     BigDecimal monthlyBudget,
     Integer currentMonthCount,
     BigDecimal currentMonthCost,
+    Integer currentDayCount,
+    Instant lastResetDate,
     Boolean alertOnBudgetThreshold,
     Integer budgetThresholdPercentage,
     Instant createdAt,
