@@ -290,7 +290,14 @@ Synthetic variables are calculated once per telemetry ingestion:
 2. **No Time-Series Queries**: Cannot reference historical values or trends
 3. **Limited Telemetry Variables**: Only supports 5 fields (kwConsumption, voltage, current, powerFactor, frequency)
 4. **No String Literals**: All values are numeric BigDecimal
-5. **No User-Defined Functions**: Function set is fixed at compile time
+   - Current architecture: All arguments are eagerly evaluated to BigDecimal by `parseArguments()`
+   - Future work requiring string literals (e.g., `avg("voltage", "1h")`) will need:
+     - Lazy argument evaluation or type-aware parsing
+     - Extended `ExpressionFunction` interface to handle mixed argument types
+5. **No Context Injection**: Functions cannot access deviceId, timestamp, or organization context
+   - Statistical functions requiring historical queries will need `ExpressionContext` plumbing
+   - Requires TelemetryRecordRepository integration
+6. **No User-Defined Functions**: Function set is fixed at compile time
 
 These limitations are **by design** for Phase 1. Future phases will address statistical aggregations and time-series analytics.
 
@@ -336,10 +343,23 @@ The following features were **intentionally excluded** from Phase 1 to maintain 
 
 ### Technical Debt to Address in Phase 2
 1. **Argument Type System**: Support both evaluated expressions and string literals
+   - Current: `parseArguments()` eagerly evaluates all args to BigDecimal
+   - Needed: Lazy evaluation or AST-based approach to preserve literal strings
+   - Impact: Functions like `avg("voltage", "1h")` currently impossible
 2. **Context Passing**: Inject ExpressionContext (deviceId, timestamp, org) into functions
+   - Current: ExpressionFunction.evaluate() has no access to execution context
+   - Needed: Thread-local context or function signature extension
+   - Impact: Cannot query historical data without deviceId/timestamp
 3. **Dynamic Field Support**: Replace hard-coded telemetry fields with dynamic schema
+   - Current: Only 5 hard-coded fields in `SyntheticVariableService.extractTelemetryValues()`
+   - Needed: Dynamic reflection or schema registry
+   - Impact: Cannot use fields like temperature, humidity unless code is modified
 4. **Integration Tests**: End-to-end tests for SyntheticVariableService pipeline
+   - Current: Only unit tests for ExpressionEvaluator
+   - Needed: Tests with real TelemetryRecord → SyntheticVariableValue flow
 5. **Query Optimization**: Efficient time-window aggregations with caching
+   - Needed: Database query optimization for time-series aggregations
+   - Consider: Materialized views or pre-aggregated rollups for common windows
 
 ---
 
@@ -381,13 +401,43 @@ src/main/java/org/sensorvision/service/SyntheticVariableService.java
 
 ---
 
+## Bug Fixes (Post-Initial Implementation)
+
+### Critical Fix: Parentheses + Comparison Bug (Commit 57e927ac)
+**Issue**: Line 90 in `ExpressionEvaluator.java` used `expression.contains("(")` to detect function calls, which incorrectly routed arithmetic grouping expressions to the function evaluator.
+
+**Impact**:
+- `(voltage - 210) > 5` → NumberFormatException
+- `if((kwConsumption - 80) > 10, 1, 0)` → NumberFormatException
+
+**Root Cause**: `evaluateWithFunctions()` found no functions, passed to `evaluateArithmetic()`, which then tried to parse comparison operators like `10 > 7` as a BigDecimal.
+
+**Fix**: Changed line 90 from `expression.contains("(")` to `FUNCTION_PATTERN.matcher(expression).find()` to only detect actual function calls (identifier followed by parenthesis).
+
+**Verification**: Added 2 regression tests:
+- `shouldEvaluateGroupedComparison()` - tests `(voltage - 210) > 5`
+- `shouldEvaluateIfWithGroupedComparison()` - tests `if((kwConsumption - 80) > 10, 1, 0)`
+
+### Missing Python Test Dependencies (Commit 57e927ac)
+**Issue**: `tests/test_sensorvision_sdk.py` imported `responses` and `aiohttp`, but they were not declared in `sensorvision-sdk/pyproject.toml` dev dependencies.
+
+**Impact**: Clean installs with `pip install -e .[dev]` would fail with ModuleNotFoundError.
+
+**Fix**: Added to `[project.optional-dependencies].dev`:
+```toml
+"responses>=0.23.0",   # HTTP mocking for tests
+"aiohttp>=3.8.0",      # Async client tests
+```
+
+---
+
 ## Metrics
 
 - **Lines of Code**: ~1,200 (production code)
 - **Test Lines**: ~600
 - **Documentation**: 470 lines
 - **Functions**: 21 (17 Math + 4 Logic)
-- **Test Cases**: 40+
+- **Test Cases**: 42 (40 initial + 2 regression tests)
 - **API Endpoints**: 2
 
 ---
