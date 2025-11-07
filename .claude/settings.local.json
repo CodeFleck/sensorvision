@@ -24,7 +24,8 @@
       "Bash(git push:*)",
       "Bash(gh pr close:*)",
       "Bash(gh pr create:*)",
-      "Bash(gh pr comment:*)"
+      "Bash(gh pr comment:*)",
+      "Bash(gh pr merge:*)"
     ],
     "deny": [],
     "ask": []

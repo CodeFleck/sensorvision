@@ -80,6 +80,7 @@ class NotificationServiceTest {
 
         // Default mock behavior - email service returns true (lenient for tests that don't use it)
         lenient().when(emailService.sendAlertEmail(any(), any(), anyString())).thenReturn(true);
+        lenient().when(smsService.formatAlertMessage(any())).thenReturn("Test SMS message");
         lenient().when(smsService.sendSms(any(), anyString(), anyString())).thenReturn(null);
         lenient().when(webhookService.sendAlertWebhook(any(), any(), anyString())).thenReturn(true);
     }
