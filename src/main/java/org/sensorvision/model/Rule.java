@@ -59,6 +59,13 @@ public class Rule extends AuditableEntity {
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
 
+    @Column(name = "send_sms")
+    @Builder.Default
+    private Boolean sendSms = false;
+
+    @Column(name = "sms_recipients", columnDefinition = "TEXT[]")
+    private String[] smsRecipients;
+
     @PrePersist
     void ensureId() {
         if (this.id == null) {
