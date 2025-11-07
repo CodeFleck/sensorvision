@@ -86,17 +86,17 @@ public class ExpressionEvaluator {
     private BigDecimal evaluateExpression(String expression) {
         expression = expression.trim();
 
-        // Handle function calls
-        if (expression.contains("(")) {
+        // Handle function calls (only if there's an identifier before the parenthesis)
+        if (FUNCTION_PATTERN.matcher(expression).find()) {
             return evaluateWithFunctions(expression);
         }
 
-        // Handle comparison operators
+        // Handle comparison operators (must be before arithmetic to handle grouped comparisons)
         if (containsComparisonOperator(expression)) {
             return evaluateComparison(expression);
         }
 
-        // Handle arithmetic
+        // Handle arithmetic (includes parentheses for grouping)
         return evaluateArithmetic(expression);
     }
 

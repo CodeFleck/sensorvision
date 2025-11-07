@@ -249,6 +249,22 @@ class ExpressionEvaluatorTest {
         assertThat(result).isEqualByComparingTo("1"); // 100 > 80 = true
     }
 
+    @Test
+    void shouldEvaluateGroupedComparison() {
+        // Bug fix test: parentheses for grouping should not break comparisons
+        // (voltage - 210) > 5 should work (220 - 210 = 10 > 5 = true)
+        BigDecimal result = evaluator.evaluate("(voltage - 210) > 5", variables);
+        assertThat(result).isEqualByComparingTo("1");
+    }
+
+    @Test
+    void shouldEvaluateIfWithGroupedComparison() {
+        // Bug fix test: if with grouped comparison argument
+        // if((kwConsumption - 80) > 10, 1, 0) should work (100 - 80 = 20 > 10 = true)
+        BigDecimal result = evaluator.evaluate("if((kwConsumption - 80) > 10, 1, 0)", variables);
+        assertThat(result).isEqualByComparingTo("1");
+    }
+
     // ===== ERROR HANDLING TESTS =====
 
     @Test

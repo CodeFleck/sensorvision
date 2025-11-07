@@ -20,7 +20,10 @@
       "Bash(git rm:*)",
       "Bash(./gradlew clean:*)",
       "Bash(Select-String -Pattern \"ExpressionEvaluator\" -Context 2,2)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr close:*)",
+      "Bash(gh pr create:*)"
     ],
     "deny": [],
     "ask": []
