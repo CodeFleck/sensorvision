@@ -62,6 +62,15 @@ device_tokens_backup*.csv
 /frontend/package-lock.json
 mosquitto.db
 
+# Mosquitto persistence
+/mosquitto/data/*.db
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
 # Terraform
 /terraform/.terraform/
 /terraform/.terraform.lock.hcl

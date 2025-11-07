@@ -8,6 +8,8 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.sensorvision.expression.ExpressionEvaluator;
+import org.sensorvision.expression.FunctionRegistry;
 import org.sensorvision.model.*;
 import org.sensorvision.repository.SyntheticVariableRepository;
 import org.sensorvision.repository.SyntheticVariableValueRepository;
@@ -36,7 +38,8 @@ class SyntheticVariableServiceTest {
     @Mock
     private SyntheticVariableValueRepository syntheticVariableValueRepository;
 
-    @InjectMocks
+    private ExpressionEvaluator expressionEvaluator;
+
     private SyntheticVariableService syntheticVariableService;
 
     @Captor
@@ -49,6 +52,17 @@ class SyntheticVariableServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Initialize real ExpressionEvaluator with FunctionRegistry
+        FunctionRegistry functionRegistry = new FunctionRegistry();
+        expressionEvaluator = new ExpressionEvaluator(functionRegistry);
+
+        // Initialize service with real evaluator and mocked repositories
+        syntheticVariableService = new SyntheticVariableService(
+                syntheticVariableRepository,
+                syntheticVariableValueRepository,
+                expressionEvaluator
+        );
+
         organization = Organization.builder()
                 .id(1L)
                 .name("Test Organization")
