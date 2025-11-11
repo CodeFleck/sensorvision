@@ -266,6 +266,23 @@ public class NotificationService {
         preferenceRepository.deleteByUserAndChannel(user, channel);
     }
 
+    /**
+     * Send direct SMS without checking user preferences (for global/fleet alerts)
+     * This bypasses normal notification preferences and sends SMS directly
+     */
+    @Async
+    public void sendDirectSms(String phoneNumber, String message, Long organizationId) {
+        log.info("Sending direct SMS to {} for organization {}", phoneNumber, organizationId);
+
+        try {
+            // Send SMS directly through SMS service
+            smsService.sendVerificationSms(phoneNumber, message);
+            log.info("Direct SMS sent successfully to {}", phoneNumber);
+        } catch (Exception e) {
+            log.error("Failed to send direct SMS to {}: {}", phoneNumber, e.getMessage(), e);
+        }
+    }
+
     private Event.EventSeverity mapAlertSeverityToEventSeverity(AlertSeverity alertSeverity) {
         return switch (alertSeverity) {
             case CRITICAL -> Event.EventSeverity.CRITICAL;
