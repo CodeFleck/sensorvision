@@ -29,6 +29,8 @@ import {
   Webhook,
   Terminal,
   Mail,
+  Phone,
+  DollarSign,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -95,6 +97,8 @@ const navigationSections: NavigationSection[] = [
       { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false },
       { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
       { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false },
+      { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, adminOnly: false },
+      { name: 'SMS Settings', href: '/sms-settings', icon: DollarSign, adminOnly: true },
       { name: 'Events', href: '/events', icon: Clock, adminOnly: true },
     ],
   },

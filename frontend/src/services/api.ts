@@ -1,4 +1,4 @@
-import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -560,6 +560,75 @@ class ApiService {
     await this.request(`/playlists/${id}`, {
       method: 'DELETE',
     });
+  }
+
+  // Phone Number Management
+  async getPhoneNumbers(): Promise<PhoneNumber[]> {
+    return this.request<PhoneNumber[]>('/phone-numbers');
+  }
+
+  async addPhoneNumber(data: PhoneNumberAddRequest): Promise<{ success: boolean; data: PhoneNumber; message: string }> {
+    return this.request('/phone-numbers', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async verifyPhoneNumber(phoneId: string, data: PhoneNumberVerifyRequest): Promise<{ success: boolean; data: string; message: string }> {
+    return this.request(`/phone-numbers/${phoneId}/verify`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async resendVerificationCode(phoneId: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/phone-numbers/${phoneId}/resend-code`, {
+      method: 'POST',
+    });
+  }
+
+  async setPrimaryPhone(phoneId: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/phone-numbers/${phoneId}/set-primary`, {
+      method: 'PUT',
+    });
+  }
+
+  async togglePhoneEnabled(phoneId: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/phone-numbers/${phoneId}/toggle`, {
+      method: 'PUT',
+    });
+  }
+
+  async deletePhoneNumber(phoneId: string): Promise<void> {
+    await this.request(`/phone-numbers/${phoneId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // SMS Settings Management (Admin only)
+  async getSmsSettings(): Promise<SmsSettings> {
+    return this.request<SmsSettings>('/sms-settings');
+  }
+
+  async updateSmsSettings(data: SmsSettingsUpdateRequest): Promise<SmsSettings> {
+    return this.request<SmsSettings>('/sms-settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async resetMonthlySmsCounters(): Promise<{ success: boolean; message: string }> {
+    return this.request('/sms-settings/reset-monthly-counters', {
+      method: 'POST',
+    });
+  }
+
+  // SMS Delivery Logs (optional - for dashboard)
+  async getSmsDeliveryLogs(limit?: number, offset?: number): Promise<SmsDeliveryLog[]> {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (offset) params.append('offset', offset.toString());
+    return this.request<SmsDeliveryLog[]>(`/sms-delivery-logs?${params}`);
   }
 }
 

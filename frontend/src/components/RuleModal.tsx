@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
-import { Rule, Device } from '../types';
+import { useState, useEffect } from 'react';
+import { X, Plus, Trash2, MessageSquare } from 'lucide-react';
+import { Rule, Device, PhoneNumber } from '../types';
 import { apiService } from '../services/api';
 
 interface RuleModalProps {
@@ -18,9 +18,27 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
     operator: rule?.operator || 'GT',
     threshold: rule?.threshold?.toString() || '',
     enabled: rule?.enabled ?? true,
+    sendSms: rule?.sendSms ?? false,
+    smsRecipients: rule?.smsRecipients || [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
+  const [newRecipient, setNewRecipient] = useState('');
+
+  useEffect(() => {
+    fetchPhoneNumbers();
+  }, []);
+
+  const fetchPhoneNumbers = async () => {
+    try {
+      const data = await apiService.getPhoneNumbers();
+      const verified = data.filter(p => p.verified && p.enabled);
+      setPhoneNumbers(verified);
+    } catch (error) {
+      console.error('Failed to fetch phone numbers:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +49,7 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
       const ruleData = {
         ...formData,
         threshold: parseFloat(formData.threshold),
+        smsRecipients: formData.sendSms ? formData.smsRecipients : [],
       };
 
       if (rule) {
@@ -44,6 +63,23 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddRecipient = (phoneNumber: string) => {
+    if (phoneNumber && !formData.smsRecipients.includes(phoneNumber)) {
+      setFormData(prev => ({
+        ...prev,
+        smsRecipients: [...prev.smsRecipients, phoneNumber],
+      }));
+      setNewRecipient('');
+    }
+  };
+
+  const handleRemoveRecipient = (phoneNumber: string) => {
+    setFormData(prev => ({
+      ...prev,
+      smsRecipients: prev.smsRecipients.filter(p => p !== phoneNumber),
+    }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -214,6 +250,95 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
             <label htmlFor="enabled" className="ml-2 block text-sm text-gray-700">
               Enable rule immediately
             </label>
+          </div>
+
+          {/* SMS Notification Section */}
+          <div className="border-t pt-4 mt-4">
+            <div className="flex items-center mb-3">
+              <input
+                type="checkbox"
+                id="sendSms"
+                name="sendSms"
+                checked={formData.sendSms}
+                onChange={handleChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="sendSms" className="ml-2 flex items-center text-sm font-medium text-gray-700">
+                <MessageSquare className="h-4 w-4 mr-1" />
+                Send SMS notifications
+              </label>
+            </div>
+
+            {formData.sendSms && (
+              <div className="ml-6 space-y-3">
+                {phoneNumbers.length === 0 ? (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      No verified phone numbers. <a href="/phone-numbers" className="underline font-medium">Add a phone number</a> to receive SMS alerts.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        SMS Recipients
+                      </label>
+                      <div className="flex space-x-2">
+                        <select
+                          value={newRecipient}
+                          onChange={(e) => setNewRecipient(e.target.value)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Select a phone number...</option>
+                          {phoneNumbers.map((phone) => (
+                            <option key={phone.id} value={phone.phoneNumber}>
+                              {phone.phoneNumber} {phone.isPrimary ? '(Primary)' : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleAddRecipient(newRecipient)}
+                          disabled={!newRecipient}
+                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Plus className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {formData.smsRecipients.length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">Selected recipients:</p>
+                        <div className="space-y-1">
+                          {formData.smsRecipients.map((phone) => (
+                            <div
+                              key={phone}
+                              className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded"
+                            >
+                              <span className="text-sm text-gray-900">{phone}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveRecipient(phone)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs text-blue-800">
+                        SMS alerts will be sent to all selected recipients when this rule triggers. Message and data rates may apply.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-3 pt-4">

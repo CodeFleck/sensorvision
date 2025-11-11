@@ -39,6 +39,8 @@ import DataRetention from './pages/DataRetention';
 import Profile from './pages/Profile';
 import { Playlists } from './pages/Playlists';
 import { PlaylistPlayer } from './pages/PlaylistPlayer';
+import PhoneNumbers from './pages/PhoneNumbers';
+import SmsSettings from './pages/SmsSettings';
 import { config } from './config';
 
 function App() {
@@ -112,8 +114,10 @@ function App() {
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/my-tickets" element={<MyTickets />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/phone-numbers" element={<PhoneNumbers />} />
 
                   {/* Admin-only routes */}
+                  <Route path="/sms-settings" element={<ProtectedRoute adminOnly={true}><SmsSettings /></ProtectedRoute>} />
                   <Route path="/device-groups" element={<ProtectedRoute adminOnly={true}><DeviceGroups /></ProtectedRoute>} />
                   <Route path="/device-tags" element={<ProtectedRoute adminOnly={true}><DeviceTags /></ProtectedRoute>} />
                   <Route path="/events" element={<ProtectedRoute adminOnly={true}><Events /></ProtectedRoute>} />
