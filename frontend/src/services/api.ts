@@ -1,4 +1,4 @@
-import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -629,6 +629,78 @@ class ApiService {
     if (limit) params.append('limit', limit.toString());
     if (offset) params.append('offset', offset.toString());
     return this.request<SmsDeliveryLog[]>(`/sms-delivery-logs?${params}`);
+  }
+
+  // Admin User Management
+  async getAllUsers(): Promise<User[]> {
+    return this.request<User[]>('/admin/users');
+  }
+
+  async getUser(userId: number): Promise<User> {
+    return this.request<User>(`/admin/users/${userId}`);
+  }
+
+  async enableUser(userId: number): Promise<{ success: boolean; data: User; message: string }> {
+    return this.request(`/admin/users/${userId}/enable`, {
+      method: 'PUT',
+    });
+  }
+
+  async disableUser(userId: number): Promise<{ success: boolean; data: User; message: string }> {
+    return this.request(`/admin/users/${userId}/disable`, {
+      method: 'PUT',
+    });
+  }
+
+  async updateUser(userId: number, data: { firstName?: string; lastName?: string; email?: string }): Promise<{ success: boolean; data: User; message: string }> {
+    return this.request(`/admin/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteUser(userId: number): Promise<void> {
+    await this.request(`/admin/users/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getUsersByOrganization(organizationId: number): Promise<User[]> {
+    return this.request<User[]>(`/admin/users/organization/${organizationId}`);
+  }
+
+  // Admin Organization Management
+  async getAllOrganizations(): Promise<Organization[]> {
+    return this.request<Organization[]>('/admin/organizations');
+  }
+
+  async getOrganization(organizationId: number): Promise<Organization> {
+    return this.request<Organization>(`/admin/organizations/${organizationId}`);
+  }
+
+  async enableOrganization(organizationId: number): Promise<{ success: boolean; data: Organization; message: string }> {
+    return this.request(`/admin/organizations/${organizationId}/enable`, {
+      method: 'PUT',
+    });
+  }
+
+  async disableOrganization(organizationId: number): Promise<{ success: boolean; data: Organization; message: string }> {
+    return this.request(`/admin/organizations/${organizationId}/disable`, {
+      method: 'PUT',
+    });
+  }
+
+  async updateOrganization(organizationId: number, data: { name?: string; description?: string }): Promise<{ success: boolean; data: Organization; message: string }> {
+    return this.request(`/admin/organizations/${organizationId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteOrganization(organizationId: number): Promise<void> {
+    await this.request(`/admin/organizations/${organizationId}`, {
+      method: 'DELETE',
+    });
   }
 }
 

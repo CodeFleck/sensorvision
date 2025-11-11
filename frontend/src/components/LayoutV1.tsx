@@ -31,6 +31,8 @@ import {
   Mail,
   Phone,
   DollarSign,
+  User,
+  Building2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -116,6 +118,16 @@ const navigationSections: NavigationSection[] = [
       { name: 'Webhook Tester', href: '/webhook-tester', icon: Webhook, adminOnly: true },
       { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: true },
       { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
+    ],
+  },
+  {
+    name: 'ADMINISTRATION',
+    icon: Shield,
+    iconColor: 'text-indigo-600',
+    adminOnly: true,
+    items: [
+      { name: 'User Management', href: '/admin/users', icon: User, adminOnly: true },
+      { name: 'Organizations', href: '/admin/organizations', icon: Building2, adminOnly: true },
     ],
   },
   {

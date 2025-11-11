@@ -179,10 +179,23 @@ export interface User {
   organizationName: string;
   roles: string[];
   enabled: boolean;
+  emailVerified?: boolean;
+  lastLoginAt?: string;
   avatarUrl?: string;
   avatarVersion?: number;
   themePreference?: 'light' | 'dark' | 'system';
   createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Organization {
+  id: number;
+  name: string;
+  description?: string;
+  enabled: boolean;
+  userCount?: number;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface LoginRequest {

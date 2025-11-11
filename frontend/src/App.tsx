@@ -41,6 +41,8 @@ import { Playlists } from './pages/Playlists';
 import { PlaylistPlayer } from './pages/PlaylistPlayer';
 import PhoneNumbers from './pages/PhoneNumbers';
 import SmsSettings from './pages/SmsSettings';
+import AdminUsers from './pages/AdminUsers';
+import AdminOrganizations from './pages/AdminOrganizations';
 import { config } from './config';
 
 function App() {
@@ -117,6 +119,8 @@ function App() {
                   <Route path="/phone-numbers" element={<PhoneNumbers />} />
 
                   {/* Admin-only routes */}
+                  <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
+                  <Route path="/admin/organizations" element={<ProtectedRoute adminOnly={true}><AdminOrganizations /></ProtectedRoute>} />
                   <Route path="/sms-settings" element={<ProtectedRoute adminOnly={true}><SmsSettings /></ProtectedRoute>} />
                   <Route path="/device-groups" element={<ProtectedRoute adminOnly={true}><DeviceGroups /></ProtectedRoute>} />
                   <Route path="/device-tags" element={<ProtectedRoute adminOnly={true}><DeviceTags /></ProtectedRoute>} />
