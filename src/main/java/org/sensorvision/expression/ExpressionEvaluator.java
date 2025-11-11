@@ -28,6 +28,9 @@ public class ExpressionEvaluator {
 
     private static final MathContext MC = new MathContext(10, RoundingMode.HALF_UP);
 
+    // Thread-local context for statistical functions
+    private static final ThreadLocal<StatisticalFunctionContext> contextHolder = new ThreadLocal<>();
+
     // Patterns for tokenization
     private static final Pattern FUNCTION_PATTERN = Pattern.compile("([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(");
     private static final Pattern NUMBER_PATTERN = Pattern.compile("-?\\d+(?:\\.\\d+)?");
@@ -55,6 +58,39 @@ public class ExpressionEvaluator {
         } catch (Exception e) {
             log.error("Failed to evaluate expression '{}': {}", expression, e.getMessage());
             throw new ExpressionEvaluationException("Expression evaluation failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Evaluate an expression with variable substitution and statistical context.
+     * This overload supports time-series statistical functions.
+     *
+     * @param expression The expression to evaluate
+     * @param variables Map of variable names to values
+     * @param context Statistical function context (device, time, repository)
+     * @return The evaluated result
+     */
+    public BigDecimal evaluate(String expression, Map<String, BigDecimal> variables, StatisticalFunctionContext context) {
+        if (expression == null || expression.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Set context in thread-local for function access
+            contextHolder.set(context);
+
+            // Substitute variables with their values
+            String processedExpression = substituteVariables(expression, variables);
+
+            // Parse and evaluate the expression
+            return evaluateExpression(processedExpression);
+
+        } catch (Exception e) {
+            log.error("Failed to evaluate expression '{}': {}", expression, e.getMessage());
+            throw new ExpressionEvaluationException("Expression evaluation failed: " + e.getMessage(), e);
+        } finally {
+            // Always clear context to prevent leaks
+            contextHolder.remove();
         }
     }
 
@@ -143,7 +179,7 @@ public class ExpressionEvaluator {
 
             // Extract function arguments
             String argsString = expression.substring(lastFunctionNameEnd + 1, closingParen);
-            List<BigDecimal> args = parseArguments(argsString);
+            List<Object> args = parseArguments(argsString);
 
             // Evaluate function
             BigDecimal result = evaluateFunction(lastFunctionName, args);
@@ -160,19 +196,20 @@ public class ExpressionEvaluator {
 
     /**
      * Parse comma-separated function arguments.
+     * Now supports both numeric expressions and string literals (for statistical functions).
      */
-    private List<BigDecimal> parseArguments(String argsString) {
+    private List<Object> parseArguments(String argsString) {
         if (argsString.trim().isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<BigDecimal> args = new ArrayList<>();
+        List<Object> args = new ArrayList<>();
         int depth = 0;
         StringBuilder currentArg = new StringBuilder();
 
         for (char c : argsString.toCharArray()) {
             if (c == ',' && depth == 0) {
-                args.add(evaluateExpression(currentArg.toString().trim()));
+                args.add(parseArgument(currentArg.toString().trim()));
                 currentArg = new StringBuilder();
             } else {
                 if (c == '(') depth++;
@@ -182,19 +219,42 @@ public class ExpressionEvaluator {
         }
 
         if (currentArg.length() > 0) {
-            args.add(evaluateExpression(currentArg.toString().trim()));
+            args.add(parseArgument(currentArg.toString().trim()));
         }
 
         return args;
     }
 
     /**
+     * Parse a single argument - can be a string literal or numeric expression.
+     */
+    private Object parseArgument(String arg) {
+        arg = arg.trim();
+
+        // Check if it's a string literal (enclosed in quotes)
+        if ((arg.startsWith("\"") && arg.endsWith("\"")) ||
+            (arg.startsWith("'") && arg.endsWith("'"))) {
+            // Remove quotes and return as string
+            return arg.substring(1, arg.length() - 1);
+        }
+
+        // Otherwise, evaluate as expression
+        return evaluateExpression(arg);
+    }
+
+    /**
      * Evaluate a function call.
      */
-    private BigDecimal evaluateFunction(String functionName, List<BigDecimal> args) {
+    private BigDecimal evaluateFunction(String functionName, List<Object> args) {
         ExpressionFunction function = functionRegistry.getFunction(functionName);
         if (function == null) {
             throw new ExpressionEvaluationException("Unknown function: " + functionName);
+        }
+
+        // Check if function is context-aware (statistical function)
+        if (function instanceof ContextualExpressionFunction) {
+            StatisticalFunctionContext context = contextHolder.get();
+            return ((ContextualExpressionFunction) function).evaluateWithContext(context, args.toArray());
         }
 
         return function.evaluate(args.toArray());

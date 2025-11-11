@@ -1,7 +1,9 @@
 package org.sensorvision.expression;
 
 import lombok.extern.slf4j.Slf4j;
-import org.sensorvision.expression.functions.*;
+import org.sensorvision.expression.functions.LogicFunctions;
+import org.sensorvision.expression.functions.MathFunctions;
+import org.sensorvision.expression.functions.StatisticalFunctions;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -50,6 +52,18 @@ public class FunctionRegistry {
         registerLogic("or", LogicFunctions::or, "Logical OR: or(x, y, ...) - returns 1 if any non-zero, else 0");
         registerLogic("not", LogicFunctions::not, "Logical NOT: not(x) - returns 1 if x is 0, else 0");
 
+        // Statistical time-series functions
+        registerStatistical("avg", StatisticalFunctions.avg(), "Average over time window: avg(\"variable\", \"5m\")");
+        registerStatistical("stddev", StatisticalFunctions.stddev(), "Standard deviation: stddev(\"variable\", \"1h\")");
+        registerStatistical("sum", StatisticalFunctions.sum(), "Sum over time window: sum(\"variable\", \"24h\")");
+        registerStatistical("count", StatisticalFunctions.count(), "Count data points: count(\"variable\", \"1h\")");
+        registerStatistical("minTime", StatisticalFunctions.minTime(), "Minimum value over time: minTime(\"variable\", \"7d\")");
+        registerStatistical("maxTime", StatisticalFunctions.maxTime(), "Maximum value over time: maxTime(\"variable\", \"7d\")");
+        registerStatistical("rate", StatisticalFunctions.rate(), "Rate of change per hour: rate(\"variable\", \"1h\")");
+        registerStatistical("movingAvg", StatisticalFunctions.movingAvg(), "Moving average: movingAvg(\"variable\", \"15m\")");
+        registerStatistical("percentChange", StatisticalFunctions.percentChange(), "Percent change: percentChange(\"variable\", \"1h\")");
+        registerStatistical("median", StatisticalFunctions.median(), "Median value: median(\"variable\", \"1h\")");
+
         log.info("Registered {} expression functions across {} categories",
                 functions.size(), Set.copyOf(functionCategories.values()).size());
     }
@@ -60,6 +74,10 @@ public class FunctionRegistry {
 
     private void registerLogic(String name, ExpressionFunction function, String description) {
         register(name, function, description, "Logic");
+    }
+
+    private void registerStatistical(String name, ExpressionFunction function, String description) {
+        register(name, function, description, "Statistical");
     }
 
     private void register(String name, ExpressionFunction function, String description, String category) {
