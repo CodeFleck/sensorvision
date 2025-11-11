@@ -253,12 +253,24 @@ const AddPhoneModal = ({ onClose, onAdd }: AddPhoneModalProps) => {
   const [countryCode, setCountryCode] = useState('CA');
   const [loading, setLoading] = useState(false);
 
+  // Map country codes to their dial codes
+  const getDialCode = (country: string): string => {
+    const dialCodes: Record<string, string> = {
+      'US': '+1',
+      'CA': '+1',
+      'GB': '+44',
+      'AU': '+61',
+    };
+    return dialCodes[country] || '+1';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Prepend +1 for North American numbers
-      const fullPhoneNumber = `+1${phoneNumber}`;
+      // Prepend appropriate country dial code
+      const dialCode = getDialCode(countryCode).replace('+', '');
+      const fullPhoneNumber = `+${dialCode}${phoneNumber}`;
       await onAdd(fullPhoneNumber, countryCode);
     } finally {
       setLoading(false);
@@ -298,8 +310,8 @@ const AddPhoneModal = ({ onClose, onAdd }: AddPhoneModalProps) => {
               Phone Number *
             </label>
             <div className="flex space-x-2">
-              <div className="w-20 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-gray-700">
-                +1
+              <div className="w-20 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-gray-700 font-medium">
+                {getDialCode(countryCode)}
               </div>
               <input
                 type="tel"
@@ -307,13 +319,15 @@ const AddPhoneModal = ({ onClose, onAdd }: AddPhoneModalProps) => {
                 required
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                placeholder="5551234567"
-                maxLength={10}
+                placeholder={countryCode === 'US' || countryCode === 'CA' ? '5551234567' : 'Phone number'}
+                maxLength={countryCode === 'US' || countryCode === 'CA' ? 10 : 15}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <p className="mt-1 text-sm text-gray-500">
-              Enter 10-digit phone number (area code + number)
+              {countryCode === 'US' || countryCode === 'CA'
+                ? 'Enter 10-digit phone number (area code + number)'
+                : 'Enter phone number without country code'}
             </p>
           </div>
 
