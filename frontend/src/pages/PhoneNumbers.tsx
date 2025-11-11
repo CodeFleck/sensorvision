@@ -250,7 +250,7 @@ interface AddPhoneModalProps {
 
 const AddPhoneModal = ({ onClose, onAdd }: AddPhoneModalProps) => {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [countryCode, setCountryCode] = useState('US');
+  const [countryCode, setCountryCode] = useState('CA');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
