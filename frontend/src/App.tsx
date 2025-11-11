@@ -43,6 +43,7 @@ import PhoneNumbers from './pages/PhoneNumbers';
 import SmsSettings from './pages/SmsSettings';
 import AdminUsers from './pages/AdminUsers';
 import AdminOrganizations from './pages/AdminOrganizations';
+import { GlobalRules } from './pages/GlobalRules';
 import { config } from './config';
 
 function App() {
@@ -112,6 +113,7 @@ function App() {
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/rules" element={<Rules />} />
+                  <Route path="/global-rules" element={<GlobalRules />} />
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/my-tickets" element={<MyTickets />} />

@@ -28,6 +28,7 @@ import {
   Archive,
   Webhook,
   Terminal,
+  Network,
   Mail,
   Phone,
   DollarSign,
@@ -97,6 +98,7 @@ const navigationSections: NavigationSection[] = [
     adminOnly: false,
     items: [
       { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false },
+      { name: 'Global Rules', href: '/global-rules', icon: Network, adminOnly: false },
       { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
       { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false },
       { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, adminOnly: false },
