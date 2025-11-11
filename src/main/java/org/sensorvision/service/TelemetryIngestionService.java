@@ -74,7 +74,7 @@ public class TelemetryIngestionService {
      * @param payload The telemetry data
      */
     public void ingest(TelemetryPayload payload) {
-        Device device = deviceRepository.findByExternalId(payload.deviceId())
+        Device device = deviceRepository.findByExternalIdWithOrganization(payload.deviceId())
                 .orElseGet(() -> {
                     if (!telemetryConfig.getAutoProvision().isEnabled()) {
                         throw new IllegalArgumentException(

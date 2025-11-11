@@ -117,7 +117,6 @@ const navigationSections: NavigationSection[] = [
       { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
       { name: 'Webhook Tester', href: '/webhook-tester', icon: Webhook, adminOnly: true },
       { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: true },
-      { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
     ],
   },
   {

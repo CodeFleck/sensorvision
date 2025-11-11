@@ -102,7 +102,7 @@ class TelemetryIngestionServiceTest {
                 Map.of("location", "Building A")
         );
 
-        when(deviceRepository.findByExternalId("test-device-001")).thenReturn(Optional.of(existingDevice));
+        when(deviceRepository.findByExternalIdWithOrganization("test-device-001")).thenReturn(Optional.of(existingDevice));
         when(deviceRepository.save(any(Device.class))).thenReturn(existingDevice);
         when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -110,7 +110,7 @@ class TelemetryIngestionServiceTest {
         telemetryIngestionService.ingest(payload);
 
         // Assert
-        verify(deviceRepository).findByExternalId("test-device-001");
+        verify(deviceRepository).findByExternalIdWithOrganization("test-device-001");
         verify(deviceRepository).save(existingDevice);
         verify(telemetryRecordRepository).save(any(TelemetryRecord.class));
         verify(ruleEngineService).evaluateRules(any(TelemetryRecord.class));
@@ -155,7 +155,7 @@ class TelemetryIngestionServiceTest {
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        when(deviceRepository.findByExternalId("new-device-001")).thenReturn(Optional.empty());
+        when(deviceRepository.findByExternalIdWithOrganization("new-device-001")).thenReturn(Optional.empty());
         when(deviceService.getOrCreateDevice(eq("new-device-001"), eq(org))).thenReturn(newDevice);
         when(deviceRepository.save(any(Device.class))).thenReturn(newDevice);
         when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
@@ -197,7 +197,7 @@ class TelemetryIngestionServiceTest {
         // No authentication in security context
         SecurityContextHolder.clearContext();
 
-        when(deviceRepository.findByExternalId("new-device-002")).thenReturn(Optional.empty());
+        when(deviceRepository.findByExternalIdWithOrganization("new-device-002")).thenReturn(Optional.empty());
         when(organizationRepository.findByName("Default Organization")).thenReturn(Optional.of(defaultOrg));
         when(deviceService.getOrCreateDevice(eq("new-device-002"), eq(defaultOrg))).thenReturn(newDevice);
         when(deviceRepository.save(any(Device.class))).thenReturn(newDevice);
@@ -224,7 +224,7 @@ class TelemetryIngestionServiceTest {
                 Map.of()
         );
 
-        when(deviceRepository.findByExternalId("non-existent-device")).thenReturn(Optional.empty());
+        when(deviceRepository.findByExternalIdWithOrganization("non-existent-device")).thenReturn(Optional.empty());
 
         // Act & Assert
         IllegalArgumentException exception = assertThrows(
@@ -235,7 +235,7 @@ class TelemetryIngestionServiceTest {
         assertTrue(exception.getMessage().contains("auto-provisioning is disabled"));
         assertTrue(exception.getMessage().contains("non-existent-device"));
 
-        verify(deviceRepository).findByExternalId("non-existent-device");
+        verify(deviceRepository).findByExternalIdWithOrganization("non-existent-device");
         verify(deviceService, never()).getOrCreateDevice(any(), any());
         verify(telemetryRecordRepository, never()).save(any());
     }
@@ -264,7 +264,7 @@ class TelemetryIngestionServiceTest {
                 metadata
         );
 
-        when(deviceRepository.findByExternalId("device-with-metadata")).thenReturn(Optional.of(device));
+        when(deviceRepository.findByExternalIdWithOrganization("device-with-metadata")).thenReturn(Optional.of(device));
         when(deviceRepository.save(any(Device.class))).thenReturn(device);
         when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -279,5 +279,47 @@ class TelemetryIngestionServiceTest {
         assertEquals("Floor 3", savedDevice.getLocation());
         assertEquals("temperature_sensor", savedDevice.getSensorType());
         assertEquals("v2.1.0", savedDevice.getFirmwareVersion());
+    }
+
+    @Test
+    void ingest_shouldPopulateOrganizationInTelemetryRecord() {
+        // Regression test for organization_id null constraint violation
+        // This test ensures that the organization field is properly populated
+        // when creating telemetry records to prevent batch insert failures
+
+        // Arrange
+        Organization org = Organization.builder().id(42L).name("Test Organization").build();
+        Device device = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("test-device-org")
+                .name("Test Device with Org")
+                .organization(org)
+                .build();
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "test-device-org",
+                Instant.now(),
+                Map.of("kw_consumption", new BigDecimal("100.5")),
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("test-device-org"))
+                .thenReturn(Optional.of(device));
+        when(deviceRepository.save(any(Device.class))).thenReturn(device);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        telemetryIngestionService.ingest(payload);
+
+        // Assert
+        ArgumentCaptor<TelemetryRecord> recordCaptor = ArgumentCaptor.forClass(TelemetryRecord.class);
+        verify(telemetryRecordRepository).save(recordCaptor.capture());
+        TelemetryRecord savedRecord = recordCaptor.getValue();
+
+        // Verify organization is NOT null (regression check)
+        assertNotNull(savedRecord.getOrganization(), "Organization must not be null in telemetry record");
+        assertEquals(42L, savedRecord.getOrganization().getId(), "Organization ID must match device's organization");
+        assertEquals("Test Organization", savedRecord.getOrganization().getName());
+        assertEquals(device.getId(), savedRecord.getDevice().getId());
     }
 }
