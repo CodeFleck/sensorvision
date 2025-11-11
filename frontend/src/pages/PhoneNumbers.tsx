@@ -257,7 +257,9 @@ const AddPhoneModal = ({ onClose, onAdd }: AddPhoneModalProps) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await onAdd(phoneNumber, countryCode);
+      // Prepend +1 for North American numbers
+      const fullPhoneNumber = `+1${phoneNumber}`;
+      await onAdd(fullPhoneNumber, countryCode);
     } finally {
       setLoading(false);
     }
@@ -295,17 +297,23 @@ const AddPhoneModal = ({ onClose, onAdd }: AddPhoneModalProps) => {
             <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
               Phone Number *
             </label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              required
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="+15551234567"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="flex space-x-2">
+              <div className="w-20 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-gray-700">
+                +1
+              </div>
+              <input
+                type="tel"
+                id="phoneNumber"
+                required
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                placeholder="5551234567"
+                maxLength={10}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
             <p className="mt-1 text-sm text-gray-500">
-              Enter full number with country code in E.164 format (e.g., +15551234567 for Canada/US)
+              Enter 10-digit phone number (area code + number)
             </p>
           </div>
 
