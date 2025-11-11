@@ -702,6 +702,79 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // Global Rules Management
+  async getGlobalRules(): Promise<any[]> {
+    return this.request('/global-rules');
+  }
+
+  async getGlobalRule(ruleId: string): Promise<any> {
+    return this.request(`/global-rules/${ruleId}`);
+  }
+
+  async createGlobalRule(rule: any): Promise<any> {
+    return this.request('/global-rules', {
+      method: 'POST',
+      body: JSON.stringify(rule),
+    });
+  }
+
+  async updateGlobalRule(ruleId: string, rule: any): Promise<any> {
+    return this.request(`/global-rules/${ruleId}`, {
+      method: 'PUT',
+      body: JSON.stringify(rule),
+    });
+  }
+
+  async deleteGlobalRule(ruleId: string): Promise<void> {
+    await this.request(`/global-rules/${ruleId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async toggleGlobalRule(ruleId: string): Promise<any> {
+    return this.request(`/global-rules/${ruleId}/toggle`, {
+      method: 'POST',
+    });
+  }
+
+  async evaluateGlobalRule(ruleId: string): Promise<void> {
+    await this.request(`/global-rules/${ruleId}/evaluate`, {
+      method: 'POST',
+    });
+  }
+
+  // Global Alerts Management
+  async getGlobalAlerts(params?: { unacknowledgedOnly?: boolean; page?: number; size?: number }): Promise<any> {
+    const searchParams = new URLSearchParams();
+    if (params?.unacknowledgedOnly) searchParams.append('unacknowledgedOnly', 'true');
+    if (params?.page !== undefined) searchParams.append('page', params.page.toString());
+    if (params?.size !== undefined) searchParams.append('size', params.size.toString());
+
+    const query = searchParams.toString();
+    return this.request(`/global-alerts${query ? `?${query}` : ''}`);
+  }
+
+  async getGlobalAlert(alertId: string): Promise<any> {
+    return this.request(`/global-alerts/${alertId}`);
+  }
+
+  async acknowledgeGlobalAlert(alertId: string): Promise<any> {
+    return this.request(`/global-alerts/${alertId}/acknowledge`, {
+      method: 'POST',
+    });
+  }
+
+  async resolveGlobalAlert(alertId: string, resolutionNote?: string): Promise<any> {
+    return this.request(`/global-alerts/${alertId}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ resolutionNote }),
+    });
+  }
+
+  async getGlobalAlertStats(): Promise<{ unacknowledged: number; unresolved: number }> {
+    return this.request('/global-alerts/stats');
+  }
 }
 
 export const apiService = new ApiService();
