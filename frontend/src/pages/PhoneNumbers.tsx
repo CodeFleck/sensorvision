@@ -305,7 +305,7 @@ const AddPhoneModal = ({ onClose, onAdd }: AddPhoneModalProps) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p className="mt-1 text-sm text-gray-500">
-              Use E.164 format (e.g., +15551234567)
+              Enter full number with country code in E.164 format (e.g., +15551234567 for Canada/US)
             </p>
           </div>
 
