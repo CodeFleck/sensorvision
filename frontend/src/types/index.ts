@@ -504,3 +504,88 @@ export interface SmsDeliveryLog {
   deliveredAt?: string;
   createdAt: string;
 }
+
+// Plugin Marketplace types
+export type PluginCategory =
+  | 'PROTOCOL_PARSER'
+  | 'INTEGRATION'
+  | 'NOTIFICATION'
+  | 'WIDGET'
+  | 'ML_MODEL'
+  | 'BUSINESS_LOGIC';
+
+export type PluginProvider =
+  | 'LORAWAN_TTN'
+  | 'MODBUS_TCP'
+  | 'SIGFOX'
+  | 'MQTT_BRIDGE'
+  | 'HTTP_WEBHOOK'
+  | 'CSV_IMPORT'
+  | 'SLACK'
+  | 'DISCORD'
+  | 'TELEGRAM'
+  | 'EMAIL'
+  | 'CUSTOM';
+
+export type PluginInstallationStatus = 'INACTIVE' | 'ACTIVE' | 'UNINSTALLED';
+
+export interface PluginRegistry {
+  id: number;
+  pluginKey: string;
+  name: string;
+  description?: string;
+  category: PluginCategory;
+  version: string;
+  author?: string;
+  authorUrl?: string;
+  iconUrl?: string;
+  repositoryUrl?: string;
+  documentationUrl?: string;
+  minSensorvisionVersion?: string;
+  maxSensorvisionVersion?: string;
+  isOfficial: boolean;
+  isVerified: boolean;
+  installationCount: number;
+  ratingAverage?: number;
+  ratingCount: number;
+  pluginProvider: PluginProvider;
+  pluginType: string;
+  configSchema?: Record<string, unknown>;
+  tags?: string[];
+  screenshots?: string[];
+  changelog?: string;
+  publishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  isInstalled?: boolean;
+  installedPluginId?: number;
+}
+
+export interface InstalledPlugin {
+  id: number;
+  pluginKey: string;
+  installedVersion: string;
+  status: PluginInstallationStatus;
+  configuration?: Record<string, unknown>;
+  installedAt: string;
+  activatedAt?: string;
+  lastUsedAt?: string;
+  plugin?: PluginRegistry;
+}
+
+export interface PluginInstallRequest {
+  configuration?: Record<string, unknown>;
+}
+
+export interface PluginRating {
+  id: number;
+  rating: number;
+  reviewText?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PluginRatingRequest {
+  rating: number;
+  reviewText?: string;
+}
