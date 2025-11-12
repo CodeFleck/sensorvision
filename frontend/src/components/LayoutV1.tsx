@@ -32,6 +32,7 @@ import {
   Mail,
   Phone,
   DollarSign,
+  Package,
   User,
   Building2,
 } from 'lucide-react';
@@ -101,6 +102,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Global Rules', href: '/global-rules', icon: Network, adminOnly: false },
       { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
       { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false },
+      { name: 'Plugin Marketplace', href: '/plugins', icon: Package, adminOnly: false },
       { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, adminOnly: false },
       { name: 'SMS Settings', href: '/sms-settings', icon: DollarSign, adminOnly: true },
       { name: 'Events', href: '/events', icon: Clock, adminOnly: true },

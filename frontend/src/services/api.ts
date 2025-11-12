@@ -1,4 +1,4 @@
-import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization, PluginRegistry, InstalledPlugin, PluginRating } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -774,6 +774,69 @@ class ApiService {
 
   async getGlobalAlertStats(): Promise<{ unacknowledged: number; unresolved: number }> {
     return this.request('/global-alerts/stats');
+  }
+
+  // Plugin Marketplace Management
+
+  async getAllPlugins(params?: { search?: string; category?: string; sort?: string }): Promise<PluginRegistry[]> {
+    const queryParams = new URLSearchParams();
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.sort) queryParams.append('sort', params.sort);
+
+    const url = `/plugins${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return this.request(url);
+  }
+
+  async getPlugin(pluginKey: string): Promise<PluginRegistry> {
+    return this.request(`/plugins/${pluginKey}`);
+  }
+
+  async installPlugin(pluginKey: string, config?: Record<string, unknown>): Promise<InstalledPlugin> {
+    return this.request(`/plugins/${pluginKey}/install`, {
+      method: 'POST',
+      body: JSON.stringify({ configuration: config }),
+    });
+  }
+
+  async getInstalledPlugins(): Promise<InstalledPlugin[]> {
+    return this.request('/plugins/installed');
+  }
+
+  async activatePlugin(installedPluginId: number): Promise<InstalledPlugin> {
+    return this.request(`/plugins/installed/${installedPluginId}/activate`, {
+      method: 'PUT',
+    });
+  }
+
+  async deactivatePlugin(installedPluginId: number): Promise<InstalledPlugin> {
+    return this.request(`/plugins/installed/${installedPluginId}/deactivate`, {
+      method: 'PUT',
+    });
+  }
+
+  async uninstallPlugin(installedPluginId: number): Promise<void> {
+    return this.request(`/plugins/installed/${installedPluginId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async updatePluginConfiguration(installedPluginId: number, config: Record<string, unknown>): Promise<InstalledPlugin> {
+    return this.request(`/plugins/installed/${installedPluginId}/configuration`, {
+      method: 'PUT',
+      body: JSON.stringify(config),
+    });
+  }
+
+  async ratePlugin(pluginKey: string, rating: number, reviewText?: string): Promise<PluginRating> {
+    return this.request(`/plugins/${pluginKey}/ratings`, {
+      method: 'POST',
+      body: JSON.stringify({ rating, reviewText }),
+    });
+  }
+
+  async getPluginRatings(pluginKey: string): Promise<PluginRating[]> {
+    return this.request(`/plugins/${pluginKey}/ratings`);
   }
 }
 

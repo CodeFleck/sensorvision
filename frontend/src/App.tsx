@@ -44,6 +44,7 @@ import SmsSettings from './pages/SmsSettings';
 import AdminUsers from './pages/AdminUsers';
 import AdminOrganizations from './pages/AdminOrganizations';
 import { GlobalRules } from './pages/GlobalRules';
+import PluginMarketplace from './pages/PluginMarketplace';
 import { config } from './config';
 
 function App() {
@@ -114,6 +115,7 @@ function App() {
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/rules" element={<Rules />} />
                   <Route path="/global-rules" element={<GlobalRules />} />
+                  <Route path="/plugins" element={<PluginMarketplace />} />
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/my-tickets" element={<MyTickets />} />
