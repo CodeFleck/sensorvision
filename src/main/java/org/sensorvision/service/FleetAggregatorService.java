@@ -78,8 +78,13 @@ public class FleetAggregatorService {
             case AVG -> avg(devices, rule.getAggregationVariable());
             case MIN -> min(devices, rule.getAggregationVariable());
             case MAX -> max(devices, rule.getAggregationVariable());
+            case MEDIAN -> median(devices, rule.getAggregationVariable());
             case STDDEV -> stddev(devices, rule.getAggregationVariable());
+            case VARIANCE -> variance(devices, rule.getAggregationVariable());
             case PERCENTILE -> percentile(devices, rule.getAggregationVariable(), rule.getAggregationParams());
+            case PERCENTILE_95 -> percentile95(devices, rule.getAggregationVariable());
+            case PERCENTILE_99 -> percentile99(devices, rule.getAggregationVariable());
+            case RANGE -> range(devices, rule.getAggregationVariable());
             case COUNT_DEVICES_WHERE -> countDevicesWhere(devices, rule.getAggregationParams());
             case AVG_UPTIME_HOURS -> avgUptimeHours(devices, rule.getAggregationParams());
         };
@@ -342,7 +347,73 @@ public class FleetAggregatorService {
                 .build();
     }
 
+    private AggregationResult median(List<Device> devices, String variable) {
+        Map<UUID, BigDecimal> latestValues = getLatestTelemetryValues(devices, variable);
+
+        if (latestValues.isEmpty()) {
+            return AggregationResult.builder()
+                    .value(BigDecimal.ZERO)
+                    .deviceCount(devices.size())
+                    .affectedDevices(Collections.emptyList())
+                    .build();
+        }
+
+        List<BigDecimal> sortedValues = latestValues.values().stream()
+                .sorted()
+                .toList();
+
+        BigDecimal median;
+        int size = sortedValues.size();
+        if (size % 2 == 0) {
+            // Even number of elements - average of two middle values
+            median = sortedValues.get(size / 2 - 1)
+                    .add(sortedValues.get(size / 2))
+                    .divide(BigDecimal.valueOf(2), 6, RoundingMode.HALF_UP);
+        } else {
+            // Odd number of elements - middle value
+            median = sortedValues.get(size / 2);
+        }
+
+        return AggregationResult.builder()
+                .value(median)
+                .deviceCount(devices.size())
+                .affectedDevices(new ArrayList<>(latestValues.keySet()))
+                .build();
+    }
+
     private AggregationResult stddev(List<Device> devices, String variable) {
+        Map<UUID, BigDecimal> latestValues = getLatestTelemetryValues(devices, variable);
+
+        if (latestValues.size() < 2) {
+            return AggregationResult.builder()
+                    .value(BigDecimal.ZERO)
+                    .deviceCount(devices.size())
+                    .affectedDevices(new ArrayList<>(latestValues.keySet()))
+                    .build();
+        }
+
+        // Calculate mean
+        BigDecimal sum = latestValues.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal mean = sum.divide(BigDecimal.valueOf(latestValues.size()), 6, RoundingMode.HALF_UP);
+
+        // Calculate variance
+        BigDecimal varianceValue = latestValues.values().stream()
+                .map(val -> val.subtract(mean).pow(2))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(BigDecimal.valueOf(latestValues.size()), 6, RoundingMode.HALF_UP);
+
+        // Calculate standard deviation
+        double stddevDouble = Math.sqrt(varianceValue.doubleValue());
+        BigDecimal stddev = BigDecimal.valueOf(stddevDouble).setScale(6, RoundingMode.HALF_UP);
+
+        return AggregationResult.builder()
+                .value(stddev)
+                .deviceCount(devices.size())
+                .affectedDevices(new ArrayList<>(latestValues.keySet()))
+                .build();
+    }
+
+    private AggregationResult variance(List<Device> devices, String variable) {
         Map<UUID, BigDecimal> latestValues = getLatestTelemetryValues(devices, variable);
 
         if (latestValues.size() < 2) {
@@ -363,12 +434,8 @@ public class FleetAggregatorService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .divide(BigDecimal.valueOf(latestValues.size()), 6, RoundingMode.HALF_UP);
 
-        // Calculate standard deviation
-        double stddevDouble = Math.sqrt(variance.doubleValue());
-        BigDecimal stddev = BigDecimal.valueOf(stddevDouble).setScale(6, RoundingMode.HALF_UP);
-
         return AggregationResult.builder()
-                .value(stddev)
+                .value(variance)
                 .deviceCount(devices.size())
                 .affectedDevices(new ArrayList<>(latestValues.keySet()))
                 .build();
@@ -398,6 +465,39 @@ public class FleetAggregatorService {
 
         return AggregationResult.builder()
                 .value(sortedValues.get(index))
+                .deviceCount(devices.size())
+                .affectedDevices(new ArrayList<>(latestValues.keySet()))
+                .build();
+    }
+
+    private AggregationResult percentile95(List<Device> devices, String variable) {
+        Map<String, Object> params = Map.of("percentile", 95);
+        return percentile(devices, variable, params);
+    }
+
+    private AggregationResult percentile99(List<Device> devices, String variable) {
+        Map<String, Object> params = Map.of("percentile", 99);
+        return percentile(devices, variable, params);
+    }
+
+    private AggregationResult range(List<Device> devices, String variable) {
+        Map<UUID, BigDecimal> latestValues = getLatestTelemetryValues(devices, variable);
+
+        if (latestValues.isEmpty()) {
+            return AggregationResult.builder()
+                    .value(BigDecimal.ZERO)
+                    .deviceCount(devices.size())
+                    .affectedDevices(Collections.emptyList())
+                    .build();
+        }
+
+        Optional<BigDecimal> min = latestValues.values().stream().min(BigDecimal::compareTo);
+        Optional<BigDecimal> max = latestValues.values().stream().max(BigDecimal::compareTo);
+
+        BigDecimal range = max.orElse(BigDecimal.ZERO).subtract(min.orElse(BigDecimal.ZERO));
+
+        return AggregationResult.builder()
+                .value(range)
                 .deviceCount(devices.size())
                 .affectedDevices(new ArrayList<>(latestValues.keySet()))
                 .build();

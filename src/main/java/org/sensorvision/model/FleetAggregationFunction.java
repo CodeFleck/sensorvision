@@ -17,8 +17,13 @@ public enum FleetAggregationFunction {
     AVG("avg"),
     MIN("min"),
     MAX("max"),
+    MEDIAN("median"),
     STDDEV("stddev"),
+    VARIANCE("variance"),
     PERCENTILE("percentile"),
+    PERCENTILE_95("percentile95"),
+    PERCENTILE_99("percentile99"),
+    RANGE("range"),
 
     // Time-window operations
     COUNT_DEVICES_WHERE("countDevicesWhere"),
@@ -36,7 +41,8 @@ public enum FleetAggregationFunction {
 
     public static FleetAggregationFunction fromString(String functionName) {
         for (FleetAggregationFunction func : values()) {
-            if (func.functionName.equalsIgnoreCase(functionName)) {
+            // Support both enum constant name and function name
+            if (func.functionName.equalsIgnoreCase(functionName) || func.name().equalsIgnoreCase(functionName)) {
                 return func;
             }
         }
@@ -45,6 +51,8 @@ public enum FleetAggregationFunction {
 
     public boolean requiresVariable() {
         return this == SUM || this == AVG || this == MIN || this == MAX ||
-               this == STDDEV || this == PERCENTILE;
+               this == MEDIAN || this == STDDEV || this == VARIANCE ||
+               this == PERCENTILE || this == PERCENTILE_95 || this == PERCENTILE_99 ||
+               this == RANGE;
     }
 }

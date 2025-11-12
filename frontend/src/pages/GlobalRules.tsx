@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, Play, Activity } from 'luc
 import { apiService } from '../services/api';
 import { FleetRuleBuilderModal } from '../components/FleetRuleBuilderModal';
 import { clsx } from 'clsx';
+import toast from 'react-hot-toast';
 
 interface GlobalRule {
   id: string;
@@ -43,6 +44,7 @@ export const GlobalRules = () => {
       setRules(data);
     } catch (error) {
       console.error('Failed to fetch global rules:', error);
+      toast.error('Failed to load global rules');
     } finally {
       setLoading(false);
     }
@@ -62,37 +64,65 @@ export const GlobalRules = () => {
     if (window.confirm('Are you sure you want to delete this global rule?')) {
       try {
         await apiService.deleteGlobalRule(id);
+        toast.success('Global rule deleted successfully');
         await fetchRules();
       } catch (error) {
         console.error('Failed to delete global rule:', error);
+        toast.error('Failed to delete global rule');
       }
     }
   };
 
   const handleToggleEnabled = async (id: string) => {
     try {
+      const rule = rules.find(r => r.id === id);
+      if (!rule) return;
+
+      const newState = !rule.enabled;
       await apiService.toggleGlobalRule(id);
+      toast.success(`${rule.name} turned ${newState ? 'ON' : 'OFF'}`);
       await fetchRules();
     } catch (error) {
       console.error('Failed to toggle global rule:', error);
+      toast.error('Failed to toggle global rule');
     }
   };
 
   const handleEvaluateNow = async (id: string) => {
     try {
       await apiService.evaluateGlobalRule(id);
-      alert('Global rule evaluated successfully. Check Global Alerts for any new alerts.');
+      toast.success('Global rule evaluated successfully. Check Global Alerts for any new alerts.');
       await fetchRules();
     } catch (error) {
       console.error('Failed to evaluate global rule:', error);
-      alert('Failed to evaluate global rule. Please try again.');
+      toast.error('Failed to evaluate global rule');
+    }
+  };
+
+  const handleSave = async (ruleData: any) => {
+    try {
+      if (selectedRule) {
+        // Update existing rule
+        await apiService.updateGlobalRule(selectedRule.id, ruleData);
+        toast.success('Global rule updated successfully');
+      } else {
+        // Create new rule
+        await apiService.createGlobalRule(ruleData);
+        toast.success('Global rule created successfully');
+      }
+      setIsModalOpen(false);
+      setSelectedRule(null);
+      await fetchRules();
+    } catch (error) {
+      console.error('Failed to save global rule:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save global rule');
+      throw error; // Re-throw to let modal handle it
     }
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedRule(null);
-    fetchRules();
   };
 
   const operatorLabels: Record<string, string> = {
@@ -272,6 +302,7 @@ export const GlobalRules = () => {
         <FleetRuleBuilderModal
           rule={selectedRule}
           onClose={handleModalClose}
+          onSave={handleSave}
         />
       )}
     </div>
