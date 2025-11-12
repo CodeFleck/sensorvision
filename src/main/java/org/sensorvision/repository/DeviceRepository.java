@@ -13,6 +13,9 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
 
     Optional<Device> findByExternalId(String externalId);
 
+    @Query("SELECT d FROM Device d LEFT JOIN FETCH d.organization WHERE d.externalId = :externalId")
+    Optional<Device> findByExternalIdWithOrganization(@Param("externalId") String externalId);
+
     Optional<Device> findByApiToken(String apiToken);
 
     @Query("SELECT d FROM Device d LEFT JOIN FETCH d.organization WHERE d.apiToken = :apiToken")
@@ -23,6 +26,9 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
     List<Device> findByOrganizationId(Long organizationId);
 
     List<Device> findByOrganization(Organization organization);
+
+    @Query("SELECT d FROM Device d WHERE d.organization.id = :organizationId AND d.active = true")
+    List<Device> findByOrganizationIdAndActiveTrue(@Param("organizationId") Long organizationId);
 
     @Query("SELECT COUNT(t) > 0 FROM TelemetryRecord t WHERE t.device.externalId = :externalId")
     boolean hasTelemetry(@Param("externalId") String externalId);

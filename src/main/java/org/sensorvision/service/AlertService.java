@@ -84,6 +84,15 @@ public class AlertService {
         notificationService.sendAlertNotifications(alert);
     }
 
+    /**
+     * Send SMS notification for global alerts (bypasses user preferences)
+     * Used by GlobalRuleEvaluatorService for fleet-wide alerts
+     */
+    public void sendSmsNotification(String phoneNumber, String message, Long organizationId) {
+        log.info("Sending SMS notification to {} for organization {}", phoneNumber, organizationId);
+        notificationService.sendDirectSms(phoneNumber, message, organizationId);
+    }
+
     private AlertResponse toResponse(Alert alert) {
         return new AlertResponse(
                 alert.getId(),

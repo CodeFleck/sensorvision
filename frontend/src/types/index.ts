@@ -56,6 +56,8 @@ export interface Rule {
   operator: 'GT' | 'LT' | 'EQ' | 'GTE' | 'LTE';
   threshold: number;
   enabled: boolean;
+  sendSms?: boolean;
+  smsRecipients?: string[];
   createdAt: string;
 }
 
@@ -177,10 +179,23 @@ export interface User {
   organizationName: string;
   roles: string[];
   enabled: boolean;
+  emailVerified?: boolean;
+  lastLoginAt?: string;
   avatarUrl?: string;
   avatarVersion?: number;
   themePreference?: 'light' | 'dark' | 'system';
   createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Organization {
+  id: number;
+  name: string;
+  description?: string;
+  enabled: boolean;
+  userCount?: number;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface LoginRequest {
@@ -427,4 +442,65 @@ export interface PlaylistUpdateRequest {
   loopEnabled?: boolean;
   transitionEffect?: TransitionEffect;
   items?: PlaylistItemCreateRequest[];
+}
+
+// SMS Alert types
+export interface PhoneNumber {
+  id: string;
+  phoneNumber: string;
+  countryCode: string;
+  verified: boolean;
+  isPrimary: boolean;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PhoneNumberAddRequest {
+  phoneNumber: string;
+  countryCode: string;
+}
+
+export interface PhoneNumberVerifyRequest {
+  code: string;
+}
+
+export interface SmsSettings {
+  id: string;
+  enabled: boolean;
+  dailyLimit: number;
+  monthlyBudget: number;
+  currentMonthCount: number;
+  currentMonthCost: number;
+  currentDayCount: number;
+  lastResetDate?: string;
+  alertOnBudgetThreshold: boolean;
+  budgetThresholdPercentage: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SmsSettingsUpdateRequest {
+  enabled?: boolean;
+  dailyLimit?: number;
+  monthlyBudget?: number;
+  alertOnBudgetThreshold?: boolean;
+  budgetThresholdPercentage?: number;
+}
+
+export type SmsDeliveryStatus = 'QUEUED' | 'SENT' | 'DELIVERED' | 'FAILED' | 'UNDELIVERED';
+
+export interface SmsDeliveryLog {
+  id: string;
+  alertId?: string;
+  phoneNumber: string;
+  messageBody: string;
+  twilioSid?: string;
+  status: SmsDeliveryStatus;
+  errorCode?: string;
+  errorMessage?: string;
+  cost: number;
+  sentAt?: string;
+  deliveredAt?: string;
+  createdAt: string;
 }

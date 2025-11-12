@@ -19,4 +19,11 @@ public class Organization extends AuditableEntity {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean enabled = true;
 }

@@ -8,19 +8,22 @@ Comprehensive guide to using advanced mathematical expressions, conditional logi
 3. [Math Functions](#math-functions)
 4. [Comparison Operators](#comparison-operators)
 5. [Conditional Logic](#conditional-logic)
-6. [Practical Examples](#practical-examples)
-7. [Best Practices](#best-practices)
+6. [Statistical Time-Series Functions](#statistical-time-series-functions)
+7. [Practical Examples](#practical-examples)
+8. [Best Practices](#best-practices)
 
 ---
 
 ## Overview
 
-Synthetic variables allow you to create derived metrics from raw telemetry data using mathematical expressions. As of Sprint 4, the expression engine supports:
+Synthetic variables allow you to create derived metrics from raw telemetry data using mathematical expressions. As of Sprint 4 Phase 2, the expression engine supports:
 
 - **Basic Arithmetic**: `+`, `-`, `*`, `/`, `()`
 - **17 Math Functions**: `sqrt`, `pow`, `abs`, `log`, `sin`, `cos`, `round`, etc.
 - **Comparison Operators**: `>`, `<`, `>=`, `<=`, `==`, `!=`
 - **Conditional Logic**: `if`, `and`, `or`, `not`
+- **Statistical Time-Series Functions**: `avg`, `stddev`, `sum`, `count`, `minTime`, `maxTime`, `rate`, `movingAvg`, `percentChange`, `median`
+- **Time Windows**: `5m`, `15m`, `1h`, `24h`, `7d`, `30d`
 - **Variable References**: Reference any telemetry variable by name
 
 ---

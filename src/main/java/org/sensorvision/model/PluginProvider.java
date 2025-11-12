@@ -42,7 +42,27 @@ public enum PluginProvider {
     /**
      * Custom MQTT topic with transformation
      */
-    MQTT_CUSTOM("MQTT Custom Format", PluginType.PROTOCOL_PARSER);
+    MQTT_CUSTOM("MQTT Custom Format", PluginType.PROTOCOL_PARSER),
+
+    /**
+     * Slack notification integration
+     */
+    SLACK("Slack Notifications", PluginType.INTEGRATION),
+
+    /**
+     * Discord notification integration
+     */
+    DISCORD("Discord Notifications", PluginType.INTEGRATION),
+
+    /**
+     * Telegram notification integration
+     */
+    TELEGRAM("Telegram Notifications", PluginType.INTEGRATION),
+
+    /**
+     * PagerDuty incident management integration
+     */
+    PAGERDUTY("PagerDuty Incidents", PluginType.INTEGRATION);
 
     private final String displayName;
     private final PluginType defaultType;

@@ -39,6 +39,11 @@ import DataRetention from './pages/DataRetention';
 import Profile from './pages/Profile';
 import { Playlists } from './pages/Playlists';
 import { PlaylistPlayer } from './pages/PlaylistPlayer';
+import PhoneNumbers from './pages/PhoneNumbers';
+import SmsSettings from './pages/SmsSettings';
+import AdminUsers from './pages/AdminUsers';
+import AdminOrganizations from './pages/AdminOrganizations';
+import { GlobalRules } from './pages/GlobalRules';
 import { config } from './config';
 
 function App() {
@@ -108,12 +113,17 @@ function App() {
                   <Route path="/devices" element={<Devices />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/rules" element={<Rules />} />
+                  <Route path="/global-rules" element={<GlobalRules />} />
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/my-tickets" element={<MyTickets />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/phone-numbers" element={<PhoneNumbers />} />
 
                   {/* Admin-only routes */}
+                  <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
+                  <Route path="/admin/organizations" element={<ProtectedRoute adminOnly={true}><AdminOrganizations /></ProtectedRoute>} />
+                  <Route path="/sms-settings" element={<ProtectedRoute adminOnly={true}><SmsSettings /></ProtectedRoute>} />
                   <Route path="/device-groups" element={<ProtectedRoute adminOnly={true}><DeviceGroups /></ProtectedRoute>} />
                   <Route path="/device-tags" element={<ProtectedRoute adminOnly={true}><DeviceTags /></ProtectedRoute>} />
                   <Route path="/events" element={<ProtectedRoute adminOnly={true}><Events /></ProtectedRoute>} />

@@ -38,6 +38,9 @@ class SyntheticVariableServiceTest {
     @Mock
     private SyntheticVariableValueRepository syntheticVariableValueRepository;
 
+    @Mock
+    private org.sensorvision.repository.TelemetryRecordRepository telemetryRecordRepository;
+
     private ExpressionEvaluator expressionEvaluator;
 
     private SyntheticVariableService syntheticVariableService;
@@ -60,7 +63,8 @@ class SyntheticVariableServiceTest {
         syntheticVariableService = new SyntheticVariableService(
                 syntheticVariableRepository,
                 syntheticVariableValueRepository,
-                expressionEvaluator
+                expressionEvaluator,
+                telemetryRecordRepository
         );
 
         organization = Organization.builder()

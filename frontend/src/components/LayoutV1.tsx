@@ -28,7 +28,12 @@ import {
   Archive,
   Webhook,
   Terminal,
+  Network,
   Mail,
+  Phone,
+  DollarSign,
+  User,
+  Building2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -93,8 +98,11 @@ const navigationSections: NavigationSection[] = [
     adminOnly: false,
     items: [
       { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false },
+      { name: 'Global Rules', href: '/global-rules', icon: Network, adminOnly: false },
       { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
       { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false },
+      { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, adminOnly: false },
+      { name: 'SMS Settings', href: '/sms-settings', icon: DollarSign, adminOnly: true },
       { name: 'Events', href: '/events', icon: Clock, adminOnly: true },
     ],
   },
@@ -111,7 +119,16 @@ const navigationSections: NavigationSection[] = [
       { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
       { name: 'Webhook Tester', href: '/webhook-tester', icon: Webhook, adminOnly: true },
       { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: true },
-      { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
+    ],
+  },
+  {
+    name: 'ADMINISTRATION',
+    icon: Shield,
+    iconColor: 'text-indigo-600',
+    adminOnly: true,
+    items: [
+      { name: 'User Management', href: '/admin/users', icon: User, adminOnly: true },
+      { name: 'Organizations', href: '/admin/organizations', icon: Building2, adminOnly: true },
     ],
   },
   {
