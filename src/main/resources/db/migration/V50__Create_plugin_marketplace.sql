@@ -70,20 +70,29 @@ CREATE INDEX idx_installed_plugins_org ON installed_plugins(organization_id);
 CREATE INDEX idx_installed_plugins_status ON installed_plugins(status);
 CREATE INDEX idx_plugin_ratings_registry ON plugin_ratings(plugin_registry_id);
 
+-- Create function for updating updated_at timestamp
+CREATE OR REPLACE FUNCTION update_plugin_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
 -- Add updated_at trigger for plugin_registry
 CREATE TRIGGER update_plugin_registry_updated_at
     BEFORE UPDATE ON plugin_registry
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION update_plugin_updated_at_column();
 
 -- Add updated_at trigger for installed_plugins
 CREATE TRIGGER update_installed_plugins_updated_at
     BEFORE UPDATE ON installed_plugins
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION update_plugin_updated_at_column();
 
 -- Add updated_at trigger for plugin_ratings
 CREATE TRIGGER update_plugin_ratings_updated_at
     BEFORE UPDATE ON plugin_ratings
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION update_plugin_updated_at_column();
