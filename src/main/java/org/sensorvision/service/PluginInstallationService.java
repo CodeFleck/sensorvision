@@ -44,33 +44,43 @@ public class PluginInstallationService {
     public InstalledPlugin installPlugin(String pluginKey, Organization organization, JsonNode configuration) {
         logger.info("Installing plugin {} for organization {}", pluginKey, organization.getId());
 
-        // Check if already installed
-        if (installedPluginRepository.existsByOrganizationAndPluginKey(organization, pluginKey)) {
-            throw new IllegalStateException("Plugin already installed: " + pluginKey);
+        try {
+            // Check if already installed
+            if (installedPluginRepository.existsByOrganizationAndPluginKey(organization, pluginKey)) {
+                throw new IllegalStateException("Plugin already installed: " + pluginKey);
+            }
+
+            // Get plugin from registry
+            PluginRegistry plugin = pluginRegistryRepository.findByPluginKey(pluginKey)
+                    .orElseThrow(() -> new IllegalArgumentException("Plugin not found in registry: " + pluginKey));
+
+            // Create installed plugin record
+            InstalledPlugin installedPlugin = new InstalledPlugin(
+                    organization,
+                    plugin,
+                    pluginKey,
+                    plugin.getVersion()
+            );
+            installedPlugin.setConfiguration(configuration);
+            installedPlugin.setStatus(PluginInstallationStatus.INACTIVE);
+            installedPlugin.setInstalledAt(Instant.now());
+
+            installedPlugin = installedPluginRepository.save(installedPlugin);
+
+            // Update installation count (within same transaction)
+            pluginRegistryService.incrementInstallationCount(pluginKey);
+
+            logger.info("Plugin {} installed successfully for organization {}", pluginKey, organization.getId());
+            return installedPlugin;
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            // Rethrow validation exceptions as-is
+            throw e;
+        } catch (Exception e) {
+            logger.error("Failed to install plugin {} for organization {}: {}",
+                    pluginKey, organization.getId(), e.getMessage());
+            // Transaction will auto-rollback due to @Transactional on exception
+            throw new RuntimeException("Failed to install plugin: " + e.getMessage(), e);
         }
-
-        // Get plugin from registry
-        PluginRegistry plugin = pluginRegistryRepository.findByPluginKey(pluginKey)
-                .orElseThrow(() -> new IllegalArgumentException("Plugin not found in registry: " + pluginKey));
-
-        // Create installed plugin record
-        InstalledPlugin installedPlugin = new InstalledPlugin(
-                organization,
-                plugin,
-                pluginKey,
-                plugin.getVersion()
-        );
-        installedPlugin.setConfiguration(configuration);
-        installedPlugin.setStatus(PluginInstallationStatus.INACTIVE);
-        installedPlugin.setInstalledAt(Instant.now());
-
-        installedPlugin = installedPluginRepository.save(installedPlugin);
-
-        // Update installation count
-        pluginRegistryService.incrementInstallationCount(pluginKey);
-
-        logger.info("Plugin {} installed successfully for organization {}", pluginKey, organization.getId());
-        return installedPlugin;
     }
 
     /**

@@ -27,7 +27,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/plugins")
+@RequestMapping("/api/v1/data-plugins")
 @RequiredArgsConstructor
 public class DataPluginController {
 

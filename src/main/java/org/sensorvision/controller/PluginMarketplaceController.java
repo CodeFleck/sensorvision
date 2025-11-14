@@ -1,6 +1,7 @@
 package org.sensorvision.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sensorvision.dto.InstalledPluginDto;
 import org.sensorvision.dto.PluginRegistryDto;
 import org.sensorvision.model.*;
@@ -31,13 +32,16 @@ public class PluginMarketplaceController {
     private final PluginRegistryService pluginRegistryService;
     private final PluginInstallationService pluginInstallationService;
     private final PluginConfigurationService pluginConfigurationService;
+    private final ObjectMapper objectMapper;
 
     public PluginMarketplaceController(PluginRegistryService pluginRegistryService,
                                       PluginInstallationService pluginInstallationService,
-                                      PluginConfigurationService pluginConfigurationService) {
+                                      PluginConfigurationService pluginConfigurationService,
+                                      ObjectMapper objectMapper) {
         this.pluginRegistryService = pluginRegistryService;
         this.pluginInstallationService = pluginInstallationService;
         this.pluginConfigurationService = pluginConfigurationService;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -73,6 +77,10 @@ public class PluginMarketplaceController {
         }
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         List<PluginRegistryDto> dtos = plugins.stream()
                 .map(plugin -> toDto(plugin, organization))
                 .collect(Collectors.toList());
@@ -92,6 +100,10 @@ public class PluginMarketplaceController {
                 .orElseThrow(() -> new IllegalArgumentException("Plugin not found: " + pluginKey));
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         PluginRegistryDto dto = toDto(plugin, organization);
 
         return ResponseEntity.ok(dto);
@@ -108,11 +120,17 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
 
         // Get configuration from request
         JsonNode configuration = null;
         if (request != null && request.containsKey("configuration")) {
-            configuration = (JsonNode) request.get("configuration");
+            Object configValue = request.get("configuration");
+            if (configValue != null) {
+                configuration = objectMapper.valueToTree(configValue);
+            }
         }
 
         // Validate configuration if provided
@@ -145,6 +163,10 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         InstalledPlugin installedPlugin = pluginInstallationService.activatePlugin(pluginKey, organization);
 
         InstalledPluginDto dto = toInstalledDto(installedPlugin);
@@ -161,6 +183,10 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         InstalledPlugin installedPlugin = pluginInstallationService.deactivatePlugin(pluginKey, organization);
 
         InstalledPluginDto dto = toInstalledDto(installedPlugin);
@@ -177,6 +203,10 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         pluginInstallationService.uninstallPlugin(pluginKey, organization);
 
         return ResponseEntity.noContent().build();
@@ -193,6 +223,9 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
 
         // Validate configuration
         PluginRegistry plugin = pluginRegistryService.getPluginByKey(pluginKey)
@@ -220,6 +253,10 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         List<InstalledPlugin> installedPlugins = pluginInstallationService.getInstalledPlugins(organization);
 
         List<InstalledPluginDto> dtos = installedPlugins.stream()
@@ -240,7 +277,18 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         Integer rating = (Integer) request.get("rating");
+        if (rating == null) {
+            throw new IllegalArgumentException("Rating value is required");
+        }
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        }
+
         String reviewText = (String) request.get("reviewText");
 
         pluginRegistryService.ratePlugin(pluginKey, organization, rating, reviewText);
