@@ -267,7 +267,7 @@ public class StatisticalFunctions {
             String variableName = toString(args[0]);
             TimeWindow window = TimeWindow.fromCode(toString(args[1]));
 
-            List<BigDecimal> values = fetchValues(context, variableName, window);
+            List<BigDecimal> values = new java.util.ArrayList<>(fetchValues(context, variableName, window));
 
             if (values.isEmpty()) {
                 return BigDecimal.ZERO;
