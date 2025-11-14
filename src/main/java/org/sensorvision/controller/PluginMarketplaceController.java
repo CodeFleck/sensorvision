@@ -72,7 +72,7 @@ public class PluginMarketplaceController {
             }
         }
 
-        Organization organization = currentUser.getUser().getOrganization();
+        Organization organization = currentUser.getOrganization();
         List<PluginRegistryDto> dtos = plugins.stream()
                 .map(plugin -> toDto(plugin, organization))
                 .collect(Collectors.toList());
@@ -91,7 +91,7 @@ public class PluginMarketplaceController {
         PluginRegistry plugin = pluginRegistryService.getPluginByKey(pluginKey)
                 .orElseThrow(() -> new IllegalArgumentException("Plugin not found: " + pluginKey));
 
-        Organization organization = currentUser.getUser().getOrganization();
+        Organization organization = currentUser.getOrganization();
         PluginRegistryDto dto = toDto(plugin, organization);
 
         return ResponseEntity.ok(dto);
@@ -107,7 +107,7 @@ public class PluginMarketplaceController {
             @RequestBody(required = false) Map<String, Object> request,
             @AuthenticationPrincipal User currentUser) {
 
-        Organization organization = currentUser.getUser().getOrganization();
+        Organization organization = currentUser.getOrganization();
 
         // Get configuration from request
         JsonNode configuration = null;
@@ -144,7 +144,7 @@ public class PluginMarketplaceController {
             @PathVariable String pluginKey,
             @AuthenticationPrincipal User currentUser) {
 
-        Organization organization = currentUser.getUser().getOrganization();
+        Organization organization = currentUser.getOrganization();
         InstalledPlugin installedPlugin = pluginInstallationService.activatePlugin(pluginKey, organization);
 
         InstalledPluginDto dto = toInstalledDto(installedPlugin);
@@ -160,7 +160,7 @@ public class PluginMarketplaceController {
             @PathVariable String pluginKey,
             @AuthenticationPrincipal User currentUser) {
 
-        Organization organization = currentUser.getUser().getOrganization();
+        Organization organization = currentUser.getOrganization();
         InstalledPlugin installedPlugin = pluginInstallationService.deactivatePlugin(pluginKey, organization);
 
         InstalledPluginDto dto = toInstalledDto(installedPlugin);
@@ -176,7 +176,7 @@ public class PluginMarketplaceController {
             @PathVariable String pluginKey,
             @AuthenticationPrincipal User currentUser) {
 
-        Organization organization = currentUser.getUser().getOrganization();
+        Organization organization = currentUser.getOrganization();
         pluginInstallationService.uninstallPlugin(pluginKey, organization);
 
         return ResponseEntity.noContent().build();
@@ -192,7 +192,7 @@ public class PluginMarketplaceController {
             @RequestBody JsonNode configuration,
             @AuthenticationPrincipal User currentUser) {
 
-        Organization organization = currentUser.getUser().getOrganization();
+        Organization organization = currentUser.getOrganization();
 
         // Validate configuration
         PluginRegistry plugin = pluginRegistryService.getPluginByKey(pluginKey)
@@ -219,7 +219,7 @@ public class PluginMarketplaceController {
     public ResponseEntity<List<InstalledPluginDto>> getInstalledPlugins(
             @AuthenticationPrincipal User currentUser) {
 
-        Organization organization = currentUser.getUser().getOrganization();
+        Organization organization = currentUser.getOrganization();
         List<InstalledPlugin> installedPlugins = pluginInstallationService.getInstalledPlugins(organization);
 
         List<InstalledPluginDto> dtos = installedPlugins.stream()
@@ -239,7 +239,7 @@ public class PluginMarketplaceController {
             @RequestBody Map<String, Object> request,
             @AuthenticationPrincipal User currentUser) {
 
-        Organization organization = currentUser.getUser().getOrganization();
+        Organization organization = currentUser.getOrganization();
         Integer rating = (Integer) request.get("rating");
         String reviewText = (String) request.get("reviewText");
 

@@ -29,6 +29,7 @@ import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
 import ServerlessFunctions from './pages/ServerlessFunctions';
 import DataPlugins from './pages/DataPlugins';
+import PluginMarketplace from './pages/PluginMarketplace';
 import WebhookTester from './pages/WebhookTester';
 import ApiPlayground from './pages/ApiPlayground';
 import EmailTemplateBuilder from './pages/EmailTemplateBuilder';
@@ -107,6 +108,7 @@ function App() {
                   <Route path="/integration-wizard" element={<IntegrationWizard />} />
                   <Route path="/serverless-functions" element={<ServerlessFunctions />} />
                   <Route path="/data-plugins" element={<DataPlugins />} />
+                  <Route path="/plugin-marketplace" element={<PluginMarketplace />} />
                   <Route path="/dashboards" element={<Dashboards />} />
                   <Route path="/dashboard-templates" element={<DashboardTemplates />} />
                   <Route path="/playlists" element={<Playlists />} />
