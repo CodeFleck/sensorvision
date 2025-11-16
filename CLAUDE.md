@@ -236,3 +236,4 @@ Interactive 5-step wizard for device onboarding:
 3. Verify both new and existing device flows
 4. Test code generation for both platforms
 5. Verify WebSocket connection test works
+- all tests must pass before merging into main
