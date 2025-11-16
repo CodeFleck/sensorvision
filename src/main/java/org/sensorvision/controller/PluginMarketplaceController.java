@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * REST API controller for plugin marketplace operations
  */
 @RestController
-@RequestMapping("/api/v1/plugins")
+@RequestMapping("/api/v1/marketplace/plugins")
 public class PluginMarketplaceController {
 
     private static final Logger logger = LoggerFactory.getLogger(PluginMarketplaceController.class);
@@ -43,7 +43,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * GET /api/v1/plugins - List all available plugins in marketplace
+     * GET /api/v1/marketplace/plugins - List all available plugins in marketplace
      */
     @GetMapping
     public ResponseEntity<List<PluginRegistryDto>> getAllPlugins(
@@ -89,7 +89,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * GET /api/v1/plugins/{pluginKey} - Get plugin details
+     * GET /api/v1/marketplace/plugins/{pluginKey} - Get plugin details
      */
     @GetMapping("/{pluginKey}")
     public ResponseEntity<PluginRegistryDto> getPlugin(
@@ -107,7 +107,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * POST /api/v1/plugins/{pluginKey}/install - Install a plugin
+     * POST /api/v1/marketplace/plugins/{pluginKey}/install - Install a plugin
      */
     @PostMapping("/{pluginKey}/install")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -145,7 +145,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * POST /api/v1/plugins/{pluginKey}/activate - Activate an installed plugin
+     * POST /api/v1/marketplace/plugins/{pluginKey}/activate - Activate an installed plugin
      */
     @PostMapping("/{pluginKey}/activate")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -161,7 +161,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * POST /api/v1/plugins/{pluginKey}/deactivate - Deactivate an installed plugin
+     * POST /api/v1/marketplace/plugins/{pluginKey}/deactivate - Deactivate an installed plugin
      */
     @PostMapping("/{pluginKey}/deactivate")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -177,7 +177,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * DELETE /api/v1/plugins/{pluginKey} - Uninstall a plugin
+     * DELETE /api/v1/marketplace/plugins/{pluginKey} - Uninstall a plugin
      */
     @DeleteMapping("/{pluginKey}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -222,7 +222,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * GET /api/v1/plugins/installed - Get all installed plugins for current organization
+     * GET /api/v1/marketplace/plugins/installed - Get all installed plugins for current organization
      */
     @GetMapping("/installed")
     public ResponseEntity<List<InstalledPluginDto>> getInstalledPlugins(
@@ -239,7 +239,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * POST /api/v1/plugins/{pluginKey}/rate - Rate a plugin
+     * POST /api/v1/marketplace/plugins/{pluginKey}/rate - Rate a plugin
      */
     @PostMapping("/{pluginKey}/rate")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -258,7 +258,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * GET /api/v1/plugins/{pluginKey}/default-config - Get default configuration for a plugin
+     * GET /api/v1/marketplace/plugins/{pluginKey}/default-config - Get default configuration for a plugin
      */
     @GetMapping("/{pluginKey}/default-config")
     public ResponseEntity<JsonNode> getDefaultConfiguration(@PathVariable String pluginKey) {
@@ -302,10 +302,6 @@ public class PluginMarketplaceController {
         boolean isInstalled = installedPlugin != null;
         dto.setIsInstalled(isInstalled);
         dto.setIsActive(isInstalled && installedPlugin.getStatus() == PluginInstallationStatus.ACTIVE);
-
-        if (isInstalled) {
-            dto.setInstalledPluginId(installedPlugin.getId());
-        }
 
         return dto;
     }

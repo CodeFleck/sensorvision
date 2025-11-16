@@ -784,59 +784,59 @@ class ApiService {
     if (params?.category) queryParams.append('category', params.category);
     if (params?.sort) queryParams.append('sort', params.sort);
 
-    const url = `/plugins${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const url = `/marketplace/plugins${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return this.request(url);
   }
 
   async getPlugin(pluginKey: string): Promise<PluginRegistry> {
-    return this.request(`/plugins/${pluginKey}`);
+    return this.request(`/marketplace/plugins/${pluginKey}`);
   }
 
   async installPlugin(pluginKey: string, config?: Record<string, unknown>): Promise<InstalledPlugin> {
-    return this.request(`/plugins/${pluginKey}/install`, {
+    return this.request(`/marketplace/plugins/${pluginKey}/install`, {
       method: 'POST',
       body: JSON.stringify({ configuration: config }),
     });
   }
 
   async getInstalledPlugins(): Promise<InstalledPlugin[]> {
-    return this.request('/plugins/installed');
+    return this.request('/marketplace/plugins/installed');
   }
 
   async activatePlugin(pluginKey: string): Promise<InstalledPlugin> {
-    return this.request(`/plugins/${pluginKey}/activate`, {
+    return this.request(`/marketplace/plugins/${pluginKey}/activate`, {
       method: 'POST',
     });
   }
 
   async deactivatePlugin(pluginKey: string): Promise<InstalledPlugin> {
-    return this.request(`/plugins/${pluginKey}/deactivate`, {
+    return this.request(`/marketplace/plugins/${pluginKey}/deactivate`, {
       method: 'POST',
     });
   }
 
   async uninstallPlugin(pluginKey: string): Promise<void> {
-    return this.request(`/plugins/${pluginKey}`, {
+    return this.request(`/marketplace/plugins/${pluginKey}`, {
       method: 'DELETE',
     });
   }
 
   async updatePluginConfiguration(installedPluginId: number, config: Record<string, unknown>): Promise<InstalledPlugin> {
-    return this.request(`/plugins/installed/${installedPluginId}/configuration`, {
+    return this.request(`/marketplace/plugins/installed/${installedPluginId}/configuration`, {
       method: 'PUT',
       body: JSON.stringify(config),
     });
   }
 
   async ratePlugin(pluginKey: string, rating: number, reviewText?: string): Promise<PluginRating> {
-    return this.request(`/plugins/${pluginKey}/ratings`, {
+    return this.request(`/marketplace/plugins/${pluginKey}/rate`, {
       method: 'POST',
       body: JSON.stringify({ rating, reviewText }),
     });
   }
 
   async getPluginRatings(pluginKey: string): Promise<PluginRating[]> {
-    return this.request(`/plugins/${pluginKey}/ratings`);
+    return this.request(`/marketplace/plugins/${pluginKey}/ratings`);
   }
 }
 
