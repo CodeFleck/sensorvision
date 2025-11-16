@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 
 interface FleetRuleBuilderModalProps {
@@ -85,7 +85,7 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
   };
 
   const handleRemoveSmsRecipient = (index: number) => {
-    const recipients = formData.smsRecipients.filter((_, i) => i !== index);
+    const recipients = formData.smsRecipients.filter((_: any, i: number) => i !== index);
     handleChange('smsRecipients', recipients);
   };
 
@@ -329,7 +329,7 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
                   </button>
                 </div>
                 <div className="space-y-1">
-                  {formData.smsRecipients.map((recipient, index) => (
+                  {formData.smsRecipients.map((recipient: any, index: number) => (
                     <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded">
                       <span className="text-sm">{recipient}</span>
                       <button

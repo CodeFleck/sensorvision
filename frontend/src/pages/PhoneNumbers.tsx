@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Phone, Check, X, RefreshCw, Star, Power, Trash2, Shield } from 'lucide-react';
-import { PhoneNumber, PhoneNumberAddRequest } from '../types';
+import { PhoneNumber } from '../types';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
 
