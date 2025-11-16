@@ -144,9 +144,18 @@ public class PluginInstallationService {
                 .findByOrganizationAndPluginKey(organization, pluginKey)
                 .orElseThrow(() -> new IllegalArgumentException("Plugin not installed: " + pluginKey));
 
-        // Delete associated DataPlugin if exists
+        // Validate that plugin is not currently active
+        if (installedPlugin.getStatus() == PluginInstallationStatus.ACTIVE) {
+            throw new IllegalStateException("Cannot uninstall active plugin. Please deactivate it first: " + pluginKey);
+        }
+
+        // Delete associated DataPlugin if exists and validate it's not enabled
         if (installedPlugin.getDataPlugin() != null) {
-            dataPluginRepository.delete(installedPlugin.getDataPlugin());
+            DataPlugin dataPlugin = installedPlugin.getDataPlugin();
+            if (dataPlugin.getEnabled()) {
+                throw new IllegalStateException("Cannot uninstall plugin with active DataPlugin. Deactivate first: " + pluginKey);
+            }
+            dataPluginRepository.delete(dataPlugin);
         }
 
         // Delete installed plugin record

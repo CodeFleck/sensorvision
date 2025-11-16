@@ -55,7 +55,9 @@ public class PluginRegistryService {
         if (query == null || query.trim().isEmpty()) {
             return getAllPlugins();
         }
-        return pluginRegistryRepository.searchPlugins(query.trim());
+        // Sanitize input to escape LIKE special characters
+        String sanitized = sanitizeLikeQuery(query.trim());
+        return pluginRegistryRepository.searchPlugins(sanitized);
     }
 
     /**
@@ -72,7 +74,9 @@ public class PluginRegistryService {
         if (query == null || query.trim().isEmpty()) {
             return getPluginsByCategory(category);
         }
-        return pluginRegistryRepository.searchPluginsByCategory(category, query.trim());
+        // Sanitize input to escape LIKE special characters
+        String sanitized = sanitizeLikeQuery(query.trim());
+        return pluginRegistryRepository.searchPluginsByCategory(category, sanitized);
     }
 
     /**
@@ -189,18 +193,13 @@ public class PluginRegistryService {
     }
 
     /**
-     * Increment installation count for a plugin
+     * Increment installation count for a plugin (atomic operation)
      */
     @Transactional
     public void incrementInstallationCount(String pluginKey) {
-        PluginRegistry plugin = pluginRegistryRepository.findByPluginKey(pluginKey)
-                .orElseThrow(() -> new IllegalArgumentException("Plugin not found: " + pluginKey));
-
-        Long actualCount = installedPluginRepository.countInstallationsByPluginKey(pluginKey);
-        plugin.setInstallationCount(actualCount.intValue());
-
-        pluginRegistryRepository.save(plugin);
-        logger.debug("Updated installation count for plugin {}: {}", pluginKey, actualCount);
+        // Use atomic update query to avoid race conditions
+        pluginRegistryRepository.updateInstallationCount(pluginKey);
+        logger.debug("Updated installation count for plugin {}", pluginKey);
     }
 
     /**
@@ -218,5 +217,18 @@ public class PluginRegistryService {
      */
     public boolean pluginExists(String pluginKey) {
         return pluginRegistryRepository.findByPluginKey(pluginKey).isPresent();
+    }
+
+    /**
+     * Sanitize LIKE query to escape special characters
+     */
+    private String sanitizeLikeQuery(String query) {
+        if (query == null) {
+            return null;
+        }
+        // Escape LIKE special characters: % and _
+        return query.replace("\\", "\\\\")
+                    .replace("%", "\\%")
+                    .replace("_", "\\_");
     }
 }

@@ -35,7 +35,7 @@ CREATE TABLE plugin_registry (
 CREATE TABLE installed_plugins (
     id BIGSERIAL PRIMARY KEY,
     organization_id BIGINT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    plugin_registry_id BIGINT NOT NULL REFERENCES plugin_registry(id) ON DELETE CASCADE,
+    plugin_registry_id BIGINT NOT NULL REFERENCES plugin_registry(id) ON DELETE RESTRICT,
     plugin_key VARCHAR(100) NOT NULL,
     installed_version VARCHAR(20) NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'INACTIVE',

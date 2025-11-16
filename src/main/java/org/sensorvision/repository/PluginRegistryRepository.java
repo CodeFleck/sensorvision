@@ -4,6 +4,7 @@ import org.sensorvision.model.PluginCategory;
 import org.sensorvision.model.PluginProvider;
 import org.sensorvision.model.PluginRegistry;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -46,4 +47,8 @@ public interface PluginRegistryRepository extends JpaRepository<PluginRegistry, 
 
     @Query("SELECT p FROM PluginRegistry p ORDER BY p.publishedAt DESC")
     List<PluginRegistry> findRecent();
+
+    @Modifying
+    @Query("UPDATE PluginRegistry p SET p.installationCount = (SELECT COUNT(ip) FROM InstalledPlugin ip WHERE ip.pluginKey = :pluginKey) WHERE p.pluginKey = :pluginKey")
+    void updateInstallationCount(@Param("pluginKey") String pluginKey);
 }

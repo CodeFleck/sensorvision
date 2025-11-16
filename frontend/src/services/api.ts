@@ -803,20 +803,20 @@ class ApiService {
     return this.request('/plugins/installed');
   }
 
-  async activatePlugin(installedPluginId: number): Promise<InstalledPlugin> {
-    return this.request(`/plugins/installed/${installedPluginId}/activate`, {
-      method: 'PUT',
+  async activatePlugin(pluginKey: string): Promise<InstalledPlugin> {
+    return this.request(`/plugins/${pluginKey}/activate`, {
+      method: 'POST',
     });
   }
 
-  async deactivatePlugin(installedPluginId: number): Promise<InstalledPlugin> {
-    return this.request(`/plugins/installed/${installedPluginId}/deactivate`, {
-      method: 'PUT',
+  async deactivatePlugin(pluginKey: string): Promise<InstalledPlugin> {
+    return this.request(`/plugins/${pluginKey}/deactivate`, {
+      method: 'POST',
     });
   }
 
-  async uninstallPlugin(installedPluginId: number): Promise<void> {
-    return this.request(`/plugins/installed/${installedPluginId}`, {
+  async uninstallPlugin(pluginKey: string): Promise<void> {
+    return this.request(`/plugins/${pluginKey}`, {
       method: 'DELETE',
     });
   }

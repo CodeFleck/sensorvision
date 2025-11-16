@@ -78,9 +78,9 @@ const PluginMarketplace: React.FC = () => {
     }
   };
 
-  const handleActivate = async (installedPluginId: number) => {
+  const handleActivate = async (pluginKey: string) => {
     try {
-      await apiService.activatePlugin(installedPluginId);
+      await apiService.activatePlugin(pluginKey);
       toast.success('Plugin activated successfully');
       await fetchData();
     } catch (error: any) {
@@ -89,9 +89,9 @@ const PluginMarketplace: React.FC = () => {
     }
   };
 
-  const handleDeactivate = async (installedPluginId: number) => {
+  const handleDeactivate = async (pluginKey: string) => {
     try {
-      await apiService.deactivatePlugin(installedPluginId);
+      await apiService.deactivatePlugin(pluginKey);
       toast.success('Plugin deactivated successfully');
       await fetchData();
     } catch (error: any) {
@@ -100,11 +100,11 @@ const PluginMarketplace: React.FC = () => {
     }
   };
 
-  const handleUninstall = async (installedPluginId: number, pluginName: string) => {
+  const handleUninstall = async (pluginKey: string, pluginName: string) => {
     if (!confirm(`Are you sure you want to uninstall ${pluginName}?`)) return;
 
     try {
-      await apiService.uninstallPlugin(installedPluginId);
+      await apiService.uninstallPlugin(pluginKey);
       toast.success(`${pluginName} uninstalled successfully`);
       await fetchData();
     } catch (error: any) {
@@ -251,21 +251,21 @@ const PluginMarketplace: React.FC = () => {
                       <>
                         {isActive ? (
                           <button
-                            onClick={() => handleDeactivate(plugin.installedPluginId!)}
+                            onClick={() => handleDeactivate(plugin.pluginKey)}
                             className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
                           >
                             Deactivate
                           </button>
                         ) : (
                           <button
-                            onClick={() => handleActivate(plugin.installedPluginId!)}
+                            onClick={() => handleActivate(plugin.pluginKey)}
                             className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
                           >
                             Activate
                           </button>
                         )}
                         <button
-                          onClick={() => handleUninstall(plugin.installedPluginId!, plugin.name)}
+                          onClick={() => handleUninstall(plugin.pluginKey, plugin.name)}
                           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
                         >
                           Uninstall

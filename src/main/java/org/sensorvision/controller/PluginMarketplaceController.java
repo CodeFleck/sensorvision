@@ -1,7 +1,9 @@
 package org.sensorvision.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.validation.constraints.Pattern;
 import org.sensorvision.dto.InstalledPluginDto;
+import org.sensorvision.dto.PluginInstallRequest;
 import org.sensorvision.dto.PluginRegistryDto;
 import org.sensorvision.model.*;
 import org.sensorvision.service.PluginConfigurationService;
@@ -73,8 +75,14 @@ public class PluginMarketplaceController {
         }
 
         Organization organization = currentUser.getOrganization();
+
+        // Fetch all installed plugins once to avoid N+1 queries
+        List<InstalledPlugin> installedPlugins = pluginInstallationService.getInstalledPlugins(organization);
+        Map<String, InstalledPlugin> installedPluginMap = installedPlugins.stream()
+                .collect(Collectors.toMap(InstalledPlugin::getPluginKey, ip -> ip));
+
         List<PluginRegistryDto> dtos = plugins.stream()
-                .map(plugin -> toDto(plugin, organization))
+                .map(plugin -> toDto(plugin, installedPluginMap.get(plugin.getPluginKey())))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
@@ -92,7 +100,8 @@ public class PluginMarketplaceController {
                 .orElseThrow(() -> new IllegalArgumentException("Plugin not found: " + pluginKey));
 
         Organization organization = currentUser.getOrganization();
-        PluginRegistryDto dto = toDto(plugin, organization);
+        InstalledPlugin installedPlugin = pluginInstallationService.getInstalledPlugin(pluginKey, organization).orElse(null);
+        PluginRegistryDto dto = toDto(plugin, installedPlugin);
 
         return ResponseEntity.ok(dto);
     }
@@ -103,16 +112,16 @@ public class PluginMarketplaceController {
     @PostMapping("/{pluginKey}/install")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<InstalledPluginDto> installPlugin(
-            @PathVariable String pluginKey,
-            @RequestBody(required = false) Map<String, Object> request,
+            @PathVariable @Pattern(regexp = "^[a-zA-Z0-9-_]+$") String pluginKey,
+            @RequestBody(required = false) PluginInstallRequest request,
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
 
         // Get configuration from request
         JsonNode configuration = null;
-        if (request != null && request.containsKey("configuration")) {
-            configuration = (JsonNode) request.get("configuration");
+        if (request != null && request.configuration() != null) {
+            configuration = request.configuration();
         }
 
         // Validate configuration if provided
@@ -261,7 +270,7 @@ public class PluginMarketplaceController {
     }
 
     // Helper methods to convert entities to DTOs
-    private PluginRegistryDto toDto(PluginRegistry plugin, Organization organization) {
+    private PluginRegistryDto toDto(PluginRegistry plugin, InstalledPlugin installedPlugin) {
         PluginRegistryDto dto = new PluginRegistryDto();
         dto.setId(plugin.getId());
         dto.setPluginKey(plugin.getPluginKey());
@@ -289,17 +298,13 @@ public class PluginMarketplaceController {
         dto.setChangelog(plugin.getChangelog());
         dto.setPublishedAt(plugin.getPublishedAt());
 
-        // Set installation status
-        boolean isInstalled = pluginInstallationService.isPluginInstalled(plugin.getPluginKey(), organization);
+        // Set installation status based on provided installedPlugin
+        boolean isInstalled = installedPlugin != null;
         dto.setIsInstalled(isInstalled);
+        dto.setIsActive(isInstalled && installedPlugin.getStatus() == PluginInstallationStatus.ACTIVE);
 
         if (isInstalled) {
-            pluginInstallationService.getInstalledPlugin(plugin.getPluginKey(), organization)
-                    .ifPresent(installed -> {
-                        dto.setIsActive(installed.getStatus() == PluginInstallationStatus.ACTIVE);
-                    });
-        } else {
-            dto.setIsActive(false);
+            dto.setInstalledPluginId(installedPlugin.getId());
         }
 
         return dto;
