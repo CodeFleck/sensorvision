@@ -38,7 +38,8 @@
       "Bash(ForEach-Object { taskkill //F //PID $_ 2)",
       "Bash($null })",
       "Bash(Select-String -Pattern \"(BUILD|FAILED|SUCCESS|error:)\" -Context 0,2)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [],
     "ask": []

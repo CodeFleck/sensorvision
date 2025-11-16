@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, Search, Power, Edit, Trash2, Users, Calendar, Plus, X } from 'lucide-react';
+import { Building2, Search, Power, Edit, Trash2, Users, Calendar, X } from 'lucide-react';
 import { Organization } from '../types';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';

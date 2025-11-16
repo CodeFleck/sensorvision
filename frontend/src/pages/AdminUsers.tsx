@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Search, Power, Edit, Trash2, Shield, Mail, Calendar, Building2 } from 'lucide-react';
+import { Users, Search, Power, Trash2, Shield, Mail, Calendar, Building2 } from 'lucide-react';
 import { User } from '../types';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
