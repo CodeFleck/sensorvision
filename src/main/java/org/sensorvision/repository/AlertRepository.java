@@ -9,6 +9,7 @@ import org.sensorvision.model.AlertSeverity;
 import org.sensorvision.model.Organization;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -89,4 +90,11 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
      * Count unacknowledged alerts for a specific device (for health score calculation)
      */
     long countByDeviceIdAndAcknowledgedFalse(UUID deviceId);
+
+    /**
+     * Delete all alerts for devices in a specific organization (for demo mode cleanup)
+     */
+    @Modifying
+    @Query("DELETE FROM Alert a WHERE a.device.organization.id = :organizationId")
+    int deleteByDeviceOrganizationId(@Param("organizationId") Long organizationId);
 }
