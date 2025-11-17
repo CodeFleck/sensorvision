@@ -11,6 +11,7 @@ import org.sensorvision.model.TelemetryRecord;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -75,4 +76,13 @@ public interface TelemetryRecordRepository extends JpaRepository<TelemetryRecord
             @Param("organizationId") Long organizationId,
             @Param("cutoffDate") Instant cutoffDate
     );
+
+    // Demo mode cleanup queries
+    @Modifying
+    @Query("DELETE FROM TelemetryRecord t WHERE t.organization.id = :organizationId")
+    int deleteByOrganizationId(@Param("organizationId") Long organizationId);
+
+    @Modifying
+    @Query("DELETE FROM TelemetryRecord t WHERE t.device.externalId LIKE :devicePrefix")
+    int deleteByDeviceExternalIdStartingWith(@Param("devicePrefix") String devicePrefix);
 }

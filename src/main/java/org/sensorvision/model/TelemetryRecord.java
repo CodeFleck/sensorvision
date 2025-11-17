@@ -76,6 +76,12 @@ public class TelemetryRecord extends AuditableEntity {
     @Column(name = "metadata", columnDefinition = "jsonb")
     private Map<String, Object> metadata;
 
+    // Custom variables for flexible telemetry (added by V51 migration)
+    // Supports arbitrary sensor data: temperature, vibration, RPM, pressure, etc.
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "custom_variables", columnDefinition = "jsonb")
+    private Map<String, Object> customVariables;
+
     // Data retention field (added by V35 migration)
     @Builder.Default
     @Column(name = "archived", nullable = false)
