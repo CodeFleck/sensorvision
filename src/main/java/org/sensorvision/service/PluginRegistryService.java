@@ -7,6 +7,7 @@ import org.sensorvision.repository.PluginRegistryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -190,17 +191,19 @@ public class PluginRegistryService {
 
     /**
      * Increment installation count for a plugin
+     * Uses atomic database operation to prevent race conditions
+     * REQUIRED propagation ensures this participates in caller's transaction
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public void incrementInstallationCount(String pluginKey) {
-        PluginRegistry plugin = pluginRegistryRepository.findByPluginKey(pluginKey)
-                .orElseThrow(() -> new IllegalArgumentException("Plugin not found: " + pluginKey));
+        // Atomic update - prevents race conditions when multiple users install concurrently
+        int updatedRows = pluginRegistryRepository.updateInstallationCount(pluginKey);
 
-        Long actualCount = installedPluginRepository.countInstallationsByPluginKey(pluginKey);
-        plugin.setInstallationCount(actualCount.intValue());
+        if (updatedRows == 0) {
+            throw new IllegalArgumentException("Plugin not found: " + pluginKey);
+        }
 
-        pluginRegistryRepository.save(plugin);
-        logger.debug("Updated installation count for plugin {}: {}", pluginKey, actualCount);
+        logger.debug("Updated installation count for plugin {} using atomic operation", pluginKey);
     }
 
     /**

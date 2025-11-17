@@ -376,19 +376,14 @@ class PluginRegistryServiceTest {
     @Test
     void shouldIncrementInstallationCount() {
         // Arrange
-        when(pluginRegistryRepository.findByPluginKey("lorawan-ttn"))
-                .thenReturn(Optional.of(testPlugin));
-        when(installedPluginRepository.countInstallationsByPluginKey("lorawan-ttn"))
-                .thenReturn(101L);
-        when(pluginRegistryRepository.save(any(PluginRegistry.class))).thenReturn(testPlugin);
+        when(pluginRegistryRepository.updateInstallationCount("lorawan-ttn"))
+                .thenReturn(1); // 1 row updated
 
         // Act
         pluginRegistryService.incrementInstallationCount("lorawan-ttn");
 
         // Assert
-        verify(pluginRegistryRepository).save(pluginCaptor.capture());
-        PluginRegistry saved = pluginCaptor.getValue();
-        assertThat(saved.getInstallationCount()).isEqualTo(101);
+        verify(pluginRegistryRepository).updateInstallationCount("lorawan-ttn");
     }
 
     @Test
