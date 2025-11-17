@@ -32,4 +32,7 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
 
     @Query("SELECT COUNT(t) > 0 FROM TelemetryRecord t WHERE t.device.externalId = :externalId")
     boolean hasTelemetry(@Param("externalId") String externalId);
+
+    // Admin dashboard methods
+    List<Device> findTop10ByOrderByCreatedAtDesc();
 }

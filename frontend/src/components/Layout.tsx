@@ -22,6 +22,18 @@ import {
   Zap,
   BookOpen,
   Plug,
+  Users,
+  Building,
+  TicketIcon,
+  MessageSquare,
+  Gauge,
+  Server,
+  Mail,
+  Smartphone,
+  Archive,
+  Code,
+  Webhook,
+  FlaskConical,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -44,22 +56,37 @@ interface NavigationItem {
 }
 
 const navigation: NavigationItem[] = [
+  // User-accessible features
   { name: 'Dashboard', href: '/', icon: Home, adminOnly: false },
   { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
   { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false },
   { name: 'Devices', href: '/devices', icon: Cpu, adminOnly: false },
-  { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: true },
-  { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: true },
+  { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: false },
+  { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: false },
   { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: false },
   { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false },
   { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
-  { name: 'Events', href: '/events', icon: Clock, adminOnly: true },
   { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false },
+  { name: 'Variables', href: '/variables', icon: Database, adminOnly: false },
+  { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: false },
+  { name: 'Plugin Marketplace', href: '/plugin-marketplace', icon: Plug, adminOnly: false },
+
+  // Admin-only features
+  { name: 'Admin Dashboard', href: '/admin-dashboard', icon: Gauge, adminOnly: true },
+  { name: 'User Management', href: '/admin/users', icon: Users, adminOnly: true },
+  { name: 'Organizations', href: '/admin/organizations', icon: Building, adminOnly: true },
+  { name: 'Support Tickets', href: '/admin/support-tickets', icon: TicketIcon, adminOnly: true },
+  { name: 'Canned Responses', href: '/admin/canned-responses', icon: MessageSquare, adminOnly: true },
+  { name: 'Events', href: '/events', icon: Clock, adminOnly: true },
   { name: 'Data Ingestion', href: '/data-ingestion', icon: Upload, adminOnly: true },
   { name: 'Data Import', href: '/data-import', icon: FileUp, adminOnly: true },
-  { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: true },
-  { name: 'Data Plugins', href: '/data-plugins', icon: Plug, adminOnly: true },
-  { name: 'Variables', href: '/variables', icon: Database, adminOnly: true },
+  { name: 'Data Plugins', href: '/data-plugins', icon: Server, adminOnly: true },
+  { name: 'Serverless Functions', href: '/serverless-functions', icon: Code, adminOnly: true },
+  { name: 'Webhook Tester', href: '/webhook-tester', icon: Webhook, adminOnly: true },
+  { name: 'API Playground', href: '/api-playground', icon: FlaskConical, adminOnly: true },
+  { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
+  { name: 'SMS Settings', href: '/sms-settings', icon: Smartphone, adminOnly: true },
+  { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
 ];
 
 export const Layout = ({ children }: LayoutProps) => {

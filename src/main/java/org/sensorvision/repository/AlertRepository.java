@@ -89,4 +89,14 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
      * Count unacknowledged alerts for a specific device (for health score calculation)
      */
     long countByDeviceIdAndAcknowledgedFalse(UUID deviceId);
+
+    /**
+     * Count alerts by acknowledged status
+     */
+    long countByAcknowledged(boolean acknowledged);
+
+    /**
+     * Find recent alerts for admin dashboard
+     */
+    List<Alert> findTop10ByOrderByTriggeredAtDesc();
 }

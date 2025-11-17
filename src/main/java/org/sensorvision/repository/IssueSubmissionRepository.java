@@ -71,4 +71,20 @@ public interface IssueSubmissionRepository extends JpaRepository<IssueSubmission
     @Query("SELECT i.id AS id, i.updatedAt AS updatedAt, i.lastViewedAt AS lastViewedAt, i.createdAt AS createdAt, i.lastPublicReplyAt AS lastPublicReplyAt, i.status AS status " +
            "FROM IssueSubmission i WHERE i.user = :user")
     List<IssueTimestampProjection> findTimestampProjectionsByUser(@Param("user") User user);
+
+    /**
+     * Count issues by status (for admin dashboard)
+     */
+    long countByStatusIn(List<IssueStatus> statuses);
+
+    /**
+     * Find recent issues for admin dashboard
+     */
+    List<IssueSubmission> findTop10ByOrderByCreatedAtDesc();
+
+    /**
+     * Count issues created on a specific date
+     */
+    @Query("SELECT COUNT(i) FROM IssueSubmission i WHERE i.createdAt >= :startDate AND i.createdAt < :endDate")
+    long countTicketsCreatedOnDate(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 }
