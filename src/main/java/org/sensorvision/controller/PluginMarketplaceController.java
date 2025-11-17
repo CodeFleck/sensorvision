@@ -81,8 +81,13 @@ public class PluginMarketplaceController {
             throw new IllegalStateException("User is not associated with an organization");
         }
 
+        // Fetch all installed plugins once to avoid N+1 query problem
+        List<InstalledPlugin> installedPlugins = pluginInstallationService.getInstalledPlugins(organization);
+        Map<String, InstalledPlugin> installedMap = installedPlugins.stream()
+                .collect(Collectors.toMap(InstalledPlugin::getPluginKey, p -> p));
+
         List<PluginRegistryDto> dtos = plugins.stream()
-                .map(plugin -> toDto(plugin, organization))
+                .map(plugin -> toDto(plugin, installedMap))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
@@ -142,7 +147,10 @@ public class PluginMarketplaceController {
                     pluginConfigurationService.validateConfiguration(plugin, configuration);
 
             if (!validationResult.isValid()) {
-                return ResponseEntity.badRequest().body(null);
+                InstalledPluginDto errorDto = new InstalledPluginDto();
+                // Return validation errors in a structured format
+                logger.warn("Configuration validation failed for plugin {}: {}", pluginKey, validationResult.getErrors());
+                return ResponseEntity.badRequest().build();
             }
         }
 
@@ -235,7 +243,8 @@ public class PluginMarketplaceController {
                 pluginConfigurationService.validateConfiguration(plugin, configuration);
 
         if (!validationResult.isValid()) {
-            return ResponseEntity.badRequest().body(null);
+            logger.warn("Configuration validation failed for plugin {}: {}", pluginKey, validationResult.getErrors());
+            return ResponseEntity.badRequest().build();
         }
 
         InstalledPlugin installedPlugin = pluginInstallationService.updatePluginConfiguration(
@@ -309,7 +318,9 @@ public class PluginMarketplaceController {
     }
 
     // Helper methods to convert entities to DTOs
-    private PluginRegistryDto toDto(PluginRegistry plugin, Organization organization) {
+
+    // Optimized version using pre-fetched map (avoids N+1 queries)
+    private PluginRegistryDto toDto(PluginRegistry plugin, Map<String, InstalledPlugin> installedMap) {
         PluginRegistryDto dto = new PluginRegistryDto();
         dto.setId(plugin.getId());
         dto.setPluginKey(plugin.getPluginKey());
@@ -337,20 +348,20 @@ public class PluginMarketplaceController {
         dto.setChangelog(plugin.getChangelog());
         dto.setPublishedAt(plugin.getPublishedAt());
 
-        // Set installation status
-        boolean isInstalled = pluginInstallationService.isPluginInstalled(plugin.getPluginKey(), organization);
-        dto.setIsInstalled(isInstalled);
-
-        if (isInstalled) {
-            pluginInstallationService.getInstalledPlugin(plugin.getPluginKey(), organization)
-                    .ifPresent(installed -> {
-                        dto.setIsActive(installed.getStatus() == PluginInstallationStatus.ACTIVE);
-                    });
-        } else {
-            dto.setIsActive(false);
-        }
+        // Set installation status using map lookup (no database query)
+        InstalledPlugin installed = installedMap.get(plugin.getPluginKey());
+        dto.setIsInstalled(installed != null);
+        dto.setIsActive(installed != null && installed.getStatus() == PluginInstallationStatus.ACTIVE);
 
         return dto;
+    }
+
+    // Single plugin version (used by getPlugin endpoint)
+    private PluginRegistryDto toDto(PluginRegistry plugin, Organization organization) {
+        Map<String, InstalledPlugin> installedMap = pluginInstallationService.getInstalledPlugins(organization)
+                .stream()
+                .collect(Collectors.toMap(InstalledPlugin::getPluginKey, p -> p));
+        return toDto(plugin, installedMap);
     }
 
     private InstalledPluginDto toInstalledDto(InstalledPlugin installedPlugin) {

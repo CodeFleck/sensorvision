@@ -1,27 +1,33 @@
 import axios from './axiosConfig';
 
 export interface PluginRegistry {
-  key: string;
+  id: number;
+  pluginKey: string;
   name: string;
   description: string;
-  author: string;
-  version: string;
   category: 'DATA_INGESTION' | 'NOTIFICATION' | 'ANALYTICS' | 'INTEGRATION' | 'UTILITY';
+  version: string;
+  author: string;
+  authorUrl?: string;
   iconUrl?: string;
-  websiteUrl?: string;
-  documentationUrl?: string;
   repositoryUrl?: string;
+  documentationUrl?: string;
+  minSensorvisionVersion?: string;
+  maxSensorvisionVersion?: string;
   isOfficial: boolean;
   isVerified: boolean;
-  downloads: number;
-  averageRating: number;
+  installationCount: number;
+  ratingAverage: number;
   ratingCount: number;
+  pluginProvider: string;
+  pluginType: string;
+  configSchema?: any;
   tags: string[];
   screenshots: string[];
-  configurationSchema?: any;
-  compatibleVersions: string[];
-  createdAt: string;
-  updatedAt: string;
+  changelog?: string;
+  publishedAt?: string;
+  isInstalled: boolean;
+  isActive: boolean;
 }
 
 export interface InstalledPlugin {
@@ -111,7 +117,7 @@ class PluginMarketplaceService {
   async getMostPopular(limit: number = 10): Promise<PluginRegistry[]> {
     const plugins = await this.getAllPlugins();
     return plugins
-      .sort((a, b) => b.downloads - a.downloads)
+      .sort((a, b) => b.installationCount - a.installationCount)
       .slice(0, limit);
   }
 
@@ -120,7 +126,7 @@ class PluginMarketplaceService {
     const plugins = await this.getAllPlugins();
     return plugins
       .filter(p => p.ratingCount > 0)
-      .sort((a, b) => b.averageRating - a.averageRating)
+      .sort((a, b) => b.ratingAverage - a.ratingAverage)
       .slice(0, limit);
   }
 
@@ -128,7 +134,8 @@ class PluginMarketplaceService {
   async getRecent(limit: number = 10): Promise<PluginRegistry[]> {
     const plugins = await this.getAllPlugins();
     return plugins
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .filter(p => p.publishedAt)
+      .sort((a, b) => new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime())
       .slice(0, limit);
   }
 

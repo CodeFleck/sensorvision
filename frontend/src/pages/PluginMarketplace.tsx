@@ -314,13 +314,13 @@ const PluginMarketplace: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredMarketplacePlugins.map((plugin) => {
-                    const installed = isPluginInstalled(plugin.key);
-                    const installedInfo = getInstalledPlugin(plugin.key);
+                    const installed = isPluginInstalled(plugin.pluginKey);
+                    const installedInfo = getInstalledPlugin(plugin.pluginKey);
                     const isActive = installedInfo?.status === 'ACTIVE';
 
                     return (
                       <div
-                        key={plugin.key}
+                        key={plugin.pluginKey}
                         className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
                       >
                         {/* Plugin Header */}
@@ -362,12 +362,12 @@ const PluginMarketplace: React.FC = () => {
                           <div className="flex items-center gap-1">
                             <Star className="w-4 h-4 text-yellow-400 fill-current" />
                             <span>
-                              {plugin.averageRating.toFixed(1)} ({plugin.ratingCount})
+                              {plugin.ratingAverage.toFixed(1)} ({plugin.ratingCount})
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Download className="w-4 h-4" />
-                            <span>{plugin.downloads.toLocaleString()}</span>
+                            <span>{plugin.installationCount.toLocaleString()}</span>
                           </div>
                         </div>
 
@@ -387,7 +387,7 @@ const PluginMarketplace: React.FC = () => {
                           {!installed ? (
                             <>
                               <button
-                                onClick={() => handleInstall(plugin.key)}
+                                onClick={() => handleInstall(plugin.pluginKey)}
                                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                               >
                                 <Download className="w-4 h-4" />
@@ -405,8 +405,8 @@ const PluginMarketplace: React.FC = () => {
                               <button
                                 onClick={() =>
                                   isActive
-                                    ? handleDeactivate(plugin.key)
-                                    : handleActivate(plugin.key)
+                                    ? handleDeactivate(plugin.pluginKey)
+                                    : handleActivate(plugin.pluginKey)
                                 }
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors ${
                                   isActive
@@ -427,7 +427,7 @@ const PluginMarketplace: React.FC = () => {
                                 )}
                               </button>
                               <button
-                                onClick={() => handleConfigure(plugin.key)}
+                                onClick={() => handleConfigure(plugin.pluginKey)}
                                 className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                                 title="Configure"
                               >
