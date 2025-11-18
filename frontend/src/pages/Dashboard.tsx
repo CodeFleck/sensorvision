@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { DeviceCard } from '../components/DeviceCard';
 import { RealTimeChart } from '../components/RealTimeChart';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { Device, LatestTelemetry, TelemetryPoint } from '../types';
 import { Activity, Zap, Cpu } from 'lucide-react';
 
 export const Dashboard = () => {
+  const { isAdmin } = useAuth();
+
+  // Redirect admins to admin dashboard
+  if (isAdmin) {
+    return <Navigate to="/admin-dashboard" replace />;
+  }
   const [devices, setDevices] = useState<Device[]>([]);
   const [latestTelemetry, setLatestTelemetry] = useState<Record<string, TelemetryPoint>>({});
   const [loading, setLoading] = useState(true);

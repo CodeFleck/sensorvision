@@ -37,8 +37,11 @@ except ImportError:
     DHT_AVAILABLE = False
 
 # Configuration
+# IMPORTANT: Replace with your SensorVision instance URL
+# - Development: http://localhost:8080
+# - Production: http://YOUR-SERVER-IP:8080 or https://your-domain.com
 API_URL = "http://localhost:8080"  # Change to your SensorVision URL
-API_KEY = "your-device-token"       # Change to your device token
+API_KEY = "your-device-token"       # Change to your device token from Integration Wizard
 DEVICE_ID = "raspberry-pi-dht22"
 DHT_SENSOR = Adafruit_DHT.DHT22 if DHT_AVAILABLE else None
 DHT_PIN = 4  # GPIO pin number

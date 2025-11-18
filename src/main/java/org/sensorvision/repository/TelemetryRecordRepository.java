@@ -75,4 +75,15 @@ public interface TelemetryRecordRepository extends JpaRepository<TelemetryRecord
             @Param("organizationId") Long organizationId,
             @Param("cutoffDate") Instant cutoffDate
     );
+
+    // Admin dashboard queries
+    @Query("SELECT COUNT(t) FROM TelemetryRecord t WHERE t.timestamp >= :since")
+    long countRecordsInLastMinute(@Param("since") Instant since);
+
+    default long countRecordsInLastMinute() {
+        return countRecordsInLastMinute(Instant.now().minusSeconds(60));
+    }
+
+    @Query("SELECT COUNT(DISTINCT t.device.id) FROM TelemetryRecord t WHERE t.timestamp >= :startDate AND t.timestamp < :endDate")
+    long countUniqueDevicesOnDate(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 }

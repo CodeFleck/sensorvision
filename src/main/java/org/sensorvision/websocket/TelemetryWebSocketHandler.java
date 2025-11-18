@@ -47,11 +47,15 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         // Only log actual errors, not normal connection issues during close
         // IOException "connection aborted" often happens during normal page reload/navigation
-        if (exception != null && exception instanceof java.io.IOException) {
+        // ClosedChannelException happens during application shutdown
+        if (exception != null && (exception instanceof java.io.IOException ||
+                                   exception instanceof java.nio.channels.ClosedChannelException)) {
             String message = exception.getMessage();
             if (message != null && (message.contains("connection was aborted") ||
                                    message.contains("Connection reset"))) {
                 log.debug("WebSocket connection closed by client: {}", session.getId());
+            } else if (exception instanceof java.nio.channels.ClosedChannelException) {
+                log.debug("WebSocket channel closed (likely during shutdown): {}", session.getId());
             } else {
                 log.warn("WebSocket I/O error for session {}: {}",
                         session.getId(), exception.getMessage());

@@ -135,6 +135,135 @@ Mathematical expressions like "kwConsumption * voltage" are parsed and calculate
 - Frontend testing via npm test (Jest/React Testing Library)
 - This project is already deployed to PROD. Project urls: https://github.com/CodeFleck/sensorvision, http://35.88.65.186.nip.io:8080/
 
+## Production Operations
+
+### Accessing Production Logs
+
+**Backend Application Logs:**
+```bash
+# View backend logs
+docker logs sensorvision-backend
+
+# Follow logs in real-time
+docker logs -f sensorvision-backend
+
+# View last 100 lines
+docker logs --tail 100 sensorvision-backend
+
+# View logs with timestamps
+docker logs -t sensorvision-backend
+
+# Search for errors
+docker logs --tail 200 sensorvision-backend | grep -i "error\|exception"
+
+# Search for telemetry ingestion
+docker logs --tail 200 sensorvision-backend | grep -i "telemetry\|ingestion"
+
+# View logs from mounted volume (if available)
+cat ./logs/sensorvision.log
+tail -f ./logs/sensorvision.log
+```
+
+**MQTT Broker Logs:**
+```bash
+# View MQTT broker logs
+docker logs sensorvision-mosquitto
+
+# Follow MQTT logs in real-time
+docker logs -f sensorvision-mosquitto
+
+# Monitor MQTT messages (requires mosquitto-clients)
+mosquitto_sub -h 35.88.65.186 -p 1883 -t "#" -v
+```
+
+**Database Logs:**
+```bash
+# View PostgreSQL logs
+docker logs sensorvision-postgres
+
+# Follow database logs
+docker logs -f sensorvision-postgres
+```
+
+### Production Troubleshooting
+
+**Check Service Health:**
+```bash
+# Backend health check
+curl -s http://35.88.65.186.nip.io:8080/actuator/health
+
+# View detailed health info
+curl -s http://35.88.65.186.nip.io:8080/actuator/health | jq
+
+# Check metrics
+curl -s http://35.88.65.186.nip.io:8080/actuator/metrics
+```
+
+**Test MQTT Connectivity:**
+```bash
+# Test MQTT port accessibility from external network
+telnet 35.88.65.186 1883
+
+# Subscribe to all MQTT topics (requires mosquitto-clients)
+mosquitto_sub -h 35.88.65.186 -p 1883 -t "#" -v
+
+# Publish test message
+mosquitto_pub -h 35.88.65.186 -p 1883 \
+  -t "sensorvision/devices/test-001/telemetry" \
+  -m '{"deviceId":"test-001","timestamp":"2024-01-01T12:00:00Z","variables":{"temperature":23.5}}'
+```
+
+**Common Production Issues:**
+
+1. **MQTT Port Not Accessible:**
+   - Issue: Customers can send data locally but not from remote devices
+   - Solution: Ensure port 1883 is open in AWS Security Group/Firewall
+   - Verify: `telnet 35.88.65.186 1883` from external network
+
+2. **Integration Wizard URLs:**
+   - Development: Uses `http://localhost:8080`
+   - Production: Uses `http://35.88.65.186.nip.io:8080`
+   - MQTT: Strips `.nip.io` suffix to get raw IP for broker connection
+
+3. **WebSocket Connectivity:**
+   - WebSocket endpoint: `ws://35.88.65.186.nip.io:8080/ws/telemetry`
+   - Check browser console for connection errors
+   - Verify backend logs for WebSocket handshake issues
+
+### Production Deployment Checklist
+
+**Network & Security:**
+- [ ] Port 8080 (HTTP API) is open in security group/firewall
+- [ ] Port 1883 (MQTT) is open for external device connections
+- [ ] Port 5432 (PostgreSQL) is restricted to backend container only
+- [ ] SSL/TLS certificates configured (if using HTTPS)
+- [ ] CORS settings configured for frontend domain
+
+**MQTT Broker:**
+- [ ] MQTT broker is accessible from external network
+- [ ] Test connectivity: `telnet <server-ip> 1883`
+- [ ] MQTT authentication configured (if `MQTT_DEVICE_AUTH_REQUIRED=true`)
+- [ ] MQTT topics configured: `sensorvision/devices/+/telemetry`
+
+**Environment Variables:**
+- [ ] `JWT_SECRET` set to secure random value
+- [ ] `DB_PASSWORD` changed from default
+- [ ] `MQTT_PASSWORD` changed from default (if auth enabled)
+- [ ] `APP_BASE_URL` set to production domain
+- [ ] `OAUTH2_REDIRECT_BASE_URL` set to production domain
+
+**Monitoring:**
+- [ ] Prometheus metrics endpoint accessible: `/actuator/metrics`
+- [ ] Health check endpoint working: `/actuator/health`
+- [ ] Log rotation configured for `./logs/sensorvision.log`
+- [ ] Disk space monitoring for PostgreSQL volume
+
+**Integration Wizard:**
+- [ ] Verify generated code uses correct production URL
+- [ ] Verify MQTT server address is correct (IP, not .nip.io)
+- [ ] Test connection from Integration Wizard works
+- [ ] SDK examples updated with production URL guidance
+
 ## Official SDKs and Integration Tools
 
 ### Python SDK (`sensorvision-sdk/`)

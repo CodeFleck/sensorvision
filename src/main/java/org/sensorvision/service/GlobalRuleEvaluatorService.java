@@ -249,6 +249,7 @@ public class GlobalRuleEvaluatorService {
 
     /**
      * Parse evaluation interval string to minutes
+     * Supports formats: "5m", "1h", "30s", "15", "every_15_minutes", "every_1_hour"
      */
     private long parseIntervalToMinutes(String interval) {
         if (interval == null || interval.isBlank()) {
@@ -258,6 +259,23 @@ public class GlobalRuleEvaluatorService {
         try {
             interval = interval.toLowerCase().trim();
 
+            // Handle "every_X_minutes" and "every_X_hours" format
+            if (interval.startsWith("every_")) {
+                String[] parts = interval.split("_");
+                if (parts.length >= 3) {
+                    long value = Long.parseLong(parts[1]);
+                    String unit = parts[2];
+                    if (unit.startsWith("minute")) {
+                        return value;
+                    } else if (unit.startsWith("hour")) {
+                        return value * 60;
+                    } else if (unit.startsWith("second")) {
+                        return Math.max(1, value / 60);
+                    }
+                }
+            }
+
+            // Handle standard unit suffixes: "5m", "1h", "30s"
             if (interval.endsWith("m")) {
                 return Long.parseLong(interval.substring(0, interval.length() - 1));
             } else if (interval.endsWith("h")) {
@@ -268,7 +286,7 @@ public class GlobalRuleEvaluatorService {
                 return Long.parseLong(interval); // Assume minutes if no unit
             }
         } catch (Exception e) {
-            log.error("Error parsing interval '{}', defaulting to 5 minutes", interval);
+            log.error("Error parsing interval '{}', defaulting to 5 minutes", interval, e);
             return 5;
         }
     }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,4 +28,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByOrganizationId(Long organizationId);
 
     long countByOrganizationId(Long organizationId);
+
+    // Admin dashboard methods
+    List<User> findTop10ByOrderByCreatedAtDesc();
+
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :startDate AND u.createdAt < :endDate")
+    long countUsersCreatedOnDate(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 }

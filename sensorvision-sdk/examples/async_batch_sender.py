@@ -26,6 +26,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configuration
+# IMPORTANT: Replace with your SensorVision instance URL
+# - Development: http://localhost:8080
+# - Production: http://YOUR-SERVER-IP:8080 or https://your-domain.com
 API_URL = "http://localhost:8080"
 API_KEY = "your-device-token"
 DEVICE_IDS = [f"sensor-{i:03d}" for i in range(1, 11)]  # sensor-001 to sensor-010
