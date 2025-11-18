@@ -6,6 +6,7 @@ import org.sensorvision.model.User;
 import org.sensorvision.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -24,6 +25,7 @@ public class AdminUserController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<UserDto>> getAllUsers() {
         List<User> users = userRepository.findAll();
         List<UserDto> userDtos = users.stream()
@@ -33,6 +35,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/{userId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<UserDto> getUser(@PathVariable Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
@@ -106,6 +109,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/organization/{organizationId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<UserDto>> getUsersByOrganization(@PathVariable Long organizationId) {
         List<User> users = userRepository.findByOrganizationId(organizationId);
         List<UserDto> userDtos = users.stream()
