@@ -13,8 +13,11 @@ Usage:
 from sensorvision import SensorVisionClient
 
 # Configuration
-API_URL = "http://localhost:8080"  # Your SensorVision instance URL
-API_KEY = "your-device-token"       # Your device token
+# IMPORTANT: Replace with your SensorVision instance URL
+# - Development: http://localhost:8080
+# - Production: http://YOUR-SERVER-IP:8080 or https://your-domain.com
+API_URL = "http://localhost:8080"  # Change this to your SensorVision URL
+API_KEY = "your-device-token"       # Your device token from Integration Wizard
 DEVICE_ID = "my-sensor"             # Your device ID
 
 # Initialize client

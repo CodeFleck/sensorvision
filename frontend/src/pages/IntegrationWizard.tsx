@@ -282,12 +282,24 @@ export const IntegrationWizard: React.FC = () => {
   const generateCode = (platform: Platform, devId: string, token: string) => {
     let code = '';
 
+    // Extract MQTT server from API URL
+    // Remove protocol and port, extract hostname/IP
+    const mqttServer = apiUrl
+      .replace(/^https?:\/\//, '')  // Remove http:// or https://
+      .replace(/:\d+$/, '')          // Remove :port at end
+      .replace(/\.nip\.io$/, '');    // Remove .nip.io suffix to get raw IP
+
     switch (platform) {
       case 'esp32':
       case 'arduino':
         code = `// ESP32/Arduino MQTT Example for SensorVision
 // Install library: PubSubClient by Nick O'Leary
 // Arduino IDE: Sketch -> Include Library -> Manage Libraries -> Search "PubSubClient"
+//
+// IMPORTANT - NETWORK REQUIREMENTS:
+// - MQTT broker must be accessible on port 1883
+// - If connecting from outside your network, ensure port 1883 is open in firewall
+// - For production: ${apiUrl} -> MQTT at ${mqttServer}:1883
 
 #include <WiFi.h>
 #include <PubSubClient.h>
@@ -297,8 +309,8 @@ const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
 // SensorVision MQTT configuration
-const char* mqttServer = "${apiUrl.replace('http://', '').replace(':8080', '')}";  // Remove http:// and port
-const int mqttPort = 1883;
+const char* mqttServer = "${mqttServer}";  // MQTT broker address
+const int mqttPort = 1883;                 // MQTT port (must be accessible)
 const char* deviceId = "${devId}";
 const char* mqttTopic = "sensorvision/devices/${devId}/telemetry";
 
@@ -1075,6 +1087,45 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
 
         {/* Step Content */}
         <div className="mb-8">{renderStep()}</div>
+
+        {/* Troubleshooting Help */}
+        {currentStep === 4 && connectionError && (
+          <div className="max-w-2xl mx-auto mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Troubleshooting Tips
+            </h3>
+            <div className="space-y-3 text-sm text-blue-800">
+              <div>
+                <strong>MQTT Connection Issues (ESP32/Arduino):</strong>
+                <ul className="list-disc ml-5 mt-1 space-y-1">
+                  <li>Verify MQTT broker is accessible: <code className="bg-blue-100 px-1 rounded">telnet {apiUrl.replace(/^https?:\/\//, '').replace(/:\d+$/, '').replace(/\.nip\.io$/, '')} 1883</code></li>
+                  <li>Check that port 1883 is open in your firewall/security group</li>
+                  <li>Ensure WiFi credentials are correct in your code</li>
+                  <li>Check Serial Monitor output for connection errors</li>
+                </ul>
+              </div>
+              <div>
+                <strong>HTTP/REST API Issues (Python/Node.js):</strong>
+                <ul className="list-disc ml-5 mt-1 space-y-1">
+                  <li>Verify URL is correct: <code className="bg-blue-100 px-1 rounded">{apiUrl}</code></li>
+                  <li>Check that device token is valid (not masked)</li>
+                  <li>Ensure all telemetry values are numeric (not booleans or strings)</li>
+                  <li>Test backend health: <code className="bg-blue-100 px-1 rounded">curl {apiUrl}/actuator/health</code></li>
+                </ul>
+              </div>
+              <div>
+                <strong>Data Not Appearing:</strong>
+                <ul className="list-disc ml-5 mt-1 space-y-1">
+                  <li>Check browser console for WebSocket connection errors</li>
+                  <li>Refresh the dashboard to see if data was stored</li>
+                  <li>Verify device ID matches exactly (case-sensitive)</li>
+                  <li>Check backend logs for ingestion errors</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Navigation Buttons */}
         {currentStep > 1 && currentStep < 5 && (
