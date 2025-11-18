@@ -12,6 +12,7 @@ import org.sensorvision.service.DeviceService;
 import org.sensorvision.service.DeviceTokenService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -40,6 +41,7 @@ public class DeviceTokenController {
      * @return The newly generated token (only time it will be visible)
      */
     @PostMapping("/generate")
+    @Transactional
     public ResponseEntity<DeviceTokenResponse> generateToken(@PathVariable String deviceId) {
         Organization userOrg = securityUtils.getCurrentUserOrganization();
 
@@ -78,6 +80,7 @@ public class DeviceTokenController {
      * @return The new token (invalidates the old one)
      */
     @PostMapping("/rotate")
+    @Transactional
     public ResponseEntity<DeviceTokenResponse> rotateToken(@PathVariable String deviceId) {
         String newToken = deviceService.rotateDeviceToken(deviceId);
 
@@ -102,6 +105,7 @@ public class DeviceTokenController {
      * @return Masked token information
      */
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<DeviceTokenResponse> getTokenInfo(@PathVariable String deviceId) {
         Organization userOrg = securityUtils.getCurrentUserOrganization();
 
@@ -137,6 +141,7 @@ public class DeviceTokenController {
      * @return Success message
      */
     @DeleteMapping
+    @Transactional
     public ResponseEntity<DeviceTokenResponse> revokeToken(@PathVariable String deviceId) {
         Organization userOrg = securityUtils.getCurrentUserOrganization();
 

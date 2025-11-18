@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -55,6 +56,7 @@ public class WebhookTestController {
      */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
+    @Transactional(readOnly = true)
     public ResponseEntity<Page<WebhookTestResponse>> getHistory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
@@ -74,6 +76,7 @@ public class WebhookTestController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
+    @Transactional(readOnly = true)
     public ResponseEntity<WebhookTestResponse> getTest(@PathVariable Long id) {
         Organization org = securityUtils.getCurrentUserOrganization();
 
@@ -89,6 +92,7 @@ public class WebhookTestController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
+    @Transactional
     public ResponseEntity<Void> deleteTest(@PathVariable Long id) {
         Organization org = securityUtils.getCurrentUserOrganization();
 

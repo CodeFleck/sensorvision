@@ -59,6 +59,7 @@ public class DataPluginController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
+    @Transactional(readOnly = true)
     public ResponseEntity<DataPluginDto> getPlugin(@PathVariable Long id) {
         Organization org = securityUtils.getCurrentUserOrganization();
 
@@ -78,6 +79,7 @@ public class DataPluginController {
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public ResponseEntity<DataPluginDto> createPlugin(
             @Valid @RequestBody CreateDataPluginRequest request
     ) {
@@ -117,6 +119,7 @@ public class DataPluginController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public ResponseEntity<DataPluginDto> updatePlugin(
             @PathVariable Long id,
             @Valid @RequestBody CreateDataPluginRequest request
@@ -163,6 +166,7 @@ public class DataPluginController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public ResponseEntity<Void> deletePlugin(@PathVariable Long id) {
         Organization org = securityUtils.getCurrentUserOrganization();
 

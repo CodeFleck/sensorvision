@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -37,6 +38,7 @@ public class DeviceCommandController {
      * Body: { "command": "toggle", "payload": { "target": "relay1" } }
      */
     @PostMapping
+    @Transactional
     public ResponseEntity<CommandResponse> sendCommand(
             @PathVariable String deviceId,
             @Valid @RequestBody CommandRequest request) {
@@ -66,6 +68,7 @@ public class DeviceCommandController {
      * Body: { "target": "relay1" }
      */
     @PostMapping("/toggle")
+    @Transactional
     public ResponseEntity<CommandResponse> toggleCommand(
             @PathVariable String deviceId,
             @RequestBody Map<String, String> body) {
@@ -97,6 +100,7 @@ public class DeviceCommandController {
      * Body: { "variable": "led_brightness", "value": 75 }
      */
     @PostMapping("/set-value")
+    @Transactional
     public ResponseEntity<CommandResponse> setValueCommand(
             @PathVariable String deviceId,
             @RequestBody Map<String, Object> body) {

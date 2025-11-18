@@ -25,6 +25,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -71,6 +72,7 @@ public class TelemetryController {
      * Body: { "timestamp": "2025-01-15T10:30:00Z", "variables": {...}, "metadata": {...} }
      */
     @PostMapping("/ingest/{deviceId}")
+    @Transactional
     public ResponseEntity<TelemetryIngestResponse> ingestTelemetry(
             @PathVariable String deviceId,
             @RequestHeader(value = "X-Device-Token", required = false) String deviceToken,
@@ -145,6 +147,7 @@ public class TelemetryController {
      * POST /api/v1/data/ingest/bulk
      */
     @PostMapping("/ingest/bulk")
+    @Transactional
     public ResponseEntity<BulkIngestResponse> bulkIngestTelemetry(
             @Valid @RequestBody BulkTelemetryIngestRequest request) {
 
