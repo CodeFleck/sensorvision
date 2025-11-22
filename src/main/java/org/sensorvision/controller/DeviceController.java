@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,8 +30,10 @@ public class DeviceController {
     private final DeviceService deviceService;
 
     @GetMapping
-    public List<DeviceResponse> getDevices() {
-        return deviceService.getAllDevices();
+    public List<DeviceResponse> getDevices(
+            @RequestParam(required = false) String tagName,
+            @RequestParam(required = false) Long groupId) {
+        return deviceService.getAllDevices(tagName, groupId);
     }
 
     @GetMapping("/{externalId}")
@@ -46,7 +49,7 @@ public class DeviceController {
 
     @PutMapping("/{externalId}")
     public DeviceResponse updateDevice(@PathVariable String externalId,
-                                        @Valid @RequestBody DeviceUpdateRequest request) {
+            @Valid @RequestBody DeviceUpdateRequest request) {
         return deviceService.updateDevice(externalId, request);
     }
 
@@ -70,5 +73,6 @@ public class DeviceController {
     }
 
     // DTO for token rotation response
-    public record TokenRotationResponse(String deviceExternalId, String apiToken) {}
+    public record TokenRotationResponse(String deviceExternalId, String apiToken) {
+    }
 }
