@@ -469,7 +469,6 @@ public class DeviceService {
                 device.getLastSeenAt(),
                 healthScore,
                 healthStatus,
-                healthStatus,
                 device.getLastHealthCheckAt(),
                 device.getTags().stream()
                         .map(t -> new DeviceTagDto(t.getId(), t.getName(), t.getColor()))
