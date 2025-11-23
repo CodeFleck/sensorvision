@@ -131,19 +131,18 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ---
 
-#### 2.2 Advanced Synthetic Variables ⚠️ HIGH PRIORITY
-**Effort**: 2 weeks (Sprint 4) | **Status**: 🚧 Planned
+#### 2.2 Advanced Synthetic Variables ✅ COMPLETE
+**Effort**: 2 weeks (Sprint 4) | **Status**: ✅ Completed (2025-11-13)
 **GitHub Issue**: [#80](https://github.com/CodeFleck/sensorvision/issues/80)
 
-**New Functions**:
-- **Math**: sqrt, pow, abs, log, exp, sin, cos, round, floor, ceil
-- **Statistics**: mean, stddev, percentile, moving average, rate of change
-- **Time Windows**: 5m, 15m, 1h, 24h, 7d, 30d
-- **Aggregations**: sum(), count(), min(), max(), avg() with time windows
-- **Conditional**: if(condition, true_value, false_value)
-- **Logical**: AND, OR, NOT operators
+**Implemented Functions**:
+- **Math (17)**: sqrt, pow, abs, log, log10, exp, sin, cos, tan, asin, acos, atan, round, floor, ceil, min, max
+- **Logic (4)**: if, and, or, not
+- **Statistics (10)**: avg, stddev, sum, count, minTime, maxTime, rate, movingAvg, percentChange, median
+- **Time Windows (6)**: 5m, 15m, 1h, 24h, 7d, 30d
+- **Comparison Operators**: >, <, >=, <=, ==, !=
 
-**Example**: `if(kwConsumption > avg(kwConsumption, 1h) * 1.5, 1, 0)` → Spike detection
+**Example**: `if(kwConsumption > avg("kwConsumption", "1h") * 1.5, 1, 0)` → Spike detection (WORKING!)
 
 ---
 
@@ -465,25 +464,34 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 ### Sprint 4: Advanced Synthetic Variables (Weeks 7-8) ✅ COMPLETE
 **Goal**: Powerful expression engine for derived metrics
 
-**Tasks** (Issue #80):
+**Phase 1 Tasks** (Issue #80):
 1. ✅ Extend expression parser to support function calls
 2. ✅ Implement math functions (sqrt, pow, abs, log, exp, sin, cos, round, floor, ceil)
-3. ⏸️ Implement statistical functions (mean, stddev, percentile, moving average, rate of change) - Deferred to Phase 2
-4. ⏸️ Add time window aggregations (5m, 15m, 1h, 24h, 7d, 30d) - Deferred to Phase 2
-5. ✅ Implement conditional logic (if/then/else, AND/OR/NOT)
-6. ⏸️ Enhanced expression builder UI with autocomplete - Planned for Phase 2
-7. ✅ Expression validation and error handling
+3. ✅ Implement conditional logic (if/then/else, AND/OR/NOT)
+4. ✅ Expression validation and error handling
+5. ✅ REST API for function metadata
+6. ✅ 42 unit tests with full coverage
+
+**Phase 2 Tasks** (Statistical Time-Series Functions):
+1. ✅ Implement statistical functions (avg, stddev, sum, count, minTime, maxTime, rate, movingAvg, percentChange, median)
+2. ✅ Add time window aggregations (5m, 15m, 1h, 24h, 7d, 30d)
+3. ✅ StatisticalFunctionContext architecture with thread-local context
+4. ✅ String literal argument support for function parameters
+5. ✅ TelemetryRecordRepository time-window queries
+6. ✅ 27 comprehensive unit tests for statistical functions
+7. ⏸️ Enhanced expression builder UI with autocomplete - Planned for future
 
 **Deliverables**:
-- ✅ 21 math & logic functions supported (17 Math + 4 Logic)
+- ✅ **31 functions total** (17 Math + 4 Logic + 10 Statistical)
 - ✅ Comparison operators (>, <, >=, <=, ==, !=)
 - ✅ Nested function calls and complex expressions
+- ✅ Time-series aggregations with 6 time windows
 - ✅ Comprehensive documentation with 10+ examples (470 lines)
-- ✅ 42 unit tests with full coverage
+- ✅ **69 unit tests** with full coverage (42 expression + 27 statistical)
 - ✅ REST API for function metadata
 
-**Sprint Duration**: 2 weeks | **Completion Date**: 2025-11-06 (Phase 1 only)
-**Note**: Statistical functions and time-series aggregations deferred to Sprint 4 Phase 2 due to architectural complexity
+**Sprint Duration**: 2 weeks | **Completion Date**: 2025-11-13 (Phases 1 & 2 COMPLETE)
+**Note**: Phase 2 was discovered to be fully implemented during code review on 2025-11-13
 
 ---
 
