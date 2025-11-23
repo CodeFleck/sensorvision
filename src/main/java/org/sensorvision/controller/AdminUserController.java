@@ -6,7 +6,9 @@ import org.sensorvision.model.User;
 import org.sensorvision.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +26,7 @@ public class AdminUserController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<UserDto>> getAllUsers() {
         List<User> users = userRepository.findAll();
         List<UserDto> userDtos = users.stream()
@@ -33,6 +36,7 @@ public class AdminUserController {
     }
 
     @GetMapping("/{userId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<UserDto> getUser(@PathVariable Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
@@ -49,8 +53,7 @@ public class AdminUserController {
 
         return ResponseEntity.ok(ApiResponse.success(
                 convertToDto(user),
-                "User enabled successfully"
-        ));
+                "User enabled successfully"));
     }
 
     @PutMapping("/{userId}/disable")
@@ -63,8 +66,7 @@ public class AdminUserController {
 
         return ResponseEntity.ok(ApiResponse.success(
                 convertToDto(user),
-                "User disabled successfully"
-        ));
+                "User disabled successfully"));
     }
 
     @PutMapping("/{userId}")
@@ -88,8 +90,7 @@ public class AdminUserController {
 
         return ResponseEntity.ok(ApiResponse.success(
                 convertToDto(user),
-                "User updated successfully"
-        ));
+                "User updated successfully"));
     }
 
     @DeleteMapping("/{userId}")
@@ -101,11 +102,11 @@ public class AdminUserController {
 
         return ResponseEntity.ok(ApiResponse.success(
                 null,
-                "User deleted successfully"
-        ));
+                "User deleted successfully"));
     }
 
     @GetMapping("/organization/{organizationId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<UserDto>> getUsersByOrganization(@PathVariable Long organizationId) {
         List<User> users = userRepository.findByOrganizationId(organizationId);
         List<UserDto> userDtos = users.stream()
@@ -125,10 +126,12 @@ public class AdminUserController {
         dto.setOrganizationName(user.getOrganization().getName());
         dto.setEnabled(user.getEnabled());
         dto.setEmailVerified(user.getEmailVerified());
-        dto.setCreatedAt(user.getCreatedAt() != null ?
-            LocalDateTime.ofInstant(user.getCreatedAt(), java.time.ZoneId.systemDefault()) : null);
-        dto.setUpdatedAt(user.getUpdatedAt() != null ?
-            LocalDateTime.ofInstant(user.getUpdatedAt(), java.time.ZoneId.systemDefault()) : null);
+        dto.setCreatedAt(user.getCreatedAt() != null
+                ? LocalDateTime.ofInstant(user.getCreatedAt(), java.time.ZoneId.systemDefault())
+                : null);
+        dto.setUpdatedAt(user.getUpdatedAt() != null
+                ? LocalDateTime.ofInstant(user.getUpdatedAt(), java.time.ZoneId.systemDefault())
+                : null);
         dto.setLastLoginAt(null); // lastLoginAt field doesn't exist in User entity yet
         dto.setRoles(user.getRoles().stream()
                 .map(role -> role.getName())
@@ -142,11 +145,28 @@ public class AdminUserController {
         private String lastName;
         private String email;
 
-        public String getFirstName() { return firstName; }
-        public void setFirstName(String firstName) { this.firstName = firstName; }
-        public String getLastName() { return lastName; }
-        public void setLastName(String lastName) { this.lastName = lastName; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
+        public String getFirstName() {
+            return firstName;
+        }
+
+        public void setFirstName(String firstName) {
+            this.firstName = firstName;
+        }
+
+        public String getLastName() {
+            return lastName;
+        }
+
+        public void setLastName(String lastName) {
+            this.lastName = lastName;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
     }
 }

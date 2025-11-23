@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -97,6 +98,7 @@ public class NotificationController {
      * Get notification history for current user
      */
     @GetMapping("/logs")
+    @Transactional(readOnly = true)
     public ResponseEntity<Page<NotificationLogResponse>> getNotificationLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size

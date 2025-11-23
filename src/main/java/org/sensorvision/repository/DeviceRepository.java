@@ -35,4 +35,12 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
 
     // Admin dashboard methods
     List<Device> findTop10ByOrderByCreatedAtDesc();
+
+    @Query("SELECT DISTINCT d FROM Device d JOIN d.tags t WHERE d.organization = :organization AND t.name = :tagName")
+    List<Device> findByOrganizationAndTagName(@Param("organization") Organization organization,
+            @Param("tagName") String tagName);
+
+    @Query("SELECT DISTINCT d FROM Device d JOIN d.groups g WHERE d.organization = :organization AND g.id = :groupId")
+    List<Device> findByOrganizationAndGroupId(@Param("organization") Organization organization,
+            @Param("groupId") Long groupId);
 }

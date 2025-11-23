@@ -1,3 +1,15 @@
+export interface DeviceTag {
+  id: number;
+  name: string;
+  color: string;
+}
+
+export interface DeviceGroup {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 export interface Device {
   externalId: string;
   name: string;
@@ -14,13 +26,15 @@ export interface Device {
   healthScore?: number;
   healthStatus?: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR' | 'CRITICAL';
   lastHealthCheckAt?: string;
+  tags?: DeviceTag[];
+  groups?: DeviceGroup[];
 }
 
 export interface DeviceTokenResponse {
   deviceId?: string;
-  token?: string;          // Full token (only shown once on generation/rotation)
-  maskedToken?: string;    // Masked token (e.g., "550e8400...0000")
-  expiresAt?: string | null; // Token expiration date (if applicable)
+  token?: string;
+  maskedToken?: string;
+  expiresAt?: string | null;
   message: string;
   success: boolean;
   tokenCreatedAt?: string;

@@ -10,6 +10,7 @@ import org.sensorvision.service.DeviceTokenService;
 import org.sensorvision.service.TelemetryIngestionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -70,6 +71,7 @@ public class SimpleIngestionController {
      * @return Response indicating success or failure
      */
     @PostMapping("/{deviceId}")
+    @Transactional
     public ResponseEntity<SimpleIngestResponse> ingest(
             @PathVariable String deviceId,
             @RequestHeader(value = "X-API-Key", required = false) String apiKey,

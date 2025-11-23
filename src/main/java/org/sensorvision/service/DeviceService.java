@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.UUID;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +22,14 @@ import org.sensorvision.model.Device;
 import org.sensorvision.model.DeviceStatus;
 import org.sensorvision.model.Event;
 import org.sensorvision.model.Organization;
+import org.sensorvision.model.Organization;
+import org.sensorvision.model.DeviceTag;
+import org.sensorvision.model.DeviceGroup;
+import org.sensorvision.dto.DeviceTagDto;
+import org.sensorvision.dto.DeviceGroupDto;
 import org.sensorvision.repository.DeviceRepository;
+import org.sensorvision.repository.DeviceTagRepository;
+import org.sensorvision.repository.DeviceGroupRepository;
 import org.sensorvision.security.SecurityUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +43,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class DeviceService {
 
     private final DeviceRepository deviceRepository;
+    private final DeviceTagRepository deviceTagRepository;
+    private final DeviceGroupRepository deviceGroupRepository;
     private final EventService eventService;
     private final PasswordEncoder passwordEncoder;
     private final DeviceTokenService deviceTokenService;
@@ -40,9 +52,19 @@ public class DeviceService {
     private final DeviceHealthService deviceHealthService;
 
     @Transactional(readOnly = true)
-    public List<DeviceResponse> getAllDevices() {
+    public List<DeviceResponse> getAllDevices(String tagName, Long groupId) {
         Organization userOrg = securityUtils.getCurrentUserOrganization();
-        return deviceRepository.findByOrganization(userOrg).stream()
+        List<Device> devices;
+
+        if (tagName != null && !tagName.isBlank()) {
+            devices = deviceRepository.findByOrganizationAndTagName(userOrg, tagName);
+        } else if (groupId != null) {
+            devices = deviceRepository.findByOrganizationAndGroupId(userOrg, groupId);
+        } else {
+            devices = deviceRepository.findByOrganization(userOrg);
+        }
+
+        return devices.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -78,10 +100,42 @@ public class DeviceService {
                 .sensorType(request.sensorType())
                 .firmwareVersion(request.firmwareVersion())
                 .status(DeviceStatus.UNKNOWN)
-                .organization(userOrg)  // Set organization from current user
+                .organization(userOrg) // Set organization from current user
                 .build();
 
+        // Handle Tags
+        if (request.tags() != null) {
+            Set<DeviceTag> tags = new HashSet<>();
+            for (String tagName : request.tags()) {
+                DeviceTag tag = deviceTagRepository.findByOrganizationIdAndName(userOrg.getId(), tagName)
+                        .orElseGet(() -> deviceTagRepository.save(
+                                DeviceTag.builder()
+                                        .organization(userOrg)
+                                        .name(tagName)
+                                        .color("#FF5733") // Default color
+                                        .build()));
+                tags.add(tag);
+            }
+            device.setTags(tags);
+        }
+
         Device saved = deviceRepository.save(device);
+
+        // Handle Groups (must be done after save because DeviceGroup owns the
+        // relationship)
+        if (request.groupIds() != null) {
+            for (Long groupId : request.groupIds()) {
+                DeviceGroup group = deviceGroupRepository.findById(groupId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Group not found: " + groupId));
+
+                if (!group.getOrganization().getId().equals(userOrg.getId())) {
+                    throw new AccessDeniedException("Access denied to group: " + groupId);
+                }
+
+                group.getDevices().add(saved);
+                deviceGroupRepository.save(group);
+            }
+        }
 
         // Generate API token for new device using DeviceTokenService
         String apiToken = deviceTokenService.assignTokenToDevice(saved);
@@ -89,11 +143,10 @@ public class DeviceService {
         // Emit device created event
         if (saved.getOrganization() != null) {
             eventService.emitDeviceLifecycleEvent(
-                saved.getOrganization(),
-                saved.getExternalId(),
-                saved.getName(),
-                Event.EventType.DEVICE_CREATED
-            );
+                    saved.getOrganization(),
+                    saved.getExternalId(),
+                    saved.getName(),
+                    Event.EventType.DEVICE_CREATED);
         }
 
         log.info("Device created with API token: {} (token: {}...)",
@@ -121,16 +174,61 @@ public class DeviceService {
         device.setLocation(request.location());
         device.setSensorType(request.sensorType());
         device.setFirmwareVersion(request.firmwareVersion());
+
+        // Update Tags
+        if (request.tags() != null) {
+            Set<DeviceTag> tags = new HashSet<>();
+            for (String tagName : request.tags()) {
+                DeviceTag tag = deviceTagRepository.findByOrganizationIdAndName(userOrg.getId(), tagName)
+                        .orElseGet(() -> deviceTagRepository.save(
+                                DeviceTag.builder()
+                                        .organization(userOrg)
+                                        .name(tagName)
+                                        .color("#FF5733")
+                                        .build()));
+                tags.add(tag);
+            }
+            device.setTags(tags);
+        }
+
         Device updated = deviceRepository.save(device);
+
+        // Update Groups
+        if (request.groupIds() != null) {
+            // Remove from existing groups
+            // Note: This is inefficient for large datasets but acceptable for single device
+            // update
+            List<DeviceGroup> currentGroups = new ArrayList<>(device.getGroups());
+            for (DeviceGroup group : currentGroups) {
+                if (!request.groupIds().contains(group.getId())) {
+                    group.getDevices().remove(device);
+                    deviceGroupRepository.save(group);
+                }
+            }
+
+            // Add to new groups
+            for (Long groupId : request.groupIds()) {
+                DeviceGroup group = deviceGroupRepository.findById(groupId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Group not found: " + groupId));
+
+                if (!group.getOrganization().getId().equals(userOrg.getId())) {
+                    throw new AccessDeniedException("Access denied to group: " + groupId);
+                }
+
+                if (!group.getDevices().contains(device)) {
+                    group.getDevices().add(device);
+                    deviceGroupRepository.save(group);
+                }
+            }
+        }
 
         // Emit device updated event
         if (updated.getOrganization() != null) {
             eventService.emitDeviceLifecycleEvent(
-                updated.getOrganization(),
-                updated.getExternalId(),
-                updated.getName(),
-                Event.EventType.DEVICE_UPDATED
-            );
+                    updated.getOrganization(),
+                    updated.getExternalId(),
+                    updated.getName(),
+                    Event.EventType.DEVICE_UPDATED);
         }
 
         return toResponse(updated);
@@ -149,11 +247,10 @@ public class DeviceService {
         // Emit device deleted event before deleting
         if (device.getOrganization() != null) {
             eventService.emitDeviceLifecycleEvent(
-                device.getOrganization(),
-                device.getExternalId(),
-                device.getName(),
-                Event.EventType.DEVICE_DELETED
-            );
+                    device.getOrganization(),
+                    device.getExternalId(),
+                    device.getName(),
+                    Event.EventType.DEVICE_DELETED);
         }
 
         deviceRepository.delete(device);
@@ -186,8 +283,7 @@ public class DeviceService {
                     Event.EventType.DEVICE_UPDATED,
                     Event.EventSeverity.INFO,
                     "Device API Token Rotated",
-                    String.format("API token rotated for device %s (%s)", device.getName(), device.getExternalId())
-            );
+                    String.format("API token rotated for device %s (%s)", device.getName(), device.getExternalId()));
         }
 
         // Return the raw token - this is the only time it will be visible
@@ -205,7 +301,7 @@ public class DeviceService {
 
                     Device device = Device.builder()
                             .externalId(externalId)
-                            .name(externalId)  // Use externalId as default name
+                            .name(externalId) // Use externalId as default name
                             .active(true)
                             .status(DeviceStatus.UNKNOWN)
                             .organization(organization)
@@ -221,8 +317,7 @@ public class DeviceService {
                             organization,
                             saved.getExternalId(),
                             saved.getName(),
-                            Event.EventType.DEVICE_CREATED
-                    );
+                            Event.EventType.DEVICE_CREATED);
 
                     return saved;
                 });
@@ -274,6 +369,64 @@ public class DeviceService {
                         }
                         break;
 
+                    case ASSIGN_TAGS:
+                        if (request.getParameters() != null && request.getParameters().containsKey("tags")) {
+                            List<String> tags = (List<String>) request.getParameters().get("tags");
+                            for (String tagName : tags) {
+                                DeviceTag tag = deviceTagRepository
+                                        .findByOrganizationIdAndName(userOrg.getId(), tagName)
+                                        .orElseGet(() -> deviceTagRepository.save(
+                                                DeviceTag.builder().organization(userOrg).name(tagName).color("#FF5733")
+                                                        .build()));
+                                device.getTags().add(tag);
+                            }
+                            deviceRepository.save(device);
+                        }
+                        break;
+
+                    case REMOVE_TAGS:
+                        if (request.getParameters() != null && request.getParameters().containsKey("tags")) {
+                            List<String> tagsToRemove = (List<String>) request.getParameters().get("tags");
+                            device.getTags().removeIf(t -> tagsToRemove.contains(t.getName()));
+                            deviceRepository.save(device);
+                        }
+                        break;
+
+                    case ASSIGN_GROUP:
+                        if (request.getParameters() != null && request.getParameters().containsKey("groupId")) {
+                            // Handle both Integer and Long (JSON numbers might be Integer)
+                            Number groupIdNum = (Number) request.getParameters().get("groupId");
+                            Long groupId = groupIdNum.longValue();
+
+                            DeviceGroup group = deviceGroupRepository.findById(groupId)
+                                    .orElseThrow(() -> new ResourceNotFoundException("Group not found: " + groupId));
+
+                            if (!group.getOrganization().getId().equals(userOrg.getId())) {
+                                throw new AccessDeniedException("Access denied to group: " + groupId);
+                            }
+
+                            group.getDevices().add(device);
+                            deviceGroupRepository.save(group);
+                        }
+                        break;
+
+                    case REMOVE_FROM_GROUP:
+                        if (request.getParameters() != null && request.getParameters().containsKey("groupId")) {
+                            Number groupIdNum = (Number) request.getParameters().get("groupId");
+                            Long groupId = groupIdNum.longValue();
+
+                            DeviceGroup group = deviceGroupRepository.findById(groupId)
+                                    .orElseThrow(() -> new ResourceNotFoundException("Group not found: " + groupId));
+
+                            if (!group.getOrganization().getId().equals(userOrg.getId())) {
+                                throw new AccessDeniedException("Access denied to group: " + groupId);
+                            }
+
+                            group.getDevices().remove(device);
+                            deviceGroupRepository.save(group);
+                        }
+                        break;
+
                     default:
                         failures.put(deviceId, "Unsupported operation: " + request.getOperation());
                         continue;
@@ -316,7 +469,12 @@ public class DeviceService {
                 device.getLastSeenAt(),
                 healthScore,
                 healthStatus,
-                device.getLastHealthCheckAt()
-        );
+                device.getLastHealthCheckAt(),
+                device.getTags().stream()
+                        .map(t -> new DeviceTagDto(t.getId(), t.getName(), t.getColor()))
+                        .collect(Collectors.toList()),
+                device.getGroups().stream()
+                        .map(g -> new DeviceGroupDto(g.getId(), g.getName(), g.getDescription()))
+                        .collect(Collectors.toList()));
     }
 }
