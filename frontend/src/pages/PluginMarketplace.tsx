@@ -1,326 +1,596 @@
 import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
-import { PluginRegistry, PluginCategory, InstalledPlugin } from '../types';
+import {
+  Search,
+  Download,
+  Star,
+  CheckCircle,
+  Package,
+  Filter,
+  X,
+  Power,
+  PowerOff,
+  Trash2,
+  Settings,
+  ExternalLink,
+  Verified,
+  Award,
+  Loader,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
+import pluginMarketplaceService, {
+  PluginRegistry,
+  InstalledPlugin,
+} from '../services/pluginMarketplaceService';
+import PluginDetailsModal from '../components/plugins/PluginDetailsModal';
+import PluginConfigModal from '../components/plugins/PluginConfigModal';
+
+type Tab = 'marketplace' | 'installed';
 
 const PluginMarketplace: React.FC = () => {
-  const [plugins, setPlugins] = useState<PluginRegistry[]>([]);
+  const [activeTab, setActiveTab] = useState<Tab>('marketplace');
+  const [marketplacePlugins, setMarketplacePlugins] = useState<PluginRegistry[]>([]);
   const [installedPlugins, setInstalledPlugins] = useState<InstalledPlugin[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<PluginCategory | ''>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedPlugin, setSelectedPlugin] = useState<PluginRegistry | null>(null);
-  const [showInstallModal, setShowInstallModal] = useState(false);
-  const [installing, setInstalling] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [pluginToConfig, setPluginToConfig] = useState<string | null>(null);
 
-  const categories: { value: PluginCategory | ''; label: string }[] = [
-    { value: '', label: 'All Categories' },
-    { value: 'PROTOCOL_PARSER', label: 'Protocol Parsers' },
-    { value: 'INTEGRATION', label: 'Integrations' },
-    { value: 'NOTIFICATION', label: 'Notifications' },
-    { value: 'WIDGET', label: 'Widgets' },
-    { value: 'ML_MODEL', label: 'ML Models' },
-    { value: 'BUSINESS_LOGIC', label: 'Business Logic' },
+  const categories = [
+    'DATA_INGESTION',
+    'NOTIFICATION',
+    'ANALYTICS',
+    'INTEGRATION',
+    'UTILITY',
   ];
 
   useEffect(() => {
-    fetchData();
-  }, [searchTerm, selectedCategory]);
+    loadData();
+  }, []);
 
-  const fetchData = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const [pluginsData, installedData] = await Promise.all([
-        apiService.getAllPlugins({
-          search: searchTerm || undefined,
-          category: selectedCategory || undefined,
-        }),
-        apiService.getInstalledPlugins(),
+      const [marketplace, installed] = await Promise.all([
+        pluginMarketplaceService.getAllPlugins(),
+        pluginMarketplaceService.getInstalledPlugins(),
       ]);
-
-      // Mark plugins as installed if they exist in installedPlugins
-      const pluginsWithInstallStatus = pluginsData.map(plugin => ({
-        ...plugin,
-        isInstalled: installedData.some(ip => ip.pluginKey === plugin.pluginKey),
-        installedPluginId: installedData.find(ip => ip.pluginKey === plugin.pluginKey)?.id,
-      }));
-
-      setPlugins(pluginsWithInstallStatus);
-      setInstalledPlugins(installedData);
+      setMarketplacePlugins(marketplace);
+      setInstalledPlugins(installed);
     } catch (error) {
-      console.error('Failed to fetch plugins:', error);
+      console.error('Failed to load plugins:', error);
       toast.error('Failed to load plugins');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInstall = async (plugin: PluginRegistry) => {
-    setSelectedPlugin(plugin);
-    setShowInstallModal(true);
+  const handleInstall = async (pluginKey: string) => {
+    try {
+      await pluginMarketplaceService.installPlugin(pluginKey);
+      toast.success('Plugin installed successfully');
+      await loadData();
+    } catch (error) {
+      console.error('Failed to install plugin:', error);
+      toast.error('Failed to install plugin');
+    }
   };
 
-  const confirmInstall = async () => {
-    if (!selectedPlugin) return;
+  const handleUninstall = async (pluginKey: string) => {
+    if (!confirm('Are you sure you want to uninstall this plugin?')) {
+      return;
+    }
 
     try {
-      setInstalling(true);
-      await apiService.installPlugin(selectedPlugin.pluginKey);
-      toast.success(`${selectedPlugin.name} installed successfully`);
-      setShowInstallModal(false);
-      setSelectedPlugin(null);
-      await fetchData();
-    } catch (error: any) {
-      console.error('Failed to install plugin:', error);
-      toast.error(error.message || 'Failed to install plugin');
-    } finally {
-      setInstalling(false);
+      await pluginMarketplaceService.uninstallPlugin(pluginKey);
+      toast.success('Plugin uninstalled successfully');
+      await loadData();
+    } catch (error) {
+      console.error('Failed to uninstall plugin:', error);
+      toast.error('Failed to uninstall plugin');
     }
   };
 
   const handleActivate = async (pluginKey: string) => {
     try {
-      await apiService.activatePlugin(pluginKey);
+      await pluginMarketplaceService.activatePlugin(pluginKey);
       toast.success('Plugin activated successfully');
-      await fetchData();
-    } catch (error: any) {
+      await loadData();
+    } catch (error) {
       console.error('Failed to activate plugin:', error);
-      toast.error(error.message || 'Failed to activate plugin');
+      toast.error('Failed to activate plugin');
     }
   };
 
   const handleDeactivate = async (pluginKey: string) => {
     try {
-      await apiService.deactivatePlugin(pluginKey);
+      await pluginMarketplaceService.deactivatePlugin(pluginKey);
       toast.success('Plugin deactivated successfully');
-      await fetchData();
-    } catch (error: any) {
+      await loadData();
+    } catch (error) {
       console.error('Failed to deactivate plugin:', error);
-      toast.error(error.message || 'Failed to deactivate plugin');
+      toast.error('Failed to deactivate plugin');
     }
   };
 
-  const handleUninstall = async (pluginKey: string, pluginName: string) => {
-    if (!confirm(`Are you sure you want to uninstall ${pluginName}?`)) return;
-
-    try {
-      await apiService.uninstallPlugin(pluginKey);
-      toast.success(`${pluginName} uninstalled successfully`);
-      await fetchData();
-    } catch (error: any) {
-      console.error('Failed to uninstall plugin:', error);
-      toast.error(error.message || 'Failed to uninstall plugin');
-    }
+  const handleViewDetails = (plugin: PluginRegistry) => {
+    setSelectedPlugin(plugin);
+    setDetailsModalOpen(true);
   };
 
-  const getCategoryBadgeColor = (category: PluginCategory): string => {
-    const colors: Record<PluginCategory, string> = {
-      PROTOCOL_PARSER: 'bg-blue-100 text-blue-800',
-      INTEGRATION: 'bg-green-100 text-green-800',
-      NOTIFICATION: 'bg-purple-100 text-purple-800',
-      WIDGET: 'bg-yellow-100 text-yellow-800',
-      ML_MODEL: 'bg-pink-100 text-pink-800',
-      BUSINESS_LOGIC: 'bg-gray-100 text-gray-800',
+  const handleConfigure = (pluginKey: string) => {
+    setPluginToConfig(pluginKey);
+    setConfigModalOpen(true);
+  };
+
+  const isPluginInstalled = (pluginKey: string): boolean => {
+    return installedPlugins.some((p) => p.pluginKey === pluginKey);
+  };
+
+  const getInstalledPlugin = (pluginKey: string): InstalledPlugin | undefined => {
+    return installedPlugins.find((p) => p.pluginKey === pluginKey);
+  };
+
+  const filteredMarketplacePlugins = marketplacePlugins.filter((plugin) => {
+    const matchesSearch =
+      plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      plugin.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      plugin.author.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCategory = !selectedCategory || plugin.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  const filteredInstalledPlugins = installedPlugins.filter((plugin) =>
+    plugin.pluginName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getCategoryColor = (category: string): string => {
+    const colors: Record<string, string> = {
+      DATA_INGESTION: 'bg-blue-100 text-blue-800',
+      NOTIFICATION: 'bg-green-100 text-green-800',
+      ANALYTICS: 'bg-purple-100 text-purple-800',
+      INTEGRATION: 'bg-orange-100 text-orange-800',
+      UTILITY: 'bg-gray-100 text-gray-800',
     };
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
 
-  const getInstalledPluginStatus = (pluginKey: string) => {
-    return installedPlugins.find(ip => ip.pluginKey === pluginKey);
+  const formatCategory = (category: string): string => {
+    return category.replace(/_/g, ' ');
+  };
+
+  const getStatusColor = (status: string): string => {
+    const colors: Record<string, string> = {
+      PENDING: 'bg-yellow-100 text-yellow-800',
+      INSTALLED: 'bg-gray-100 text-gray-800',
+      ACTIVE: 'bg-green-100 text-green-800',
+      FAILED: 'bg-red-100 text-red-800',
+      UNINSTALLED: 'bg-gray-100 text-gray-400',
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Plugin Marketplace</h1>
-        <p className="text-gray-600">Extend SensorVision with protocol parsers, integrations, and more</p>
+    <div className="p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Plugin Marketplace</h1>
+            <p className="text-gray-600 mt-1">
+              Extend SensorVision with powerful plugins for data ingestion, notifications, and
+              integrations
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <div className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('marketplace')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === 'marketplace'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              Marketplace
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('installed')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+              activeTab === 'installed'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Installed ({installedPlugins.length})
+            </div>
+          </button>
+        </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search Plugins
-            </label>
+      <div className="mb-6 space-y-4">
+        <div className="flex gap-4">
+          {/* Search */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
+              placeholder="Search plugins..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name or description..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
-            </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value as PluginCategory | '')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+
+          {/* Filter Toggle */}
+          {activeTab === 'marketplace' && (
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
+                showFilters
+                  ? 'bg-blue-50 border-blue-500 text-blue-600'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
             >
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              <Filter className="w-4 h-4" />
+              Filters
+            </button>
+          )}
+        </div>
+
+        {/* Category Filters */}
+        {showFilters && activeTab === 'marketplace' && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm font-medium text-gray-700">Category:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedCategory('')}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  !selectedCategory
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                All
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                    selectedCategory === category
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {formatCategory(category)}
+                </button>
               ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Plugin Grid */}
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading plugins...</p>
-        </div>
-      ) : plugins.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-          </svg>
-          <h3 className="mt-4 text-lg font-medium text-gray-900">No plugins found</h3>
-          <p className="mt-2 text-gray-600">Try adjusting your search or filter criteria</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plugins.map(plugin => {
-            const installedStatus = getInstalledPluginStatus(plugin.pluginKey);
-            const isActive = installedStatus?.status === 'ACTIVE';
-
-            return (
-              <div key={plugin.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                <div className="p-6">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{plugin.name}</h3>
-                        {plugin.isOfficial && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                            Official
-                          </span>
-                        )}
-                        {plugin.isVerified && (
-                          <svg className="h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getCategoryBadgeColor(plugin.category)}`}>
-                        {plugin.category.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-500">v{plugin.version}</span>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {plugin.description || 'No description available'}
-                  </p>
-
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                    <div className="flex items-center gap-1">
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                        <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span>{plugin.installationCount} installs</span>
-                    </div>
-                    {plugin.ratingAverage && (
-                      <div className="flex items-center gap-1">
-                        <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span>{plugin.ratingAverage.toFixed(1)} ({plugin.ratingCount})</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    {!plugin.isInstalled ? (
-                      <button
-                        onClick={() => handleInstall(plugin)}
-                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                      >
-                        Install
-                      </button>
-                    ) : (
-                      <>
-                        {isActive ? (
-                          <button
-                            onClick={() => handleDeactivate(plugin.pluginKey)}
-                            className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
-                          >
-                            Deactivate
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleActivate(plugin.pluginKey)}
-                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-                          >
-                            Activate
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleUninstall(plugin.pluginKey, plugin.name)}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                        >
-                          Uninstall
-                        </button>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Author */}
-                  {plugin.author && (
-                    <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-500">
-                      by {plugin.author}
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Install Confirmation Modal */}
-      {showInstallModal && selectedPlugin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Install {selectedPlugin.name}?
-              </h3>
-              <p className="text-gray-600 mb-6">
-                This will install version {selectedPlugin.version} of {selectedPlugin.name}.
-                You can configure and activate it after installation.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowInstallModal(false);
-                    setSelectedPlugin(null);
-                  }}
-                  disabled={installing}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmInstall}
-                  disabled={installing}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {installing ? 'Installing...' : 'Install'}
-                </button>
-              </div>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Loading State */}
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader className="w-8 h-8 text-blue-600 animate-spin" />
         </div>
+      ) : (
+        <>
+          {/* Marketplace Tab */}
+          {activeTab === 'marketplace' && (
+            <>
+              {filteredMarketplacePlugins.length === 0 ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
+                  <Package className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                  <p className="text-blue-800">No plugins found matching your criteria</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredMarketplacePlugins.map((plugin) => {
+                    const installed = isPluginInstalled(plugin.pluginKey);
+                    const installedInfo = getInstalledPlugin(plugin.pluginKey);
+                    const isActive = installedInfo?.status === 'ACTIVE';
+
+                    return (
+                      <div
+                        key={plugin.pluginKey}
+                        className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
+                      >
+                        {/* Plugin Header */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            {plugin.iconUrl ? (
+                              <img
+                                src={plugin.iconUrl}
+                                alt={plugin.name}
+                                className="w-12 h-12 rounded-lg"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                                <Package className="w-6 h-6 text-white" />
+                              </div>
+                            )}
+                            <div>
+                              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                {plugin.name}
+                                {plugin.isOfficial && (
+                                  <Award className="w-4 h-4 text-blue-600" title="Official" />
+                                )}
+                                {plugin.isVerified && (
+                                  <Verified className="w-4 h-4 text-green-600" title="Verified" />
+                                )}
+                              </h3>
+                              <p className="text-xs text-gray-500">by {plugin.author}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                          {plugin.description}
+                        </p>
+
+                        {/* Metadata */}
+                        <div className="flex items-center gap-4 mb-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            <span>
+                              {plugin.ratingAverage.toFixed(1)} ({plugin.ratingCount})
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Download className="w-4 h-4" />
+                            <span>{plugin.installationCount.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        {/* Category Badge */}
+                        <div className="mb-4">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getCategoryColor(
+                              plugin.category
+                            )}`}
+                          >
+                            {formatCategory(plugin.category)}
+                          </span>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          {!installed ? (
+                            <>
+                              <button
+                                onClick={() => handleInstall(plugin.pluginKey)}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                              >
+                                <Download className="w-4 h-4" />
+                                Install
+                              </button>
+                              <button
+                                onClick={() => handleViewDetails(plugin)}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+                              >
+                                Details
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() =>
+                                  isActive
+                                    ? handleDeactivate(plugin.pluginKey)
+                                    : handleActivate(plugin.pluginKey)
+                                }
+                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors ${
+                                  isActive
+                                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                }`}
+                              >
+                                {isActive ? (
+                                  <>
+                                    <PowerOff className="w-4 h-4" />
+                                    Deactivate
+                                  </>
+                                ) : (
+                                  <>
+                                    <Power className="w-4 h-4" />
+                                    Activate
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                onClick={() => handleConfigure(plugin.pluginKey)}
+                                className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                                title="Configure"
+                              >
+                                <Settings className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Installed Badge */}
+                        {installed && (
+                          <div className="mt-3 flex items-center justify-center gap-2 text-xs text-green-600">
+                            <CheckCircle className="w-4 h-4" />
+                            Installed
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Installed Tab */}
+          {activeTab === 'installed' && (
+            <>
+              {filteredInstalledPlugins.length === 0 ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
+                  <Package className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                  <p className="text-blue-800 mb-4">No plugins installed yet</p>
+                  <button
+                    onClick={() => setActiveTab('marketplace')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Browse Marketplace
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Plugin
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Version
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Installed
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredInstalledPlugins.map((plugin) => {
+                        const isActive = plugin.status === 'ACTIVE';
+                        return (
+                          <tr key={plugin.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {plugin.pluginName}
+                                </div>
+                                <div className="text-sm text-gray-500">{plugin.pluginKey}</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-gray-900">{plugin.version}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`inline-flex px-2 py-1 text-xs font-medium rounded ${getStatusColor(
+                                  plugin.status
+                                )}`}
+                              >
+                                {plugin.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-sm text-gray-500">
+                                {new Date(plugin.installedAt).toLocaleDateString()}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => handleConfigure(plugin.pluginKey)}
+                                  className="p-1 text-gray-600 hover:text-blue-600"
+                                  title="Configure"
+                                >
+                                  <Settings className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    isActive
+                                      ? handleDeactivate(plugin.pluginKey)
+                                      : handleActivate(plugin.pluginKey)
+                                  }
+                                  className={`p-1 ${
+                                    isActive
+                                      ? 'text-orange-600 hover:text-orange-800'
+                                      : 'text-green-600 hover:text-green-800'
+                                  }`}
+                                  title={isActive ? 'Deactivate' : 'Activate'}
+                                >
+                                  {isActive ? (
+                                    <PowerOff className="w-4 h-4" />
+                                  ) : (
+                                    <Power className="w-4 h-4" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => handleUninstall(plugin.pluginKey)}
+                                  className="p-1 text-red-600 hover:text-red-800"
+                                  title="Uninstall"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+
+      {/* Plugin Details Modal */}
+      {selectedPlugin && (
+        <PluginDetailsModal
+          open={detailsModalOpen}
+          plugin={selectedPlugin}
+          onClose={() => {
+            setDetailsModalOpen(false);
+            setSelectedPlugin(null);
+          }}
+          onInstall={handleInstall}
+        />
+      )}
+
+      {/* Plugin Configuration Modal */}
+      {pluginToConfig && (
+        <PluginConfigModal
+          open={configModalOpen}
+          pluginKey={pluginToConfig}
+          onClose={() => {
+            setConfigModalOpen(false);
+            setPluginToConfig(null);
+            loadData();
+          }}
+        />
       )}
     </div>
   );

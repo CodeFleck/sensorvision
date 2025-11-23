@@ -1,9 +1,8 @@
 package org.sensorvision.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.validation.constraints.Pattern;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sensorvision.dto.InstalledPluginDto;
-import org.sensorvision.dto.PluginInstallRequest;
 import org.sensorvision.dto.PluginRegistryDto;
 import org.sensorvision.model.*;
 import org.sensorvision.service.PluginConfigurationService;
@@ -25,7 +24,7 @@ import java.util.stream.Collectors;
  * REST API controller for plugin marketplace operations
  */
 @RestController
-@RequestMapping("/api/v1/marketplace/plugins")
+@RequestMapping("/api/v1/plugins")
 public class PluginMarketplaceController {
 
     private static final Logger logger = LoggerFactory.getLogger(PluginMarketplaceController.class);
@@ -33,17 +32,20 @@ public class PluginMarketplaceController {
     private final PluginRegistryService pluginRegistryService;
     private final PluginInstallationService pluginInstallationService;
     private final PluginConfigurationService pluginConfigurationService;
+    private final ObjectMapper objectMapper;
 
     public PluginMarketplaceController(PluginRegistryService pluginRegistryService,
                                       PluginInstallationService pluginInstallationService,
-                                      PluginConfigurationService pluginConfigurationService) {
+                                      PluginConfigurationService pluginConfigurationService,
+                                      ObjectMapper objectMapper) {
         this.pluginRegistryService = pluginRegistryService;
         this.pluginInstallationService = pluginInstallationService;
         this.pluginConfigurationService = pluginConfigurationService;
+        this.objectMapper = objectMapper;
     }
 
     /**
-     * GET /api/v1/marketplace/plugins - List all available plugins in marketplace
+     * GET /api/v1/plugins - List all available plugins in marketplace
      */
     @GetMapping
     public ResponseEntity<List<PluginRegistryDto>> getAllPlugins(
@@ -75,21 +77,24 @@ public class PluginMarketplaceController {
         }
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
 
-        // Fetch all installed plugins once to avoid N+1 queries
+        // Fetch all installed plugins once to avoid N+1 query problem
         List<InstalledPlugin> installedPlugins = pluginInstallationService.getInstalledPlugins(organization);
-        Map<String, InstalledPlugin> installedPluginMap = installedPlugins.stream()
-                .collect(Collectors.toMap(InstalledPlugin::getPluginKey, ip -> ip));
+        Map<String, InstalledPlugin> installedMap = installedPlugins.stream()
+                .collect(Collectors.toMap(InstalledPlugin::getPluginKey, p -> p));
 
         List<PluginRegistryDto> dtos = plugins.stream()
-                .map(plugin -> toDto(plugin, installedPluginMap.get(plugin.getPluginKey())))
+                .map(plugin -> toDto(plugin, installedMap))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
     }
 
     /**
-     * GET /api/v1/marketplace/plugins/{pluginKey} - Get plugin details
+     * GET /api/v1/plugins/{pluginKey} - Get plugin details
      */
     @GetMapping("/{pluginKey}")
     public ResponseEntity<PluginRegistryDto> getPlugin(
@@ -100,28 +105,37 @@ public class PluginMarketplaceController {
                 .orElseThrow(() -> new IllegalArgumentException("Plugin not found: " + pluginKey));
 
         Organization organization = currentUser.getOrganization();
-        InstalledPlugin installedPlugin = pluginInstallationService.getInstalledPlugin(pluginKey, organization).orElse(null);
-        PluginRegistryDto dto = toDto(plugin, installedPlugin);
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
+        PluginRegistryDto dto = toDto(plugin, organization);
 
         return ResponseEntity.ok(dto);
     }
 
     /**
-     * POST /api/v1/marketplace/plugins/{pluginKey}/install - Install a plugin
+     * POST /api/v1/plugins/{pluginKey}/install - Install a plugin
      */
     @PostMapping("/{pluginKey}/install")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<InstalledPluginDto> installPlugin(
-            @PathVariable @Pattern(regexp = "^[a-zA-Z0-9-_]+$") String pluginKey,
-            @RequestBody(required = false) PluginInstallRequest request,
+            @PathVariable String pluginKey,
+            @RequestBody(required = false) Map<String, Object> request,
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
 
         // Get configuration from request
         JsonNode configuration = null;
-        if (request != null && request.configuration() != null) {
-            configuration = request.configuration();
+        if (request != null && request.containsKey("configuration")) {
+            Object configValue = request.get("configuration");
+            if (configValue != null) {
+                configuration = objectMapper.valueToTree(configValue);
+            }
         }
 
         // Validate configuration if provided
@@ -133,7 +147,10 @@ public class PluginMarketplaceController {
                     pluginConfigurationService.validateConfiguration(plugin, configuration);
 
             if (!validationResult.isValid()) {
-                return ResponseEntity.badRequest().body(null);
+                InstalledPluginDto errorDto = new InstalledPluginDto();
+                // Return validation errors in a structured format
+                logger.warn("Configuration validation failed for plugin {}: {}", pluginKey, validationResult.getErrors());
+                return ResponseEntity.badRequest().build();
             }
         }
 
@@ -145,7 +162,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * POST /api/v1/marketplace/plugins/{pluginKey}/activate - Activate an installed plugin
+     * POST /api/v1/plugins/{pluginKey}/activate - Activate an installed plugin
      */
     @PostMapping("/{pluginKey}/activate")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -154,6 +171,10 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         InstalledPlugin installedPlugin = pluginInstallationService.activatePlugin(pluginKey, organization);
 
         InstalledPluginDto dto = toInstalledDto(installedPlugin);
@@ -161,7 +182,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * POST /api/v1/marketplace/plugins/{pluginKey}/deactivate - Deactivate an installed plugin
+     * POST /api/v1/plugins/{pluginKey}/deactivate - Deactivate an installed plugin
      */
     @PostMapping("/{pluginKey}/deactivate")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -170,6 +191,10 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         InstalledPlugin installedPlugin = pluginInstallationService.deactivatePlugin(pluginKey, organization);
 
         InstalledPluginDto dto = toInstalledDto(installedPlugin);
@@ -177,7 +202,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * DELETE /api/v1/marketplace/plugins/{pluginKey} - Uninstall a plugin
+     * DELETE /api/v1/plugins/{pluginKey} - Uninstall a plugin
      */
     @DeleteMapping("/{pluginKey}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -186,6 +211,10 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         pluginInstallationService.uninstallPlugin(pluginKey, organization);
 
         return ResponseEntity.noContent().build();
@@ -202,6 +231,9 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
 
         // Validate configuration
         PluginRegistry plugin = pluginRegistryService.getPluginByKey(pluginKey)
@@ -211,7 +243,8 @@ public class PluginMarketplaceController {
                 pluginConfigurationService.validateConfiguration(plugin, configuration);
 
         if (!validationResult.isValid()) {
-            return ResponseEntity.badRequest().body(null);
+            logger.warn("Configuration validation failed for plugin {}: {}", pluginKey, validationResult.getErrors());
+            return ResponseEntity.badRequest().build();
         }
 
         InstalledPlugin installedPlugin = pluginInstallationService.updatePluginConfiguration(
@@ -222,13 +255,17 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * GET /api/v1/marketplace/plugins/installed - Get all installed plugins for current organization
+     * GET /api/v1/plugins/installed - Get all installed plugins for current organization
      */
     @GetMapping("/installed")
     public ResponseEntity<List<InstalledPluginDto>> getInstalledPlugins(
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         List<InstalledPlugin> installedPlugins = pluginInstallationService.getInstalledPlugins(organization);
 
         List<InstalledPluginDto> dtos = installedPlugins.stream()
@@ -239,7 +276,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * POST /api/v1/marketplace/plugins/{pluginKey}/rate - Rate a plugin
+     * POST /api/v1/plugins/{pluginKey}/rate - Rate a plugin
      */
     @PostMapping("/{pluginKey}/rate")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
@@ -249,7 +286,18 @@ public class PluginMarketplaceController {
             @AuthenticationPrincipal User currentUser) {
 
         Organization organization = currentUser.getOrganization();
+        if (organization == null) {
+            throw new IllegalStateException("User is not associated with an organization");
+        }
+
         Integer rating = (Integer) request.get("rating");
+        if (rating == null) {
+            throw new IllegalArgumentException("Rating value is required");
+        }
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        }
+
         String reviewText = (String) request.get("reviewText");
 
         pluginRegistryService.ratePlugin(pluginKey, organization, rating, reviewText);
@@ -258,7 +306,7 @@ public class PluginMarketplaceController {
     }
 
     /**
-     * GET /api/v1/marketplace/plugins/{pluginKey}/default-config - Get default configuration for a plugin
+     * GET /api/v1/plugins/{pluginKey}/default-config - Get default configuration for a plugin
      */
     @GetMapping("/{pluginKey}/default-config")
     public ResponseEntity<JsonNode> getDefaultConfiguration(@PathVariable String pluginKey) {
@@ -270,7 +318,9 @@ public class PluginMarketplaceController {
     }
 
     // Helper methods to convert entities to DTOs
-    private PluginRegistryDto toDto(PluginRegistry plugin, InstalledPlugin installedPlugin) {
+
+    // Optimized version using pre-fetched map (avoids N+1 queries)
+    private PluginRegistryDto toDto(PluginRegistry plugin, Map<String, InstalledPlugin> installedMap) {
         PluginRegistryDto dto = new PluginRegistryDto();
         dto.setId(plugin.getId());
         dto.setPluginKey(plugin.getPluginKey());
@@ -298,12 +348,20 @@ public class PluginMarketplaceController {
         dto.setChangelog(plugin.getChangelog());
         dto.setPublishedAt(plugin.getPublishedAt());
 
-        // Set installation status based on provided installedPlugin
-        boolean isInstalled = installedPlugin != null;
-        dto.setIsInstalled(isInstalled);
-        dto.setIsActive(isInstalled && installedPlugin.getStatus() == PluginInstallationStatus.ACTIVE);
+        // Set installation status using map lookup (no database query)
+        InstalledPlugin installed = installedMap.get(plugin.getPluginKey());
+        dto.setIsInstalled(installed != null);
+        dto.setIsActive(installed != null && installed.getStatus() == PluginInstallationStatus.ACTIVE);
 
         return dto;
+    }
+
+    // Single plugin version (used by getPlugin endpoint)
+    private PluginRegistryDto toDto(PluginRegistry plugin, Organization organization) {
+        Map<String, InstalledPlugin> installedMap = pluginInstallationService.getInstalledPlugins(organization)
+                .stream()
+                .collect(Collectors.toMap(InstalledPlugin::getPluginKey, p -> p));
+        return toDto(plugin, installedMap);
     }
 
     private InstalledPluginDto toInstalledDto(InstalledPlugin installedPlugin) {

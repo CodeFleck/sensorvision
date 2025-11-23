@@ -48,7 +48,13 @@ public interface PluginRegistryRepository extends JpaRepository<PluginRegistry, 
     @Query("SELECT p FROM PluginRegistry p ORDER BY p.publishedAt DESC")
     List<PluginRegistry> findRecent();
 
+    /**
+     * Atomically update installation count based on actual count from installed_plugins table
+     * This prevents race conditions when multiple users install the same plugin concurrently
+     */
     @Modifying
-    @Query("UPDATE PluginRegistry p SET p.installationCount = (SELECT COUNT(ip) FROM InstalledPlugin ip WHERE ip.pluginKey = :pluginKey) WHERE p.pluginKey = :pluginKey")
-    void updateInstallationCount(@Param("pluginKey") String pluginKey);
+    @Query("UPDATE PluginRegistry p SET p.installationCount = " +
+           "(SELECT COUNT(ip) FROM InstalledPlugin ip WHERE ip.pluginKey = :pluginKey) " +
+           "WHERE p.pluginKey = :pluginKey")
+    int updateInstallationCount(@Param("pluginKey") String pluginKey);
 }

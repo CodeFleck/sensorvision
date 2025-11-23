@@ -25,6 +25,7 @@ import {
   MessageSquare,
   Code,
   Plug2,
+  Store,
   Archive,
   Webhook,
   Terminal,
@@ -90,6 +91,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
       { name: 'Serverless Functions', href: '/serverless-functions', icon: Code, adminOnly: false },
       { name: 'Data Plugins', href: '/data-plugins', icon: Plug2, adminOnly: false },
+      { name: 'Plugin Marketplace', href: '/plugin-marketplace', icon: Store, adminOnly: false },
     ],
   },
   {
