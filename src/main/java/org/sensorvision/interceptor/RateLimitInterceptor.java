@@ -1,75 +1,73 @@
 package org.sensorvision.interceptor;
 
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.ConsumptionProbe;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.sensorvision.config.RateLimitConfig;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+/**
+ * Rate limiting interceptor for plugin endpoints.
+ * Limits plugin operations to 10 requests per minute per user to prevent abuse.
+ */
 @Slf4j
-@Component
-@RequiredArgsConstructor
 public class RateLimitInterceptor implements HandlerInterceptor {
 
-    private final RateLimitConfig rateLimitConfig;
+    // Rate limit: 10 requests per minute
+    private static final int MAX_REQUESTS_PER_MINUTE = 10;
+    private static final long WINDOW_SIZE_MS = 60_000; // 1 minute
+
+    // Map of username -> RateLimitInfo
+    private final ConcurrentMap<String, RateLimitInfo> rateLimitMap = new ConcurrentHashMap<>();
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        if (!rateLimitConfig.isEnabled()) {
-            return true;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return true; // Let Spring Security handle auth
         }
 
-        String key = getClientIdentifier(request);
-        String endpoint = request.getRequestURI();
+        String username = auth.getName();
+        RateLimitInfo rateLimitInfo = rateLimitMap.computeIfAbsent(username, k -> new RateLimitInfo());
 
-        Bucket bucket = rateLimitConfig.resolveBucket(key, endpoint);
-        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+        long now = System.currentTimeMillis();
+        long windowStart = rateLimitInfo.windowStart.get();
 
-        if (probe.isConsumed()) {
-            response.addHeader("X-Rate-Limit-Remaining", String.valueOf(probe.getRemainingTokens()));
-            return true;
-        } else {
-            long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
+        // Reset window if expired
+        if (now - windowStart > WINDOW_SIZE_MS) {
+            rateLimitInfo.windowStart.set(now);
+            rateLimitInfo.requestCount.set(0);
+        }
 
+        // Increment and check
+        int currentCount = rateLimitInfo.requestCount.incrementAndGet();
+
+        if (currentCount > MAX_REQUESTS_PER_MINUTE) {
+            log.warn("Rate limit exceeded for user: {} (attempt: {})", username, currentCount);
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
-            response.addHeader("X-Rate-Limit-Retry-After-Seconds", String.valueOf(waitForRefill));
-
-            String jsonResponse = String.format(
-                "{\"error\":\"Too Many Requests\",\"message\":\"Rate limit exceeded. Please try again in %d seconds.\",\"retryAfter\":%d}",
-                waitForRefill, waitForRefill
-            );
-            response.getWriter().write(jsonResponse);
-
-            log.warn("Rate limit exceeded for client: {} on endpoint: {}", key, endpoint);
+            response.getWriter().write(String.format(
+                "{\"error\": \"Rate limit exceeded\", \"message\": \"Maximum %d plugin operations per minute. Please try again later.\"}",
+                MAX_REQUESTS_PER_MINUTE
+            ));
             return false;
         }
+
+        return true;
     }
 
-    private String getClientIdentifier(HttpServletRequest request) {
-        // Try to get authenticated user first
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() &&
-            !"anonymousUser".equals(authentication.getPrincipal())) {
-            return "user:" + authentication.getName();
-        }
-
-        // Fall back to IP address for unauthenticated requests
-        String clientIp = request.getHeader("X-Forwarded-For");
-        if (clientIp == null || clientIp.isEmpty()) {
-            clientIp = request.getRemoteAddr();
-        } else {
-            // X-Forwarded-For can contain multiple IPs, take the first one
-            clientIp = clientIp.split(",")[0].trim();
-        }
-
-        return "ip:" + clientIp;
+    /**
+     * Stores rate limit information for a user
+     */
+    private static class RateLimitInfo {
+        final AtomicLong windowStart = new AtomicLong(System.currentTimeMillis());
+        final AtomicInteger requestCount = new AtomicInteger(0);
     }
 }

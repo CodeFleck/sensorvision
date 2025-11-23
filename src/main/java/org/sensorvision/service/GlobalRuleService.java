@@ -193,15 +193,17 @@ public class GlobalRuleService {
      * Validate aggregation function and variable
      */
     private void validateAggregationFunction(String functionName, String variable) {
-        try {
-            var function = org.sensorvision.model.FleetAggregationFunction.fromString(functionName);
+        org.sensorvision.model.FleetAggregationFunction function;
 
-            if (function.requiresVariable() && (variable == null || variable.isBlank())) {
-                throw new IllegalArgumentException(
-                        "Aggregation function '" + functionName + "' requires a variable");
-            }
+        try {
+            function = org.sensorvision.model.FleetAggregationFunction.fromString(functionName);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid aggregation function: " + functionName);
+        }
+
+        if (function.requiresVariable() && (variable == null || variable.isBlank())) {
+            throw new IllegalArgumentException(
+                    "Aggregation function '" + functionName + "' requires a variable");
         }
     }
 
