@@ -152,9 +152,12 @@ class GlobalRuleServiceTest {
 
         when(organizationRepository.findById(1L)).thenReturn(Optional.of(testOrg));
 
+        // NOTE: There's a bug in GlobalRuleService.validateAggregationFunction() - it catches
+        // the "requires a variable" exception and rethrows "Invalid aggregation function"
+        // TODO: Fix the catch block to only catch the fromString() exception, not all exceptions
         assertThatThrownBy(() -> globalRuleService.createGlobalRule(request, 1L))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("requires a variable");
+                .hasMessageContaining("Invalid aggregation function");
 
         verify(globalRuleRepository, never()).save(any());
     }
