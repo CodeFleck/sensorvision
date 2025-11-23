@@ -39,31 +39,16 @@ import DataRetention from './pages/DataRetention';
 import Profile from './pages/Profile';
 import { Playlists } from './pages/Playlists';
 import { PlaylistPlayer } from './pages/PlaylistPlayer';
-import PhoneNumbers from './pages/PhoneNumbers';
 import SmsSettings from './pages/SmsSettings';
-import AdminUsers from './pages/AdminUsers';
-import AdminOrganizations from './pages/AdminOrganizations';
-import { GlobalRules } from './pages/GlobalRules';
 import PluginMarketplace from './pages/PluginMarketplace';
-import AdminDashboard from './pages/AdminDashboard';
-import { config } from './config';
 
 function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <WebSocketProvider url={config.webSocketUrl}>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: { background: '#363636', color: '#fff' },
-              success: { duration: 4000, iconTheme: { primary: '#10b981', secondary: '#fff' } },
-              error: { duration: 5000, iconTheme: { primary: '#ef4444', secondary: '#fff' } },
-            }}
-          />
+        <WebSocketProvider>
+          <Toaster position="top-right" />
           <Routes>
-            {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -71,54 +56,37 @@ function App() {
             <Route path="/oauth2/callback" element={<OAuth2Callback />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
 
-            {/* Fullscreen Playlist Player (outside layout) */}
-            <Route
-              path="/playlist-player/:playlistId"
-              element={
-                <ProtectedRoute>
-                  <PlaylistPlayer />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Protected routes */}
+            {/* Protected Routes */}
             <Route
               path="/*"
               element={
                 <ProtectedRoute>
                   <LayoutV1>
                     <Routes>
-                      {/* Standard user routes */}
                       <Route path="/" element={<Dashboard />} />
-                      <Route path="/integration-wizard" element={<IntegrationWizard />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/dashboards" element={<Dashboards />} />
-                      <Route path="/dashboard-templates" element={<DashboardTemplates />} />
-                      <Route path="/playlists" element={<Playlists />} />
+                      <Route path="/dashboards/templates" element={<DashboardTemplates />} />
                       <Route path="/devices" element={<Devices />} />
                       <Route path="/device-groups" element={<DeviceGroups />} />
                       <Route path="/device-tags" element={<DeviceTags />} />
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="/rules" element={<Rules />} />
-                      <Route path="/global-rules" element={<GlobalRules />} />
                       <Route path="/alerts" element={<Alerts />} />
                       <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/variables" element={<Variables />} />
-                      <Route path="/data-export" element={<DataExport />} />
-                      <Route path="/plugin-marketplace" element={<PluginMarketplace />} />
-                      <Route path="/plugins" element={<PluginMarketplace />} />
-                      <Route path="/my-tickets" element={<MyTickets />} />
                       <Route path="/profile" element={<Profile />} />
-                      <Route path="/phone-numbers" element={<PhoneNumbers />} />
-                      {/* User‑accessible features previously marked admin‑only */}
+                      <Route path="/playlists" element={<Playlists />} />
+                      <Route path="/playlists/:id/play" element={<PlaylistPlayer />} />
+                      <Route path="/my-tickets" element={<MyTickets />} />
+                      <Route path="/integration/wizard" element={<IntegrationWizard />} />
                       <Route path="/serverless-functions" element={<ServerlessFunctions />} />
                       <Route path="/webhook-tester" element={<WebhookTester />} />
                       <Route path="/api-playground" element={<ApiPlayground />} />
+                      <Route path="/variables" element={<Variables />} />
+                      <Route path="/plugins" element={<PluginMarketplace />} />
 
-                      {/* Admin‑only routes */}
-                      <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />
-                      <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
-                      <Route path="/admin/organizations" element={<ProtectedRoute adminOnly={true}><AdminOrganizations /></ProtectedRoute>} />
-                      <Route path="/admin/support-tickets" element={<ProtectedRoute adminOnly={true}><AdminSupportTickets /></ProtectedRoute>} />
+                      {/* Admin Routes */}
+                      <Route path="/admin/support" element={<ProtectedRoute adminOnly={true}><AdminSupportTickets /></ProtectedRoute>} />
                       <Route path="/admin/canned-responses" element={<ProtectedRoute adminOnly={true}><AdminCannedResponses /></ProtectedRoute>} />
                       <Route path="/events" element={<ProtectedRoute adminOnly={true}><Events /></ProtectedRoute>} />
                       <Route path="/data-ingestion" element={<ProtectedRoute adminOnly={true}><DataIngestion /></ProtectedRoute>} />
@@ -127,6 +95,7 @@ function App() {
                       <Route path="/email-templates" element={<ProtectedRoute adminOnly={true}><EmailTemplateBuilder /></ProtectedRoute>} />
                       <Route path="/sms-settings" element={<ProtectedRoute adminOnly={true}><SmsSettings /></ProtectedRoute>} />
                       <Route path="/data-retention" element={<ProtectedRoute adminOnly={true}><DataRetention /></ProtectedRoute>} />
+                      <Route path="/data-export" element={<ProtectedRoute adminOnly={true}><DataExport /></ProtectedRoute>} />
                     </Routes>
                   </LayoutV1>
                 </ProtectedRoute>

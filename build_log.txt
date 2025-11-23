@@ -1,0 +1,29 @@
+> Task :clean
+
+> Task :compileJava
+C:\sensorvision\src\main\java\org\sensorvision\service\DeviceService.java:460: error: constructor DeviceResponse in record DeviceResponse cannot be applied to given types;
+        return new DeviceResponse(
+               ^
+  required: String,String,String,Boolean,String,String,String,DeviceStatus,Instant,Integer,String,LocalDateTime,List<DeviceTagDto>,List<DeviceGroupDto>
+  found:    String,String,String,Boolean,String,String,String,DeviceStatus,Instant,Integer,String,String,LocalDateTime,List<DeviceTagDto>,List<DeviceGroupDto>
+  reason: actual and formal argument lists differ in length
+Note: C:\sensorvision\src\main\java\org\sensorvision\config\RateLimitConfig.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+1 error
+
+> Task :compileJava FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler error output for details.
+
+* Try:
+> Run with --info option to get more log output.
+> Run with --scan to get full insights.
+
+BUILD FAILED in 13s
+2 actionable tasks: 2 executed
