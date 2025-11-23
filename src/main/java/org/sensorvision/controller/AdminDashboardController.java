@@ -11,10 +11,10 @@ import org.sensorvision.repository.*;
 import org.sensorvision.websocket.TelemetryWebSocketHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -65,16 +65,14 @@ public class AdminDashboardController {
         long totalOrganizations = organizationRepository.count();
         long activeAlerts = alertRepository.countByAcknowledged(false);
         long pendingSupportTickets = issueSubmissionRepository.countByStatusIn(
-            List.of(IssueStatus.SUBMITTED, IssueStatus.IN_REVIEW)
-        );
+                List.of(IssueStatus.SUBMITTED, IssueStatus.IN_REVIEW));
 
         stats.setSystemOverview(new SystemOverview(
-            totalUsers,
-            totalDevices,
-            totalOrganizations,
-            activeAlerts,
-            pendingSupportTickets
-        ));
+                totalUsers,
+                totalDevices,
+                totalOrganizations,
+                activeAlerts,
+                pendingSupportTickets));
 
         // Recent Activities
         stats.setRecentActivities(getRecentActivities());
@@ -96,38 +94,34 @@ public class AdminDashboardController {
         List<User> recentUsers = userRepository.findTop10ByOrderByCreatedAtDesc();
         for (User user : recentUsers) {
             activities.add(new RecentActivity(
-                "USER_REGISTERED",
-                "New user registered: " + user.getUsername(),
-                user.getCreatedAt() != null ? formatter.format(user.getCreatedAt()) : Instant.now().toString(),
-                user.getUsername(),
-                user.getId()
-            ));
+                    "USER_REGISTERED",
+                    "New user registered: " + user.getUsername(),
+                    user.getCreatedAt() != null ? formatter.format(user.getCreatedAt()) : Instant.now().toString(),
+                    user.getUsername(),
+                    user.getId()));
         }
 
         // Get recent devices (last 10)
         List<Device> recentDevices = deviceRepository.findTop10ByOrderByCreatedAtDesc();
         for (Device device : recentDevices) {
-            String username = device.getOrganization() != null ?
-                device.getOrganization().getName() : "Unknown";
+            String username = device.getOrganization() != null ? device.getOrganization().getName() : "Unknown";
             activities.add(new RecentActivity(
-                "DEVICE_ADDED",
-                "New device added: " + device.getName(),
-                device.getCreatedAt() != null ? formatter.format(device.getCreatedAt()) : Instant.now().toString(),
-                username,
-                device.getId() != null ? device.getId().hashCode() : 0L
-            ));
+                    "DEVICE_ADDED",
+                    "New device added: " + device.getName(),
+                    device.getCreatedAt() != null ? formatter.format(device.getCreatedAt()) : Instant.now().toString(),
+                    username,
+                    device.getId() != null ? device.getId().hashCode() : 0L));
         }
 
         // Get recent support tickets (last 10)
         List<IssueSubmission> recentTickets = issueSubmissionRepository.findTop10ByOrderByCreatedAtDesc();
         for (IssueSubmission ticket : recentTickets) {
             activities.add(new RecentActivity(
-                "TICKET_CREATED",
-                "Support ticket: " + ticket.getTitle(),
-                ticket.getCreatedAt() != null ? formatter.format(ticket.getCreatedAt()) : Instant.now().toString(),
-                ticket.getUser() != null ? ticket.getUser().getUsername() : "Anonymous",
-                ticket.getId()
-            ));
+                    "TICKET_CREATED",
+                    "Support ticket: " + ticket.getTitle(),
+                    ticket.getCreatedAt() != null ? formatter.format(ticket.getCreatedAt()) : Instant.now().toString(),
+                    ticket.getUser() != null ? ticket.getUser().getUsername() : "Anonymous",
+                    ticket.getId()));
         }
 
         // Get recent alerts (last 10)
@@ -135,19 +129,19 @@ public class AdminDashboardController {
         for (Alert alert : recentAlerts) {
             String deviceName = alert.getDevice() != null ? alert.getDevice().getName() : "Unknown";
             activities.add(new RecentActivity(
-                "ALERT_TRIGGERED",
-                "Alert triggered on " + deviceName + ": " + alert.getMessage(),
-                alert.getTriggeredAt() != null ? formatter.format(alert.getTriggeredAt()) : Instant.now().toString(),
-                "System",
-                alert.getId() != null ? alert.getId().hashCode() : 0L
-            ));
+                    "ALERT_TRIGGERED",
+                    "Alert triggered on " + deviceName + ": " + alert.getMessage(),
+                    alert.getTriggeredAt() != null ? formatter.format(alert.getTriggeredAt())
+                            : Instant.now().toString(),
+                    "System",
+                    alert.getId() != null ? alert.getId().hashCode() : 0L));
         }
 
         // Sort by timestamp descending and limit to 20 most recent
         return activities.stream()
-            .sorted((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()))
-            .limit(20)
-            .collect(Collectors.toList());
+                .sorted((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()))
+                .limit(20)
+                .collect(Collectors.toList());
     }
 
     private SystemHealth getSystemHealth() {
@@ -172,11 +166,10 @@ public class AdminDashboardController {
         }
 
         return new SystemHealth(
-            Math.round(dataIngestionRate * 100.0) / 100.0,
-            storageUsedMb,
-            activeConnections,
-            status
-        );
+                Math.round(dataIngestionRate * 100.0) / 100.0,
+                storageUsedMb,
+                activeConnections,
+                status);
     }
 
     private ChartData getChartData() {
@@ -186,9 +179,8 @@ public class AdminDashboardController {
         for (int i = 29; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             long count = userRepository.countUsersCreatedOnDate(
-                date.atStartOfDay(ZoneId.systemDefault()).toInstant(),
-                date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()
-            );
+                    date.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                    date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
             userGrowth.add(new DataPoint(date.toString(), count));
         }
 
@@ -197,9 +189,8 @@ public class AdminDashboardController {
         for (int i = 29; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             long count = telemetryRecordRepository.countUniqueDevicesOnDate(
-                date.atStartOfDay(ZoneId.systemDefault()).toInstant(),
-                date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()
-            );
+                    date.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                    date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
             deviceActivity.add(new DataPoint(date.toString(), count));
         }
 
@@ -208,12 +199,12 @@ public class AdminDashboardController {
         for (int i = 29; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             long count = issueSubmissionRepository.countTicketsCreatedOnDate(
-                date.atStartOfDay(ZoneId.systemDefault()).toInstant(),
-                date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()
-            );
+                    date.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                    date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant());
             ticketVolume.add(new DataPoint(date.toString(), count));
         }
 
         return new ChartData(userGrowth, deviceActivity, ticketVolume);
     }
+
 }
