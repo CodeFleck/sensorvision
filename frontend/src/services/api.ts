@@ -8,26 +8,54 @@ class ApiService {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options?.headers as Record<string, string>),
-      if(token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      headers,
+      ...options,
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+        throw new Error('Session expired. Please login again.');
       }
 
-const response = await fetch(`${API_BASE}/support/comments/${commentId}/attachment`, {
-        headers,
-      });
+      try {
+        const errorData = await response.json();
+        let errorMessage = errorData.detail || errorData.title || response.statusText;
+        if (errorData.developerMessage) {
+          errorMessage += `\n\nDeveloper Info: ${errorData.developerMessage}`;
+        }
+        if (errorData.errorType) {
+          errorMessage += ` (${errorData.errorType})`;
+        }
+        throw new Error(errorMessage);
+      } catch (parseError) {
+        if (parseError instanceof Error && parseError.message.includes('Developer Info')) {
+          throw parseError;
+        }
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+    }
 
-      if(!response.ok) {
-        throw new Error('Failed to download attachment');
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+      return undefined as T;
+    }
+
+    return response.json();
   }
 
-return response.blob();
+  async markTicketAsViewed(issueId: number): Promise<void> {
+    await this.request<void>(`/support/issues/${issueId}/mark-viewed`, {
+      method: 'POST',
+    });
   }
-
-  async markTicketAsViewed(issueId: number): Promise < void> {
-  await this.request<void>(`/support/issues/${issueId}/mark-viewed`, {
-    method: 'POST',
-  });
-}
 
   async getUnreadTicketCount(): Promise < { unreadCount: number } > {
   return this.request<{ unreadCount: number }>('/support/issues/unread-count');
