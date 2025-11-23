@@ -93,7 +93,9 @@ class DeviceServiceTest {
                 null,  // active (will default to true)
                 null,  // location
                 null,  // sensorType
-                null   // firmwareVersion
+                null,  // firmwareVersion
+                null,  // tags
+                null   // groupIds
         );
 
         Device savedDevice = Device.builder()
@@ -140,7 +142,9 @@ class DeviceServiceTest {
                 null,  // active (will default to true)
                 null,  // location
                 null,  // sensorType
-                null   // firmwareVersion
+                null,  // firmwareVersion
+                null,  // tags
+                null   // groupIds
         );
 
         when(deviceRepository.findByExternalId(request.externalId()))
@@ -168,7 +172,9 @@ class DeviceServiceTest {
                 null,  // active (will default to true)
                 null,  // location
                 null,  // sensorType
-                null   // firmwareVersion
+                null,  // firmwareVersion
+                null,  // tags
+                null   // groupIds
         );
 
         when(deviceRepository.findByExternalId(request.externalId())).thenReturn(Optional.empty());
@@ -195,7 +201,9 @@ class DeviceServiceTest {
                 null,  // active (will default to true)
                 null,  // location
                 null,  // sensorType
-                null   // firmwareVersion
+                null,  // firmwareVersion
+                null,  // tags
+                null   // groupIds
         );
 
         when(deviceRepository.findByExternalId(request.externalId())).thenReturn(Optional.empty());
@@ -248,7 +256,9 @@ class DeviceServiceTest {
                 null,  // active
                 "New Location",
                 "NewSensorType",
-                "v2.0.0"
+                "v2.0.0",
+                null,  // tags
+                null   // groupIds
         );
 
         when(deviceRepository.findByExternalId("test-device-001"))
@@ -316,7 +326,9 @@ class DeviceServiceTest {
                 null,  // active (will default to true)
                 null,  // location
                 null,  // sensorType
-                null   // firmwareVersion
+                null,  // firmwareVersion
+                null,  // tags
+                null   // groupIds
         );
 
         Device savedDevice = Device.builder()
@@ -359,7 +371,9 @@ class DeviceServiceTest {
                 null,  // active (should default to true)
                 null,  // location
                 null,  // sensorType
-                null   // firmwareVersion
+                null,  // firmwareVersion
+                null,  // tags
+                null   // groupIds
         );
 
         when(deviceRepository.findByExternalId(request.externalId())).thenReturn(Optional.empty());
@@ -386,7 +400,9 @@ class DeviceServiceTest {
                 false,  // explicitly set to false
                 null,
                 null,
-                null
+                null,
+                null,  // tags
+                null   // groupIds
         );
 
         when(deviceRepository.findByExternalId(request.externalId())).thenReturn(Optional.empty());
@@ -415,7 +431,9 @@ class DeviceServiceTest {
                 false,   // toggle to inactive
                 null,
                 null,
-                null
+                null,
+                null,    // tags
+                null     // groupIds
         );
 
         when(deviceRepository.findByExternalId("test-device-001"))
@@ -443,7 +461,9 @@ class DeviceServiceTest {
                 null,  // don't change active
                 null,
                 null,
-                null
+                null,
+                null,  // tags
+                null   // groupIds
         );
 
         when(deviceRepository.findByExternalId("test-device-001"))
@@ -472,7 +492,9 @@ class DeviceServiceTest {
                 null,  // null means don't change
                 null,
                 null,
-                null
+                null,
+                null,  // tags
+                null   // groupIds
         );
 
         when(deviceRepository.findByExternalId("test-device-001"))

@@ -29,6 +29,7 @@ import Variables from './pages/Variables';
 import IntegrationWizard from './pages/IntegrationWizard';
 import ServerlessFunctions from './pages/ServerlessFunctions';
 import DataPlugins from './pages/DataPlugins';
+import PluginMarketplace from './pages/PluginMarketplace';
 import WebhookTester from './pages/WebhookTester';
 import ApiPlayground from './pages/ApiPlayground';
 import EmailTemplateBuilder from './pages/EmailTemplateBuilder';
@@ -81,38 +82,31 @@ function App() {
               }
             />
 
-            {/* Protected routes */}
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <LayoutV1>
-                    <Routes>
-                      {/* Standard user routes */}
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/integration-wizard" element={<IntegrationWizard />} />
-                      <Route path="/dashboards" element={<Dashboards />} />
-                      <Route path="/dashboard-templates" element={<DashboardTemplates />} />
-                      <Route path="/playlists" element={<Playlists />} />
-                      <Route path="/devices" element={<Devices />} />
-                      <Route path="/device-groups" element={<DeviceGroups />} />
-                      <Route path="/device-tags" element={<DeviceTags />} />
-                      <Route path="/analytics" element={<Analytics />} />
-                      <Route path="/rules" element={<Rules />} />
-                      <Route path="/global-rules" element={<GlobalRules />} />
-                      <Route path="/alerts" element={<Alerts />} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/variables" element={<Variables />} />
-                      <Route path="/data-export" element={<DataExport />} />
-                      <Route path="/plugin-marketplace" element={<PluginMarketplace />} />
-                      <Route path="/plugins" element={<PluginMarketplace />} />
-                      <Route path="/my-tickets" element={<MyTickets />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/phone-numbers" element={<PhoneNumbers />} />
-                      {/* User‑accessible features previously marked admin‑only */}
-                      <Route path="/serverless-functions" element={<ServerlessFunctions />} />
-                      <Route path="/webhook-tester" element={<WebhookTester />} />
-                      <Route path="/api-playground" element={<ApiPlayground />} />
+        {/* Protected routes */}
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <LayoutV1>
+                <Routes>
+                  {/* Standard user routes */}
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/integration-wizard" element={<IntegrationWizard />} />
+                  <Route path="/serverless-functions" element={<ServerlessFunctions />} />
+                  <Route path="/data-plugins" element={<DataPlugins />} />
+                  <Route path="/plugin-marketplace" element={<PluginMarketplace />} />
+                  <Route path="/dashboards" element={<Dashboards />} />
+                  <Route path="/dashboard-templates" element={<DashboardTemplates />} />
+                  <Route path="/playlists" element={<Playlists />} />
+                  <Route path="/devices" element={<Devices />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/rules" element={<Rules />} />
+                  <Route path="/global-rules" element={<GlobalRules />} />
+                  <Route path="/alerts" element={<Alerts />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/my-tickets" element={<MyTickets />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/phone-numbers" element={<PhoneNumbers />} />
 
                       {/* Admin‑only routes */}
                       <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />

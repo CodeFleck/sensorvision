@@ -38,4 +38,9 @@ public interface SyntheticVariableValueRepository extends JpaRepository<Syntheti
      * Find latest value for a specific synthetic variable
      */
     SyntheticVariableValue findFirstBySyntheticVariableIdOrderByTimestampDesc(UUID syntheticVariableId);
+
+    /**
+     * Find all values for a synthetic variable
+     */
+    List<SyntheticVariableValue> findBySyntheticVariableId(UUID syntheticVariableId);
 }

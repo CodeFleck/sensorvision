@@ -7,6 +7,7 @@ import org.sensorvision.repository.PluginRegistryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -55,9 +56,7 @@ public class PluginRegistryService {
         if (query == null || query.trim().isEmpty()) {
             return getAllPlugins();
         }
-        // Sanitize input to escape LIKE special characters
-        String sanitized = sanitizeLikeQuery(query.trim());
-        return pluginRegistryRepository.searchPlugins(sanitized);
+        return pluginRegistryRepository.searchPlugins(query.trim());
     }
 
     /**
@@ -74,9 +73,7 @@ public class PluginRegistryService {
         if (query == null || query.trim().isEmpty()) {
             return getPluginsByCategory(category);
         }
-        // Sanitize input to escape LIKE special characters
-        String sanitized = sanitizeLikeQuery(query.trim());
-        return pluginRegistryRepository.searchPluginsByCategory(category, sanitized);
+        return pluginRegistryRepository.searchPluginsByCategory(category, query.trim());
     }
 
     /**
@@ -193,13 +190,20 @@ public class PluginRegistryService {
     }
 
     /**
-     * Increment installation count for a plugin (atomic operation)
+     * Increment installation count for a plugin
+     * Uses atomic database operation to prevent race conditions
+     * REQUIRED propagation ensures this participates in caller's transaction
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public void incrementInstallationCount(String pluginKey) {
-        // Use atomic update query to avoid race conditions
-        pluginRegistryRepository.updateInstallationCount(pluginKey);
-        logger.debug("Updated installation count for plugin {}", pluginKey);
+        // Atomic update - prevents race conditions when multiple users install concurrently
+        int updatedRows = pluginRegistryRepository.updateInstallationCount(pluginKey);
+
+        if (updatedRows == 0) {
+            throw new IllegalArgumentException("Plugin not found: " + pluginKey);
+        }
+
+        logger.debug("Updated installation count for plugin {} using atomic operation", pluginKey);
     }
 
     /**
@@ -217,18 +221,5 @@ public class PluginRegistryService {
      */
     public boolean pluginExists(String pluginKey) {
         return pluginRegistryRepository.findByPluginKey(pluginKey).isPresent();
-    }
-
-    /**
-     * Sanitize LIKE query to escape special characters
-     */
-    private String sanitizeLikeQuery(String query) {
-        if (query == null) {
-            return null;
-        }
-        // Escape LIKE special characters: % and _
-        return query.replace("\\", "\\\\")
-                    .replace("%", "\\%")
-                    .replace("_", "\\_");
     }
 }
