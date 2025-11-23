@@ -8,7 +8,6 @@ import org.sensorvision.repository.OrganizationRepository;
 import org.sensorvision.repository.RoleRepository;
 import org.sensorvision.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -30,7 +29,8 @@ import java.util.Set;
  * - This initializer will NOT recreate the user if it already exists
  *
  * Usage:
- * - Set environment variables: ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=SecurePassword123
+ * - Set environment variables: ADMIN_EMAIL=admin@example.com
+ * ADMIN_PASSWORD=SecurePassword123
  * - Deploy/restart the application
  * - Verify admin user creation in logs
  * - Remove the environment variables and redeploy
@@ -39,37 +39,34 @@ import java.util.Set;
 @Component
 public class AdminUserInitializer implements CommandLineRunner {
 
-    @Value("${ADMIN_EMAIL:#{null}}")
-    private String adminEmail;
-
-    @Value("${ADMIN_PASSWORD:#{null}}")
-    private String adminPassword;
-
-    @Value("${ADMIN_FIRST_NAME:Admin}")
-    private String adminFirstName;
-
-    @Value("${ADMIN_LAST_NAME:User}")
-    private String adminLastName;
-
-    @Value("${ADMIN_ORG_NAME:System Administration}")
-    private String adminOrgName;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final OrganizationRepository organizationRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private OrganizationRepository organizationRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AdminUserInitializer(UserRepository userRepository,
+            RoleRepository roleRepository,
+            OrganizationRepository organizationRepository,
+            PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.organizationRepository = organizationRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public void run(String... args) {
+        // Read environment variables directly
+        String adminEmail = System.getenv("ADMIN_EMAIL");
+        String adminPassword = System.getenv("ADMIN_PASSWORD");
+        String adminFirstName = System.getenv().getOrDefault("ADMIN_FIRST_NAME", "Admin");
+        String adminLastName = System.getenv().getOrDefault("ADMIN_LAST_NAME", "User");
+        String adminOrgName = System.getenv().getOrDefault("ADMIN_ORG_NAME", "System Administration");
+
         // Only proceed if both email and password are provided
-        if (adminEmail == null || adminPassword == null) {
+        if (adminEmail == null || adminEmail.trim().isEmpty() ||
+                adminPassword == null || adminPassword.trim().isEmpty()) {
             log.info("Admin user initialization skipped: ADMIN_EMAIL or ADMIN_PASSWORD not set");
             return;
         }
@@ -82,7 +79,7 @@ public class AdminUserInitializer implements CommandLineRunner {
 
         try {
             // Create admin user
-            createAdminUser();
+            createAdminUser(adminEmail, adminPassword, adminFirstName, adminLastName, adminOrgName);
             log.info("=================================================================");
             log.info("ADMIN USER CREATED SUCCESSFULLY");
             log.info("Email: {}", adminEmail);
@@ -95,7 +92,9 @@ public class AdminUserInitializer implements CommandLineRunner {
         }
     }
 
-    private void createAdminUser() {
+    private void createAdminUser(String adminEmail, String adminPassword,
+            String adminFirstName, String adminLastName,
+            String adminOrgName) {
         // Find or create admin organization
         Organization organization = organizationRepository.findByName(adminOrgName)
                 .orElseGet(() -> {
@@ -107,11 +106,13 @@ public class AdminUserInitializer implements CommandLineRunner {
 
         // Get ADMIN role
         Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                .orElseThrow(() -> new RuntimeException("ROLE_ADMIN not found in database. Ensure migrations have run."));
+                .orElseThrow(
+                        () -> new RuntimeException("ROLE_ADMIN not found in database. Ensure migrations have run."));
 
         // Get USER role (admins should have both roles)
         Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new RuntimeException("ROLE_USER not found in database. Ensure migrations have run."));
+                .orElseThrow(
+                        () -> new RuntimeException("ROLE_USER not found in database. Ensure migrations have run."));
 
         // Create username from email (before @ symbol)
         String username = adminEmail.split("@")[0];
