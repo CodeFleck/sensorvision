@@ -76,7 +76,12 @@ export const Profile = () => {
   };
 
   const getTimeAgo = (dateString: string) => {
+    if (!dateString) return 'Unknown';
+
     const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'Unknown';
+
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));

@@ -8,16 +8,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Build and test
 ./gradlew clean build                    # Full build with tests
+./gradlew clean build -x test            # Build without running tests (faster)
 ./gradlew bootRun                        # Run application for development
 ./gradlew test                           # Run test suite
 ./gradlew test --tests "*DeviceService*" # Run specific test class
 ./gradlew test --info                    # Detailed test output for debugging
+./gradlew test --tests "*DeviceService*" --info  # Specific test with detailed output
+
+# Code coverage
+./gradlew test jacocoTestReport          # Generate code coverage report
+# View coverage report at: build/reports/jacoco/test/html/index.html
 
 # Docker services (required for development)
 docker-compose up -d                     # Start PostgreSQL, MQTT, Prometheus, Grafana
 docker-compose down                      # Stop all services
 docker-compose logs postgres             # View specific service logs
 docker-compose logs mosquitto
+docker-compose ps                        # Check running containers
 ```
 
 ### Frontend (React + TypeScript)
@@ -127,6 +134,24 @@ The rules engine supports operators: GT, GTE, LT, LTE, EQ with automatic severit
 
 ### Synthetic Variables
 Mathematical expressions like "kwConsumption * voltage" are parsed and calculated automatically. The expression engine supports basic arithmetic operations and references to telemetry variables.
+
+### Rate Limiting
+The application uses rate limiting to protect against abuse:
+- **Implementation**: `RateLimitInterceptor` in `WebMvcConfig.java`
+- **Limit**: 10 requests per minute per authenticated user
+- **Applies to**: Most `/api/v1/**` endpoints
+- **Excludes**:
+  - `/api/v1/auth/**` (authentication endpoints)
+  - `/api/v1/devices/**` (high-frequency device reads)
+  - `/api/v1/data/**` (telemetry data queries)
+  - `/api/v1/ingest/**` (IoT data ingestion)
+  - `/api/v1/actuator/**` (health/metrics)
+- **Error Response**: HTTP 429 with JSON error message
+
+**Important for Development:**
+- React StrictMode causes double useEffect calls, which can trigger rate limits
+- If you get 429 errors during development, check `WebMvcConfig.java` exclusions
+- Read endpoints for real-time dashboards should be excluded from rate limiting
 
 ### Testing Strategy
 - Unit tests for services with mocked dependencies
