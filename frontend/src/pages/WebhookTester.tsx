@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import webhookTestService, { WebhookTestRequest, WebhookTestResponse } from '../services/webhookTestService';
 
 const PAYLOAD_TEMPLATES = {
@@ -41,6 +42,7 @@ const WebhookTester: React.FC = () => {
   const [result, setResult] = useState<WebhookTestResponse | null>(null);
   const [history, setHistory] = useState<WebhookTestResponse[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     loadHistory();
@@ -109,10 +111,92 @@ const WebhookTester: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Webhook Testing Tool</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-3xl font-bold text-gray-900">Webhook Testing Tool</h1>
+          <button
+            onClick={() => setShowHelp(!showHelp)}
+            className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+          >
+            <HelpCircle className="h-5 w-5" />
+            <span>How to Use</span>
+            {showHelp ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+        </div>
         <p className="text-gray-600 mt-2">
           Test webhook endpoints with custom payloads and view responses.
         </p>
+
+        {/* Help Section */}
+        {showHelp && (
+          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-blue-900 mb-3">How to Use Webhook Tester</h2>
+
+            <div className="space-y-4 text-sm text-blue-800">
+              <div>
+                <h3 className="font-semibold mb-2">What is a Webhook?</h3>
+                <p>
+                  A webhook is an HTTP callback that allows one system to send real-time data to another.
+                  In SensorVision, webhooks can be used to receive telemetry data from external devices
+                  or IoT platforms (like LoRaWAN, Sigfox, etc.).
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Quick Start Guide:</h3>
+                <ol className="list-decimal list-inside space-y-2 ml-2">
+                  <li>
+                    <strong>Load a Template:</strong> Select a predefined template from the dropdown
+                    (e.g., "HTTP Webhook Generic" or "LoRaWAN TTN") to auto-fill the request with example data.
+                  </li>
+                  <li>
+                    <strong>Configure Request:</strong> Modify the URL, HTTP method, headers, and body
+                    to match your webhook endpoint.
+                  </li>
+                  <li>
+                    <strong>Send Request:</strong> Click "Send Request" to test the webhook.
+                    The response will appear on the right side.
+                  </li>
+                  <li>
+                    <strong>View History:</strong> Click "Show History" to review previous test requests
+                    and their responses.
+                  </li>
+                </ol>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">HTTP Methods:</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li><strong>POST:</strong> Most common for webhooks - used to send data to your server</li>
+                  <li><strong>PUT:</strong> Update existing resources</li>
+                  <li><strong>PATCH:</strong> Partially update resources</li>
+                  <li><strong>GET:</strong> Retrieve data (not typical for webhooks)</li>
+                  <li><strong>DELETE:</strong> Remove resources</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Headers Example:</h3>
+                <pre className="bg-blue-100 p-2 rounded text-xs font-mono overflow-x-auto">
+{`{
+  "Content-Type": "application/json",
+  "Authorization": "Bearer your-token-here",
+  "X-Custom-Header": "custom-value"
+}`}
+                </pre>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Tips:</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Use localhost URLs when testing locally: <code className="bg-blue-100 px-1 rounded">http://localhost:8080/api/v1/...</code></li>
+                  <li>Check response status codes: 2xx = success, 4xx = client error, 5xx = server error</li>
+                  <li>Verify JSON syntax before sending - invalid JSON will cause errors</li>
+                  <li>Test history is automatically saved for quick re-testing</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

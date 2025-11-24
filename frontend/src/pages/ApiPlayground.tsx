@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Clock, Trash2, Copy, Check, BookOpen, Code } from 'lucide-react';
+import { Play, Clock, Trash2, Copy, Check, BookOpen, Code, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface ApiEndpoint {
@@ -228,6 +228,7 @@ const ApiPlayground: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [copiedResponse, setCopiedResponse] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const loadEndpoint = (endpoint: ApiEndpoint) => {
     setSelectedEndpoint(endpoint);
@@ -346,22 +347,145 @@ const ApiPlayground: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">API Request Playground</h1>
-          <p className="text-gray-600 mt-1">
-            Test and explore SensorVision API endpoints interactively
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <a
-            href="https://github.com/CodeFleck/sensorvision"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            <BookOpen className="h-4 w-4" />
-            <span>API Docs</span>
-          </a>
+        <div className="flex-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">API Request Playground</h1>
+              <p className="text-gray-600 mt-1">
+                Test and explore SensorVision API endpoints interactively
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowHelp(!showHelp)}
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+              >
+                <HelpCircle className="h-5 w-5" />
+                <span>How to Use</span>
+                {showHelp ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+              <a
+                href="https://github.com/CodeFleck/sensorvision"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                <BookOpen className="h-4 w-4" />
+                <span>API Docs</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Help Section */}
+          {showHelp && (
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-blue-900 mb-3">How to Use API Playground</h2>
+
+              <div className="space-y-4 text-sm text-blue-800">
+                <div>
+                  <h3 className="font-semibold mb-2">What is the API Playground?</h3>
+                  <p>
+                    The API Playground is an interactive tool for testing and exploring SensorVision's REST API
+                    endpoints. It allows you to make HTTP requests directly from the browser without writing code,
+                    making it perfect for debugging, learning the API, or building integration prototypes.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Quick Start Guide:</h3>
+                  <ol className="list-decimal list-inside space-y-2 ml-2">
+                    <li>
+                      <strong>Browse Endpoints:</strong> Click on a category (Devices, Telemetry, Rules & Alerts, etc.)
+                      in the left sidebar to see available endpoints.
+                    </li>
+                    <li>
+                      <strong>Select an Endpoint:</strong> Click on any endpoint to load it. The method, path,
+                      and example body (if applicable) will be auto-filled.
+                    </li>
+                    <li>
+                      <strong>Customize Parameters:</strong> Replace placeholders like <code className="bg-blue-100 px-1 rounded">{'{deviceId}'}</code> in
+                      the path with actual values. Modify the request body if needed.
+                    </li>
+                    <li>
+                      <strong>Send Request:</strong> Click "Send Request" to execute. The response will appear
+                      below with status code, duration, and response body.
+                    </li>
+                    <li>
+                      <strong>View History:</strong> Recent requests are saved in the sidebar for quick re-use.
+                    </li>
+                  </ol>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Understanding HTTP Methods:</h3>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li><strong className="text-green-600">GET:</strong> Retrieve data (e.g., list devices, query telemetry)</li>
+                    <li><strong className="text-blue-600">POST:</strong> Create new resources (e.g., create device, ingest telemetry)</li>
+                    <li><strong className="text-orange-600">PUT:</strong> Update entire resources (e.g., update device details)</li>
+                    <li><strong className="text-purple-600">PATCH:</strong> Partially update resources</li>
+                    <li><strong className="text-red-600">DELETE:</strong> Remove resources (e.g., delete device)</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Path Parameters:</h3>
+                  <p className="mb-2">Replace placeholders in curly braces with actual values:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li><code className="bg-blue-100 px-1 rounded">/api/v1/devices/{'{deviceId}'}</code> → <code className="bg-blue-100 px-1 rounded">/api/v1/devices/sensor-001</code></li>
+                    <li><code className="bg-blue-100 px-1 rounded">/api/v1/alerts/{'{alertId}'}/acknowledge</code> → <code className="bg-blue-100 px-1 rounded">/api/v1/alerts/42/acknowledge</code></li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Query Parameters:</h3>
+                  <p className="mb-2">For GET requests with filters or ranges:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li><code className="bg-blue-100 px-1 rounded">?deviceId=sensor-001&from=2024-01-01T00:00:00Z&to=2024-01-31T23:59:59Z</code></li>
+                    <li><code className="bg-blue-100 px-1 rounded">?deviceIds=sensor-001,sensor-002,sensor-003</code></li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Authentication:</h3>
+                  <p>
+                    Requests are automatically authenticated using your current session token.
+                    Endpoints marked "Requires Authentication" will include your Bearer token in the Authorization header.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Response Status Codes:</h3>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li><strong className="text-green-600">2xx:</strong> Success (200 OK, 201 Created, 204 No Content)</li>
+                    <li><strong className="text-yellow-600">3xx:</strong> Redirection</li>
+                    <li><strong className="text-red-600">4xx:</strong> Client error (400 Bad Request, 401 Unauthorized, 404 Not Found)</li>
+                    <li><strong className="text-red-600">5xx:</strong> Server error (500 Internal Server Error)</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Tips:</h3>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li>Use the "Copy" button to copy responses for use in documentation or debugging</li>
+                    <li>Check the duration metric to monitor API performance</li>
+                    <li>Verify JSON syntax before sending POST/PUT requests - use the example bodies as templates</li>
+                    <li>Click on recent requests in the history to quickly re-run them</li>
+                    <li>Use the browser's Network tab (F12) for detailed request/response inspection</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">Common Use Cases:</h3>
+                  <ul className="list-disc list-inside space-y-1 ml-2">
+                    <li><strong>Testing Device Creation:</strong> Use POST /api/v1/devices with a custom request body</li>
+                    <li><strong>Querying Telemetry:</strong> Use GET /api/v1/data/query with deviceId, from, and to parameters</li>
+                    <li><strong>Creating Rules:</strong> Use POST /api/v1/rules to set up monitoring conditions</li>
+                    <li><strong>Debugging Webhooks:</strong> Use POST /api/v1/data/ingest to simulate device data ingestion</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
