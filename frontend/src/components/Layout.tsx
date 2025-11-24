@@ -52,30 +52,34 @@ interface NavigationItem {
   href?: string;
   icon: React.ComponentType<{ className?: string }>;
   adminOnly: boolean;
+  excludeForAdmin?: boolean;  // Hide from admins (show only to regular users)
   children?: NavigationItem[];
 }
 
 const navigation: NavigationItem[] = [
-  // User-accessible features
-  { name: 'Dashboard', href: '/', icon: Home, adminOnly: false },
-  { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
-  { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false },
+  // User-accessible features (hidden from admins - they should use admin dashboard)
+  { name: 'Dashboard', href: '/', icon: Home, adminOnly: false, excludeForAdmin: true },
+  { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false, excludeForAdmin: true },
+  { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false, excludeForAdmin: true },
   {
     name: 'Devices',
     href: '/devices',
     icon: Cpu,
     adminOnly: false,
+    excludeForAdmin: true,
     children: [
       { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: false },
       { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: false },
     ]
   },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: false },
-  { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false },
-  { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
-  { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false },
-  { name: 'Variables', href: '/variables', icon: Database, adminOnly: false },
-  { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: false },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: false, excludeForAdmin: true },
+  { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false, excludeForAdmin: true },
+  { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false, excludeForAdmin: true },
+  { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false, excludeForAdmin: true },
+  { name: 'Variables', href: '/variables', icon: Database, adminOnly: false, excludeForAdmin: true },
+  { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: false, excludeForAdmin: true },
+  { name: 'Webhook Tester', href: '/webhook-tester', icon: Webhook, adminOnly: false, excludeForAdmin: true },
+  { name: 'API Playground', href: '/api-playground', icon: FlaskConical, adminOnly: false, excludeForAdmin: true },
   { name: 'Plugin Marketplace', href: '/plugin-marketplace', icon: Plug, adminOnly: false },
 
   // Admin-only features
@@ -89,8 +93,6 @@ const navigation: NavigationItem[] = [
   { name: 'Data Import', href: '/data-import', icon: FileUp, adminOnly: true },
   { name: 'Data Plugins', href: '/data-plugins', icon: Server, adminOnly: true },
   { name: 'Serverless Functions', href: '/serverless-functions', icon: Code, adminOnly: true },
-  { name: 'Webhook Tester', href: '/webhook-tester', icon: Webhook, adminOnly: true },
-  { name: 'API Playground', href: '/api-playground', icon: FlaskConical, adminOnly: true },
   { name: 'Email Templates', href: '/email-templates', icon: Mail, adminOnly: true },
   { name: 'SMS Settings', href: '/sms-settings', icon: Smartphone, adminOnly: true },
   { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
@@ -126,9 +128,20 @@ export const Layout = ({ children }: LayoutProps) => {
   const filterNavigation = (items: NavigationItem[]): NavigationItem[] => {
     return items
       .map(item => {
+        // Hide items marked as excludeForAdmin when user is admin
+        if (item.excludeForAdmin && isAdmin) {
+          return null;
+        }
+
         // Filter children if they exist
         const filteredChildren = item.children
-          ? item.children.filter(child => !child.adminOnly || isAdmin)
+          ? item.children.filter(child => {
+              // Exclude if marked excludeForAdmin and user is admin
+              if (child.excludeForAdmin && isAdmin) return false;
+              // Exclude if adminOnly and user is not admin
+              if (child.adminOnly && !isAdmin) return false;
+              return true;
+            })
           : undefined;
 
         // If item has children, keep it if at least one child is visible
