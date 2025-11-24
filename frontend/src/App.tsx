@@ -15,6 +15,8 @@ import { Dashboard } from './pages/Dashboard';
 import { Dashboards } from './pages/Dashboards';
 import { DashboardTemplates } from './pages/DashboardTemplates';
 import { Devices } from './pages/Devices';
+import DeviceGroups from './pages/DeviceGroups';
+import DeviceTags from './pages/DeviceTags';
 import { Analytics } from './pages/Analytics';
 import { Rules } from './pages/Rules';
 import { Alerts } from './pages/Alerts';
@@ -22,22 +24,17 @@ import { Events } from './pages/Events';
 import { Notifications } from './pages/Notifications';
 import DataIngestion from './pages/DataIngestion';
 import DataImport from './pages/DataImport';
-import DeviceGroups from './pages/DeviceGroups';
-import DeviceTags from './pages/DeviceTags';
-import DataExport from './pages/DataExport';
-import Variables from './pages/Variables';
-import IntegrationWizard from './pages/IntegrationWizard';
+import { IntegrationWizard } from './pages/IntegrationWizard';
 import ServerlessFunctions from './pages/ServerlessFunctions';
 import DataPlugins from './pages/DataPlugins';
 import PluginMarketplace from './pages/PluginMarketplace';
-import WebhookTester from './pages/WebhookTester';
-import ApiPlayground from './pages/ApiPlayground';
 import EmailTemplateBuilder from './pages/EmailTemplateBuilder';
 import { AdminSupportTickets } from './pages/AdminSupportTickets';
 import { AdminCannedResponses } from './pages/AdminCannedResponses';
 import { MyTickets } from './pages/MyTickets';
 import DataRetention from './pages/DataRetention';
 import Profile from './pages/Profile';
+
 import { Playlists } from './pages/Playlists';
 import { PlaylistPlayer } from './pages/PlaylistPlayer';
 import PhoneNumbers from './pages/PhoneNumbers';
@@ -45,7 +42,7 @@ import SmsSettings from './pages/SmsSettings';
 import AdminUsers from './pages/AdminUsers';
 import AdminOrganizations from './pages/AdminOrganizations';
 import { GlobalRules } from './pages/GlobalRules';
-import PluginMarketplace from './pages/PluginMarketplace';
+
 import AdminDashboard from './pages/AdminDashboard';
 import { config } from './config';
 
@@ -82,31 +79,33 @@ function App() {
               }
             />
 
-        {/* Protected routes */}
-        <Route
-          path="/*"
-          element={
-            <ProtectedRoute>
-              <LayoutV1>
-                <Routes>
-                  {/* Standard user routes */}
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/integration-wizard" element={<IntegrationWizard />} />
-                  <Route path="/serverless-functions" element={<ServerlessFunctions />} />
-                  <Route path="/data-plugins" element={<DataPlugins />} />
-                  <Route path="/plugin-marketplace" element={<PluginMarketplace />} />
-                  <Route path="/dashboards" element={<Dashboards />} />
-                  <Route path="/dashboard-templates" element={<DashboardTemplates />} />
-                  <Route path="/playlists" element={<Playlists />} />
-                  <Route path="/devices" element={<Devices />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/rules" element={<Rules />} />
-                  <Route path="/global-rules" element={<GlobalRules />} />
-                  <Route path="/alerts" element={<Alerts />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/my-tickets" element={<MyTickets />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/phone-numbers" element={<PhoneNumbers />} />
+            {/* Protected routes */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <LayoutV1>
+                    <Routes>
+                      {/* Standard user routes */}
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/integration-wizard" element={<IntegrationWizard />} />
+                      <Route path="/serverless-functions" element={<ServerlessFunctions />} />
+                      <Route path="/data-plugins" element={<DataPlugins />} />
+                      <Route path="/plugin-marketplace" element={<PluginMarketplace />} />
+                      <Route path="/dashboards" element={<Dashboards />} />
+                      <Route path="/dashboard-templates" element={<DashboardTemplates />} />
+                      <Route path="/playlists" element={<Playlists />} />
+                      <Route path="/devices" element={<Devices />} />
+                      <Route path="/device-groups" element={<DeviceGroups />} />
+                      <Route path="/device-tags" element={<DeviceTags />} />
+                      <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/rules" element={<Rules />} />
+                      <Route path="/global-rules" element={<GlobalRules />} />
+                      <Route path="/alerts" element={<Alerts />} />
+                      <Route path="/notifications" element={<Notifications />} />
+                      <Route path="/my-tickets" element={<MyTickets />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/phone-numbers" element={<PhoneNumbers />} />
 
                       {/* Admin‑only routes */}
                       <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />

@@ -60,9 +60,16 @@ const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: Home, adminOnly: false },
   { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
   { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false },
-  { name: 'Devices', href: '/devices', icon: Cpu, adminOnly: false },
-  { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: false },
-  { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: false },
+  {
+    name: 'Devices',
+    href: '/devices',
+    icon: Cpu,
+    adminOnly: false,
+    children: [
+      { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: false },
+      { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: false },
+    ]
+  },
   { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: false },
   { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false },
   { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
