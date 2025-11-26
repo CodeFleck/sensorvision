@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Service for calculating and maintaining device health scores (0-100).
@@ -49,6 +50,9 @@ public class DeviceHealthService {
     private static final int OFFLINE_THRESHOLD_MINUTES = 30;
     private static final int CRITICAL_ALERT_THRESHOLD = 5;
     private static final int WARNING_ALERT_THRESHOLD = 2;
+
+    // Concurrency control for scheduled tasks
+    private final AtomicBoolean statusUpdateRunning = new AtomicBoolean(false);
 
     /**
      * Calculate health score for a specific device
@@ -226,8 +230,15 @@ public class DeviceHealthService {
     @Scheduled(fixedDelay = 180000) // 3 minutes
     @Transactional
     public void updateDeviceOnlineStatus() {
-        log.debug("Starting scheduled device online/offline status update");
-        Instant oneHourAgo = Instant.now().minus(60, ChronoUnit.MINUTES);
+        // Prevent concurrent executions if previous run hasn't completed
+        if (!statusUpdateRunning.compareAndSet(false, true)) {
+            log.warn("Previous device status update still running, skipping this execution");
+            return;
+        }
+
+        try {
+            log.debug("Starting scheduled device online/offline status update");
+            Instant oneHourAgo = Instant.now().minus(60, ChronoUnit.MINUTES);
 
         // Use pagination to avoid loading all devices at once
         int pageSize = 100;
@@ -274,7 +285,10 @@ public class DeviceHealthService {
             pageNumber++;
         } while (!deviceBatch.isEmpty() && deviceBatch.size() == pageSize);
 
-        log.debug("Device status update completed: {} online, {} offline, {} unknown",
-                onlineCount, offlineCount, unknownCount);
+            log.debug("Device status update completed: {} online, {} offline, {} unknown",
+                    onlineCount, offlineCount, unknownCount);
+        } finally {
+            statusUpdateRunning.set(false);
+        }
     }
 }
