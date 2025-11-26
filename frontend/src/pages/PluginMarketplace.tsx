@@ -11,16 +11,13 @@ import {
   PowerOff,
   Trash2,
   Settings,
-  ExternalLink,
   Verified,
   Award,
   Loader,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import pluginMarketplaceService, {
-  PluginRegistry,
-  InstalledPlugin,
-} from '../services/pluginMarketplaceService';
+import pluginMarketplaceService from '../services/pluginMarketplaceService';
+import { PluginRegistry, InstalledPlugin } from '../types';
 import PluginDetailsModal from '../components/plugins/PluginDetailsModal';
 import PluginConfigModal from '../components/plugins/PluginConfigModal';
 
@@ -341,10 +338,14 @@ const PluginMarketplace: React.FC = () => {
                               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                                 {plugin.name}
                                 {plugin.isOfficial && (
-                                  <Award className="w-4 h-4 text-blue-600" title="Official" />
+                                  <span title="Official">
+                                    <Award className="w-4 h-4 text-blue-600" />
+                                  </span>
                                 )}
                                 {plugin.isVerified && (
-                                  <Verified className="w-4 h-4 text-green-600" title="Verified" />
+                                  <span title="Verified">
+                                    <Verified className="w-4 h-4 text-green-600" />
+                                  </span>
                                 )}
                               </h3>
                               <p className="text-xs text-gray-500">by {plugin.author}</p>

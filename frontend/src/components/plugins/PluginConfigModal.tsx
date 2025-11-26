@@ -31,7 +31,7 @@ const PluginConfigModal: React.FC<PluginConfigModalProps> = ({ open, pluginKey, 
       ]);
 
       setPluginInfo(plugin);
-      setConfigSchema(plugin.configurationSchema);
+      setConfigSchema(plugin.configSchema);
 
       // Try to get existing configuration from installed plugins
       try {

@@ -1,4 +1,4 @@
-import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, Event, EventType, EventSeverity, NotificationPreference, NotificationPreferenceRequest, NotificationLog, NotificationStats, NotificationChannel, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization, PluginRegistry, InstalledPlugin, PluginRating } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization, PluginRegistry, InstalledPlugin, PluginRating } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -51,7 +51,49 @@ class ApiService {
     return response.json();
   }
 
+  // Generic HTTP methods for use by other services
+  async get<T>(endpoint: string): Promise<{ data: T }> {
+    const data = await this.request<T>(endpoint, { method: 'GET' });
+    return { data };
+  }
+
+  async post<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+    const data = await this.request<T>(endpoint, {
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return { data };
+  }
+
+  async put<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+    const data = await this.request<T>(endpoint, {
+      method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return { data };
+  }
+
+  async patch<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+    const data = await this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return { data };
+  }
+
+  async delete<T = void>(endpoint: string): Promise<{ data: T }> {
+    const data = await this.request<T>(endpoint, { method: 'DELETE' });
+    return { data };
+  }
+
   // Support / Issues
+  async submitIssue(issue: IssueSubmissionRequest): Promise<IssueSubmission> {
+    return this.request<IssueSubmission>('/support/issues', {
+      method: 'POST',
+      body: JSON.stringify(issue),
+    });
+  }
+
   async markTicketAsViewed(issueId: number): Promise<void> {
     await this.request<void>(`/support/issues/${issueId}/mark-viewed`, {
       method: 'POST',
@@ -96,6 +138,62 @@ class ApiService {
     });
     if (!response.ok) {
       throw new Error('Failed to fetch screenshot');
+    }
+    return response.blob();
+  }
+
+  async getAdminIssues(): Promise<AdminIssue[]> {
+    return this.request<AdminIssue[]>('/admin/support/issues');
+  }
+
+  async getUserIssues(): Promise<IssueSubmission[]> {
+    return this.request<IssueSubmission[]>('/support/issues/my-issues');
+  }
+
+  async getIssueById(issueId: number): Promise<IssueSubmission> {
+    return this.request<IssueSubmission>(`/support/issues/${issueId}`);
+  }
+
+  async getUserIssueComments(issueId: number): Promise<IssueComment[]> {
+    return this.request<IssueComment[]>(`/support/issues/${issueId}/comments`);
+  }
+
+  async addUserComment(issueId: number, comment: IssueCommentRequest, attachment?: File): Promise<IssueComment> {
+    const token = localStorage.getItem('accessToken');
+    const formData = new FormData();
+    formData.append('message', comment.message);
+
+    if (attachment) {
+      formData.append('attachment', attachment);
+    }
+
+    const response = await fetch(`${API_BASE}/support/issues/${issueId}/comments`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to add comment');
+    }
+
+    return response.json();
+  }
+
+  async downloadCommentAttachment(commentId: number): Promise<Blob> {
+    const token = localStorage.getItem('accessToken');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE}/support/comments/${commentId}/attachment`, {
+      headers,
+    });
+    if (!response.ok) {
+      throw new Error('Failed to download attachment');
     }
     return response.blob();
   }
@@ -220,6 +318,45 @@ class ApiService {
       interval,
     });
     return this.request<any>(`/analytics/aggregate?${params}`);
+  }
+
+  // Events
+  async getEvents(params: Record<string, string | number>): Promise<any> {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      queryParams.append(key, value.toString());
+    });
+    return this.request<any>(`/events?${queryParams}`);
+  }
+
+  // Notifications
+  async getNotificationPreferences(): Promise<any[]> {
+    return this.request<any[]>('/notifications/preferences');
+  }
+
+  async getNotificationLogs(page: number, size: number): Promise<any> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+    });
+    return this.request<any>(`/notifications/logs?${params}`);
+  }
+
+  async getNotificationStats(): Promise<any> {
+    return this.request<any>('/notifications/stats');
+  }
+
+  async saveNotificationPreference(preference: any): Promise<any> {
+    return this.request<any>('/notifications/preferences', {
+      method: 'POST',
+      body: JSON.stringify(preference),
+    });
+  }
+
+  async deleteNotificationPreference(channel: string): Promise<void> {
+    await this.request(`/notifications/preferences/${channel}`, {
+      method: 'DELETE',
+    });
   }
 
   // Dashboards
