@@ -8,6 +8,7 @@ import * as apiService from '../services/api';
 vi.mock('../services/api', () => ({
   apiService: {
     getDevice: vi.fn(),
+    getDevices: vi.fn(),
     createDevice: vi.fn(),
     generateDeviceToken: vi.fn(),
     rotateDeviceToken: vi.fn(),
@@ -35,6 +36,8 @@ const renderWithRouter = (component: React.ReactElement) => {
 describe('IntegrationWizard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock: return empty array for getDevices (can be overridden in specific tests)
+    vi.mocked(apiService.apiService.getDevices).mockResolvedValue([]);
   });
 
   describe('Utility Functions', () => {
@@ -130,7 +133,8 @@ describe('IntegrationWizard', () => {
       });
     });
 
-    it('should show device ID input field', () => {
+    it('should show device ID input field when creating new device', () => {
+      // When NOT using existing device, should show text input with placeholder
       const deviceIdInput = screen.getByPlaceholderText(/e.g., sensor-001/i);
       expect(deviceIdInput).toBeInTheDocument();
     });
@@ -140,12 +144,33 @@ describe('IntegrationWizard', () => {
       expect(deviceNameInput).toBeInTheDocument();
     });
 
-    it('should hide device name input when using existing device', () => {
+    it('should show dropdown and hide device name input when using existing device', async () => {
+      // Mock getDevices API call
+      vi.mocked(apiService.apiService.getDevices).mockResolvedValue([
+        { externalId: 'existing-1', name: 'Existing Device 1', status: 'ONLINE' } as any,
+        { externalId: 'existing-2', name: 'Existing Device 2', status: 'OFFLINE' } as any,
+      ]);
+
       const checkbox = screen.getByRole('checkbox', { name: /Use existing device/i });
       fireEvent.click(checkbox);
 
+      // Wait for devices to load
+      await waitFor(() => {
+        const dropdown = screen.getByRole('combobox');
+        expect(dropdown).toBeInTheDocument();
+      });
+
+      // Device name input should not be visible
       const deviceNameInput = screen.queryByPlaceholderText(/Living Room Sensor/i);
       expect(deviceNameInput).not.toBeInTheDocument();
+
+      // Device ID text input should not be visible
+      const deviceIdInput = screen.queryByPlaceholderText(/e.g., sensor-001/i);
+      expect(deviceIdInput).not.toBeInTheDocument();
+
+      // Should show dropdown with options
+      expect(screen.getByText('Existing Device 1 (existing-1)')).toBeInTheDocument();
+      expect(screen.getByText('Existing Device 2 (existing-2)')).toBeInTheDocument();
     });
 
     it('should handle successful device creation', async () => {
@@ -222,6 +247,11 @@ describe('IntegrationWizard', () => {
     it('should handle existing device with token rotation', async () => {
       const mockToken = 'existing-token-789';
 
+      // Mock getDevices to populate dropdown
+      vi.mocked(apiService.apiService.getDevices).mockResolvedValue([
+        { externalId: 'existing-device', name: 'Existing Device', status: 'ONLINE' } as any,
+      ]);
+
       vi.mocked(apiService.apiService.getDevice).mockResolvedValue({
         externalId: 'existing-device',
         name: 'Existing Device',
@@ -239,8 +269,14 @@ describe('IntegrationWizard', () => {
       const checkbox = screen.getByRole('checkbox', { name: /Use existing device/i });
       fireEvent.click(checkbox);
 
-      const deviceIdInput = screen.getByPlaceholderText(/e.g., sensor-001/i);
-      fireEvent.change(deviceIdInput, { target: { value: 'existing-device' } });
+      // Wait for dropdown to load
+      await waitFor(() => {
+        expect(screen.getByRole('combobox')).toBeInTheDocument();
+      });
+
+      // Select device from dropdown
+      const dropdown = screen.getByRole('combobox');
+      fireEvent.change(dropdown, { target: { value: 'existing-device' } });
 
       const continueButton = screen.getByRole('button', { name: /Continue/i });
       fireEvent.click(continueButton);
