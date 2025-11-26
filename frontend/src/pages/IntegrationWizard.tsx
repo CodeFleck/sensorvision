@@ -103,6 +103,8 @@ export const IntegrationWizard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [lastSetupDeviceId, setLastSetupDeviceId] = useState(''); // Track which device we set up
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [existingDevices, setExistingDevices] = useState<Array<{ externalId: string; name: string }>>([]);
+  const [loadingDevices, setLoadingDevices] = useState(false);
   const apiUrl = config.backendUrl;
 
   const totalSteps = 5;
@@ -115,6 +117,25 @@ export const IntegrationWizard: React.FC = () => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 3000);
   };
+
+  // Fetch existing devices when "Use existing device" is checked
+  React.useEffect(() => {
+    if (useExistingDevice && existingDevices.length === 0) {
+      const fetchDevices = async () => {
+        setLoadingDevices(true);
+        try {
+          const devices = await apiService.getDevices();
+          setExistingDevices(devices.map(d => ({ externalId: d.externalId, name: d.name })));
+        } catch (error) {
+          console.error('Failed to fetch devices:', error);
+          showToast('Failed to load devices', 'error');
+        } finally {
+          setLoadingDevices(false);
+        }
+      };
+      fetchDevices();
+    }
+  }, [useExistingDevice]);
 
   const goToNextStep = () => {
     if (currentStep < totalSteps) {
@@ -773,19 +794,58 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Device ID
+                    {useExistingDevice ? 'Select Device' : 'Device ID'}
                   </label>
-                  <input
-                    type="text"
-                    value={deviceId}
-                    onChange={(e) => setDeviceId(e.target.value)}
-                    placeholder="e.g., sensor-001, weather-station-01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Unique identifier for your device
-                  </p>
+                  {useExistingDevice ? (
+                    <>
+                      {loadingDevices ? (
+                        <div className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                          Loading devices...
+                        </div>
+                      ) : existingDevices.length > 0 ? (
+                        <select
+                          value={deviceId}
+                          onChange={(e) => {
+                            const selectedDevice = existingDevices.find(d => d.externalId === e.target.value);
+                            setDeviceId(e.target.value);
+                            if (selectedDevice) {
+                              setDeviceName(selectedDevice.name);
+                            }
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          <option value="">-- Select a device --</option>
+                          {existingDevices.map((device) => (
+                            <option key={device.externalId} value={device.externalId}>
+                              {device.name} ({device.externalId})
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="w-full px-4 py-2 border border-gray-300 rounded-md bg-yellow-50 text-yellow-700">
+                          No devices found. Uncheck "Use existing device" to create one.
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Select from your existing devices
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        value={deviceId}
+                        onChange={(e) => setDeviceId(e.target.value)}
+                        placeholder="e.g., sensor-001, weather-station-01"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Unique identifier for your device
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {!useExistingDevice && (
@@ -988,21 +1048,45 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
               </div>
 
               <div className="border-t pt-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Next Steps:</h3>
-                <ul className="space-y-2 text-sm text-gray-700">
-                  <li className="flex items-start">
-                    <span className="mr-2">1.</span>
-                    <span>View your device data on the <a href="/" className="text-blue-600 hover:underline">Dashboard</a></span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">2.</span>
-                    <span>Set up <a href="/rules" className="text-blue-600 hover:underline">Alerts & Rules</a> for monitoring</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">3.</span>
-                    <span>Check <a href="/analytics" className="text-blue-600 hover:underline">Analytics</a> for historical data</span>
-                  </li>
-                </ul>
+                <h3 className="font-semibold text-gray-900 mb-3">What's Next?</h3>
+                <div className="space-y-4 text-sm text-gray-700">
+                  <div className="flex items-start space-x-3">
+                    <span className="font-medium text-blue-600 min-w-[24px]">1.</span>
+                    <div>
+                      <p className="font-medium text-gray-900">View Real-time Data</p>
+                      <p className="text-gray-600 mt-1">
+                        Go to the <a href="/" className="text-blue-600 hover:underline font-medium">Dashboard</a> to see your device's live telemetry data, power consumption charts, and device status.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <span className="font-medium text-blue-600 min-w-[24px]">2.</span>
+                    <div>
+                      <p className="font-medium text-gray-900">Set Up Alerts</p>
+                      <p className="text-gray-600 mt-1">
+                        Create <a href="/rules" className="text-blue-600 hover:underline font-medium">Rules & Alerts</a> to get notified when metrics exceed thresholds (e.g., high power consumption, voltage drops).
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <span className="font-medium text-blue-600 min-w-[24px]">3.</span>
+                    <div>
+                      <p className="font-medium text-gray-900">Analyze Historical Data</p>
+                      <p className="text-gray-600 mt-1">
+                        Use <a href="/analytics" className="text-blue-600 hover:underline font-medium">Analytics</a> to explore trends, calculate aggregations (min/max/avg), and gain insights from your data history.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <span className="font-medium text-blue-600 min-w-[24px]">4.</span>
+                    <div>
+                      <p className="font-medium text-gray-900">Manage Devices</p>
+                      <p className="text-gray-600 mt-1">
+                        Visit <a href="/devices" className="text-blue-600 hover:underline font-medium">Device Management</a> to edit device properties, manage API tokens, or add more devices to your fleet.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex space-x-4 pt-4">
