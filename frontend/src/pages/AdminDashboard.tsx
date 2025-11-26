@@ -6,7 +6,6 @@ import {
   Building2,
   AlertTriangle,
   TicketIcon,
-  TrendingUp,
   RefreshCw,
   Activity,
   Database,
