@@ -14,10 +14,13 @@ import org.sensorvision.model.Organization;
 import org.sensorvision.repository.AlertRepository;
 import org.sensorvision.repository.DeviceRepository;
 import org.sensorvision.repository.TelemetryRecordRepository;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -63,7 +66,8 @@ class DeviceHealthServiceTest {
         Instant thirtyMinutesAgo = Instant.now().minus(30, ChronoUnit.MINUTES);
         Device device = createTestDevice("device-001", DeviceStatus.UNKNOWN, thirtyMinutesAgo);
 
-        when(deviceRepository.findAll()).thenReturn(List.of(device));
+        when(deviceRepository.findAll(any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(device)));
         when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -81,7 +85,8 @@ class DeviceHealthServiceTest {
         Instant ninetyMinutesAgo = Instant.now().minus(90, ChronoUnit.MINUTES);
         Device device = createTestDevice("device-002", DeviceStatus.ONLINE, ninetyMinutesAgo);
 
-        when(deviceRepository.findAll()).thenReturn(List.of(device));
+        when(deviceRepository.findAll(any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(device)));
         when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -99,7 +104,8 @@ class DeviceHealthServiceTest {
         Instant exactlyOneHourAgo = Instant.now().minus(60, ChronoUnit.MINUTES);
         Device device = createTestDevice("device-003", DeviceStatus.ONLINE, exactlyOneHourAgo);
 
-        when(deviceRepository.findAll()).thenReturn(List.of(device));
+        when(deviceRepository.findAll(any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(device)));
         when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -117,7 +123,8 @@ class DeviceHealthServiceTest {
         // Given: Device with no lastSeenAt timestamp
         Device device = createTestDevice("device-004", DeviceStatus.ONLINE, null);
 
-        when(deviceRepository.findAll()).thenReturn(List.of(device));
+        when(deviceRepository.findAll(any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(device)));
         when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -135,7 +142,8 @@ class DeviceHealthServiceTest {
         Instant thirtyMinutesAgo = Instant.now().minus(30, ChronoUnit.MINUTES);
         Device device = createTestDevice("device-005", DeviceStatus.ONLINE, thirtyMinutesAgo);
 
-        when(deviceRepository.findAll()).thenReturn(List.of(device));
+        when(deviceRepository.findAll(any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(device)));
 
         // When
         deviceHealthService.updateDeviceOnlineStatus();
@@ -154,7 +162,8 @@ class DeviceHealthServiceTest {
         Device offlineDevice = createTestDevice("device-007", DeviceStatus.ONLINE, twoHoursAgo);
         Device unknownDevice = createTestDevice("device-008", DeviceStatus.OFFLINE, null);
 
-        when(deviceRepository.findAll()).thenReturn(Arrays.asList(onlineDevice, offlineDevice, unknownDevice));
+        when(deviceRepository.findAll(any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(Arrays.asList(onlineDevice, offlineDevice, unknownDevice)));
         when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -176,7 +185,8 @@ class DeviceHealthServiceTest {
         Device failingDevice = createTestDevice("device-009", DeviceStatus.ONLINE, Instant.now().minus(90, ChronoUnit.MINUTES));
         Device successDevice = createTestDevice("device-010", DeviceStatus.UNKNOWN, Instant.now().minus(30, ChronoUnit.MINUTES));
 
-        when(deviceRepository.findAll()).thenReturn(Arrays.asList(failingDevice, successDevice));
+        when(deviceRepository.findAll(any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(Arrays.asList(failingDevice, successDevice)));
         when(deviceRepository.save(failingDevice)).thenThrow(new RuntimeException("Database error"));
         when(deviceRepository.save(successDevice)).thenAnswer(invocation -> invocation.getArgument(0));
 

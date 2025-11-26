@@ -221,47 +221,58 @@ public class DeviceHealthService {
     /**
      * Scheduled task to update device online/offline status based on lastSeenAt
      * Devices that haven't sent data in the past 1 hour are marked as OFFLINE
-     * Runs every 5 minutes
+     * Runs every 3 minutes (offset from health score updates to avoid conflicts)
      */
-    @Scheduled(fixedDelay = 300000) // 5 minutes
+    @Scheduled(fixedDelay = 180000) // 3 minutes
     @Transactional
     public void updateDeviceOnlineStatus() {
         log.debug("Starting scheduled device online/offline status update");
         Instant oneHourAgo = Instant.now().minus(60, ChronoUnit.MINUTES);
 
-        List<Device> allDevices = deviceRepository.findAll();
+        // Use pagination to avoid loading all devices at once
+        int pageSize = 100;
+        int pageNumber = 0;
         int onlineCount = 0;
         int offlineCount = 0;
         int unknownCount = 0;
 
-        for (Device device : allDevices) {
-            try {
-                DeviceStatus previousStatus = device.getStatus();
-                DeviceStatus newStatus;
+        List<Device> deviceBatch;
+        do {
+            deviceBatch = deviceRepository.findAll(
+                org.springframework.data.domain.PageRequest.of(pageNumber, pageSize)
+            ).getContent();
 
-                if (device.getLastSeenAt() == null) {
-                    newStatus = DeviceStatus.UNKNOWN;
-                    unknownCount++;
-                } else if (device.getLastSeenAt().isBefore(oneHourAgo)) {
-                    newStatus = DeviceStatus.OFFLINE;
-                    offlineCount++;
-                } else {
-                    newStatus = DeviceStatus.ONLINE;
-                    onlineCount++;
-                }
+            for (Device device : deviceBatch) {
+                try {
+                    DeviceStatus previousStatus = device.getStatus();
+                    DeviceStatus newStatus;
 
-                // Only update if status changed
-                if (previousStatus != newStatus) {
-                    device.setStatus(newStatus);
-                    deviceRepository.save(device);
-                    log.info("Device {} status changed from {} to {}",
-                            device.getExternalId(), previousStatus, newStatus);
+                    if (device.getLastSeenAt() == null) {
+                        newStatus = DeviceStatus.UNKNOWN;
+                        unknownCount++;
+                    } else if (device.getLastSeenAt().isBefore(oneHourAgo)) {
+                        newStatus = DeviceStatus.OFFLINE;
+                        offlineCount++;
+                    } else {
+                        newStatus = DeviceStatus.ONLINE;
+                        onlineCount++;
+                    }
+
+                    // Only update if status changed
+                    if (previousStatus != newStatus) {
+                        device.setStatus(newStatus);
+                        deviceRepository.save(device);
+                        log.info("Device {} status changed from {} to {}",
+                                device.getExternalId(), previousStatus, newStatus);
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to update status for device {}: {}",
+                            device.getExternalId(), e.getMessage());
                 }
-            } catch (Exception e) {
-                log.error("Failed to update status for device {}: {}",
-                        device.getExternalId(), e.getMessage());
             }
-        }
+
+            pageNumber++;
+        } while (!deviceBatch.isEmpty() && deviceBatch.size() == pageSize);
 
         log.debug("Device status update completed: {} online, {} offline, {} unknown",
                 onlineCount, offlineCount, unknownCount);
