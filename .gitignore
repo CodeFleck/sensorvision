@@ -83,3 +83,6 @@ __pycache__/
 # Claude local agent settings (do not commit local CLAUDE settings)
 /.claude/
 /.claude/*.json
+
+# Process ID files
+*.pid

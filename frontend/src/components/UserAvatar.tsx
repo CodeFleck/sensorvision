@@ -31,7 +31,9 @@ export const UserAvatar = ({ user, size = 'md', editable = false, onClick }: Use
     xl: 'h-24 w-24 text-3xl',
   };
 
-  const hasAvatar = user.avatarUrl && !imageError;
+  // Check avatarVersion instead of avatarUrl for more reliable detection
+  // avatarVersion defaults to 0 and gets set to timestamp when avatar is uploaded
+  const hasAvatar = (user.avatarVersion ?? 0) > 0 && !imageError;
 
   const handleImageError = () => {
     setImageError(true);

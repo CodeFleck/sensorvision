@@ -24,6 +24,9 @@ import PluginConfigModal from '../components/plugins/PluginConfigModal';
 type Tab = 'marketplace' | 'installed';
 
 const PluginMarketplace: React.FC = () => {
+  // Feature flag - set to true when marketplace is ready
+  const MARKETPLACE_ENABLED = false;
+
   const [activeTab, setActiveTab] = useState<Tab>('marketplace');
   const [marketplacePlugins, setMarketplacePlugins] = useState<PluginRegistry[]>([]);
   const [installedPlugins, setInstalledPlugins] = useState<InstalledPlugin[]>([]);
@@ -45,7 +48,11 @@ const PluginMarketplace: React.FC = () => {
   ];
 
   useEffect(() => {
-    loadData();
+    if (MARKETPLACE_ENABLED) {
+      loadData();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const loadData = async () => {
@@ -187,121 +194,149 @@ const PluginMarketplace: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200">
-        <div className="flex space-x-8">
-          <button
-            onClick={() => setActiveTab('marketplace')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'marketplace'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <Package className="w-4 h-4" />
-              Marketplace
+      {/* Coming Soon Banner or Marketplace Content */}
+      {!MARKETPLACE_ENABLED ? (
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 rounded-xl p-16 text-center shadow-lg">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex justify-center mb-6">
+              <div className="bg-white p-6 rounded-full shadow-md">
+                <Package className="w-16 h-16 text-blue-600" />
+              </div>
             </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('installed')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'installed'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              Installed ({installedPlugins.length})
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Coming Soon</h2>
+            <p className="text-xl text-gray-700 mb-6">
+              The Plugin Marketplace is currently under development
+            </p>
+            <div className="bg-white/60 backdrop-blur-sm rounded-lg p-6 mb-6">
+              <p className="text-gray-600 leading-relaxed">
+                We're working hard to bring you an extensive collection of plugins to extend
+                SensorVision's capabilities. Soon you'll be able to browse, install, and manage
+                plugins for data ingestion, notifications, analytics, integrations, and more.
+              </p>
             </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="mb-6 space-y-4">
-        <div className="flex gap-4">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search plugins..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Filter Toggle */}
-          {activeTab === 'marketplace' && (
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
-                showFilters
-                  ? 'bg-blue-50 border-blue-500 text-blue-600'
-                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-            </button>
-          )}
-        </div>
-
-        {/* Category Filters */}
-        {showFilters && activeTab === 'marketplace' && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm font-medium text-gray-700">Category:</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedCategory('')}
-                className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                  !selectedCategory
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                All
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                    selectedCategory === category
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {formatCategory(category)}
-                </button>
-              ))}
+            <div className="flex items-center justify-center gap-3 text-sm text-gray-500">
+              <Loader className="w-4 h-4 animate-spin" />
+              <span>Stay tuned for updates</span>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Loading State */}
-      {loading ? (
-        <div className="flex justify-center items-center py-12">
-          <Loader className="w-8 h-8 text-blue-600 animate-spin" />
         </div>
       ) : (
         <>
-          {/* Marketplace Tab */}
-          {activeTab === 'marketplace' && (
+          {/* Tabs */}
+          <div className="mb-6 border-b border-gray-200">
+            <div className="flex space-x-8">
+              <button
+                onClick={() => setActiveTab('marketplace')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'marketplace'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Marketplace
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('installed')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'installed'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  Installed ({installedPlugins.length})
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="mb-6 space-y-4">
+            <div className="flex gap-4">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search plugins..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Filter Toggle */}
+              {activeTab === 'marketplace' && (
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${
+                    showFilters
+                      ? 'bg-blue-50 border-blue-500 text-blue-600'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </button>
+              )}
+            </div>
+
+            {/* Category Filters */}
+            {showFilters && activeTab === 'marketplace' && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-medium text-gray-700">Category:</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedCategory('')}
+                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                      !selectedCategory
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => setSelectedCategory(category)}
+                      className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                        selectedCategory === category
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {formatCategory(category)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader className="w-8 h-8 text-blue-600 animate-spin" />
+            </div>
+          ) : (
+            <>
+              {/* Marketplace Tab */}
+              {activeTab === 'marketplace' && (
             <>
               {filteredMarketplacePlugins.length === 0 ? (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
@@ -565,6 +600,8 @@ const PluginMarketplace: React.FC = () => {
               )}
             </>
           )}
+        </>
+      )}
         </>
       )}
 

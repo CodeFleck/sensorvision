@@ -19,7 +19,10 @@ export const Dashboard = () => {
   const [latestTelemetry, setLatestTelemetry] = useState<Record<string, TelemetryPoint>>({});
   const [loading, setLoading] = useState(true);
 
-  const { lastMessage, connectionStatus } = useWebSocket('ws://localhost:8080/ws/telemetry');
+  // Dynamically construct WebSocket URL based on current host
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${wsProtocol}//${window.location.host}/ws/telemetry`;
+  const { lastMessage, connectionStatus } = useWebSocket(wsUrl);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,11 +126,13 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Real-time Chart */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Real-time Power Consumption</h2>
-        <RealTimeChart telemetryData={Object.values(latestTelemetry)} />
-      </div>
+      {/* Real-time Chart - Only show when there's telemetry data */}
+      {Object.keys(latestTelemetry).length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Real-time Power Consumption</h2>
+          <RealTimeChart telemetryData={Object.values(latestTelemetry)} />
+        </div>
+      )}
 
       {/* Device Grid */}
       <div>
