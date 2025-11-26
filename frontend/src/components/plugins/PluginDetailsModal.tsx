@@ -3,16 +3,13 @@ import {
   X,
   Star,
   Download,
-  ExternalLink,
   Award,
   Verified,
   Package,
-  Calendar,
   GitBranch,
   FileText,
-  Image as ImageIcon,
 } from 'lucide-react';
-import { PluginRegistry } from '../../services/pluginMarketplaceService';
+import { PluginRegistry } from '../../types';
 
 interface PluginDetailsModalProps {
   open: boolean;
@@ -76,10 +73,14 @@ const PluginDetailsModal: React.FC<PluginDetailsModalProps> = ({
                   <h2 className="text-2xl font-bold flex items-center gap-2">
                     {plugin.name}
                     {plugin.isOfficial && (
-                      <Award className="w-5 h-5 text-yellow-300" title="Official Plugin" />
+                      <span title="Official Plugin">
+                        <Award className="w-5 h-5 text-yellow-300" />
+                      </span>
                     )}
                     {plugin.isVerified && (
-                      <Verified className="w-5 h-5 text-green-300" title="Verified Plugin" />
+                      <span title="Verified Plugin">
+                        <Verified className="w-5 h-5 text-green-300" />
+                      </span>
                     )}
                   </h2>
                   <p className="text-blue-100 text-sm">by {plugin.author}</p>
@@ -87,12 +88,12 @@ const PluginDetailsModal: React.FC<PluginDetailsModalProps> = ({
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-yellow-300 fill-current" />
                       <span>
-                        {plugin.averageRating.toFixed(1)} ({plugin.ratingCount} reviews)
+                        {plugin.ratingAverage?.toFixed(1) || '0.0'} ({plugin.ratingCount} reviews)
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Download className="w-4 h-4" />
-                      <span>{plugin.downloads.toLocaleString()} downloads</span>
+                      <span>{plugin.installationCount.toLocaleString()} installs</span>
                     </div>
                   </div>
                 </div>
@@ -200,22 +201,24 @@ const PluginDetailsModal: React.FC<PluginDetailsModalProps> = ({
               </div>
             )}
 
-            {/* Compatible Versions */}
-            {plugin.compatibleVersions && plugin.compatibleVersions.length > 0 && (
+            {/* Version Compatibility */}
+            {(plugin.minSensorvisionVersion || plugin.maxSensorvisionVersion) && (
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
                   <GitBranch className="w-5 h-5" />
-                  Compatible Versions
+                  Version Compatibility
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {plugin.compatibleVersions.map((version, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-mono rounded"
-                    >
-                      {version}
+                  {plugin.minSensorvisionVersion && (
+                    <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-mono rounded">
+                      Min: {plugin.minSensorvisionVersion}
                     </span>
-                  ))}
+                  )}
+                  {plugin.maxSensorvisionVersion && (
+                    <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-mono rounded">
+                      Max: {plugin.maxSensorvisionVersion}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -224,17 +227,6 @@ const PluginDetailsModal: React.FC<PluginDetailsModalProps> = ({
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Resources</h3>
               <div className="space-y-2">
-                {plugin.websiteUrl && (
-                  <a
-                    href={plugin.websiteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Website
-                  </a>
-                )}
                 {plugin.documentationUrl && (
                   <a
                     href={plugin.documentationUrl}
@@ -257,6 +249,17 @@ const PluginDetailsModal: React.FC<PluginDetailsModalProps> = ({
                     Repository
                   </a>
                 )}
+                {plugin.authorUrl && (
+                  <a
+                    href={plugin.authorUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                  >
+                    <GitBranch className="w-4 h-4" />
+                    Author Page
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -271,7 +274,7 @@ const PluginDetailsModal: React.FC<PluginDetailsModalProps> = ({
             </button>
             <button
               onClick={() => {
-                onInstall(plugin.key);
+                onInstall(plugin.pluginKey);
                 onClose();
               }}
               className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
