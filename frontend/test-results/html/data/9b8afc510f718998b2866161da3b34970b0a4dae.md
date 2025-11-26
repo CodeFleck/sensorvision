@@ -1,0 +1,212 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic:
+    - status [ref=e8]: Maximum 10 plugin operations per minute. Please try again later.
+    - status [ref=e14]: Maximum 10 plugin operations per minute. Please try again later.
+  - generic [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e20]:
+        - img [ref=e21]
+        - heading "SensorVision" [level=1] [ref=e23]
+      - navigation [ref=e24]:
+        - generic [ref=e25]:
+          - button "CORE" [ref=e26] [cursor=pointer]:
+            - img [ref=e27]
+            - generic [ref=e30]: CORE
+            - img [ref=e31]
+          - generic [ref=e34]:
+            - link "Dashboard" [ref=e35] [cursor=pointer]:
+              - /url: /
+              - img [ref=e36]
+              - generic [ref=e39]: Dashboard
+            - link "Widget Dashboards" [ref=e40] [cursor=pointer]:
+              - /url: /dashboards
+              - img [ref=e41]
+              - generic [ref=e46]: Widget Dashboards
+            - link "Analytics" [ref=e47] [cursor=pointer]:
+              - /url: /analytics
+              - img [ref=e48]
+              - generic [ref=e50]: Analytics
+        - generic [ref=e52]:
+          - button "DEVICES & DATA" [ref=e53] [cursor=pointer]:
+            - img [ref=e54]
+            - generic [ref=e57]: DEVICES & DATA
+            - img [ref=e58]
+          - generic [ref=e61]:
+            - link "Devices" [ref=e62] [cursor=pointer]:
+              - /url: /devices
+              - img [ref=e63]
+              - generic [ref=e66]: Devices
+            - link "Device Groups" [ref=e67] [cursor=pointer]:
+              - /url: /device-groups
+              - img [ref=e68]
+              - generic [ref=e73]: Device Groups
+            - link "Device Tags" [ref=e74] [cursor=pointer]:
+              - /url: /device-tags
+              - img [ref=e75]
+              - generic [ref=e77]: Device Tags
+            - link "Integration Wizard" [ref=e78] [cursor=pointer]:
+              - /url: /integration-wizard
+              - img [ref=e79]
+              - generic [ref=e81]: Integration Wizard
+            - link "Serverless Functions" [ref=e82] [cursor=pointer]:
+              - /url: /serverless-functions
+              - img [ref=e83]
+              - generic [ref=e86]: Serverless Functions
+            - link "Data Plugins" [ref=e87] [cursor=pointer]:
+              - /url: /data-plugins
+              - img [ref=e88]
+              - generic [ref=e90]: Data Plugins
+            - link "Plugin Marketplace" [ref=e91] [cursor=pointer]:
+              - /url: /plugin-marketplace
+              - img [ref=e92]
+              - generic [ref=e97]: Plugin Marketplace
+        - generic [ref=e99]:
+          - button "MONITORING" [ref=e100] [cursor=pointer]:
+            - img [ref=e101]
+            - generic [ref=e103]: MONITORING
+            - img [ref=e104]
+          - generic [ref=e107]:
+            - link "Rules" [active] [ref=e108] [cursor=pointer]:
+              - /url: /rules
+              - img [ref=e109]
+              - generic [ref=e112]: Rules
+            - link "Global Rules" [ref=e113] [cursor=pointer]:
+              - /url: /global-rules
+              - img [ref=e114]
+              - generic [ref=e119]: Global Rules
+            - link "Alerts" [ref=e120] [cursor=pointer]:
+              - /url: /alerts
+              - img [ref=e121]
+              - generic [ref=e123]: Alerts
+            - link "Notifications" [ref=e124] [cursor=pointer]:
+              - /url: /notifications
+              - img [ref=e125]
+              - generic [ref=e128]: Notifications
+            - link "Plugin Marketplace" [ref=e129] [cursor=pointer]:
+              - /url: /plugins
+              - img [ref=e130]
+              - generic [ref=e134]: Plugin Marketplace
+            - link "Phone Numbers" [ref=e135] [cursor=pointer]:
+              - /url: /phone-numbers
+              - img [ref=e136]
+              - generic [ref=e138]: Phone Numbers
+            - link "SMS Settings" [ref=e139] [cursor=pointer]:
+              - /url: /sms-settings
+              - img [ref=e140]
+              - generic [ref=e142]: SMS Settings
+            - link "Events" [ref=e143] [cursor=pointer]:
+              - /url: /events
+              - img [ref=e144]
+              - generic [ref=e147]: Events
+        - generic [ref=e149]:
+          - button "DATA MANAGEMENT" [ref=e150] [cursor=pointer]:
+            - img [ref=e151]
+            - generic [ref=e155]: DATA MANAGEMENT
+            - img [ref=e156]
+          - generic [ref=e159]:
+            - link "Data Ingestion" [ref=e160] [cursor=pointer]:
+              - /url: /data-ingestion
+              - img [ref=e161]
+              - generic [ref=e164]: Data Ingestion
+            - link "Data Import" [ref=e165] [cursor=pointer]:
+              - /url: /data-import
+              - img [ref=e166]
+              - generic [ref=e170]: Data Import
+            - link "Data Export" [ref=e171] [cursor=pointer]:
+              - /url: /data-export
+              - img [ref=e172]
+              - generic [ref=e175]: Data Export
+            - link "Variables" [ref=e176] [cursor=pointer]:
+              - /url: /variables
+              - img [ref=e177]
+              - generic [ref=e181]: Variables
+            - link "Data Retention" [ref=e182] [cursor=pointer]:
+              - /url: /data-retention
+              - img [ref=e183]
+              - generic [ref=e186]: Data Retention
+            - link "Webhook Tester" [ref=e187] [cursor=pointer]:
+              - /url: /webhook-tester
+              - img [ref=e188]
+              - generic [ref=e192]: Webhook Tester
+            - link "API Playground" [ref=e193] [cursor=pointer]:
+              - /url: /api-playground
+              - img [ref=e194]
+              - generic [ref=e196]: API Playground
+        - generic [ref=e198]:
+          - button "ADMINISTRATION" [ref=e199] [cursor=pointer]:
+            - img [ref=e200]
+            - generic [ref=e202]: ADMINISTRATION
+            - img [ref=e203]
+          - generic [ref=e206]:
+            - link "User Management" [ref=e207] [cursor=pointer]:
+              - /url: /admin/users
+              - img [ref=e208]
+              - generic [ref=e211]: User Management
+            - link "Organizations" [ref=e212] [cursor=pointer]:
+              - /url: /admin/organizations
+              - img [ref=e213]
+              - generic [ref=e217]: Organizations
+        - generic [ref=e219]:
+          - button "HELP & SUPPORT" [ref=e220] [cursor=pointer]:
+            - img [ref=e221]
+            - generic [ref=e223]: HELP & SUPPORT
+            - img [ref=e224]
+          - generic [ref=e227]:
+            - link "Support Tickets" [ref=e228] [cursor=pointer]:
+              - /url: /admin/support-tickets
+              - img [ref=e229]
+              - generic [ref=e231]: Support Tickets
+            - link "Canned Responses" [ref=e232] [cursor=pointer]:
+              - /url: /admin/canned-responses
+              - img [ref=e233]
+              - generic [ref=e235]: Canned Responses
+            - link "Email Templates" [ref=e236] [cursor=pointer]:
+              - /url: /email-templates
+              - img [ref=e237]
+              - generic [ref=e240]: Email Templates
+    - generic [ref=e241]:
+      - banner [ref=e242]:
+        - generic [ref=e244]:
+          - link "Documentation" [ref=e245] [cursor=pointer]:
+            - /url: /how-it-works
+            - img [ref=e246]
+            - generic [ref=e249]: Documentation
+          - button "AD admin Admin" [ref=e251] [cursor=pointer]:
+            - generic [ref=e253]: AD
+            - generic [ref=e255]:
+              - generic [ref=e256]: admin
+              - generic [ref=e257]:
+                - img [ref=e258]
+                - generic [ref=e260]: Admin
+            - img [ref=e261]
+      - main [ref=e263]:
+        - generic [ref=e264]:
+          - generic [ref=e265]:
+            - generic [ref=e266]:
+              - heading "Rules & Automation" [level=1] [ref=e267]
+              - paragraph [ref=e268]: Create conditional rules to monitor your devices and trigger alerts
+            - button "Create Rule" [ref=e269] [cursor=pointer]:
+              - img [ref=e270]
+              - generic [ref=e271]: Create Rule
+          - generic [ref=e272]:
+            - table [ref=e273]:
+              - rowgroup [ref=e274]:
+                - row "Rule Device Condition Status Created Actions" [ref=e275]:
+                  - cell "Rule" [ref=e276]
+                  - cell "Device" [ref=e277]
+                  - cell "Condition" [ref=e278]
+                  - cell "Status" [ref=e279]
+                  - cell "Created" [ref=e280]
+                  - cell "Actions" [ref=e281]
+              - rowgroup
+            - generic [ref=e282]: No rules created yet. Create your first rule to get started with automation.
+      - contentinfo [ref=e283]:
+        - generic [ref=e285]:
+          - paragraph [ref=e287]: © 2025 SensorVision. All rights reserved.
+          - button "Report Issue" [ref=e289] [cursor=pointer]:
+            - img [ref=e290]
+            - text: Report Issue
+```

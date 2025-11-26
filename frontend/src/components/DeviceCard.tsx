@@ -1,6 +1,7 @@
 import { Device, TelemetryPoint } from '../types';
 import { Cpu, MapPin, Zap, Clock } from 'lucide-react';
 import { clsx } from 'clsx';
+import { formatTimeAgo } from '../utils/timeUtils';
 
 interface DeviceCardProps {
   device: Device;
@@ -24,14 +25,24 @@ export const DeviceCard = ({ device, latestTelemetry }: DeviceCardProps) => {
             <p className="text-sm text-gray-500">{device.externalId}</p>
           </div>
         </div>
-        <span
-          className={clsx(
-            'px-2 py-1 text-xs font-medium rounded-full',
-            statusColors[device.status]
+        <div className="flex flex-col items-end gap-1">
+          <span
+            className={clsx(
+              'px-2 py-1 text-xs font-medium rounded-full',
+              statusColors[device.status]
+            )}
+          >
+            {device.status}
+          </span>
+          {device.lastSeenAt && (
+            <div className="flex items-center text-xs text-gray-500">
+              <Clock className="h-3 w-3 mr-1" />
+              <span title={new Date(device.lastSeenAt).toLocaleString()}>
+                {formatTimeAgo(device.lastSeenAt)}
+              </span>
+            </div>
           )}
-        >
-          {device.status}
-        </span>
+        </div>
       </div>
 
       <div className="space-y-3">

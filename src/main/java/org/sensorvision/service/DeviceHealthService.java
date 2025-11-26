@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Service for calculating and maintaining device health scores (0-100).
@@ -49,6 +50,9 @@ public class DeviceHealthService {
     private static final int OFFLINE_THRESHOLD_MINUTES = 30;
     private static final int CRITICAL_ALERT_THRESHOLD = 5;
     private static final int WARNING_ALERT_THRESHOLD = 2;
+
+    // Concurrency control for scheduled tasks
+    private final AtomicBoolean statusUpdateRunning = new AtomicBoolean(false);
 
     /**
      * Calculate health score for a specific device
@@ -215,6 +219,76 @@ public class DeviceHealthService {
             return "POOR";
         } else {
             return "CRITICAL";
+        }
+    }
+
+    /**
+     * Scheduled task to update device online/offline status based on lastSeenAt
+     * Devices that haven't sent data in the past 1 hour are marked as OFFLINE
+     * Runs every 3 minutes (offset from health score updates to avoid conflicts)
+     */
+    @Scheduled(fixedDelay = 180000) // 3 minutes
+    @Transactional
+    public void updateDeviceOnlineStatus() {
+        // Prevent concurrent executions if previous run hasn't completed
+        if (!statusUpdateRunning.compareAndSet(false, true)) {
+            log.warn("Previous device status update still running, skipping this execution");
+            return;
+        }
+
+        try {
+            log.debug("Starting scheduled device online/offline status update");
+            Instant oneHourAgo = Instant.now().minus(60, ChronoUnit.MINUTES);
+
+        // Use pagination to avoid loading all devices at once
+        int pageSize = 100;
+        int pageNumber = 0;
+        int onlineCount = 0;
+        int offlineCount = 0;
+        int unknownCount = 0;
+
+        List<Device> deviceBatch;
+        do {
+            deviceBatch = deviceRepository.findAll(
+                org.springframework.data.domain.PageRequest.of(pageNumber, pageSize)
+            ).getContent();
+
+            for (Device device : deviceBatch) {
+                try {
+                    DeviceStatus previousStatus = device.getStatus();
+                    DeviceStatus newStatus;
+
+                    if (device.getLastSeenAt() == null) {
+                        newStatus = DeviceStatus.UNKNOWN;
+                        unknownCount++;
+                    } else if (device.getLastSeenAt().isBefore(oneHourAgo)) {
+                        newStatus = DeviceStatus.OFFLINE;
+                        offlineCount++;
+                    } else {
+                        newStatus = DeviceStatus.ONLINE;
+                        onlineCount++;
+                    }
+
+                    // Only update if status changed
+                    if (previousStatus != newStatus) {
+                        device.setStatus(newStatus);
+                        deviceRepository.save(device);
+                        log.info("Device {} status changed from {} to {}",
+                                device.getExternalId(), previousStatus, newStatus);
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to update status for device {}: {}",
+                            device.getExternalId(), e.getMessage());
+                }
+            }
+
+            pageNumber++;
+        } while (!deviceBatch.isEmpty() && deviceBatch.size() == pageSize);
+
+            log.debug("Device status update completed: {} online, {} offline, {} unknown",
+                    onlineCount, offlineCount, unknownCount);
+        } finally {
+            statusUpdateRunning.set(false);
         }
     }
 }

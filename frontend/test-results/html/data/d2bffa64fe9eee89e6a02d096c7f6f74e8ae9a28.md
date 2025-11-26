@@ -1,0 +1,366 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic:
+    - status [ref=e8]: Maximum 10 plugin operations per minute. Please try again later.
+    - status [ref=e14]: Maximum 10 plugin operations per minute. Please try again later.
+  - generic [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e20]:
+        - img [ref=e21]
+        - heading "SensorVision" [level=1] [ref=e23]
+      - navigation [ref=e24]:
+        - generic [ref=e25]:
+          - button "CORE" [ref=e26] [cursor=pointer]:
+            - img [ref=e27]
+            - generic [ref=e30]: CORE
+            - img [ref=e31]
+          - generic [ref=e34]:
+            - link "Dashboard" [ref=e35] [cursor=pointer]:
+              - /url: /
+              - img [ref=e36]
+              - generic [ref=e39]: Dashboard
+            - link "Widget Dashboards" [ref=e40] [cursor=pointer]:
+              - /url: /dashboards
+              - img [ref=e41]
+              - generic [ref=e46]: Widget Dashboards
+            - link "Analytics" [ref=e47] [cursor=pointer]:
+              - /url: /analytics
+              - img [ref=e48]
+              - generic [ref=e50]: Analytics
+        - generic [ref=e52]:
+          - button "DEVICES & DATA" [ref=e53] [cursor=pointer]:
+            - img [ref=e54]
+            - generic [ref=e57]: DEVICES & DATA
+            - img [ref=e58]
+          - generic [ref=e61]:
+            - link "Devices" [active] [ref=e62] [cursor=pointer]:
+              - /url: /devices
+              - img [ref=e63]
+              - generic [ref=e66]: Devices
+            - link "Device Groups" [ref=e67] [cursor=pointer]:
+              - /url: /device-groups
+              - img [ref=e68]
+              - generic [ref=e73]: Device Groups
+            - link "Device Tags" [ref=e74] [cursor=pointer]:
+              - /url: /device-tags
+              - img [ref=e75]
+              - generic [ref=e77]: Device Tags
+            - link "Integration Wizard" [ref=e78] [cursor=pointer]:
+              - /url: /integration-wizard
+              - img [ref=e79]
+              - generic [ref=e81]: Integration Wizard
+            - link "Serverless Functions" [ref=e82] [cursor=pointer]:
+              - /url: /serverless-functions
+              - img [ref=e83]
+              - generic [ref=e86]: Serverless Functions
+            - link "Data Plugins" [ref=e87] [cursor=pointer]:
+              - /url: /data-plugins
+              - img [ref=e88]
+              - generic [ref=e90]: Data Plugins
+            - link "Plugin Marketplace" [ref=e91] [cursor=pointer]:
+              - /url: /plugin-marketplace
+              - img [ref=e92]
+              - generic [ref=e97]: Plugin Marketplace
+        - generic [ref=e99]:
+          - button "MONITORING" [ref=e100] [cursor=pointer]:
+            - img [ref=e101]
+            - generic [ref=e103]: MONITORING
+            - img [ref=e104]
+          - generic [ref=e107]:
+            - link "Rules" [ref=e108] [cursor=pointer]:
+              - /url: /rules
+              - img [ref=e109]
+              - generic [ref=e112]: Rules
+            - link "Global Rules" [ref=e113] [cursor=pointer]:
+              - /url: /global-rules
+              - img [ref=e114]
+              - generic [ref=e119]: Global Rules
+            - link "Alerts" [ref=e120] [cursor=pointer]:
+              - /url: /alerts
+              - img [ref=e121]
+              - generic [ref=e123]: Alerts
+            - link "Notifications" [ref=e124] [cursor=pointer]:
+              - /url: /notifications
+              - img [ref=e125]
+              - generic [ref=e128]: Notifications
+            - link "Plugin Marketplace" [ref=e129] [cursor=pointer]:
+              - /url: /plugins
+              - img [ref=e130]
+              - generic [ref=e134]: Plugin Marketplace
+            - link "Phone Numbers" [ref=e135] [cursor=pointer]:
+              - /url: /phone-numbers
+              - img [ref=e136]
+              - generic [ref=e138]: Phone Numbers
+            - link "SMS Settings" [ref=e139] [cursor=pointer]:
+              - /url: /sms-settings
+              - img [ref=e140]
+              - generic [ref=e142]: SMS Settings
+            - link "Events" [ref=e143] [cursor=pointer]:
+              - /url: /events
+              - img [ref=e144]
+              - generic [ref=e147]: Events
+        - generic [ref=e149]:
+          - button "DATA MANAGEMENT" [ref=e150] [cursor=pointer]:
+            - img [ref=e151]
+            - generic [ref=e155]: DATA MANAGEMENT
+            - img [ref=e156]
+          - generic [ref=e159]:
+            - link "Data Ingestion" [ref=e160] [cursor=pointer]:
+              - /url: /data-ingestion
+              - img [ref=e161]
+              - generic [ref=e164]: Data Ingestion
+            - link "Data Import" [ref=e165] [cursor=pointer]:
+              - /url: /data-import
+              - img [ref=e166]
+              - generic [ref=e170]: Data Import
+            - link "Data Export" [ref=e171] [cursor=pointer]:
+              - /url: /data-export
+              - img [ref=e172]
+              - generic [ref=e175]: Data Export
+            - link "Variables" [ref=e176] [cursor=pointer]:
+              - /url: /variables
+              - img [ref=e177]
+              - generic [ref=e181]: Variables
+            - link "Data Retention" [ref=e182] [cursor=pointer]:
+              - /url: /data-retention
+              - img [ref=e183]
+              - generic [ref=e186]: Data Retention
+            - link "Webhook Tester" [ref=e187] [cursor=pointer]:
+              - /url: /webhook-tester
+              - img [ref=e188]
+              - generic [ref=e192]: Webhook Tester
+            - link "API Playground" [ref=e193] [cursor=pointer]:
+              - /url: /api-playground
+              - img [ref=e194]
+              - generic [ref=e196]: API Playground
+        - generic [ref=e198]:
+          - button "ADMINISTRATION" [ref=e199] [cursor=pointer]:
+            - img [ref=e200]
+            - generic [ref=e202]: ADMINISTRATION
+            - img [ref=e203]
+          - generic [ref=e206]:
+            - link "User Management" [ref=e207] [cursor=pointer]:
+              - /url: /admin/users
+              - img [ref=e208]
+              - generic [ref=e211]: User Management
+            - link "Organizations" [ref=e212] [cursor=pointer]:
+              - /url: /admin/organizations
+              - img [ref=e213]
+              - generic [ref=e217]: Organizations
+        - generic [ref=e219]:
+          - button "HELP & SUPPORT" [ref=e220] [cursor=pointer]:
+            - img [ref=e221]
+            - generic [ref=e223]: HELP & SUPPORT
+            - img [ref=e224]
+          - generic [ref=e227]:
+            - link "Support Tickets" [ref=e228] [cursor=pointer]:
+              - /url: /admin/support-tickets
+              - img [ref=e229]
+              - generic [ref=e231]: Support Tickets
+            - link "Canned Responses" [ref=e232] [cursor=pointer]:
+              - /url: /admin/canned-responses
+              - img [ref=e233]
+              - generic [ref=e235]: Canned Responses
+            - link "Email Templates" [ref=e236] [cursor=pointer]:
+              - /url: /email-templates
+              - img [ref=e237]
+              - generic [ref=e240]: Email Templates
+    - generic [ref=e241]:
+      - banner [ref=e242]:
+        - generic [ref=e244]:
+          - link "Documentation" [ref=e245] [cursor=pointer]:
+            - /url: /how-it-works
+            - img [ref=e246]
+            - generic [ref=e249]: Documentation
+          - button "AD admin Admin" [ref=e251] [cursor=pointer]:
+            - generic [ref=e253]: AD
+            - generic [ref=e255]:
+              - generic [ref=e256]: admin
+              - generic [ref=e257]:
+                - img [ref=e258]
+                - generic [ref=e260]: Admin
+            - img [ref=e261]
+      - main [ref=e263]:
+        - generic [ref=e264]:
+          - generic [ref=e265]:
+            - generic [ref=e266]:
+              - heading "Device Management" [level=1] [ref=e267]
+              - paragraph [ref=e268]: Manage your IoT devices and monitor their status
+            - button "Add Device" [ref=e269] [cursor=pointer]:
+              - img [ref=e270]
+              - generic [ref=e271]: Add Device
+          - generic [ref=e272]:
+            - img [ref=e273]
+            - textbox "Search devices..." [ref=e276]
+          - table [ref=e278]:
+            - rowgroup [ref=e279]:
+              - row "Device Status Active Location Type Last Seen Actions" [ref=e280]:
+                - cell "Device" [ref=e281]
+                - cell "Status" [ref=e282]
+                - cell "Active" [ref=e283]
+                - cell "Location" [ref=e284]
+                - cell "Type" [ref=e285]
+                - cell "Last Seen" [ref=e286]
+                - cell "Actions" [ref=e287]
+            - rowgroup [ref=e288]:
+              - row "Delete Me 1761942079389 delete-me-1761942079389 UNKNOWN Toggle Active Status - - - Manage Token Edit Delete" [ref=e289]:
+                - cell "Delete Me 1761942079389 delete-me-1761942079389" [ref=e290]:
+                  - generic [ref=e291]:
+                    - generic [ref=e292]: Delete Me 1761942079389
+                    - generic [ref=e293]: delete-me-1761942079389
+                - cell "UNKNOWN" [ref=e294]
+                - cell "Toggle Active Status" [ref=e295]:
+                  - checkbox "Toggle Active Status" [checked] [ref=e297]
+                - cell "-" [ref=e299]
+                - cell "-" [ref=e300]
+                - cell "-" [ref=e301]
+                - cell "Manage Token Edit Delete" [ref=e302]:
+                  - generic [ref=e303]:
+                    - button "Manage Token" [ref=e304] [cursor=pointer]:
+                      - img [ref=e305]
+                    - button "Edit" [ref=e309] [cursor=pointer]:
+                      - img [ref=e310]
+                    - button "Delete" [ref=e313] [cursor=pointer]:
+                      - img [ref=e314]
+              - row "Delete Me 1764183782896 delete-me-1764183782896 UNKNOWN Toggle Active Status - - - Manage Token Edit Delete" [ref=e317]:
+                - cell "Delete Me 1764183782896 delete-me-1764183782896" [ref=e318]:
+                  - generic [ref=e319]:
+                    - generic [ref=e320]: Delete Me 1764183782896
+                    - generic [ref=e321]: delete-me-1764183782896
+                - cell "UNKNOWN" [ref=e322]
+                - cell "Toggle Active Status" [ref=e323]:
+                  - checkbox "Toggle Active Status" [checked] [ref=e325]
+                - cell "-" [ref=e327]
+                - cell "-" [ref=e328]
+                - cell "-" [ref=e329]
+                - cell "Manage Token Edit Delete" [ref=e330]:
+                  - generic [ref=e331]:
+                    - button "Manage Token" [ref=e332] [cursor=pointer]:
+                      - img [ref=e333]
+                    - button "Edit" [ref=e337] [cursor=pointer]:
+                      - img [ref=e338]
+                    - button "Delete" [ref=e341] [cursor=pointer]:
+                      - img [ref=e342]
+              - row "Delete Me 1761941601154 delete-me-1761941601154 UNKNOWN Toggle Active Status - - - Manage Token Edit Delete" [ref=e345]:
+                - cell "Delete Me 1761941601154 delete-me-1761941601154" [ref=e346]:
+                  - generic [ref=e347]:
+                    - generic [ref=e348]: Delete Me 1761941601154
+                    - generic [ref=e349]: delete-me-1761941601154
+                - cell "UNKNOWN" [ref=e350]
+                - cell "Toggle Active Status" [ref=e351]:
+                  - checkbox "Toggle Active Status" [checked] [ref=e353]
+                - cell "-" [ref=e355]
+                - cell "-" [ref=e356]
+                - cell "-" [ref=e357]
+                - cell "Manage Token Edit Delete" [ref=e358]:
+                  - generic [ref=e359]:
+                    - button "Manage Token" [ref=e360] [cursor=pointer]:
+                      - img [ref=e361]
+                    - button "Edit" [ref=e365] [cursor=pointer]:
+                      - img [ref=e366]
+                    - button "Delete" [ref=e369] [cursor=pointer]:
+                      - img [ref=e370]
+              - row "Updated Device 1761941601082 e2e-device-1761941309471 UNKNOWN Toggle Active Status - - - Manage Token Edit Delete" [ref=e373]:
+                - cell "Updated Device 1761941601082 e2e-device-1761941309471" [ref=e374]:
+                  - generic [ref=e375]:
+                    - generic [ref=e376]: Updated Device 1761941601082
+                    - generic [ref=e377]: e2e-device-1761941309471
+                - cell "UNKNOWN" [ref=e378]
+                - cell "Toggle Active Status" [ref=e379]:
+                  - checkbox "Toggle Active Status" [checked] [ref=e381]
+                - cell "-" [ref=e383]
+                - cell "-" [ref=e384]
+                - cell "-" [ref=e385]
+                - cell "Manage Token Edit Delete" [ref=e386]:
+                  - generic [ref=e387]:
+                    - button "Manage Token" [ref=e388] [cursor=pointer]:
+                      - img [ref=e389]
+                    - button "Edit" [ref=e393] [cursor=pointer]:
+                      - img [ref=e394]
+                    - button "Delete" [ref=e397] [cursor=pointer]:
+                      - img [ref=e398]
+              - row "Delete Me 1761941614987 delete-me-1761941614987 UNKNOWN Toggle Active Status - - - Manage Token Edit Delete" [ref=e401]:
+                - cell "Delete Me 1761941614987 delete-me-1761941614987" [ref=e402]:
+                  - generic [ref=e403]:
+                    - generic [ref=e404]: Delete Me 1761941614987
+                    - generic [ref=e405]: delete-me-1761941614987
+                - cell "UNKNOWN" [ref=e406]
+                - cell "Toggle Active Status" [ref=e407]:
+                  - checkbox "Toggle Active Status" [checked] [ref=e409]
+                - cell "-" [ref=e411]
+                - cell "-" [ref=e412]
+                - cell "-" [ref=e413]
+                - cell "Manage Token Edit Delete" [ref=e414]:
+                  - generic [ref=e415]:
+                    - button "Manage Token" [ref=e416] [cursor=pointer]:
+                      - img [ref=e417]
+                    - button "Edit" [ref=e421] [cursor=pointer]:
+                      - img [ref=e422]
+                    - button "Delete" [ref=e425] [cursor=pointer]:
+                      - img [ref=e426]
+              - row "Delete Me 1761942064628 delete-me-1761942064628 UNKNOWN Toggle Active Status - - - Manage Token Edit Delete" [ref=e429]:
+                - cell "Delete Me 1761942064628 delete-me-1761942064628" [ref=e430]:
+                  - generic [ref=e431]:
+                    - generic [ref=e432]: Delete Me 1761942064628
+                    - generic [ref=e433]: delete-me-1761942064628
+                - cell "UNKNOWN" [ref=e434]
+                - cell "Toggle Active Status" [ref=e435]:
+                  - checkbox "Toggle Active Status" [checked] [ref=e437]
+                - cell "-" [ref=e439]
+                - cell "-" [ref=e440]
+                - cell "-" [ref=e441]
+                - cell "Manage Token Edit Delete" [ref=e442]:
+                  - generic [ref=e443]:
+                    - button "Manage Token" [ref=e444] [cursor=pointer]:
+                      - img [ref=e445]
+                    - button "Edit" [ref=e449] [cursor=pointer]:
+                      - img [ref=e450]
+                    - button "Delete" [ref=e453] [cursor=pointer]:
+                      - img [ref=e454]
+              - row "Delete Me 1761942418171 delete-me-1761942418171 UNKNOWN Toggle Active Status - - - Manage Token Edit Delete" [ref=e457]:
+                - cell "Delete Me 1761942418171 delete-me-1761942418171" [ref=e458]:
+                  - generic [ref=e459]:
+                    - generic [ref=e460]: Delete Me 1761942418171
+                    - generic [ref=e461]: delete-me-1761942418171
+                - cell "UNKNOWN" [ref=e462]
+                - cell "Toggle Active Status" [ref=e463]:
+                  - checkbox "Toggle Active Status" [checked] [ref=e465]
+                - cell "-" [ref=e467]
+                - cell "-" [ref=e468]
+                - cell "-" [ref=e469]
+                - cell "Manage Token Edit Delete" [ref=e470]:
+                  - generic [ref=e471]:
+                    - button "Manage Token" [ref=e472] [cursor=pointer]:
+                      - img [ref=e473]
+                    - button "Edit" [ref=e477] [cursor=pointer]:
+                      - img [ref=e478]
+                    - button "Delete" [ref=e481] [cursor=pointer]:
+                      - img [ref=e482]
+              - row "E2E Test Device 1761941600922 e2e-device-1761941600922 UNKNOWN Toggle Active Status - - - Manage Token Edit Delete" [ref=e485]:
+                - cell "E2E Test Device 1761941600922 e2e-device-1761941600922" [ref=e486]:
+                  - generic [ref=e487]:
+                    - generic [ref=e488]: E2E Test Device 1761941600922
+                    - generic [ref=e489]: e2e-device-1761941600922
+                - cell "UNKNOWN" [ref=e490]
+                - cell "Toggle Active Status" [ref=e491]:
+                  - checkbox "Toggle Active Status" [checked] [ref=e493]
+                - cell "-" [ref=e495]
+                - cell "-" [ref=e496]
+                - cell "-" [ref=e497]
+                - cell "Manage Token Edit Delete" [ref=e498]:
+                  - generic [ref=e499]:
+                    - button "Manage Token" [ref=e500] [cursor=pointer]:
+                      - img [ref=e501]
+                    - button "Edit" [ref=e505] [cursor=pointer]:
+                      - img [ref=e506]
+                    - button "Delete" [ref=e509] [cursor=pointer]:
+                      - img [ref=e510]
+      - contentinfo [ref=e513]:
+        - generic [ref=e515]:
+          - paragraph [ref=e517]: © 2025 SensorVision. All rights reserved.
+          - button "Report Issue" [ref=e519] [cursor=pointer]:
+            - img [ref=e520]
+            - text: Report Issue
+```
