@@ -123,11 +123,13 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Real-time Chart */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Real-time Power Consumption</h2>
-        <RealTimeChart telemetryData={Object.values(latestTelemetry)} />
-      </div>
+      {/* Real-time Chart - Only show when there's telemetry data */}
+      {Object.keys(latestTelemetry).length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Real-time Power Consumption</h2>
+          <RealTimeChart telemetryData={Object.values(latestTelemetry)} />
+        </div>
+      )}
 
       {/* Device Grid */}
       <div>
