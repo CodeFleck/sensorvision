@@ -578,6 +578,8 @@ export interface PluginRegistry {
 export interface InstalledPlugin {
   id: number;
   pluginKey: string;
+  pluginName: string;
+  version: string;
   installedVersion: string;
   status: PluginInstallationStatus;
   configuration?: Record<string, unknown>;

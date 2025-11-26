@@ -1,52 +1,5 @@
 import axios from './axiosConfig';
-
-export interface PluginRegistry {
-  id: number;
-  pluginKey: string;
-  name: string;
-  description: string;
-  category: 'DATA_INGESTION' | 'NOTIFICATION' | 'ANALYTICS' | 'INTEGRATION' | 'UTILITY';
-  version: string;
-  author: string;
-  authorUrl?: string;
-  iconUrl?: string;
-  repositoryUrl?: string;
-  documentationUrl?: string;
-  minSensorvisionVersion?: string;
-  maxSensorvisionVersion?: string;
-  isOfficial: boolean;
-  isVerified: boolean;
-  installationCount: number;
-  ratingAverage: number;
-  ratingCount: number;
-  pluginProvider: string;
-  pluginType: string;
-  configSchema?: any;
-  tags: string[];
-  screenshots: string[];
-  changelog?: string;
-  publishedAt?: string;
-  isInstalled: boolean;
-  isActive: boolean;
-}
-
-export interface InstalledPlugin {
-  id: string;
-  pluginKey: string;
-  pluginName: string;
-  version: string;
-  status: 'PENDING' | 'INSTALLED' | 'ACTIVE' | 'FAILED' | 'UNINSTALLED';
-  isActive: boolean;
-  configuration?: any;
-  installedAt: string;
-  lastActivatedAt?: string;
-  errorMessage?: string;
-}
-
-export interface PluginRating {
-  rating: number;
-  review?: string;
-}
+import { PluginRegistry, InstalledPlugin, PluginRating } from '../types';
 
 class PluginMarketplaceService {
   private readonly BASE_URL = '/api/v1/plugins';
@@ -126,7 +79,7 @@ class PluginMarketplaceService {
     const plugins = await this.getAllPlugins();
     return plugins
       .filter(p => p.ratingCount > 0)
-      .sort((a, b) => b.ratingAverage - a.ratingAverage)
+      .sort((a, b) => (b.ratingAverage || 0) - (a.ratingAverage || 0))
       .slice(0, limit);
   }
 

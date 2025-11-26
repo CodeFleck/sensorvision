@@ -55,8 +55,8 @@ const PluginMarketplace: React.FC = () => {
         pluginMarketplaceService.getAllPlugins(),
         pluginMarketplaceService.getInstalledPlugins(),
       ]);
-      setMarketplacePlugins(marketplace);
-      setInstalledPlugins(installed);
+      setMarketplacePlugins(marketplace as PluginRegistry[]);
+      setInstalledPlugins(installed as InstalledPlugin[]);
     } catch (error) {
       console.error('Failed to load plugins:', error);
       toast.error('Failed to load plugins');
@@ -134,8 +134,8 @@ const PluginMarketplace: React.FC = () => {
   const filteredMarketplacePlugins = marketplacePlugins.filter((plugin) => {
     const matchesSearch =
       plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plugin.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      plugin.author.toLowerCase().includes(searchTerm.toLowerCase());
+      plugin.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      plugin.author?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory = !selectedCategory || plugin.category === selectedCategory;
 
@@ -363,7 +363,7 @@ const PluginMarketplace: React.FC = () => {
                           <div className="flex items-center gap-1">
                             <Star className="w-4 h-4 text-yellow-400 fill-current" />
                             <span>
-                              {plugin.ratingAverage.toFixed(1)} ({plugin.ratingCount})
+                              {plugin.ratingAverage?.toFixed(1) || '0.0'} ({plugin.ratingCount})
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
