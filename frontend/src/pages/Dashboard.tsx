@@ -19,7 +19,10 @@ export const Dashboard = () => {
   const [latestTelemetry, setLatestTelemetry] = useState<Record<string, TelemetryPoint>>({});
   const [loading, setLoading] = useState(true);
 
-  const { lastMessage, connectionStatus } = useWebSocket('ws://localhost:8080/ws/telemetry');
+  // Dynamically construct WebSocket URL based on current host
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const wsUrl = `${wsProtocol}//${window.location.host}/ws/telemetry`;
+  const { lastMessage, connectionStatus } = useWebSocket(wsUrl);
 
   useEffect(() => {
     const fetchData = async () => {
