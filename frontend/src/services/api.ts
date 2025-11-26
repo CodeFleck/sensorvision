@@ -313,8 +313,8 @@ class ApiService {
       deviceId,
       variable,
       aggregation,
-      start,
-      end,
+      from: start,  // Backend expects 'from' parameter
+      to: end,      // Backend expects 'to' parameter
       interval,
     });
     return this.request<any>(`/analytics/aggregate?${params}`);
