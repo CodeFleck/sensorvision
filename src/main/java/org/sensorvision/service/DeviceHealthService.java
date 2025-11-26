@@ -217,4 +217,53 @@ public class DeviceHealthService {
             return "CRITICAL";
         }
     }
+
+    /**
+     * Scheduled task to update device online/offline status based on lastSeenAt
+     * Devices that haven't sent data in the past 1 hour are marked as OFFLINE
+     * Runs every 5 minutes
+     */
+    @Scheduled(fixedDelay = 300000) // 5 minutes
+    @Transactional
+    public void updateDeviceOnlineStatus() {
+        log.debug("Starting scheduled device online/offline status update");
+        Instant oneHourAgo = Instant.now().minus(60, ChronoUnit.MINUTES);
+
+        List<Device> allDevices = deviceRepository.findAll();
+        int onlineCount = 0;
+        int offlineCount = 0;
+        int unknownCount = 0;
+
+        for (Device device : allDevices) {
+            try {
+                DeviceStatus previousStatus = device.getStatus();
+                DeviceStatus newStatus;
+
+                if (device.getLastSeenAt() == null) {
+                    newStatus = DeviceStatus.UNKNOWN;
+                    unknownCount++;
+                } else if (device.getLastSeenAt().isBefore(oneHourAgo)) {
+                    newStatus = DeviceStatus.OFFLINE;
+                    offlineCount++;
+                } else {
+                    newStatus = DeviceStatus.ONLINE;
+                    onlineCount++;
+                }
+
+                // Only update if status changed
+                if (previousStatus != newStatus) {
+                    device.setStatus(newStatus);
+                    deviceRepository.save(device);
+                    log.info("Device {} status changed from {} to {}",
+                            device.getExternalId(), previousStatus, newStatus);
+                }
+            } catch (Exception e) {
+                log.error("Failed to update status for device {}: {}",
+                        device.getExternalId(), e.getMessage());
+            }
+        }
+
+        log.debug("Device status update completed: {} online, {} offline, {} unknown",
+                onlineCount, offlineCount, unknownCount);
+    }
 }

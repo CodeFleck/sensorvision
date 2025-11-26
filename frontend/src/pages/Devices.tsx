@@ -5,6 +5,7 @@ import { apiService } from '../services/api';
 import { DeviceModal } from '../components/DeviceModal';
 import { TokenModal } from '../components/TokenModal';
 import { clsx } from 'clsx';
+import { formatTimeAgo } from '../utils/timeUtils';
 
 export const Devices = () => {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -196,7 +197,9 @@ export const Devices = () => {
                   {device.sensorType || '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {device.lastSeenAt ? new Date(device.lastSeenAt).toLocaleString() : '-'}
+                  <span title={device.lastSeenAt ? new Date(device.lastSeenAt).toLocaleString() : undefined}>
+                    {device.lastSeenAt ? formatTimeAgo(device.lastSeenAt) : '-'}
+                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-2">
