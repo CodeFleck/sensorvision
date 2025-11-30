@@ -1,6 +1,7 @@
 package org.sensorvision.security;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.User;
 import org.sensorvision.repository.UserRepository;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityUtils {
 
     private final UserRepository userRepository;
@@ -62,19 +64,33 @@ public class SecurityUtils {
 
     /**
      * Get the organization of the currently authenticated user.
+     * Note: getCurrentUser() never returns null - it always throws on failure.
      * @return The user's Organization entity
+     * @throws RuntimeException if organization is null
      */
     public Organization getCurrentUserOrganization() {
         User user = getCurrentUser();
+        if (user.getOrganization() == null) {
+            log.warn("User {} (ID: {}) does not have an associated organization",
+                    user.getUsername(), user.getId());
+            throw new RuntimeException("User does not have an associated organization");
+        }
         return user.getOrganization();
     }
 
     /**
      * Get the ID of the currently authenticated user.
+     * Note: getCurrentUser() never returns null - it always throws on failure.
      * @return The user's ID
+     * @throws IllegalStateException if user ID is null (data integrity issue)
      */
     public Long getCurrentUserId() {
         User user = getCurrentUser();
-        return user.getId();
+        Long id = user.getId();
+        if (id == null) {
+            log.error("User {} has null ID - this indicates a data integrity issue", user.getUsername());
+            throw new IllegalStateException("Current user has no ID - this indicates a data integrity issue");
+        }
+        return id;
     }
 }
