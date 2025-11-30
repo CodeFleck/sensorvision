@@ -63,9 +63,16 @@ public class SecurityUtils {
     /**
      * Get the organization of the currently authenticated user.
      * @return The user's Organization entity
+     * @throws RuntimeException if user or organization is null
      */
     public Organization getCurrentUserOrganization() {
         User user = getCurrentUser();
+        if (user == null) {
+            throw new RuntimeException("Current user is null");
+        }
+        if (user.getOrganization() == null) {
+            throw new RuntimeException("User does not have an associated organization");
+        }
         return user.getOrganization();
     }
 
