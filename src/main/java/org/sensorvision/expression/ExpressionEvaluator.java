@@ -96,9 +96,55 @@ public class ExpressionEvaluator {
 
     /**
      * Substitute variables in expression with their numeric values.
+     * Preserves string literals (content inside quotes) to avoid replacing
+     * variable names that are meant to be passed as strings to functions.
      */
     private String substituteVariables(String expression, Map<String, BigDecimal> variables) {
-        String result = expression;
+        // Extract string literals first and replace with placeholders
+        List<String> stringLiterals = new ArrayList<>();
+        StringBuilder withPlaceholders = new StringBuilder();
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        StringBuilder currentLiteral = new StringBuilder();
+
+        for (int i = 0; i < expression.length(); i++) {
+            char c = expression.charAt(i);
+
+            if (c == '"' && !inSingleQuote) {
+                if (inDoubleQuote) {
+                    // End of double-quoted string
+                    currentLiteral.append(c);
+                    stringLiterals.add(currentLiteral.toString());
+                    withPlaceholders.append("__STRING_LITERAL_").append(stringLiterals.size() - 1).append("__");
+                    currentLiteral = new StringBuilder();
+                    inDoubleQuote = false;
+                } else {
+                    // Start of double-quoted string
+                    inDoubleQuote = true;
+                    currentLiteral.append(c);
+                }
+            } else if (c == '\'' && !inDoubleQuote) {
+                if (inSingleQuote) {
+                    // End of single-quoted string
+                    currentLiteral.append(c);
+                    stringLiterals.add(currentLiteral.toString());
+                    withPlaceholders.append("__STRING_LITERAL_").append(stringLiterals.size() - 1).append("__");
+                    currentLiteral = new StringBuilder();
+                    inSingleQuote = false;
+                } else {
+                    // Start of single-quoted string
+                    inSingleQuote = true;
+                    currentLiteral.append(c);
+                }
+            } else if (inSingleQuote || inDoubleQuote) {
+                currentLiteral.append(c);
+            } else {
+                withPlaceholders.append(c);
+            }
+        }
+
+        // Perform variable substitution on the expression without string literals
+        String result = withPlaceholders.toString();
 
         // Sort variables by length (descending) to avoid partial replacements
         List<String> variableNames = new ArrayList<>(variables.keySet());
@@ -111,6 +157,11 @@ public class ExpressionEvaluator {
                 result = result.replaceAll("\\b" + Pattern.quote(varName) + "\\b",
                         Matcher.quoteReplacement(value.toPlainString()));
             }
+        }
+
+        // Restore string literals
+        for (int i = 0; i < stringLiterals.size(); i++) {
+            result = result.replace("__STRING_LITERAL_" + i + "__", stringLiterals.get(i));
         }
 
         return result;

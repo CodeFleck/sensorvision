@@ -292,6 +292,7 @@ public class StatisticalFunctions {
 
     /**
      * Fetch telemetry values for a specific variable over a time window.
+     * Includes all records up to and including the current timestamp.
      */
     private static List<BigDecimal> fetchValues(
             StatisticalFunctionContext context,
@@ -299,7 +300,9 @@ public class StatisticalFunctions {
             TimeWindow window) {
 
         Instant startTime = window.calculateStartTime(context.getCurrentTimestamp());
-        Instant endTime = context.getCurrentTimestamp();
+        // Include records up to and including the current timestamp
+        // Add a small buffer to ensure the current record is included
+        Instant endTime = context.getCurrentTimestamp().plusMillis(1);
 
         List<TelemetryRecord> records = context.getTelemetryRepository()
             .findByDeviceExternalIdAndTimestampBetweenOrderByTimestampAsc(
@@ -307,6 +310,42 @@ public class StatisticalFunctions {
                 startTime,
                 endTime
             );
+
+        log.debug("fetchValues({}): startTime={}, endTime={}, found {} records",
+                  variableName, startTime, endTime, records.size());
+
+        // Map variable name to record field
+        Function<TelemetryRecord, BigDecimal> extractor = getFieldExtractor(variableName);
+
+        return records.stream()
+            .map(extractor)
+            .filter(value -> value != null && value.compareTo(BigDecimal.ZERO) != 0)
+            .toList();
+    }
+
+    /**
+     * Fetch telemetry values for a specific variable over a time window,
+     * EXCLUDING the current record. Used for comparison-based functions
+     * like anomaly detection where you want to compare current vs historical.
+     */
+    private static List<BigDecimal> fetchHistoricalValues(
+            StatisticalFunctionContext context,
+            String variableName,
+            TimeWindow window) {
+
+        Instant startTime = window.calculateStartTime(context.getCurrentTimestamp());
+        // Exclude the current record by using a slightly earlier end time
+        Instant endTime = context.getCurrentTimestamp().minusMillis(1);
+
+        List<TelemetryRecord> records = context.getTelemetryRepository()
+            .findByDeviceExternalIdAndTimestampBetweenOrderByTimestampAsc(
+                context.getDeviceExternalId(),
+                startTime,
+                endTime
+            );
+
+        log.debug("fetchHistoricalValues({}): startTime={}, endTime={}, found {} records",
+                  variableName, startTime, endTime, records.size());
 
         // Map variable name to record field
         Function<TelemetryRecord, BigDecimal> extractor = getFieldExtractor(variableName);
