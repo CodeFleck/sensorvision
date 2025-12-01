@@ -58,7 +58,7 @@ class DashboardHibernateReproTests {
         em.persist(org);
 
         Dashboard dashboard = new Dashboard();
-        dashboard.setName("Default Dashboard");
+        dashboard.setName("Dashboard");
         dashboard.setIsDefault(true);
         dashboard.setOrganization(org);
         dashboard.setLayoutConfig(mapper.createObjectNode());
