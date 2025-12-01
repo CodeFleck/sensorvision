@@ -30,6 +30,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/devices/**",  // Exclude device endpoints (high frequency reads)
                         "/api/v1/data/**",  // Exclude telemetry data endpoints (high frequency reads)
                         "/api/v1/ingest/**",  // Exclude data ingestion endpoints
+                        "/api/v1/dashboards/**",  // Exclude dashboard/widget endpoints (interactive UI)
+                        "/api/v1/support/**",  // Exclude support ticket endpoints (user interactions)
                         "/swagger-ui/**",  // Exclude Swagger UI
                         "/v3/api-docs/**"  // Exclude OpenAPI docs
                 );
