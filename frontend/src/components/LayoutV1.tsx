@@ -33,7 +33,6 @@ import {
   Mail,
   Phone,
   DollarSign,
-  Package,
   User,
   Building2,
 } from 'lucide-react';
