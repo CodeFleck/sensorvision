@@ -65,6 +65,7 @@ interface NavigationSection {
   iconColor: string;
   items: NavigationItem[];
   adminOnly: boolean;
+  excludeForAdmin?: boolean; // Hide entire section from admins
 }
 
 const navigationSections: NavigationSection[] = [
@@ -99,30 +100,32 @@ const navigationSections: NavigationSection[] = [
     icon: AlertTriangle,
     iconColor: 'text-orange-600',
     adminOnly: false,
+    excludeForAdmin: true, // Hide from admin dashboard - user-only feature
     items: [
-      { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false },
-      { name: 'Global Rules', href: '/global-rules', icon: Network, adminOnly: false },
-      { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false },
-      { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false },
-      { name: 'Plugin Marketplace', href: '/plugins', icon: Package, adminOnly: false },
-      { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, adminOnly: false },
-      { name: 'SMS Settings', href: '/sms-settings', icon: DollarSign, adminOnly: true },
-      { name: 'Events', href: '/events', icon: Clock, adminOnly: true },
+      { name: 'Rules', href: '/rules', icon: Settings, adminOnly: false, excludeForAdmin: true },
+      { name: 'Global Rules', href: '/global-rules', icon: Network, adminOnly: false, excludeForAdmin: true },
+      { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false, excludeForAdmin: true },
+      { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false, excludeForAdmin: true },
+      { name: 'Plugin Marketplace', href: '/plugin-marketplace', icon: Package, adminOnly: false, excludeForAdmin: true },
+      { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, adminOnly: false, excludeForAdmin: true },
+      { name: 'SMS Settings', href: '/sms-settings', icon: DollarSign, adminOnly: false, excludeForAdmin: true },
+      { name: 'Events', href: '/events', icon: Clock, adminOnly: false, excludeForAdmin: true },
     ],
   },
   {
     name: 'DATA MANAGEMENT',
     icon: Database,
     iconColor: 'text-purple-600',
-    adminOnly: true,
+    adminOnly: false,
+    excludeForAdmin: true, // Hide from admin dashboard - user-only feature
     items: [
-      { name: 'Data Ingestion', href: '/data-ingestion', icon: Upload, adminOnly: true },
-      { name: 'Data Import', href: '/data-import', icon: FileUp, adminOnly: true },
-      { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: true },
-      { name: 'Variables', href: '/variables', icon: Database, adminOnly: true },
-      { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: true },
-      { name: 'Webhook Tester', href: '/webhook-tester', icon: Webhook, adminOnly: true },
-      { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: true },
+      { name: 'Data Ingestion', href: '/data-ingestion', icon: Upload, adminOnly: false, excludeForAdmin: true },
+      { name: 'Data Import', href: '/data-import', icon: FileUp, adminOnly: false, excludeForAdmin: true },
+      { name: 'Data Export', href: '/data-export', icon: Download, adminOnly: false, excludeForAdmin: true },
+      { name: 'Variables', href: '/variables', icon: Database, adminOnly: false, excludeForAdmin: true },
+      { name: 'Data Retention', href: '/data-retention', icon: Archive, adminOnly: false, excludeForAdmin: true },
+      { name: 'Webhook Tester', href: '/webhook-tester', icon: Webhook, adminOnly: false, excludeForAdmin: true },
+      { name: 'API Playground', href: '/api-playground', icon: Terminal, adminOnly: false, excludeForAdmin: true },
     ],
   },
   {
@@ -188,6 +191,16 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
   const getVisibleSections = (): NavigationSection[] => {
     return navigationSections
       .map(section => {
+        // If section is admin-only and user is not admin, hide entire section
+        if (section.adminOnly && !isAdmin) {
+          return null;
+        }
+
+        // If section is marked excludeForAdmin and user is admin, hide entire section
+        if (section.excludeForAdmin && isAdmin) {
+          return null;
+        }
+
         // Filter items within section
         const visibleItems = section.items.filter(item => {
           // Hide admin-only items from non-admins
@@ -200,11 +213,6 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
           }
           return true;
         });
-
-        // If section is admin-only and user is not admin, hide entire section
-        if (section.adminOnly && !isAdmin) {
-          return null;
-        }
 
         // If no items are visible, hide section
         if (visibleItems.length === 0) {
