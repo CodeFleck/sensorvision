@@ -237,12 +237,12 @@ class SyntheticVariableServiceIntegrationTest {
             true
         );
 
-        // Create hourly data
+        // Create hourly data - parameters: timestamp, voltage, current, kwConsumption, powerFactor, frequency
         Instant now = Instant.now();
-        createTelemetryRecord(now.minusSeconds(3600), new BigDecimal("10.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
-        createTelemetryRecord(now.minusSeconds(2400), new BigDecimal("15.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
-        createTelemetryRecord(now.minusSeconds(1200), new BigDecimal("20.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
-        TelemetryRecord latest = createTelemetryRecord(now, new BigDecimal("25.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
+        createTelemetryRecord(now.minusSeconds(3600), new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("10.0"), null, null);
+        createTelemetryRecord(now.minusSeconds(2400), new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("15.0"), null, null);
+        createTelemetryRecord(now.minusSeconds(1200), new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("20.0"), null, null);
+        TelemetryRecord latest = createTelemetryRecord(now, new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("25.0"), null, null);
 
         // Calculate
         syntheticVariableService.calculateSyntheticVariables(latest);
@@ -265,11 +265,11 @@ class SyntheticVariableServiceIntegrationTest {
             true
         );
 
-        // Create data with increasing trend
+        // Create data with increasing trend - parameters: timestamp, voltage, current, kwConsumption, powerFactor, frequency
         Instant now = Instant.now();
-        createTelemetryRecord(now.minusSeconds(3600), new BigDecimal("100.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
-        createTelemetryRecord(now.minusSeconds(1800), new BigDecimal("120.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
-        TelemetryRecord latest = createTelemetryRecord(now, new BigDecimal("140.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
+        createTelemetryRecord(now.minusSeconds(3600), new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("100.0"), null, null);
+        createTelemetryRecord(now.minusSeconds(1800), new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("120.0"), null, null);
+        TelemetryRecord latest = createTelemetryRecord(now, new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("140.0"), null, null);
 
         // Calculate
         syntheticVariableService.calculateSyntheticVariables(latest);
@@ -292,10 +292,10 @@ class SyntheticVariableServiceIntegrationTest {
             true
         );
 
-        // Create data: 100 -> 150 = 50% increase
+        // Create data: 100 -> 150 = 50% increase - parameters: timestamp, voltage, current, kwConsumption, powerFactor, frequency
         Instant now = Instant.now();
-        createTelemetryRecord(now.minusSeconds(3600), new BigDecimal("100.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
-        TelemetryRecord latest = createTelemetryRecord(now, new BigDecimal("150.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
+        createTelemetryRecord(now.minusSeconds(3600), new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("100.0"), null, null);
+        TelemetryRecord latest = createTelemetryRecord(now, new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("150.0"), null, null);
 
         // Calculate
         syntheticVariableService.calculateSyntheticVariables(latest);
@@ -318,14 +318,14 @@ class SyntheticVariableServiceIntegrationTest {
             true
         );
 
-        // Create hourly baseline data (average around 100)
+        // Create hourly baseline data (average kwConsumption around 100) - parameters: timestamp, voltage, current, kwConsumption, powerFactor, frequency
         Instant now = Instant.now();
-        createTelemetryRecord(now.minusSeconds(3600), new BigDecimal("95.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
-        createTelemetryRecord(now.minusSeconds(2400), new BigDecimal("100.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
-        createTelemetryRecord(now.minusSeconds(1200), new BigDecimal("105.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
+        createTelemetryRecord(now.minusSeconds(3600), new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("95.0"), null, null);
+        createTelemetryRecord(now.minusSeconds(2400), new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("100.0"), null, null);
+        createTelemetryRecord(now.minusSeconds(1200), new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("105.0"), null, null);
 
         // Create spike: 200 > (100 * 1.5) = 200 > 150 → TRUE
-        TelemetryRecord latest = createTelemetryRecord(now, new BigDecimal("200.0"), new BigDecimal("220.0"), new BigDecimal("5.0"), null, null);
+        TelemetryRecord latest = createTelemetryRecord(now, new BigDecimal("220.0"), new BigDecimal("5.0"), new BigDecimal("200.0"), null, null);
 
         // Calculate
         syntheticVariableService.calculateSyntheticVariables(latest);

@@ -37,17 +37,18 @@ public class TestBeanConfiguration {
     @Bean
     @Primary
     public ClientRegistrationRepository clientRegistrationRepository() {
+        // Use placeholder URLs that clearly indicate they are for testing only
         ClientRegistration dummyRegistration = ClientRegistration.withRegistrationId("google")
-                .clientId("dummy-client-id")
-                .clientSecret("dummy-client-secret")
+                .clientId("test-client-id")
+                .clientSecret("test-client-secret")
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
                 .scope("openid", "profile", "email")
-                .authorizationUri("https://accounts.google.com/o/oauth2/v2/auth")
-                .tokenUri("https://www.googleapis.com/oauth2/v4/token")
-                .userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
+                .authorizationUri("https://test.example.com/oauth2/authorize")
+                .tokenUri("https://test.example.com/oauth2/token")
+                .userInfoUri("https://test.example.com/oauth2/userinfo")
                 .userNameAttributeName("sub")
-                .clientName("Google")
+                .clientName("Test OAuth2 Provider")
                 .build();
 
         return new InMemoryClientRegistrationRepository(dummyRegistration);
