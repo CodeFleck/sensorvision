@@ -39,8 +39,8 @@ public class DefaultDashboardInitializer {
         }
 
         Dashboard dashboard = new Dashboard();
-        dashboard.setName("Default Dashboard");
-        dashboard.setDescription("Automatically generated default dashboard");
+        dashboard.setName("Dashboard");
+        dashboard.setDescription(null);
         dashboard.setIsDefault(true);
         dashboard.setLayoutConfig(objectMapper.createObjectNode());
         dashboard.setOrganization(entityManager.getReference(Organization.class, organization.getId()));

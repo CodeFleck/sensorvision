@@ -302,15 +302,6 @@ export const Dashboards: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-gray-800">{dashboard.name}</h1>
-              {/* Auto-generated Dashboard Indicator */}
-              {dashboard.description?.includes('Automatically generated') && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-full">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Auto-generated
-                </span>
-              )}
               {/* WebSocket Status Indicator */}
               <div className="flex items-center gap-2 text-sm">
                 <div className={`w-2 h-2 rounded-full ${connectionStatus === 'Open' ? 'bg-green-500' : 'bg-gray-400'}`} />
