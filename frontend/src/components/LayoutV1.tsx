@@ -106,7 +106,6 @@ const navigationSections: NavigationSection[] = [
       { name: 'Global Rules', href: '/global-rules', icon: Network, adminOnly: false, excludeForAdmin: true },
       { name: 'Alerts', href: '/alerts', icon: AlertTriangle, adminOnly: false, excludeForAdmin: true },
       { name: 'Notifications', href: '/notifications', icon: Bell, adminOnly: false, excludeForAdmin: true },
-      { name: 'Plugin Marketplace', href: '/plugin-marketplace', icon: Package, adminOnly: false, excludeForAdmin: true },
       { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, adminOnly: false, excludeForAdmin: true },
       { name: 'SMS Settings', href: '/sms-settings', icon: DollarSign, adminOnly: false, excludeForAdmin: true },
       { name: 'Events', href: '/events', icon: Clock, adminOnly: false, excludeForAdmin: true },
