@@ -33,6 +33,10 @@ import { AdminSupportTickets } from './pages/AdminSupportTickets';
 import { AdminCannedResponses } from './pages/AdminCannedResponses';
 import { MyTickets } from './pages/MyTickets';
 import DataRetention from './pages/DataRetention';
+import Variables from './pages/Variables';
+import DataExport from './pages/DataExport';
+import WebhookTester from './pages/WebhookTester';
+import ApiPlayground from './pages/ApiPlayground';
 import Profile from './pages/Profile';
 
 import { Playlists } from './pages/Playlists';
@@ -86,40 +90,51 @@ function App() {
                 <ProtectedRoute>
                   <LayoutV1>
                     <Routes>
-                      {/* Standard user routes */}
+                      {/* Core user routes */}
                       <Route path="/" element={<Dashboard />} />
+                      <Route path="/dashboards" element={<Dashboards />} />
+                      <Route path="/dashboard-templates" element={<DashboardTemplates />} />
+                      <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/profile" element={<Profile />} />
+
+                      {/* Devices & Data routes (user-accessible) */}
+                      <Route path="/devices" element={<Devices />} />
+                      <Route path="/device-groups" element={<DeviceGroups />} />
+                      <Route path="/device-tags" element={<DeviceTags />} />
                       <Route path="/integration-wizard" element={<IntegrationWizard />} />
                       <Route path="/serverless-functions" element={<ServerlessFunctions />} />
                       <Route path="/data-plugins" element={<DataPlugins />} />
                       <Route path="/plugin-marketplace" element={<PluginMarketplace />} />
-                      <Route path="/dashboards" element={<Dashboards />} />
-                      <Route path="/dashboard-templates" element={<DashboardTemplates />} />
                       <Route path="/playlists" element={<Playlists />} />
-                      <Route path="/devices" element={<Devices />} />
-                      <Route path="/device-groups" element={<DeviceGroups />} />
-                      <Route path="/device-tags" element={<DeviceTags />} />
-                      <Route path="/analytics" element={<Analytics />} />
+
+                      {/* Monitoring routes (user-accessible) */}
                       <Route path="/rules" element={<Rules />} />
                       <Route path="/global-rules" element={<GlobalRules />} />
                       <Route path="/alerts" element={<Alerts />} />
                       <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/my-tickets" element={<MyTickets />} />
-                      <Route path="/profile" element={<Profile />} />
                       <Route path="/phone-numbers" element={<PhoneNumbers />} />
+                      <Route path="/sms-settings" element={<SmsSettings />} />
+                      <Route path="/events" element={<Events />} />
 
-                      {/* Admin‑only routes */}
+                      {/* Data Management routes (user-accessible) */}
+                      <Route path="/data-ingestion" element={<DataIngestion />} />
+                      <Route path="/data-import" element={<DataImport />} />
+                      <Route path="/data-export" element={<DataExport />} />
+                      <Route path="/variables" element={<Variables />} />
+                      <Route path="/data-retention" element={<DataRetention />} />
+                      <Route path="/webhook-tester" element={<WebhookTester />} />
+                      <Route path="/api-playground" element={<ApiPlayground />} />
+
+                      {/* Support routes */}
+                      <Route path="/my-tickets" element={<MyTickets />} />
+
+                      {/* Admin-only routes */}
                       <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />
                       <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
                       <Route path="/admin/organizations" element={<ProtectedRoute adminOnly={true}><AdminOrganizations /></ProtectedRoute>} />
                       <Route path="/admin/support-tickets" element={<ProtectedRoute adminOnly={true}><AdminSupportTickets /></ProtectedRoute>} />
                       <Route path="/admin/canned-responses" element={<ProtectedRoute adminOnly={true}><AdminCannedResponses /></ProtectedRoute>} />
-                      <Route path="/events" element={<ProtectedRoute adminOnly={true}><Events /></ProtectedRoute>} />
-                      <Route path="/data-ingestion" element={<ProtectedRoute adminOnly={true}><DataIngestion /></ProtectedRoute>} />
-                      <Route path="/data-import" element={<ProtectedRoute adminOnly={true}><DataImport /></ProtectedRoute>} />
-                      <Route path="/data-plugins" element={<ProtectedRoute adminOnly={true}><DataPlugins /></ProtectedRoute>} />
                       <Route path="/email-templates" element={<ProtectedRoute adminOnly={true}><EmailTemplateBuilder /></ProtectedRoute>} />
-                      <Route path="/sms-settings" element={<ProtectedRoute adminOnly={true}><SmsSettings /></ProtectedRoute>} />
-                      <Route path="/data-retention" element={<ProtectedRoute adminOnly={true}><DataRetention /></ProtectedRoute>} />
                     </Routes>
                   </LayoutV1>
                 </ProtectedRoute>
