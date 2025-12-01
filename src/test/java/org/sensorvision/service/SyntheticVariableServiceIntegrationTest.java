@@ -417,6 +417,7 @@ class SyntheticVariableServiceIntegrationTest {
                                                     BigDecimal kwConsumption, BigDecimal powerFactor, BigDecimal frequency) {
         TelemetryRecord record = new TelemetryRecord();
         record.setDevice(testDevice);
+        record.setOrganization(testOrg);  // Required field - set organization from test context
         record.setTimestamp(timestamp);
         record.setVoltage(voltage);
         record.setCurrent(current);
