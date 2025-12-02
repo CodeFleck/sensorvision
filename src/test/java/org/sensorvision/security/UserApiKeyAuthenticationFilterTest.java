@@ -7,7 +7,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -17,7 +16,6 @@ import org.sensorvision.model.Role;
 import org.sensorvision.model.User;
 import org.sensorvision.model.UserApiKey;
 import org.sensorvision.service.UserApiKeyService;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -31,7 +29,7 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for UserApiKeyAuthenticationFilter.
- * Tests API key extraction, validation, and authentication.
+ * Tests API key extraction, validation, authentication, and rate limiting.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -49,7 +47,6 @@ class UserApiKeyAuthenticationFilterTest {
     @Mock
     private FilterChain filterChain;
 
-    @InjectMocks
     private UserApiKeyAuthenticationFilter filter;
 
     private Organization testOrganization;
@@ -58,6 +55,7 @@ class UserApiKeyAuthenticationFilterTest {
 
     @BeforeEach
     void setUp() {
+        filter = new UserApiKeyAuthenticationFilter(userApiKeyService);
         SecurityContextHolder.clearContext();
 
         testOrganization = Organization.builder()
@@ -80,11 +78,15 @@ class UserApiKeyAuthenticationFilterTest {
         testApiKey = UserApiKey.builder()
                 .id(1L)
                 .user(testUser)
-                .keyValue("550e8400-e29b-41d4-a716-446655440000")
+                .keyPrefix("550e8400")
+                .keyHash("$2a$10$hashedvalue")
                 .name("Default Token")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+
+        // Default mock for remote address
+        when(request.getRemoteAddr()).thenReturn("127.0.0.1");
     }
 
     @AfterEach
@@ -99,7 +101,7 @@ class UserApiKeyAuthenticationFilterTest {
         // Given
         String apiKey = "550e8400-e29b-41d4-a716-446655440000";
         when(request.getHeader("X-API-Key")).thenReturn(apiKey);
-        when(request.getHeader("Authorization")).thenReturn(null);
+        when(request.getRequestURI()).thenReturn("/api/v1/test");
         when(userApiKeyService.validateApiKey(apiKey)).thenReturn(Optional.of(testApiKey));
 
         // When
@@ -117,7 +119,7 @@ class UserApiKeyAuthenticationFilterTest {
         assertThat(apiKeyAuth.getAuthorities()).hasSize(1);
 
         verify(filterChain).doFilter(request, response);
-        verify(userApiKeyService).updateLastUsedAt(1L);
+        verify(userApiKeyService).updateLastUsedAtAsync(1L);
     }
 
     @Test
@@ -125,7 +127,6 @@ class UserApiKeyAuthenticationFilterTest {
         // Given
         String invalidKey = "550e8400-e29b-41d4-a716-446655440000";
         when(request.getHeader("X-API-Key")).thenReturn(invalidKey);
-        when(request.getHeader("Authorization")).thenReturn(null);
         when(userApiKeyService.validateApiKey(invalidKey)).thenReturn(Optional.empty());
 
         // When
@@ -136,40 +137,22 @@ class UserApiKeyAuthenticationFilterTest {
         assertThat(auth).isNull();
 
         verify(filterChain).doFilter(request, response);
-        verify(userApiKeyService, never()).updateLastUsedAt(any());
+        verify(userApiKeyService, never()).updateLastUsedAtAsync(any());
     }
 
-    // ==================== Bearer Token Tests ====================
+    // ==================== Bearer Token No Longer Supported ====================
 
     @Test
-    void doFilterInternal_withValidBearerToken_shouldAuthenticate() throws Exception {
-        // Given
+    void doFilterInternal_withBearerToken_shouldNotAuthenticate() throws Exception {
+        // Given - Bearer tokens are now reserved for JWT, not user API keys
         String apiKey = "550e8400-e29b-41d4-a716-446655440000";
         when(request.getHeader("X-API-Key")).thenReturn(null);
         when(request.getHeader("Authorization")).thenReturn("Bearer " + apiKey);
-        when(userApiKeyService.validateApiKey(apiKey)).thenReturn(Optional.of(testApiKey));
 
         // When
         filter.doFilterInternal(request, response, filterChain);
 
-        // Then
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        assertThat(auth).isNotNull();
-        assertThat(auth).isInstanceOf(UserApiKeyAuthenticationFilter.UserApiKeyAuthentication.class);
-
-        verify(filterChain).doFilter(request, response);
-    }
-
-    @Test
-    void doFilterInternal_withInvalidBearerPrefix_shouldNotAuthenticate() throws Exception {
-        // Given
-        when(request.getHeader("X-API-Key")).thenReturn(null);
-        when(request.getHeader("Authorization")).thenReturn("Basic sometoken");
-
-        // When
-        filter.doFilterInternal(request, response, filterChain);
-
-        // Then
+        // Then - Should not authenticate via Bearer
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         assertThat(auth).isNull();
 
@@ -183,7 +166,6 @@ class UserApiKeyAuthenticationFilterTest {
     void doFilterInternal_withNoApiKey_shouldContinueChain() throws Exception {
         // Given
         when(request.getHeader("X-API-Key")).thenReturn(null);
-        when(request.getHeader("Authorization")).thenReturn(null);
 
         // When
         filter.doFilterInternal(request, response, filterChain);
@@ -200,7 +182,6 @@ class UserApiKeyAuthenticationFilterTest {
     void doFilterInternal_withBlankApiKey_shouldContinueChain() throws Exception {
         // Given
         when(request.getHeader("X-API-Key")).thenReturn("   ");
-        when(request.getHeader("Authorization")).thenReturn(null);
 
         // When
         filter.doFilterInternal(request, response, filterChain);
@@ -231,6 +212,7 @@ class UserApiKeyAuthenticationFilterTest {
 
         verify(filterChain).doFilter(request, response);
         // Service shouldn't be called since we're already authenticated
+        verify(userApiKeyService, never()).validateApiKey(any());
     }
 
     // ==================== Invalid Format Tests ====================
@@ -240,7 +222,6 @@ class UserApiKeyAuthenticationFilterTest {
         // Given - not a UUID format
         String invalidFormat = "not-a-valid-uuid";
         when(request.getHeader("X-API-Key")).thenReturn(invalidFormat);
-        when(request.getHeader("Authorization")).thenReturn(null);
 
         // When
         filter.doFilterInternal(request, response, filterChain);
@@ -258,7 +239,6 @@ class UserApiKeyAuthenticationFilterTest {
         // Given - JWT token instead of API key
         String jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
         when(request.getHeader("X-API-Key")).thenReturn(jwtToken);
-        when(request.getHeader("Authorization")).thenReturn(null);
 
         // When
         filter.doFilterInternal(request, response, filterChain);
@@ -278,7 +258,6 @@ class UserApiKeyAuthenticationFilterTest {
         // Given
         String apiKey = "550e8400-e29b-41d4-a716-446655440000";
         when(request.getHeader("X-API-Key")).thenReturn(apiKey);
-        when(request.getHeader("Authorization")).thenReturn(null);
         when(userApiKeyService.validateApiKey(apiKey)).thenThrow(new RuntimeException("Database error"));
 
         // When
@@ -290,6 +269,45 @@ class UserApiKeyAuthenticationFilterTest {
 
         // Filter chain should still continue
         verify(filterChain).doFilter(request, response);
+    }
+
+    // ==================== Rate Limiting Tests ====================
+
+    @Test
+    void doFilterInternal_afterManyFailedAttempts_shouldRateLimit() throws Exception {
+        // Given - simulate 10 failed attempts
+        String apiKey = "550e8400-e29b-41d4-a716-446655440000";
+        when(request.getHeader("X-API-Key")).thenReturn(apiKey);
+        when(userApiKeyService.validateApiKey(apiKey)).thenReturn(Optional.empty());
+
+        // Simulate 10 failed attempts to trigger rate limiting
+        for (int i = 0; i < 10; i++) {
+            filter.doFilterInternal(request, response, filterChain);
+        }
+
+        // The 11th attempt should be rate limited
+        reset(userApiKeyService);
+        filter.doFilterInternal(request, response, filterChain);
+
+        // Then - service should not be called due to rate limiting
+        verify(userApiKeyService, never()).validateApiKey(any());
+    }
+
+    @Test
+    void doFilterInternal_withXForwardedFor_shouldUseRealClientIp() throws Exception {
+        // Given
+        String apiKey = "550e8400-e29b-41d4-a716-446655440000";
+        when(request.getHeader("X-API-Key")).thenReturn(apiKey);
+        when(request.getHeader("X-Forwarded-For")).thenReturn("192.168.1.100, 10.0.0.1");
+        when(request.getRequestURI()).thenReturn("/api/v1/test");
+        when(userApiKeyService.validateApiKey(apiKey)).thenReturn(Optional.of(testApiKey));
+
+        // When
+        filter.doFilterInternal(request, response, filterChain);
+
+        // Then - should authenticate successfully
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        assertThat(auth).isNotNull();
     }
 
     // ==================== UserApiKeyAuthentication Class Tests ====================
@@ -334,27 +352,5 @@ class UserApiKeyAuthenticationFilterTest {
         // Then
         assertThat(auth.getOrganizationId()).isNull();
         assertThat(auth.getOrganizationName()).isNull();
-    }
-
-    // ==================== X-API-Key Priority Over Bearer Tests ====================
-
-    @Test
-    void doFilterInternal_xApiKeyHeader_shouldTakePriorityOverBearer() throws Exception {
-        // Given - both headers present, X-API-Key should be used
-        String xApiKey = "550e8400-e29b-41d4-a716-446655440000";
-        String bearerKey = "660e8400-e29b-41d4-a716-446655440001";
-        when(request.getHeader("X-API-Key")).thenReturn(xApiKey);
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + bearerKey);
-        when(userApiKeyService.validateApiKey(xApiKey)).thenReturn(Optional.of(testApiKey));
-
-        // When
-        filter.doFilterInternal(request, response, filterChain);
-
-        // Then
-        verify(userApiKeyService).validateApiKey(xApiKey);
-        verify(userApiKeyService, never()).validateApiKey(bearerKey);
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        assertThat(auth).isNotNull();
     }
 }

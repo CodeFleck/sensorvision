@@ -1,6 +1,7 @@
 package org.sensorvision.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.dto.CreateUserApiKeyRequest;
@@ -11,6 +12,7 @@ import org.sensorvision.security.SecurityUtils;
 import org.sensorvision.service.UserApiKeyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/api-keys")
 @RequiredArgsConstructor
+@Validated
 public class UserApiKeyController {
 
     private final UserApiKeyService userApiKeyService;
@@ -61,18 +64,16 @@ public class UserApiKeyController {
         User currentUser = securityUtils.getCurrentUser();
 
         String name = (request != null && request.getName() != null) ? request.getName() : "Default Token";
+        String description = (request != null) ? request.getDescription() : null;
 
-        UserApiKey apiKey = userApiKeyService.generateApiKey(currentUser.getId(), name);
-
-        // If description was provided, we'd need to add it after creation
-        // For now, the description can be added in a future update
+        UserApiKey apiKey = userApiKeyService.generateApiKey(currentUser.getId(), name, description);
 
         log.info("User {} generated new API key '{}'", currentUser.getUsername(), name);
 
         return ResponseEntity.ok(UserApiKeyDto.newKey(
                 apiKey.getId(),
                 apiKey.getName(),
-                apiKey.getKeyValue(),  // Full key value - only shown on creation
+                apiKey.getDisplayKeyValue(),  // Full key value - only shown on creation
                 apiKey.getCreatedAt()
         ));
     }
@@ -91,7 +92,7 @@ public class UserApiKeyController {
                 .map(apiKey -> ResponseEntity.ok(UserApiKeyDto.newKey(
                         apiKey.getId(),
                         apiKey.getName(),
-                        apiKey.getKeyValue(),
+                        apiKey.getDisplayKeyValue(),
                         apiKey.getCreatedAt()
                 )))
                 .orElseGet(() -> ResponseEntity.ok(UserApiKeyDto.builder()
@@ -108,7 +109,7 @@ public class UserApiKeyController {
      * @return The new API key (full key value shown only once)
      */
     @PostMapping("/{keyId}/rotate")
-    public ResponseEntity<UserApiKeyDto> rotateApiKey(@PathVariable Long keyId) {
+    public ResponseEntity<UserApiKeyDto> rotateApiKey(@PathVariable @Positive Long keyId) {
         User currentUser = securityUtils.getCurrentUser();
 
         // Verify the key belongs to the current user
@@ -121,7 +122,7 @@ public class UserApiKeyController {
         return ResponseEntity.ok(UserApiKeyDto.newKey(
                 newKey.getId(),
                 newKey.getName(),
-                newKey.getKeyValue(),
+                newKey.getDisplayKeyValue(),
                 newKey.getCreatedAt()
         ));
     }
@@ -134,7 +135,7 @@ public class UserApiKeyController {
      * @return Success message
      */
     @DeleteMapping("/{keyId}")
-    public ResponseEntity<UserApiKeyDto> revokeApiKey(@PathVariable Long keyId) {
+    public ResponseEntity<UserApiKeyDto> revokeApiKey(@PathVariable @Positive Long keyId) {
         User currentUser = securityUtils.getCurrentUser();
 
         // Verify the key belongs to the current user

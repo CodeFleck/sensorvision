@@ -4,7 +4,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.model.User;
 import org.sensorvision.model.UserApiKey;
@@ -19,29 +18,46 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
  * Authentication filter for user API keys.
  * <p>
- * This filter processes requests that use the X-API-Key header or Bearer token
+ * This filter processes requests that use the X-API-Key header
  * to authenticate with a user-level API key (like Ubidots Default Token).
  * <p>
  * User API keys grant access to all devices in the user's organization.
  * <p>
- * Supported formats:
+ * Supported format:
  * - X-API-Key: {api-key-value}
- * - Authorization: Bearer {api-key-value}
+ * <p>
+ * Note: Bearer tokens in Authorization header are reserved for JWT authentication.
  * <p>
  * This filter runs AFTER the device token filter but BEFORE the JWT filter,
  * allowing user API keys to be processed after device-specific tokens.
+ * <p>
+ * Security features:
+ * - Rate limiting on failed authentication attempts per IP
+ * - Async last-used timestamp updates to reduce latency
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final int MAX_FAILED_ATTEMPTS = 10;
+    private static final long RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
     private final UserApiKeyService userApiKeyService;
+
+    // Rate limiting: track failed attempts per IP
+    private final ConcurrentMap<String, RateLimitEntry> failedAttempts = new ConcurrentHashMap<>();
+
+    public UserApiKeyAuthenticationFilter(UserApiKeyService userApiKeyService) {
+        this.userApiKeyService = userApiKeyService;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -54,6 +70,15 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
             // Skip if already authenticated (e.g., by device token filter)
             if (SecurityContextHolder.getContext().getAuthentication() != null &&
                 SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            String clientIp = getClientIp(request);
+
+            // Check rate limiting
+            if (isRateLimited(clientIp)) {
+                log.warn("Rate limited API key authentication attempts from IP: {}", clientIp);
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -80,14 +105,22 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    // Update last used timestamp asynchronously
-                    userApiKeyService.updateLastUsedAt(userApiKey.getId());
+                    // Update last used timestamp asynchronously to avoid blocking
+                    userApiKeyService.updateLastUsedAtAsync(userApiKey.getId());
 
-                    log.debug("User API key authenticated successfully for user: {} (org: {})",
+                    // Clear any failed attempts on successful auth
+                    failedAttempts.remove(clientIp);
+
+                    log.info("API key '{}' authenticated user '{}' (org: {}) from IP {} for {}",
+                            userApiKey.getName(),
                             user.getUsername(),
-                            user.getOrganization() != null ? user.getOrganization().getName() : "N/A");
+                            user.getOrganization() != null ? user.getOrganization().getName() : "N/A",
+                            clientIp,
+                            request.getRequestURI());
                 } else {
-                    log.debug("Invalid user API key provided (key value not logged for security)");
+                    // Track failed attempt for rate limiting
+                    recordFailedAttempt(clientIp);
+                    log.debug("Invalid user API key provided from IP {} (key value not logged for security)", clientIp);
                 }
             }
         } catch (Exception e) {
@@ -100,21 +133,15 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Extract API key from request headers.
-     * Checks X-API-Key header first, then falls back to Bearer token.
+     * Only uses X-API-Key header to avoid conflicts with JWT Bearer tokens.
      */
     private String extractApiKeyFromRequest(HttpServletRequest request) {
-        // First check X-API-Key header (preferred for user API keys)
+        // Only use X-API-Key header for user API keys
+        // Bearer tokens in Authorization header are reserved for JWT authentication
         String apiKey = request.getHeader("X-API-Key");
         if (apiKey != null && !apiKey.isBlank()) {
             return apiKey.trim();
         }
-
-        // Fall back to Bearer token in Authorization header
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7).trim();
-        }
-
         return null;
     }
 
@@ -124,6 +151,57 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
     private boolean isValidApiKeyFormat(String apiKey) {
         // UUID format: 8-4-4-4-12 hex characters with dashes
         return apiKey.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+    }
+
+    /**
+     * Get the client IP address, handling proxies.
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            // Take the first IP in the chain (original client)
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    /**
+     * Check if an IP is rate limited.
+     */
+    private boolean isRateLimited(String clientIp) {
+        RateLimitEntry entry = failedAttempts.get(clientIp);
+        if (entry == null) {
+            return false;
+        }
+
+        // Check if the rate limit window has expired
+        if (System.currentTimeMillis() - entry.firstAttemptTime > RATE_LIMIT_WINDOW_MS) {
+            failedAttempts.remove(clientIp);
+            return false;
+        }
+
+        return entry.attempts.get() >= MAX_FAILED_ATTEMPTS;
+    }
+
+    /**
+     * Record a failed authentication attempt.
+     */
+    private void recordFailedAttempt(String clientIp) {
+        failedAttempts.compute(clientIp, (ip, existing) -> {
+            if (existing == null || System.currentTimeMillis() - existing.firstAttemptTime > RATE_LIMIT_WINDOW_MS) {
+                return new RateLimitEntry();
+            }
+            existing.attempts.incrementAndGet();
+            return existing;
+        });
+    }
+
+    /**
+     * Rate limit tracking entry.
+     */
+    private static class RateLimitEntry {
+        final long firstAttemptTime = System.currentTimeMillis();
+        final AtomicInteger attempts = new AtomicInteger(1);
     }
 
     /**

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sensorvision.model.Organization;
@@ -13,6 +12,7 @@ import org.sensorvision.model.User;
 import org.sensorvision.model.UserApiKey;
 import org.sensorvision.repository.UserApiKeyRepository;
 import org.sensorvision.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -38,7 +39,9 @@ class UserApiKeyServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    @InjectMocks
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private UserApiKeyService userApiKeyService;
 
     @Captor
@@ -50,6 +53,8 @@ class UserApiKeyServiceTest {
 
     @BeforeEach
     void setUp() {
+        userApiKeyService = new UserApiKeyService(userApiKeyRepository, userRepository, passwordEncoder);
+
         testOrganization = Organization.builder()
                 .id(1L)
                 .name("Test Organization")
@@ -65,7 +70,9 @@ class UserApiKeyServiceTest {
         testApiKey = UserApiKey.builder()
                 .id(1L)
                 .user(testUser)
-                .keyValue("550e8400-e29b-41d4-a716-446655440000")
+                .keyPrefix("550e8400")
+                .keyHash("$2a$10$hashedvalue")
+                .keyValue("550e8400-e29b-41d4-a716-446655440000") // Legacy for backwards compatibility
                 .name("Default Token")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -75,10 +82,13 @@ class UserApiKeyServiceTest {
     // ==================== generateApiKey() Tests ====================
 
     @Test
-    void generateApiKey_withValidUser_shouldCreateNewKey() {
+    void generateApiKey_withValidUser_shouldCreateNewKeyWithHash() {
         // Given
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(0L);
+        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
         when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashedvalue");
         when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
             UserApiKey key = invocation.getArgument(0);
             key.setId(1L);
@@ -91,21 +101,52 @@ class UserApiKeyServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("My API Key");
-        assertThat(result.getKeyValue()).isNotNull();
-        assertThat(result.getKeyValue()).matches("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
+        assertThat(result.getKeyHash()).isEqualTo("$2a$10$hashedvalue");
+        assertThat(result.getKeyPrefix()).isNotNull();
+        assertThat(result.getKeyPrefix()).hasSize(8);
+        assertThat(result.getPlaintextKeyValue()).isNotNull();
+        assertThat(result.getPlaintextKeyValue()).matches("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
         assertThat(result.getUser()).isEqualTo(testUser);
         assertThat(result.isActive()).isTrue();
 
+        verify(passwordEncoder).encode(anyString());
         verify(userApiKeyRepository).save(apiKeyCaptor.capture());
         UserApiKey savedKey = apiKeyCaptor.getValue();
         assertThat(savedKey.getName()).isEqualTo("My API Key");
+        assertThat(savedKey.getKeyValue()).isNull(); // Plaintext not stored
+    }
+
+    @Test
+    void generateApiKey_withDescription_shouldSaveDescription() {
+        // Given
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(0L);
+        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
+        when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashedvalue");
+        when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
+            UserApiKey key = invocation.getArgument(0);
+            key.setId(1L);
+            return key;
+        });
+
+        // When
+        UserApiKey result = userApiKeyService.generateApiKey(1L, "My API Key", "Test description");
+
+        // Then
+        verify(userApiKeyRepository).save(apiKeyCaptor.capture());
+        UserApiKey savedKey = apiKeyCaptor.getValue();
+        assertThat(savedKey.getDescription()).isEqualTo("Test description");
     }
 
     @Test
     void generateApiKey_withDefaultName_shouldUseDefaultToken() {
         // Given
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(0L);
+        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
         when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashedvalue");
         when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
             UserApiKey key = invocation.getArgument(0);
             key.setId(1L);
@@ -132,12 +173,27 @@ class UserApiKeyServiceTest {
     }
 
     @Test
-    void generateApiKey_shouldHandleKeyCollision() {
-        // Given: First key value already exists, second is unique
+    void generateApiKey_whenMaxKeysReached_shouldThrowException() {
+        // Given
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userApiKeyRepository.existsByKeyValue(anyString()))
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(10L); // Max is 10
+
+        // When/Then
+        assertThatThrownBy(() -> userApiKeyService.generateApiKey(1L, "Test Key"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Maximum number of API keys");
+    }
+
+    @Test
+    void generateApiKey_shouldHandlePrefixCollision() {
+        // Given: First prefix already exists, second is unique
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(0L);
+        when(userApiKeyRepository.existsByKeyPrefix(anyString()))
                 .thenReturn(true)   // First attempt - collision
                 .thenReturn(false); // Second attempt - unique
+        when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashedvalue");
         when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
             UserApiKey key = invocation.getArgument(0);
             key.setId(1L);
@@ -149,7 +205,7 @@ class UserApiKeyServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        verify(userApiKeyRepository, times(2)).existsByKeyValue(anyString());
+        verify(userApiKeyRepository, times(2)).existsByKeyPrefix(anyString());
     }
 
     // ==================== generateDefaultTokenIfNeeded() Tests ====================
@@ -159,7 +215,10 @@ class UserApiKeyServiceTest {
         // Given
         when(userApiKeyRepository.hasActiveKeys(1L)).thenReturn(false);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(0L);
+        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
         when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashedvalue");
         when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
             UserApiKey key = invocation.getArgument(0);
             key.setId(1L);
@@ -191,10 +250,12 @@ class UserApiKeyServiceTest {
     // ==================== validateApiKey() Tests ====================
 
     @Test
-    void validateApiKey_withValidKey_shouldReturnApiKey() {
+    void validateApiKey_withValidHashedKey_shouldReturnApiKey() {
         // Given
         String keyValue = "550e8400-e29b-41d4-a716-446655440000";
-        when(userApiKeyRepository.findActiveByKeyValue(keyValue)).thenReturn(Optional.of(testApiKey));
+        String keyPrefix = keyValue.substring(0, 8);
+        when(userApiKeyRepository.findActiveByKeyPrefix(keyPrefix)).thenReturn(List.of(testApiKey));
+        when(passwordEncoder.matches(keyValue, testApiKey.getKeyHash())).thenReturn(true);
 
         // When
         Optional<UserApiKey> result = userApiKeyService.validateApiKey(keyValue);
@@ -205,9 +266,47 @@ class UserApiKeyServiceTest {
     }
 
     @Test
+    void validateApiKey_withLegacyPlaintextKey_shouldReturnApiKey() {
+        // Given - legacy key without hash
+        UserApiKey legacyKey = UserApiKey.builder()
+                .id(2L)
+                .user(testUser)
+                .keyValue("660e8400-e29b-41d4-a716-446655440001")
+                .keyHash(null) // No hash - legacy key
+                .keyPrefix("660e8400")
+                .name("Legacy Token")
+                .build();
+
+        String keyValue = "660e8400-e29b-41d4-a716-446655440001";
+        String keyPrefix = keyValue.substring(0, 8);
+        when(userApiKeyRepository.findActiveByKeyPrefix(keyPrefix)).thenReturn(List.of(legacyKey));
+        // Note: passwordEncoder.matches is NOT called because keyHash is null (condition short-circuits)
+
+        // When
+        Optional<UserApiKey> result = userApiKeyService.validateApiKey(keyValue);
+
+        // Then
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(legacyKey);
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+    }
+
+    @Test
     void validateApiKey_withInvalidKey_shouldReturnEmpty() {
-        // Given
-        String keyValue = "invalid-key";
+        // Given - key that doesn't match hash and has no keyValue match
+        UserApiKey keyWithOnlyHash = UserApiKey.builder()
+                .id(3L)
+                .user(testUser)
+                .keyPrefix("550e8400")
+                .keyHash("$2a$10$differenthash")
+                .keyValue(null) // No legacy value
+                .name("Hashed Only Token")
+                .build();
+
+        String keyValue = "550e8400-e29b-41d4-a716-446655440000";
+        String keyPrefix = keyValue.substring(0, 8);
+        when(userApiKeyRepository.findActiveByKeyPrefix(keyPrefix)).thenReturn(List.of(keyWithOnlyHash));
+        when(passwordEncoder.matches(keyValue, keyWithOnlyHash.getKeyHash())).thenReturn(false);
         when(userApiKeyRepository.findActiveByKeyValue(keyValue)).thenReturn(Optional.empty());
 
         // When
@@ -224,7 +323,7 @@ class UserApiKeyServiceTest {
 
         // Then
         assertThat(result).isEmpty();
-        verify(userApiKeyRepository, never()).findActiveByKeyValue(any());
+        verify(userApiKeyRepository, never()).findActiveByKeyPrefix(any());
     }
 
     @Test
@@ -234,7 +333,17 @@ class UserApiKeyServiceTest {
 
         // Then
         assertThat(result).isEmpty();
-        verify(userApiKeyRepository, never()).findActiveByKeyValue(any());
+        verify(userApiKeyRepository, never()).findActiveByKeyPrefix(any());
+    }
+
+    @Test
+    void validateApiKey_withShortKey_shouldReturnEmpty() {
+        // When - key too short for prefix
+        Optional<UserApiKey> result = userApiKeyService.validateApiKey("abc");
+
+        // Then
+        assertThat(result).isEmpty();
+        verify(userApiKeyRepository, never()).findActiveByKeyPrefix(any());
     }
 
     // ==================== rotateApiKey() Tests ====================
@@ -242,10 +351,12 @@ class UserApiKeyServiceTest {
     @Test
     void rotateApiKey_withActiveKey_shouldRevokeAndCreateNew() {
         // Given
-        String oldKeyValue = testApiKey.getKeyValue();
         when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(testApiKey));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser)); // Need this for generateApiKey
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(0L); // After revoke
+        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
         when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$newhashedvalue");
         when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
             UserApiKey key = invocation.getArgument(0);
             if (key.getId() == null) {
@@ -259,8 +370,8 @@ class UserApiKeyServiceTest {
 
         // Then
         assertThat(newKey).isNotNull();
-        assertThat(newKey.getKeyValue()).isNotEqualTo(oldKeyValue);
         assertThat(newKey.getName()).isEqualTo("Default Token");
+        assertThat(newKey.getKeyHash()).isEqualTo("$2a$10$newhashedvalue");
         assertThat(testApiKey.getRevokedAt()).isNotNull(); // Old key revoked
 
         verify(userApiKeyRepository, times(2)).save(any(UserApiKey.class));
@@ -338,7 +449,8 @@ class UserApiKeyServiceTest {
         UserApiKey key2 = UserApiKey.builder()
                 .id(2L)
                 .user(testUser)
-                .keyValue("660e8400-e29b-41d4-a716-446655440001")
+                .keyPrefix("660e8400")
+                .keyHash("$2a$10$anotherhash")
                 .name("Second Token")
                 .build();
         List<UserApiKey> keys = List.of(testApiKey, key2);
@@ -368,9 +480,6 @@ class UserApiKeyServiceTest {
 
     @Test
     void updateLastUsedAt_shouldUpdateTimestamp() {
-        // Given
-        LocalDateTime beforeUpdate = LocalDateTime.now();
-
         // When
         userApiKeyService.updateLastUsedAt(1L);
 
@@ -378,27 +487,26 @@ class UserApiKeyServiceTest {
         verify(userApiKeyRepository).updateLastUsedAt(eq(1L), any(LocalDateTime.class));
     }
 
-    // ==================== Edge Cases ====================
+    @Test
+    void markKeyUsed_shouldTrackForBatchUpdate() {
+        // When
+        userApiKeyService.markKeyUsed(1L);
+        userApiKeyService.markKeyUsed(2L);
+
+        // Then - no immediate database call
+        verify(userApiKeyRepository, never()).updateLastUsedAt(any(), any());
+    }
 
     @Test
-    void multipleKeyGeneration_shouldProduceUniqueKeys() {
+    void flushLastUsedUpdates_shouldPersistPendingUpdates() {
         // Given
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
-        when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
-            UserApiKey key = invocation.getArgument(0);
-            key.setId(System.nanoTime()); // Unique ID
-            return key;
-        });
+        userApiKeyService.markKeyUsed(1L);
+        userApiKeyService.markKeyUsed(2L);
 
         // When
-        UserApiKey key1 = userApiKeyService.generateApiKey(1L, "Key 1");
-        UserApiKey key2 = userApiKeyService.generateApiKey(1L, "Key 2");
-        UserApiKey key3 = userApiKeyService.generateApiKey(1L, "Key 3");
+        userApiKeyService.flushLastUsedUpdates();
 
         // Then
-        assertThat(key1.getKeyValue()).isNotEqualTo(key2.getKeyValue());
-        assertThat(key2.getKeyValue()).isNotEqualTo(key3.getKeyValue());
-        assertThat(key1.getKeyValue()).isNotEqualTo(key3.getKeyValue());
+        verify(userApiKeyRepository, times(2)).updateLastUsedAt(any(), any());
     }
 }

@@ -16,8 +16,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(of = "id")
-@ToString(exclude = {"user"})
+@EqualsAndHashCode(of = {"id", "keyPrefix"})
+@ToString(exclude = {"user", "keyHash"})
 public class UserApiKey {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,8 +27,31 @@ public class UserApiKey {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "key_value", nullable = false, unique = true, length = 64)
+    /**
+     * DEPRECATED: Will be NULL for new keys after hashing migration.
+     * Only used temporarily to return the key value on creation.
+     */
+    @Column(name = "key_value", unique = true, length = 64)
     private String keyValue;
+
+    /**
+     * First 8 characters of the API key (for fast prefix-based lookups).
+     */
+    @Column(name = "key_prefix", length = 8)
+    private String keyPrefix;
+
+    /**
+     * BCrypt hash of the full API key (for secure validation).
+     */
+    @Column(name = "key_hash", length = 255)
+    private String keyHash;
+
+    /**
+     * Transient field to hold the plaintext key value after generation.
+     * This is only available immediately after key creation and is never persisted.
+     */
+    @Transient
+    private String plaintextKeyValue;
 
     @Column(nullable = false, length = 255)
     @Builder.Default
@@ -65,12 +88,29 @@ public class UserApiKey {
 
     /**
      * Get a masked version of the key for display purposes.
-     * Shows first 8 and last 4 characters.
+     * Uses the key prefix if available, otherwise falls back to keyValue.
      */
     public String getMaskedKeyValue() {
-        if (keyValue == null || keyValue.length() < 12) {
-            return "****";
+        // Prefer using the key prefix for masking
+        if (keyPrefix != null && !keyPrefix.isBlank()) {
+            return keyPrefix + "...****";
         }
-        return keyValue.substring(0, 8) + "..." + keyValue.substring(keyValue.length() - 4);
+        // Fallback to keyValue for backwards compatibility with existing keys
+        if (keyValue != null && keyValue.length() >= 12) {
+            return keyValue.substring(0, 8) + "..." + keyValue.substring(keyValue.length() - 4);
+        }
+        return "****";
+    }
+
+    /**
+     * Get the key value to return to the user.
+     * Returns the transient plaintextKeyValue if available (for new keys),
+     * otherwise falls back to keyValue for backwards compatibility.
+     */
+    public String getDisplayKeyValue() {
+        if (plaintextKeyValue != null) {
+            return plaintextKeyValue;
+        }
+        return keyValue;
     }
 }
