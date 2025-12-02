@@ -313,14 +313,18 @@ export const IntegrationWizard: React.FC = () => {
     switch (platform) {
       case 'esp32':
       case 'arduino':
-        code = `// ESP32/Arduino MQTT Example for SensorVision
-// Install library: PubSubClient by Nick O'Leary
-// Arduino IDE: Sketch -> Include Library -> Manage Libraries -> Search "PubSubClient"
-//
-// IMPORTANT - NETWORK REQUIREMENTS:
-// - MQTT broker must be accessible on port 1883
-// - If connecting from outside your network, ensure port 1883 is open in firewall
-// - For production: ${apiUrl} -> MQTT at ${mqttServer}:1883
+        code = `/*
+ * SensorVision ESP32/Arduino Example (MQTT)
+ * ==========================================
+ * This example uses MQTT for lightweight, real-time data streaming.
+ * MQTT is ideal for IoT devices due to low overhead and persistent connections.
+ *
+ * Required libraries:
+ * - WiFi (built-in for ESP32)
+ * - PubSubClient by Nick O'Leary
+ *
+ * Arduino IDE: Sketch -> Include Library -> Manage Libraries -> "PubSubClient"
+ */
 
 #include <WiFi.h>
 #include <PubSubClient.h>
@@ -330,60 +334,71 @@ const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
 // SensorVision MQTT configuration
-const char* mqttServer = "${mqttServer}";  // MQTT broker address
-const int mqttPort = 1883;                 // MQTT port (must be accessible)
+const char* mqttServer = "${mqttServer}";
+const int mqttPort = 1883;
 const char* deviceId = "${devId}";
 const char* mqttTopic = "sensorvision/devices/${devId}/telemetry";
 
 WiFiClient espClient;
-PubSubClient client(espClient);
+PubSubClient mqttClient(espClient);
 
 void setup() {
   Serial.begin(115200);
+  delay(1000);
+
+  Serial.println("\\n==========================================");
+  Serial.println("SensorVision ESP32 Client (MQTT)");
+  Serial.println("==========================================");
+  Serial.print("Device ID: ");
+  Serial.println(deviceId);
+  Serial.print("MQTT Server: ");
+  Serial.println(mqttServer);
+  Serial.println("==========================================\\n");
 
   // Connect to WiFi
+  connectWiFi();
+
+  // Setup MQTT
+  mqttClient.setServer(mqttServer, mqttPort);
+}
+
+void loop() {
+  // Maintain MQTT connection
+  if (!mqttClient.connected()) {
+    connectMQTT();
+  }
+  mqttClient.loop();
+
+  // Read sensor data (replace with actual sensor readings)
+  float temperature = 23.5 + (random(-20, 20) / 10.0);  // Simulated
+  float humidity = 65.2 + (random(-50, 50) / 10.0);     // Simulated
+
+  // Send data via MQTT
+  sendData(temperature, humidity);
+
+  delay(60000); // Send data every 60 seconds
+}
+
+void connectWiFi() {
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\\nWiFi connected!");
+  Serial.println("\\n✓ WiFi connected!");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-
-  // Setup MQTT
-  client.setServer(mqttServer, mqttPort);
-  connectMQTT();
-}
-
-void loop() {
-  // Maintain MQTT connection
-  if (!client.connected()) {
-    connectMQTT();
-  }
-  client.loop();
-
-  // Read sensor data (example - replace with actual sensor readings)
-  float temperature = 23.5 + (random(-20, 20) / 10.0);  // Simulated
-  float humidity = 65.2 + (random(-50, 50) / 10.0);     // Simulated
-
-  // Send data to SensorVision via MQTT
-  sendData(temperature, humidity);
-
-  delay(60000); // Send data every 60 seconds
 }
 
 void connectMQTT() {
-  while (!client.connected()) {
+  while (!mqttClient.connected()) {
     Serial.print("Connecting to MQTT broker...");
-
-    // Connect to MQTT (no auth required for local broker)
-    if (client.connect(deviceId)) {
+    if (mqttClient.connect(deviceId)) {
       Serial.println("connected!");
     } else {
       Serial.print("failed, rc=");
-      Serial.print(client.state());
+      Serial.print(mqttClient.state());
       Serial.println(" retrying in 5 seconds");
       delay(5000);
     }
@@ -392,13 +407,8 @@ void connectMQTT() {
 
 void sendData(float temperature, float humidity) {
   // Build JSON payload
-  // IMPORTANT: All variable values must be numeric (float/int)
-  // Format: {"deviceId":"xxx","timestamp":"ISO8601","variables":{"temp":23.5}}
-
-  String timestamp = getISOTimestamp();  // See helper function below
-
+  // Format: {"deviceId":"xxx","variables":{"temp":23.5,"humidity":65.2}}
   String payload = "{\\"deviceId\\":\\"" + String(deviceId) + "\\"," +
-                   "\\"timestamp\\":\\"" + timestamp + "\\"," +
                    "\\"variables\\":{" +
                    "\\"temperature\\":" + String(temperature, 1) + "," +
                    "\\"humidity\\":" + String(humidity, 1) +
@@ -407,126 +417,134 @@ void sendData(float temperature, float humidity) {
   Serial.print("Publishing: ");
   Serial.println(payload);
 
-  // Publish to MQTT topic
-  if (client.publish(mqttTopic, payload.c_str())) {
+  if (mqttClient.publish(mqttTopic, payload.c_str())) {
     Serial.println("✓ Data sent successfully via MQTT");
   } else {
     Serial.println("✗ Failed to send data");
   }
 }
 
-// Helper: Generate ISO 8601 timestamp
-// For production, use NTP time sync (WiFiUdp + NTPClient library)
-String getISOTimestamp() {
-  // Simple timestamp - for production use NTP!
-  unsigned long seconds = millis() / 1000;
-  char timestamp[25];
-  sprintf(timestamp, "2024-01-01T%02lu:%02lu:%02luZ",
-          (seconds / 3600) % 24,
-          (seconds / 60) % 60,
-          seconds % 60);
-  return String(timestamp);
-}
+/*
+ * ALTERNATIVE: HTTP REST API
+ * ==========================
+ * If you prefer HTTP with token authentication, use this approach:
+ *
+ * #include <HTTPClient.h>
+ *
+ * const char* apiUrl = "${apiUrl}";
+ * const char* deviceToken = "${token}";
+ *
+ * void sendDataHTTP(float temp, float humidity) {
+ *   HTTPClient http;
+ *   String url = String(apiUrl) + "/api/v1/ingest/" + deviceId;
+ *   String payload = "{\\"temperature\\":" + String(temp, 1) +
+ *                    ",\\"humidity\\":" + String(humidity, 1) + "}";
+ *
+ *   http.begin(url);
+ *   http.addHeader("Content-Type", "application/json");
+ *   http.addHeader("X-API-Key", deviceToken);
+ *   int code = http.POST(payload);
+ *   http.end();
+ * }
+ */
 
 // PRODUCTION IMPROVEMENTS:
-// 1. Use NTP for accurate timestamps: WiFiUdp + NTPClient
+// 1. Use NTP for accurate timestamps (WiFiUdp + NTPClient)
 // 2. Read actual sensors (DHT22, BME280, etc.)
 // 3. Add deep sleep for battery-powered devices
-// 4. Implement reconnection logic with exponential backoff
-// 5. Store failed messages in SPIFFS and retry when reconnected`;
+// 4. Implement reconnection with exponential backoff
+// 5. Store failed messages in SPIFFS and retry when reconnected
+// 6. Add OTA update support`;
 
         break;
 
       case 'python':
       case 'raspberry-pi':
-        code = `import requests
+        code = `"""
+SensorVision Python Example
+=============================
+Install the SDK first:  pip install sensorvision-sdk
+"""
 import time
-from urllib.parse import quote
+from sensorvision import SensorVisionClient
 
 # SensorVision configuration
 API_URL = "${apiUrl}"
-API_KEY = "${token}"
+DEVICE_TOKEN = "${token}"  # Your device authentication token
 DEVICE_ID = "${devId}"
-
-def send_data(temperature, humidity):
-    """Send sensor data to SensorVision
-
-    IMPORTANT: All values must be numbers (int/float) or numeric strings.
-    Do NOT send booleans, lists, dicts, or other non-numeric types.
-    """
-    # URL-encode device ID to handle special characters
-    url = f"{API_URL}/api/v1/ingest/{quote(DEVICE_ID)}"
-    headers = {
-        "X-API-Key": API_KEY,
-        "Content-Type": "application/json"
-    }
-    # All values must be numeric - no booleans, objects, or arrays
-    data = {
-        "temperature": temperature,
-        "humidity": humidity
-    }
-
-    try:
-        response = requests.post(url, json=data, headers=headers, timeout=10)
-        if response.status_code in (200, 201):
-            print("Data sent successfully")
-            return True
-        else:
-            print(f"Error: {response.status_code} - {response.text}")
-            return False
-    except Exception as e:
-        print(f"Failed to send data: {e}")
-        return False
 
 if __name__ == "__main__":
     print("Starting SensorVision data collection...")
+    print(f"Device ID: {DEVICE_ID}")
+    print(f"API URL: {API_URL}")
+    print("-" * 40)
 
-    while True:
-        # Read sensor data (example)
-        temperature = 23.5  # Replace with actual sensor reading
-        humidity = 65.2     # Replace with actual sensor reading
+    # Using context manager (recommended - handles cleanup automatically)
+    # The client handles retries, timeouts, and error handling
+    with SensorVisionClient(
+        api_url=API_URL,
+        api_key=DEVICE_TOKEN,
+        timeout=30,         # Request timeout in seconds
+        retry_attempts=3,   # Number of retries on failure
+        retry_delay=1.0     # Initial delay between retries (seconds)
+    ) as client:
+        while True:
+            # Read sensor data (replace with actual sensor readings)
+            temperature = 23.5  # Example: readTemperatureSensor()
+            humidity = 65.2     # Example: readHumiditySensor()
 
-        # Send to SensorVision
-        send_data(temperature, humidity)
+            # Send to SensorVision - all values must be numeric
+            try:
+                response = client.send_data(DEVICE_ID, {
+                    "temperature": temperature,
+                    "humidity": humidity
+                })
+                print(f"✓ Sent: temp={temperature}°C, humidity={humidity}%")
+            except Exception as e:
+                print(f"✗ Error: {e}")
 
-        # Wait 60 seconds
-        time.sleep(60)`;
+            # Wait 60 seconds before next reading
+            time.sleep(60)`;
         break;
 
       case 'nodejs':
-        code = `const axios = require('axios');
+        code = `/**
+ * SensorVision Node.js Example
+ * ============================
+ * Install the SDK first:  npm install sensorvision-sdk
+ */
+const { SensorVisionClient } = require('sensorvision-sdk');
 
 // SensorVision configuration
 const API_URL = '${apiUrl}';
-const API_KEY = '${token}';
+const DEVICE_TOKEN = '${token}';  // Your device authentication token
 const DEVICE_ID = '${devId}';
+
+// Initialize the SensorVision client
+// The client handles retries, timeouts, and error handling automatically
+const client = new SensorVisionClient({
+  apiUrl: API_URL,
+  apiKey: DEVICE_TOKEN,
+  timeout: 30000,      // Request timeout in milliseconds
+  retryAttempts: 3,    // Number of retries on failure
+  retryDelay: 1000     // Initial delay between retries (ms)
+});
 
 /**
  * Send telemetry data to SensorVision
- * IMPORTANT: All values must be numbers. Do NOT send booleans, objects, or arrays.
+ * All values must be numbers.
  */
 async function sendData(temperature, humidity) {
   try {
-    // URL-encode device ID to handle special characters
-    const response = await axios.post(
-      \`\${API_URL}/api/v1/ingest/\${encodeURIComponent(DEVICE_ID)}\`,
-      {
-        temperature,  // Must be a number
-        humidity      // Must be a number
-      },
-      {
-        headers: {
-          'X-API-Key': API_KEY,
-          'Content-Type': 'application/json'
-        },
-        timeout: 10000
-      }
-    );
+    const response = await client.sendData(DEVICE_ID, {
+      temperature,  // Must be a number
+      humidity      // Must be a number
+    });
 
-    console.log('Data sent successfully:', response.data);
+    console.log('✓ Data sent successfully:', response.message);
     return true;
   } catch (error) {
-    console.error('Failed to send data:', error.message);
+    console.error('✗ Failed to send data:', error.message);
     return false;
   }
 }
@@ -534,11 +552,17 @@ async function sendData(temperature, humidity) {
 // Main loop
 async function main() {
   console.log('Starting SensorVision data collection...');
+  console.log(\`Device ID: \${DEVICE_ID}\`);
+  console.log(\`API URL: \${API_URL}\`);
+  console.log('-'.repeat(40));
+
+  // Send data immediately, then every 60 seconds
+  await sendData(23.5, 65.2);
 
   setInterval(async () => {
-    // Read sensor data (example)
-    const temperature = 23.5;  // Replace with actual sensor reading
-    const humidity = 65.2;     // Replace with actual sensor reading
+    // Read sensor data (replace with actual sensor readings)
+    const temperature = 23.5;  // Example: readTemperatureSensor()
+    const humidity = 65.2;     // Example: readHumiditySensor()
 
     await sendData(temperature, humidity);
   }, 60000); // Send data every minute
@@ -579,7 +603,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
 #
 #   curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
 #     -H "X-API-Key: $API_KEY" \\
-#     -H "Content-Type: "application/json" \\
+#     -H "Content-Type: application/json" \\
 #     -d "{\\"temperature\\": $TEMPERATURE, \\"humidity\\": $HUMIDITY}"
 #
 #   sleep 60  # Wait 60 seconds

@@ -95,21 +95,21 @@ class TestSendData:
 
     def test_send_data_invalid_device_id(self, client):
         """Test sending data with invalid device ID."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError):
             client.send_data("", {"temperature": 23.5})
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError):
             client.send_data("a" * 256, {"temperature": 23.5})
 
     def test_send_data_invalid_data(self, client):
         """Test sending invalid telemetry data."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError):
             client.send_data("test-device", {})
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError):
             client.send_data("test-device", {"temp": "not a number"})
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError):
             client.send_data("test-device", "not a dict")
 
 

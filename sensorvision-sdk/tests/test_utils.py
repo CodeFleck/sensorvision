@@ -7,6 +7,7 @@ from sensorvision.utils import (
     validate_telemetry_data,
     get_env_or_raise
 )
+from sensorvision.exceptions import ValidationError
 
 
 class TestValidateDeviceId:
@@ -20,17 +21,17 @@ class TestValidateDeviceId:
 
     def test_invalid_device_id_empty(self):
         """Test empty device ID."""
-        with pytest.raises(ValueError, match="non-empty string"):
+        with pytest.raises(ValidationError, match="non-empty string"):
             validate_device_id("")
 
     def test_invalid_device_id_none(self):
         """Test None device ID."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError):
             validate_device_id(None)
 
     def test_invalid_device_id_too_long(self):
         """Test device ID that's too long."""
-        with pytest.raises(ValueError, match="less than 255"):
+        with pytest.raises(ValidationError, match="less than 255"):
             validate_device_id("a" * 256)
 
 
@@ -45,28 +46,28 @@ class TestValidateTelemetryData:
 
     def test_invalid_telemetry_data_not_dict(self):
         """Test non-dict telemetry data."""
-        with pytest.raises(ValueError, match="must be a dictionary"):
+        with pytest.raises(ValidationError, match="must be a dictionary"):
             validate_telemetry_data("not a dict")
 
-        with pytest.raises(ValueError, match="must be a dictionary"):
+        with pytest.raises(ValidationError, match="must be a dictionary"):
             validate_telemetry_data([1, 2, 3])
 
     def test_invalid_telemetry_data_empty(self):
         """Test empty telemetry data."""
-        with pytest.raises(ValueError, match="cannot be empty"):
+        with pytest.raises(ValidationError, match="cannot be empty"):
             validate_telemetry_data({})
 
     def test_invalid_telemetry_data_non_string_key(self):
         """Test telemetry data with non-string key."""
-        with pytest.raises(ValueError, match="key must be string"):
+        with pytest.raises(ValidationError, match="key must be string"):
             validate_telemetry_data({123: 45.6})
 
     def test_invalid_telemetry_data_non_numeric_value(self):
         """Test telemetry data with non-numeric value."""
-        with pytest.raises(ValueError, match="must be numeric or boolean"):
+        with pytest.raises(ValidationError, match="must be numeric or boolean"):
             validate_telemetry_data({"temp": "23.5"})
 
-        with pytest.raises(ValueError, match="must be numeric or boolean"):
+        with pytest.raises(ValidationError, match="must be numeric or boolean"):
             validate_telemetry_data({"data": {"nested": "value"}})
 
 

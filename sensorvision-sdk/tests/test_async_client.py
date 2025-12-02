@@ -8,7 +8,8 @@ from sensorvision.exceptions import (
     AuthenticationError,
     ValidationError,
     NetworkError,
-    ServerError
+    ServerError,
+    RateLimitError
 )
 
 
@@ -92,12 +93,12 @@ class TestAsyncSendData:
 
     async def test_send_data_invalid_device_id(self, async_client):
         """Test async sending with invalid device ID."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError):
             await async_client.send_data("", {"temperature": 23.5})
 
     async def test_send_data_invalid_data(self, async_client):
         """Test async sending with invalid data."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidationError):
             await async_client.send_data("test-device", {})
 
 
@@ -135,6 +136,22 @@ class TestAsyncErrorHandling:
         async_client._get_session = AsyncMock(return_value=mock_session)
 
         with pytest.raises(ServerError):
+            await async_client.send_data("test-device", {"temperature": 23.5})
+
+    async def test_rate_limit_error(self, async_client):
+        """Test async rate limit error."""
+        mock_response = AsyncMock()
+        mock_response.status = 429
+        mock_response.text = AsyncMock(return_value="Rate limit exceeded")
+
+        mock_session = AsyncMock()
+        mock_session.post = MagicMock()
+        mock_session.post.return_value.__aenter__.return_value = mock_response
+
+        # Mock the _get_session method to return our mock session
+        async_client._get_session = AsyncMock(return_value=mock_session)
+
+        with pytest.raises(RateLimitError):
             await async_client.send_data("test-device", {"temperature": 23.5})
 
 
