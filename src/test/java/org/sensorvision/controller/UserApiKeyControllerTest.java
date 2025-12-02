@@ -224,7 +224,7 @@ class UserApiKeyControllerTest {
         // When/Then
         assertThatThrownBy(() -> controller.rotateApiKey(999L))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("Access denied to API key: 999");
+                .hasMessageContaining("Access denied to API key");
     }
 
     // ==================== DELETE /api/v1/api-keys/{keyId} Tests ====================
@@ -256,7 +256,7 @@ class UserApiKeyControllerTest {
         // When/Then
         assertThatThrownBy(() -> controller.revokeApiKey(999L))
                 .isInstanceOf(AccessDeniedException.class)
-                .hasMessageContaining("Access denied to API key: 999");
+                .hasMessageContaining("Access denied to API key");
     }
 
     // ==================== Ownership Verification Tests ====================

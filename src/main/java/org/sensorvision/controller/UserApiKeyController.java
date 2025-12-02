@@ -161,7 +161,7 @@ public class UserApiKeyController {
         boolean ownsKey = userKeys.stream().anyMatch(k -> k.getId().equals(keyId));
 
         if (!ownsKey) {
-            throw new AccessDeniedException("Access denied to API key: " + keyId);
+            throw new AccessDeniedException("Access denied to API key");
         }
     }
 
