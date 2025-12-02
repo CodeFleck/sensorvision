@@ -13,9 +13,12 @@ import org.sensorvision.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.sensorvision.model.UserApiKey;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -271,6 +274,115 @@ class SecurityUtilsTest {
         assertThatThrownBy(() -> securityUtils.getCurrentUserId())
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("data integrity issue");
+    }
+
+    // ==================== getCurrentUser() with UserApiKeyAuthentication Tests ====================
+
+    @Test
+    void getCurrentUser_withUserApiKeyAuthentication_shouldReturnUser() {
+        // Given: User API Key authentication
+        Organization organization = Organization.builder().id(1L).name("Test Org").build();
+        User user = User.builder()
+                .id(3L)
+                .username("apiuser")
+                .organization(organization)
+                .build();
+
+        UserApiKey apiKey = UserApiKey.builder()
+                .id(1L)
+                .user(user)
+                .keyValue("550e8400-e29b-41d4-a716-446655440000")
+                .name("Default Token")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        UserApiKeyAuthenticationFilter.UserApiKeyAuthentication apiKeyAuth =
+                new UserApiKeyAuthenticationFilter.UserApiKeyAuthentication(
+                        user,
+                        apiKey,
+                        Collections.emptyList()
+                );
+
+        when(securityContext.getAuthentication()).thenReturn(apiKeyAuth);
+        when(userRepository.findByIdWithOrganizationAndRoles(3L)).thenReturn(Optional.of(user));
+
+        // When
+        User result = securityUtils.getCurrentUser();
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getUsername()).isEqualTo("apiuser");
+        verify(userRepository).findByIdWithOrganizationAndRoles(3L);
+        verify(userRepository, never()).findByUsername(any());
+    }
+
+    @Test
+    void getCurrentUser_withUserApiKeyAuthenticationAndUserNotFound_shouldThrowException() {
+        // Given: User API Key authentication but user not in database
+        Organization organization = Organization.builder().id(1L).name("Test Org").build();
+        User user = User.builder()
+                .id(999L)
+                .username("deleteduser")
+                .organization(organization)
+                .build();
+
+        UserApiKey apiKey = UserApiKey.builder()
+                .id(1L)
+                .user(user)
+                .keyValue("550e8400-e29b-41d4-a716-446655440000")
+                .name("Default Token")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        UserApiKeyAuthenticationFilter.UserApiKeyAuthentication apiKeyAuth =
+                new UserApiKeyAuthenticationFilter.UserApiKeyAuthentication(
+                        user,
+                        apiKey,
+                        Collections.emptyList()
+                );
+
+        when(securityContext.getAuthentication()).thenReturn(apiKeyAuth);
+        when(userRepository.findByIdWithOrganizationAndRoles(999L)).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThatThrownBy(() -> securityUtils.getCurrentUser())
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("User not found");
+    }
+
+    @Test
+    void getCurrentUserId_withUserApiKeyAuthentication_shouldReturnUserId() {
+        // Given
+        Organization organization = Organization.builder().id(1L).name("Test Org").build();
+        User user = User.builder()
+                .id(42L)
+                .username("apiuser")
+                .organization(organization)
+                .build();
+
+        UserApiKey apiKey = UserApiKey.builder()
+                .id(1L)
+                .user(user)
+                .keyValue("550e8400-e29b-41d4-a716-446655440000")
+                .name("Default Token")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        UserApiKeyAuthenticationFilter.UserApiKeyAuthentication apiKeyAuth =
+                new UserApiKeyAuthenticationFilter.UserApiKeyAuthentication(
+                        user,
+                        apiKey,
+                        Collections.emptyList()
+                );
+
+        when(securityContext.getAuthentication()).thenReturn(apiKeyAuth);
+        when(userRepository.findByIdWithOrganizationAndRoles(42L)).thenReturn(Optional.of(user));
+
+        // When
+        Long result = securityUtils.getCurrentUserId();
+
+        // Then
+        assertThat(result).isEqualTo(42L);
     }
 
     // ==================== Helper Methods ====================
