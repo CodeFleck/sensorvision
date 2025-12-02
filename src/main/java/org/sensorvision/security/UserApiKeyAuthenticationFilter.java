@@ -84,10 +84,10 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
                     userApiKeyService.updateLastUsedAt(userApiKey.getId());
 
                     log.debug("User API key authenticated successfully for user: {} (org: {})",
-                            user.getUsername(), user.getOrganization().getName());
+                            user.getUsername(),
+                            user.getOrganization() != null ? user.getOrganization().getName() : "N/A");
                 } else {
-                    log.debug("Invalid user API key provided: {}...",
-                            apiKey.length() > 8 ? apiKey.substring(0, 8) : apiKey);
+                    log.debug("Invalid user API key provided (key value not logged for security)");
                 }
             }
         } catch (Exception e) {

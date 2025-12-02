@@ -1,5 +1,6 @@
 package org.sensorvision.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.dto.CreateUserApiKeyRequest;
@@ -56,7 +57,7 @@ public class UserApiKeyController {
      * @return The newly generated API key (full key value shown only once)
      */
     @PostMapping
-    public ResponseEntity<UserApiKeyDto> generateApiKey(@RequestBody(required = false) CreateUserApiKeyRequest request) {
+    public ResponseEntity<UserApiKeyDto> generateApiKey(@Valid @RequestBody(required = false) CreateUserApiKeyRequest request) {
         User currentUser = securityUtils.getCurrentUser();
 
         String name = (request != null && request.getName() != null) ? request.getName() : "Default Token";

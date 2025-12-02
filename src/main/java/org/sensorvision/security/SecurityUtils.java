@@ -54,6 +54,14 @@ public class SecurityUtils {
             user = userRepository.findByIdWithOrganizationAndRoles(userPrincipal.getId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
         }
+        // Handle User API Key authentication
+        else if (authentication instanceof UserApiKeyAuthenticationFilter.UserApiKeyAuthentication) {
+            UserApiKeyAuthenticationFilter.UserApiKeyAuthentication apiKeyAuth =
+                    (UserApiKeyAuthenticationFilter.UserApiKeyAuthentication) authentication;
+
+            user = userRepository.findByIdWithOrganizationAndRoles(apiKeyAuth.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        }
         else {
             throw new RuntimeException("Invalid authentication principal type: " +
                     authentication.getPrincipal().getClass().getName());
