@@ -3,6 +3,7 @@ package org.sensorvision.config;
 import org.sensorvision.security.CustomOAuth2UserService;
 import org.sensorvision.security.CustomUserDetailsService;
 import org.sensorvision.security.DeviceTokenAuthenticationFilter;
+import org.sensorvision.security.UserApiKeyAuthenticationFilter;
 import org.sensorvision.security.OAuth2AuthenticationSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,6 +51,9 @@ public class SecurityConfig {
 
     @Autowired
     private DeviceTokenAuthenticationFilter deviceTokenAuthenticationFilter;
+
+    @Autowired
+    private UserApiKeyAuthenticationFilter userApiKeyAuthenticationFilter;
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
@@ -115,9 +119,11 @@ public class SecurityConfig {
                         .failureUrl("http://35.88.65.186:8080/login?error=oauth2_failed")
                 )
                 .authenticationProvider(authenticationProvider())
-                // Add device token authentication filter before UsernamePasswordAuthenticationFilter
-                // This allows device tokens to be processed before JWT authentication
-                .addFilterBefore(deviceTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // Add device token authentication filter first (for device-specific tokens)
+                .addFilterBefore(deviceTokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // Add user API key filter after device token filter (for user-level tokens)
+                // User API keys allow access to all devices in user's organization
+                .addFilterAfter(userApiKeyAuthenticationFilter, DeviceTokenAuthenticationFilter.class);
 
         return http.build();
     }
