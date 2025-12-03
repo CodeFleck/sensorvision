@@ -32,6 +32,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/ingest/**",  // Exclude data ingestion endpoints
                         "/api/v1/dashboards/**",  // Exclude dashboard/widget endpoints (interactive UI)
                         "/api/v1/dashboard-templates/**",  // Exclude dashboard template browsing
+                        "/api/v1/admin/dashboard/**",  // Exclude admin dashboard (stats endpoint)
+                        "/api/v1/admin/support-tickets/**",  // Exclude support ticket operations
                         "/swagger-ui/**",  // Exclude Swagger UI
                         "/v3/api-docs/**"  // Exclude OpenAPI docs
                 );
