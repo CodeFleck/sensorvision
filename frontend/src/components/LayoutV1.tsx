@@ -101,7 +101,6 @@ const navigationSections: NavigationSection[] = [
       { name: 'Devices', href: '/devices', icon: Cpu, adminOnly: false },
       { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: false },
       { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: false },
-      { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
       { name: 'Serverless Functions', href: '/serverless-functions', icon: Code, adminOnly: false },
       { name: 'Data Plugins', href: '/data-plugins', icon: Plug2, adminOnly: false },
       { name: 'Plugin Marketplace', href: '/plugin-marketplace', icon: Store, adminOnly: false },

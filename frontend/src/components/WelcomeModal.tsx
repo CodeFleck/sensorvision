@@ -25,6 +25,20 @@ export const WelcomeModal = ({ forceShow = false }: WelcomeModalProps) => {
     }
   }, [forceShow]);
 
+  // Handle Escape key to close modal (accessibility)
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen]);
+
   const handleClose = () => {
     localStorage.setItem(WELCOME_MODAL_KEY, 'true');
     setIsOpen(false);
@@ -70,11 +84,17 @@ export const WelcomeModal = ({ forceShow = false }: WelcomeModalProps) => {
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all">
+        <div
+          className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="welcome-modal-title"
+        >
           {/* Close button */}
           <button
             onClick={handleClose}
             className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors z-10"
+            aria-label="Close welcome dialog"
           >
             <X className="h-5 w-5" />
           </button>
@@ -84,7 +104,7 @@ export const WelcomeModal = ({ forceShow = false }: WelcomeModalProps) => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
               <Rocket className="h-8 w-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 id="welcome-modal-title" className="text-2xl font-bold text-white mb-2">
               Welcome to SensorVision!
             </h2>
             <p className="text-blue-100">
