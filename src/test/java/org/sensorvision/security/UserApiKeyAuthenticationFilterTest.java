@@ -55,7 +55,8 @@ class UserApiKeyAuthenticationFilterTest {
 
     @BeforeEach
     void setUp() {
-        filter = new UserApiKeyAuthenticationFilter(userApiKeyService);
+        // Default to trusting proxy headers for backwards compatibility in tests
+        filter = new UserApiKeyAuthenticationFilter(userApiKeyService, true);
         SecurityContextHolder.clearContext();
 
         testOrganization = Organization.builder()
@@ -359,7 +360,7 @@ class UserApiKeyAuthenticationFilterTest {
     @Test
     void cleanupExpiredRateLimitEntries_shouldRemoveExpiredEntries() throws Exception {
         // Given - Create a new filter instance for clean state
-        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService);
+        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, false);
 
         // Simulate failed attempts from two different IPs
         String apiKey = "550e8400-e29b-41d4-a716-446655440000";
@@ -393,9 +394,57 @@ class UserApiKeyAuthenticationFilterTest {
     @Test
     void cleanupExpiredRateLimitEntries_shouldNotFailOnEmptyMap() {
         // Given - Fresh filter with no rate limit entries
-        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService);
+        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, false);
 
         // When/Then - Should not throw
         cleanFilter.cleanupExpiredRateLimitEntries();
+    }
+
+    // ==================== X-Forwarded-For Trust Configuration Tests ====================
+
+    @Test
+    void doFilterInternal_whenProxyHeadersNotTrusted_shouldIgnoreXForwardedFor() throws Exception {
+        // Given - Filter configured to NOT trust proxy headers
+        UserApiKeyAuthenticationFilter untrustedFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, false);
+
+        String apiKey = "550e8400-e29b-41d4-a716-446655440000";
+        when(request.getHeader("X-API-Key")).thenReturn(apiKey);
+        when(request.getHeader("X-Forwarded-For")).thenReturn("192.168.1.100, 10.0.0.1");
+        when(request.getRemoteAddr()).thenReturn("127.0.0.1");
+        when(userApiKeyService.validateApiKey(apiKey)).thenReturn(Optional.empty());
+
+        // When - Simulate 10 failed attempts with spoofed X-Forwarded-For
+        for (int i = 0; i < 10; i++) {
+            // Attacker tries different spoofed IPs
+            when(request.getHeader("X-Forwarded-For")).thenReturn("192.168.1." + i);
+            untrustedFilter.doFilterInternal(request, response, filterChain);
+        }
+
+        // Then - Should still be rate limited because we use remoteAddr (127.0.0.1)
+        reset(userApiKeyService);
+        untrustedFilter.doFilterInternal(request, response, filterChain);
+
+        // Service should NOT be called due to rate limiting based on actual remote IP
+        verify(userApiKeyService, never()).validateApiKey(any());
+    }
+
+    @Test
+    void doFilterInternal_whenProxyHeadersTrusted_shouldUseXForwardedFor() throws Exception {
+        // Given - Filter configured to trust proxy headers
+        UserApiKeyAuthenticationFilter trustedFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, true);
+
+        String apiKey = "550e8400-e29b-41d4-a716-446655440000";
+        when(request.getHeader("X-API-Key")).thenReturn(apiKey);
+        when(request.getRemoteAddr()).thenReturn("10.0.0.1"); // Proxy IP
+        when(request.getRequestURI()).thenReturn("/api/v1/test");
+        when(userApiKeyService.validateApiKey(apiKey)).thenReturn(Optional.of(testApiKey));
+
+        // When - Request comes through proxy with real client IP in X-Forwarded-For
+        when(request.getHeader("X-Forwarded-For")).thenReturn("203.0.113.50, 10.0.0.1");
+        trustedFilter.doFilterInternal(request, response, filterChain);
+
+        // Then - Should authenticate successfully
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        assertThat(auth).isNotNull();
     }
 }

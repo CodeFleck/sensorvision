@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.model.User;
 import org.sensorvision.model.UserApiKey;
 import org.sensorvision.service.UserApiKeyService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -53,12 +54,23 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
     private static final long RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
     private final UserApiKeyService userApiKeyService;
+    private final boolean trustProxyHeaders;
 
     // Rate limiting: track failed attempts per IP
     private final ConcurrentMap<String, RateLimitEntry> failedAttempts = new ConcurrentHashMap<>();
 
-    public UserApiKeyAuthenticationFilter(UserApiKeyService userApiKeyService) {
+    public UserApiKeyAuthenticationFilter(
+            UserApiKeyService userApiKeyService,
+            @Value("${security.proxy.trust-forwarded-headers:false}") boolean trustProxyHeaders) {
         this.userApiKeyService = userApiKeyService;
+        this.trustProxyHeaders = trustProxyHeaders;
+        if (!trustProxyHeaders) {
+            log.info("X-Forwarded-For header trust is DISABLED (default). " +
+                    "Set security.proxy.trust-forwarded-headers=true when behind a trusted reverse proxy.");
+        } else {
+            log.warn("X-Forwarded-For header trust is ENABLED. " +
+                    "Ensure your reverse proxy is properly configured to set this header.");
+        }
     }
 
     @Override
@@ -157,12 +169,18 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Get the client IP address, handling proxies.
+     * <p>
+     * SECURITY: X-Forwarded-For header is only trusted when explicitly enabled via
+     * security.proxy.trust-forwarded-headers=true. This prevents IP spoofing attacks
+     * when the application is not behind a properly configured reverse proxy.
      */
     private String getClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            // Take the first IP in the chain (original client)
-            return xForwardedFor.split(",")[0].trim();
+        if (trustProxyHeaders) {
+            String xForwardedFor = request.getHeader("X-Forwarded-For");
+            if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+                // Take the first IP in the chain (original client)
+                return xForwardedFor.split(",")[0].trim();
+            }
         }
         return request.getRemoteAddr();
     }
