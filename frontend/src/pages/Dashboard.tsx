@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { DeviceCard } from '../components/DeviceCard';
 import { RealTimeChart } from '../components/RealTimeChart';
+import { GettingStarted } from '../components/GettingStarted';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
@@ -97,6 +98,19 @@ export const Dashboard = () => {
             Try Again
           </button>
         </div>
+      </div>
+    );
+  }
+
+  // Show Getting Started when user has no devices
+  if (devices.length === 0) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Real-time IoT monitoring overview</p>
+        </div>
+        <GettingStarted />
       </div>
     );
   }

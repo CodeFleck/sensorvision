@@ -35,9 +35,11 @@ import {
   DollarSign,
   User,
   Building2,
+  Rocket,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
+import { WelcomeModal } from './WelcomeModal';
 import { useUnreadTickets } from '../hooks/useUnreadTickets';
 import { SubmitIssueModal } from './SubmitIssueModal';
 import { AvatarUploadModal } from './AvatarUploadModal';
@@ -68,6 +70,17 @@ interface NavigationSection {
 }
 
 const navigationSections: NavigationSection[] = [
+  {
+    name: 'GETTING STARTED',
+    icon: Rocket,
+    iconColor: 'text-purple-600',
+    adminOnly: false,
+    excludeForAdmin: true, // Hide from admins who don't need onboarding
+    items: [
+      { name: 'Integration Wizard', href: '/integration-wizard', icon: Zap, adminOnly: false },
+      { name: 'How It Works', href: '/how-it-works', icon: BookOpen, adminOnly: false },
+    ],
+  },
   {
     name: 'CORE',
     icon: Home,
@@ -440,6 +453,9 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
           }}
         />
       )}
+
+      {/* Welcome Modal for first-time users */}
+      <WelcomeModal />
     </div>
   );
 };
