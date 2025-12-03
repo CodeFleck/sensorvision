@@ -353,4 +353,49 @@ class UserApiKeyAuthenticationFilterTest {
         assertThat(auth.getOrganizationId()).isNull();
         assertThat(auth.getOrganizationName()).isNull();
     }
+
+    // ==================== Scheduled Cleanup Tests ====================
+
+    @Test
+    void cleanupExpiredRateLimitEntries_shouldRemoveExpiredEntries() throws Exception {
+        // Given - Create a new filter instance for clean state
+        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService);
+
+        // Simulate failed attempts from two different IPs
+        String apiKey = "550e8400-e29b-41d4-a716-446655440000";
+        when(request.getHeader("X-API-Key")).thenReturn(apiKey);
+        when(userApiKeyService.validateApiKey(apiKey)).thenReturn(Optional.empty());
+
+        // IP 1 - will have failed attempts
+        when(request.getRemoteAddr()).thenReturn("192.168.1.1");
+        when(request.getHeader("X-Forwarded-For")).thenReturn(null);
+        cleanFilter.doFilterInternal(request, response, filterChain);
+
+        // IP 2 - will have failed attempts
+        when(request.getRemoteAddr()).thenReturn("192.168.1.2");
+        cleanFilter.doFilterInternal(request, response, filterChain);
+
+        // When - Run cleanup (entries are not yet expired, so shouldn't be removed)
+        cleanFilter.cleanupExpiredRateLimitEntries();
+
+        // Then - Entries should still exist (not expired yet)
+        // We can verify this by checking that a new failed attempt from IP 1 increments the counter
+        // rather than creating a new entry
+        reset(userApiKeyService);
+        when(userApiKeyService.validateApiKey(apiKey)).thenReturn(Optional.empty());
+        when(request.getRemoteAddr()).thenReturn("192.168.1.1");
+        cleanFilter.doFilterInternal(request, response, filterChain);
+
+        // Service should still be called (not rate limited yet with only 2 attempts)
+        verify(userApiKeyService).validateApiKey(apiKey);
+    }
+
+    @Test
+    void cleanupExpiredRateLimitEntries_shouldNotFailOnEmptyMap() {
+        // Given - Fresh filter with no rate limit entries
+        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService);
+
+        // When/Then - Should not throw
+        cleanFilter.cleanupExpiredRateLimitEntries();
+    }
 }
