@@ -4,9 +4,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -19,6 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * while allowing normal interactive UI usage.
  */
 @Slf4j
+@Component
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     // Rate limit: 60 requests per minute (1 per second average)
@@ -62,6 +66,30 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
 
         return true;
+    }
+
+    /**
+     * Scheduled cleanup of expired rate limit entries.
+     * Runs every 5 minutes to remove entries whose window has expired.
+     * This prevents memory buildup from inactive users.
+     */
+    @Scheduled(fixedRate = 300_000) // Every 5 minutes
+    public void cleanupExpiredRateLimitEntries() {
+        long now = System.currentTimeMillis();
+        int removedCount = 0;
+
+        var iterator = rateLimitMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            if (now - entry.getValue().windowStart.get() > WINDOW_SIZE_MS) {
+                iterator.remove();
+                removedCount++;
+            }
+        }
+
+        if (removedCount > 0) {
+            log.debug("Cleaned up {} expired rate limit entries", removedCount);
+        }
     }
 
     /**

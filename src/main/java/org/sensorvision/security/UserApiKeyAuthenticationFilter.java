@@ -16,6 +16,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -194,6 +196,30 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
             existing.attempts.incrementAndGet();
             return existing;
         });
+    }
+
+    /**
+     * Scheduled cleanup of expired rate limit entries.
+     * Runs every 5 minutes to remove entries whose window has expired.
+     * This prevents memory leaks from attackers using many different IPs.
+     */
+    @Scheduled(fixedRate = 300_000) // Every 5 minutes
+    public void cleanupExpiredRateLimitEntries() {
+        long now = System.currentTimeMillis();
+        int removedCount = 0;
+
+        var iterator = failedAttempts.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            if (now - entry.getValue().firstAttemptTime > RATE_LIMIT_WINDOW_MS) {
+                iterator.remove();
+                removedCount++;
+            }
+        }
+
+        if (removedCount > 0) {
+            log.debug("Cleaned up {} expired rate limit entries", removedCount);
+        }
     }
 
     /**

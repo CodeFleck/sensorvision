@@ -1,7 +1,6 @@
 package org.sensorvision.config;
 
 import org.sensorvision.interceptor.RateLimitInterceptor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -15,14 +14,15 @@ import java.io.IOException;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    @Bean
-    public RateLimitInterceptor rateLimitInterceptor() {
-        return new RateLimitInterceptor();
+    private final RateLimitInterceptor rateLimitInterceptor;
+
+    public WebMvcConfig(RateLimitInterceptor rateLimitInterceptor) {
+        this.rateLimitInterceptor = rateLimitInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(rateLimitInterceptor())
+        registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns("/api/v1/**")
                 .excludePathPatterns(
                         "/api/v1/auth/**",  // Exclude auth endpoints
