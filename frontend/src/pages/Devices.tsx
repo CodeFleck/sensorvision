@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, Key } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Edit, Trash2, Search, Key, Cpu, ArrowRight, Zap } from 'lucide-react';
 import { Device } from '../types';
 import { apiService } from '../services/api';
 import { DeviceModal } from '../components/DeviceModal';
@@ -235,8 +236,45 @@ export const Devices = () => {
         </table>
 
         {filteredDevices.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No devices found
+          <div className="text-center py-12">
+            {devices.length === 0 ? (
+              // No devices at all - show onboarding CTA
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Cpu className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No devices yet
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Connect your first IoT device to start collecting data. Our Integration Wizard
+                  generates ready-to-use code for ESP32, Arduino, Raspberry Pi, and more.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    to="/integration-wizard"
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    <Zap className="h-4 w-4" />
+                    Integration Wizard
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <button
+                    onClick={handleCreate}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium border border-gray-300"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Device Manually
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Has devices but search found nothing
+              <div className="text-gray-500">
+                <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No devices match your search "{searchTerm}"</p>
+              </div>
+            )}
           </div>
         )}
       </div>
