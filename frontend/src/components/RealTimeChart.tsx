@@ -41,6 +41,8 @@ export const RealTimeChart = ({ telemetryData }: RealTimeChartProps) => {
 
   useEffect(() => {
     const now = new Date();
+    const cutoffTime = new Date(now.getTime() - timeWindow * 1000);
+
     const newDataPoints: DataPoint[] = telemetryData
       .filter(point => point.kwConsumption !== undefined)
       .map(point => ({
@@ -50,16 +52,26 @@ export const RealTimeChart = ({ telemetryData }: RealTimeChartProps) => {
       }));
 
     setChartData(prevData => {
-      const cutoffTime = new Date(now.getTime() - timeWindow * 1000);
-
-      // Combine new and existing data, removing old entries
-      const allData = [...prevData, ...newDataPoints];
-      const filteredData = allData.filter(point =>
+      // Filter old entries from prevData FIRST to prevent memory buildup
+      const recentPrevData = prevData.filter(point =>
         new Date(point.timestamp) > cutoffTime
       );
 
+      // Create a Set of existing keys for O(1) deduplication lookup
+      const existingKeys = new Set(
+        recentPrevData.map(p => `${p.deviceId}-${p.timestamp}`)
+      );
+
+      // Only add new points that don't already exist (prevents duplicates from WebSocket reconnections)
+      const uniqueNewPoints = newDataPoints.filter(
+        p => !existingKeys.has(`${p.deviceId}-${p.timestamp}`)
+      );
+
+      // Combine filtered previous data with unique new data
+      const allData = [...recentPrevData, ...uniqueNewPoints];
+
       // Sort by timestamp
-      return filteredData.sort((a, b) =>
+      return allData.sort((a, b) =>
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
     });
