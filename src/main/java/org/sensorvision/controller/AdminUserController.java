@@ -6,9 +6,7 @@ import org.sensorvision.model.User;
 import org.sensorvision.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,9 +24,8 @@ public class AdminUserController {
     }
 
     @GetMapping
-    @Transactional(readOnly = true)
     public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<User> users = userRepository.findAll();
+        List<User> users = userRepository.findAllWithOrganizationAndRoles();
         List<UserDto> userDtos = users.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -36,9 +33,8 @@ public class AdminUserController {
     }
 
     @GetMapping("/{userId}")
-    @Transactional(readOnly = true)
     public ResponseEntity<UserDto> getUser(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdWithOrganizationAndRoles(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         return ResponseEntity.ok(convertToDto(user));
     }
@@ -49,10 +45,14 @@ public class AdminUserController {
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
         user.setEnabled(true);
-        user = userRepository.save(user);
+        userRepository.save(user);
+
+        // Re-fetch with eager loading for DTO conversion
+        User savedUser = userRepository.findByIdWithOrganizationAndRoles(userId)
+                .orElseThrow(() -> new RuntimeException("User not found after save"));
 
         return ResponseEntity.ok(ApiResponse.success(
-                convertToDto(user),
+                convertToDto(savedUser),
                 "User enabled successfully"));
     }
 
@@ -62,10 +62,14 @@ public class AdminUserController {
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
         user.setEnabled(false);
-        user = userRepository.save(user);
+        userRepository.save(user);
+
+        // Re-fetch with eager loading for DTO conversion
+        User savedUser = userRepository.findByIdWithOrganizationAndRoles(userId)
+                .orElseThrow(() -> new RuntimeException("User not found after save"));
 
         return ResponseEntity.ok(ApiResponse.success(
-                convertToDto(user),
+                convertToDto(savedUser),
                 "User disabled successfully"));
     }
 
@@ -86,10 +90,14 @@ public class AdminUserController {
             user.setEmail(request.getEmail());
         }
 
-        user = userRepository.save(user);
+        userRepository.save(user);
+
+        // Re-fetch with eager loading for DTO conversion
+        User savedUser = userRepository.findByIdWithOrganizationAndRoles(userId)
+                .orElseThrow(() -> new RuntimeException("User not found after save"));
 
         return ResponseEntity.ok(ApiResponse.success(
-                convertToDto(user),
+                convertToDto(savedUser),
                 "User updated successfully"));
     }
 
@@ -106,9 +114,8 @@ public class AdminUserController {
     }
 
     @GetMapping("/organization/{organizationId}")
-    @Transactional(readOnly = true)
     public ResponseEntity<List<UserDto>> getUsersByOrganization(@PathVariable Long organizationId) {
-        List<User> users = userRepository.findByOrganizationId(organizationId);
+        List<User> users = userRepository.findByOrganizationIdWithOrganizationAndRoles(organizationId);
         List<UserDto> userDtos = users.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -122,8 +129,10 @@ public class AdminUserController {
         dto.setEmail(user.getEmail());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());
-        dto.setOrganizationId(user.getOrganization().getId());
-        dto.setOrganizationName(user.getOrganization().getName());
+        if (user.getOrganization() != null) {
+            dto.setOrganizationId(user.getOrganization().getId());
+            dto.setOrganizationName(user.getOrganization().getName());
+        }
         dto.setEnabled(user.getEnabled());
         dto.setEmailVerified(user.getEmailVerified());
         dto.setCreatedAt(user.getCreatedAt() != null

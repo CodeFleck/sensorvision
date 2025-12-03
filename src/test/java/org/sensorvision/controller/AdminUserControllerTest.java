@@ -90,7 +90,7 @@ class AdminUserControllerTest {
     @Test
     void REGRESSION_getAllUsers_shouldAccessLazyLoadedOrganization() {
         // Given - User with lazy-loaded Organization
-        when(userRepository.findAll()).thenReturn(Arrays.asList(testUser));
+        when(userRepository.findAllWithOrganizationAndRoles()).thenReturn(Arrays.asList(testUser));
 
         // When - getAllUsers() accesses user.getOrganization().getId() and getName()
         ResponseEntity<List<UserDto>> response = adminUserController.getAllUsers();
@@ -101,17 +101,17 @@ class AdminUserControllerTest {
         assertThat(response.getBody()).hasSize(1);
 
         UserDto dto = response.getBody().get(0);
-        assertThat(dto.getOrganizationId()).isEqualTo(1L); // Lazy-loaded Organization.id
-        assertThat(dto.getOrganizationName()).isEqualTo("Test Organization"); // Lazy-loaded Organization.name
-        assertThat(dto.getRoles()).contains("ROLE_USER"); // Lazy-loaded Roles collection
+        assertThat(dto.getOrganizationId()).isEqualTo(1L); // Eager-fetched Organization.id
+        assertThat(dto.getOrganizationName()).isEqualTo("Test Organization"); // Eager-fetched Organization.name
+        assertThat(dto.getRoles()).contains("ROLE_USER"); // Eager-fetched Roles collection
 
-        verify(userRepository).findAll();
+        verify(userRepository).findAllWithOrganizationAndRoles();
     }
 
     @Test
     void REGRESSION_getUser_shouldAccessLazyLoadedOrganization() {
-        // Given - User with lazy-loaded Organization
-        when(userRepository.findById(100L)).thenReturn(Optional.of(testUser));
+        // Given - User with eager-fetched Organization
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
 
         // When - getUser() accesses user.getOrganization().getId() and getName()
         ResponseEntity<UserDto> response = adminUserController.getUser(100L);
@@ -122,17 +122,17 @@ class AdminUserControllerTest {
 
         UserDto dto = response.getBody();
         assertThat(dto.getId()).isEqualTo(100L);
-        assertThat(dto.getOrganizationId()).isEqualTo(1L); // Lazy-loaded Organization.id
-        assertThat(dto.getOrganizationName()).isEqualTo("Test Organization"); // Lazy-loaded Organization.name
-        assertThat(dto.getRoles()).contains("ROLE_USER"); // Lazy-loaded Roles collection
+        assertThat(dto.getOrganizationId()).isEqualTo(1L); // Eager-fetched Organization.id
+        assertThat(dto.getOrganizationName()).isEqualTo("Test Organization"); // Eager-fetched Organization.name
+        assertThat(dto.getRoles()).contains("ROLE_USER"); // Eager-fetched Roles collection
 
-        verify(userRepository).findById(100L);
+        verify(userRepository).findByIdWithOrganizationAndRoles(100L);
     }
 
     @Test
     void REGRESSION_getUsersByOrganization_shouldAccessLazyLoadedOrganization() {
-        // Given - Users with lazy-loaded Organization
-        when(userRepository.findByOrganizationId(1L)).thenReturn(Arrays.asList(testUser));
+        // Given - Users with eager-fetched Organization
+        when(userRepository.findByOrganizationIdWithOrganizationAndRoles(1L)).thenReturn(Arrays.asList(testUser));
 
         // When - getUsersByOrganization() accesses user.getOrganization().getId() and
         // getName()
@@ -144,17 +144,17 @@ class AdminUserControllerTest {
         assertThat(response.getBody()).hasSize(1);
 
         UserDto dto = response.getBody().get(0);
-        assertThat(dto.getOrganizationId()).isEqualTo(1L); // Lazy-loaded Organization.id
-        assertThat(dto.getOrganizationName()).isEqualTo("Test Organization"); // Lazy-loaded Organization.name
+        assertThat(dto.getOrganizationId()).isEqualTo(1L); // Eager-fetched Organization.id
+        assertThat(dto.getOrganizationName()).isEqualTo("Test Organization"); // Eager-fetched Organization.name
 
-        verify(userRepository).findByOrganizationId(1L);
+        verify(userRepository).findByOrganizationIdWithOrganizationAndRoles(1L);
     }
 
     @Test
     void REGRESSION_getAllUsers_shouldAccessLazyLoadedRolesCollection() {
-        // Given - User with multiple roles (lazy-loaded collection)
+        // Given - User with multiple roles (eager-fetched collection)
         testUser.getRoles().add(adminRole); // User has both ROLE_USER and ROLE_ADMIN
-        when(userRepository.findAll()).thenReturn(Arrays.asList(testUser));
+        when(userRepository.findAllWithOrganizationAndRoles()).thenReturn(Arrays.asList(testUser));
 
         // When - getAllUsers() accesses user.getRoles() stream
         ResponseEntity<List<UserDto>> response = adminUserController.getAllUsers();
@@ -186,7 +186,7 @@ class AdminUserControllerTest {
                 .roles(new HashSet<>(Arrays.asList(userRole)))
                 .build();
 
-        when(userRepository.findAll()).thenReturn(Arrays.asList(testUser, user2));
+        when(userRepository.findAllWithOrganizationAndRoles()).thenReturn(Arrays.asList(testUser, user2));
 
         // When
         ResponseEntity<List<UserDto>> response = adminUserController.getAllUsers();
@@ -201,7 +201,7 @@ class AdminUserControllerTest {
     @Test
     void getAllUsers_withNoUsers_shouldReturnEmptyList() {
         // Given
-        when(userRepository.findAll()).thenReturn(Arrays.asList());
+        when(userRepository.findAllWithOrganizationAndRoles()).thenReturn(Arrays.asList());
 
         // When
         ResponseEntity<List<UserDto>> response = adminUserController.getAllUsers();
@@ -214,7 +214,7 @@ class AdminUserControllerTest {
     @Test
     void getUser_withValidUserId_shouldReturnUser() {
         // Given
-        when(userRepository.findById(100L)).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
 
         // When
         ResponseEntity<UserDto> response = adminUserController.getUser(100L);
@@ -234,7 +234,7 @@ class AdminUserControllerTest {
     @Test
     void getUser_withNonexistentUserId_shouldThrowException() {
         // Given
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+        when(userRepository.findByIdWithOrganizationAndRoles(999L)).thenReturn(Optional.empty());
 
         // When/Then
         assertThatThrownBy(() -> adminUserController.getUser(999L))
@@ -248,6 +248,7 @@ class AdminUserControllerTest {
         testUser.setEnabled(false); // User is disabled
         when(userRepository.findById(100L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
 
         // When
         ResponseEntity<ApiResponse<UserDto>> response = adminUserController.enableUser(100L);
@@ -260,6 +261,7 @@ class AdminUserControllerTest {
         assertThat(response.getBody().data().isEnabled()).isTrue();
 
         verify(userRepository).save(testUser);
+        verify(userRepository).findByIdWithOrganizationAndRoles(100L);
         assertThat(testUser.getEnabled()).isTrue();
     }
 
@@ -282,6 +284,7 @@ class AdminUserControllerTest {
         testUser.setEnabled(true); // User is enabled
         when(userRepository.findById(100L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
 
         // When
         ResponseEntity<ApiResponse<UserDto>> response = adminUserController.disableUser(100L);
@@ -294,6 +297,7 @@ class AdminUserControllerTest {
         assertThat(response.getBody().data().isEnabled()).isFalse();
 
         verify(userRepository).save(testUser);
+        verify(userRepository).findByIdWithOrganizationAndRoles(100L);
         assertThat(testUser.getEnabled()).isFalse();
     }
 
@@ -302,6 +306,7 @@ class AdminUserControllerTest {
         // Given
         when(userRepository.findById(100L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
 
         AdminUserController.UserUpdateRequest request = new AdminUserController.UserUpdateRequest();
         request.setFirstName("Updated");
@@ -323,6 +328,7 @@ class AdminUserControllerTest {
         assertThat(updatedDto.getEmail()).isEqualTo("updated@example.com");
 
         verify(userRepository).save(testUser);
+        verify(userRepository).findByIdWithOrganizationAndRoles(100L);
     }
 
     @Test
@@ -330,6 +336,7 @@ class AdminUserControllerTest {
         // Given
         when(userRepository.findById(100L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
 
         AdminUserController.UserUpdateRequest request = new AdminUserController.UserUpdateRequest();
         request.setFirstName("UpdatedFirstName");
@@ -391,7 +398,7 @@ class AdminUserControllerTest {
                 .roles(new HashSet<>(Arrays.asList(adminRole)))
                 .build();
 
-        when(userRepository.findByOrganizationId(1L)).thenReturn(Arrays.asList(testUser, user2));
+        when(userRepository.findByOrganizationIdWithOrganizationAndRoles(1L)).thenReturn(Arrays.asList(testUser, user2));
 
         // When
         ResponseEntity<List<UserDto>> response = adminUserController.getUsersByOrganization(1L);
@@ -406,7 +413,7 @@ class AdminUserControllerTest {
     @Test
     void getUsersByOrganization_withNoUsers_shouldReturnEmptyList() {
         // Given
-        when(userRepository.findByOrganizationId(1L)).thenReturn(Arrays.asList());
+        when(userRepository.findByOrganizationIdWithOrganizationAndRoles(1L)).thenReturn(Arrays.asList());
 
         // When
         ResponseEntity<List<UserDto>> response = adminUserController.getUsersByOrganization(1L);
@@ -421,7 +428,7 @@ class AdminUserControllerTest {
     @Test
     void convertToDto_shouldMapAllFieldsCorrectly() {
         // Given
-        when(userRepository.findById(100L)).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
 
         // When
         ResponseEntity<UserDto> response = adminUserController.getUser(100L);
@@ -449,7 +456,7 @@ class AdminUserControllerTest {
         // Given
         // Note: createdAt/updatedAt are managed by AuditableEntity and cannot be set directly
         // This test validates null handling in DTO conversion
-        when(userRepository.findById(100L)).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
 
         // When
         ResponseEntity<UserDto> response = adminUserController.getUser(100L);
