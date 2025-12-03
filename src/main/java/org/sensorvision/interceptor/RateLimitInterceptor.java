@@ -9,6 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import org.springframework.stereotype.Component;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,6 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * while allowing normal interactive UI usage.
  */
 @Slf4j
+@Component
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     // Rate limit: 60 requests per minute (1 per second average)
