@@ -57,8 +57,18 @@ export const RealTimeChart = ({ telemetryData }: RealTimeChartProps) => {
         new Date(point.timestamp) > cutoffTime
       );
 
-      // Combine filtered previous data with new data
-      const allData = [...recentPrevData, ...newDataPoints];
+      // Create a Set of existing keys for O(1) deduplication lookup
+      const existingKeys = new Set(
+        recentPrevData.map(p => `${p.deviceId}-${p.timestamp}`)
+      );
+
+      // Only add new points that don't already exist (prevents duplicates from WebSocket reconnections)
+      const uniqueNewPoints = newDataPoints.filter(
+        p => !existingKeys.has(`${p.deviceId}-${p.timestamp}`)
+      );
+
+      // Combine filtered previous data with unique new data
+      const allData = [...recentPrevData, ...uniqueNewPoints];
 
       // Sort by timestamp
       return allData.sort((a, b) =>

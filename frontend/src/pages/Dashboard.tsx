@@ -10,11 +10,6 @@ import { Activity, Zap, Cpu, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export const Dashboard = () => {
   const { isAdmin } = useAuth();
-
-  // Redirect admins to admin dashboard
-  if (isAdmin) {
-    return <Navigate to="/admin-dashboard" replace />;
-  }
   const [devices, setDevices] = useState<Device[]>([]);
   const [latestTelemetry, setLatestTelemetry] = useState<Record<string, TelemetryPoint>>({});
   const [loading, setLoading] = useState(true);
@@ -55,6 +50,7 @@ export const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update telemetry when new WebSocket message arrives
@@ -66,6 +62,11 @@ export const Dashboard = () => {
       }));
     }
   }, [lastMessage]);
+
+  // Redirect admins to admin dashboard - placed after all hooks to comply with Rules of Hooks
+  if (isAdmin) {
+    return <Navigate to="/admin-dashboard" replace />;
+  }
 
   const onlineDevices = devices.filter(d => d.status === 'ONLINE').length;
   const totalPower = Object.values(latestTelemetry)
