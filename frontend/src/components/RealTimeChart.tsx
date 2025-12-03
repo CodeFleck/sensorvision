@@ -41,6 +41,8 @@ export const RealTimeChart = ({ telemetryData }: RealTimeChartProps) => {
 
   useEffect(() => {
     const now = new Date();
+    const cutoffTime = new Date(now.getTime() - timeWindow * 1000);
+
     const newDataPoints: DataPoint[] = telemetryData
       .filter(point => point.kwConsumption !== undefined)
       .map(point => ({
@@ -50,16 +52,16 @@ export const RealTimeChart = ({ telemetryData }: RealTimeChartProps) => {
       }));
 
     setChartData(prevData => {
-      const cutoffTime = new Date(now.getTime() - timeWindow * 1000);
-
-      // Combine new and existing data, removing old entries
-      const allData = [...prevData, ...newDataPoints];
-      const filteredData = allData.filter(point =>
+      // Filter old entries from prevData FIRST to prevent memory buildup
+      const recentPrevData = prevData.filter(point =>
         new Date(point.timestamp) > cutoffTime
       );
 
+      // Combine filtered previous data with new data
+      const allData = [...recentPrevData, ...newDataPoints];
+
       // Sort by timestamp
-      return filteredData.sort((a, b) =>
+      return allData.sort((a, b) =>
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
     });

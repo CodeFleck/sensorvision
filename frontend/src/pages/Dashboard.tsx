@@ -6,7 +6,7 @@ import { useWebSocket } from '../hooks/useWebSocket';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { Device, LatestTelemetry, TelemetryPoint } from '../types';
-import { Activity, Zap, Cpu } from 'lucide-react';
+import { Activity, Zap, Cpu, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export const Dashboard = () => {
   const { isAdmin } = useAuth();
@@ -18,39 +18,42 @@ export const Dashboard = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [latestTelemetry, setLatestTelemetry] = useState<Record<string, TelemetryPoint>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Dynamically construct WebSocket URL based on current host
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsUrl = `${wsProtocol}//${window.location.host}/ws/telemetry`;
   const { lastMessage, connectionStatus } = useWebSocket(wsUrl);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const devicesData = await apiService.getDevices();
-        setDevices(devicesData);
+  const fetchData = async () => {
+    try {
+      setError(null);
+      const devicesData = await apiService.getDevices();
+      setDevices(devicesData);
 
-        if (devicesData.length > 0) {
-          const telemetryData = await apiService.getLatestTelemetry(
-            devicesData.map(d => d.externalId)
-          );
+      if (devicesData.length > 0) {
+        const telemetryData = await apiService.getLatestTelemetry(
+          devicesData.map(d => d.externalId)
+        );
 
-          const telemetryMap = telemetryData.reduce((acc: Record<string, TelemetryPoint>, item: LatestTelemetry) => {
-            if (item.latest) {
-              acc[item.deviceId] = item.latest;
-            }
-            return acc;
-          }, {});
+        const telemetryMap = telemetryData.reduce((acc: Record<string, TelemetryPoint>, item: LatestTelemetry) => {
+          if (item.latest) {
+            acc[item.deviceId] = item.latest;
+          }
+          return acc;
+        }, {});
 
-          setLatestTelemetry(telemetryMap);
-        }
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-      } finally {
-        setLoading(false);
+        setLatestTelemetry(telemetryMap);
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -72,6 +75,27 @@ export const Dashboard = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+          <p className="text-red-500 mb-4">{error}</p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              fetchData();
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
