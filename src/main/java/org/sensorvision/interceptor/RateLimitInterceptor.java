@@ -14,14 +14,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Rate limiting interceptor for plugin endpoints.
- * Limits plugin operations to 10 requests per minute per user to prevent abuse.
+ * Rate limiting interceptor for API endpoints.
+ * Limits operations to 60 requests per minute per user to prevent abuse
+ * while allowing normal interactive UI usage.
  */
 @Slf4j
 public class RateLimitInterceptor implements HandlerInterceptor {
 
-    // Rate limit: 10 requests per minute
-    private static final int MAX_REQUESTS_PER_MINUTE = 10;
+    // Rate limit: 60 requests per minute (1 per second average)
+    private static final int MAX_REQUESTS_PER_MINUTE = 60;
     private static final long WINDOW_SIZE_MS = 60_000; // 1 minute
 
     // Map of username -> RateLimitInfo

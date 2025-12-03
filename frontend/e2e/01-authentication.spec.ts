@@ -37,14 +37,14 @@ test.describe('Authentication System', () => {
     // Click login button
     await page.click('button[type="submit"]');
 
-    // Wait for successful login (dashboard is at root "/")
-    await page.waitForTimeout(2000); // Wait for redirect and auth state
+    // Wait for successful login - admin users redirect to /admin-dashboard, regular users to /
+    await page.waitForURL(/\/(admin-dashboard)?(\?.*)?$/, { timeout: 10000 });
 
-    // Verify we're on dashboard (root path)
-    await expect(page).toHaveURL(/^http:\/\/localhost:3001\/\??$/);
+    // Verify we're on dashboard (admin dashboard or regular dashboard)
+    await expect(page).toHaveURL(/^http:\/\/localhost:3001\/(admin-dashboard)?\??$/);
 
     // Visual regression: Dashboard page
-    await page.waitForTimeout(2000); // Wait for data to load
+    await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('dashboard-after-login.png', {
       fullPage: true,
       animations: 'disabled',
@@ -68,15 +68,18 @@ test.describe('Authentication System', () => {
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000); // Wait for login
+    await page.waitForURL(/\/(admin-dashboard)?(\?.*)?$/, { timeout: 10000 });
 
-    // Find and click logout button (look for user menu dropdown first)
-    const userMenu = page.locator('button:has-text("admin"), [data-testid="user-menu"]');
-    if (await userMenu.count() > 0) {
-      await userMenu.first().click();
-      await page.waitForTimeout(500);
-    }
-    await page.getByRole('button', { name: /logout|sign out/i }).click();
+    // Find and click the user menu dropdown in the header to reveal Sign Out button
+    // The user menu button contains the username and chevron icon
+    const userMenuButton = page.locator('header button').filter({ hasText: 'admin' });
+    await userMenuButton.click();
+
+    // Wait for dropdown to appear
+    await page.getByRole('button', { name: /sign out/i }).waitFor({ state: 'visible' });
+
+    // Now click the Sign Out button in the dropdown
+    await page.getByRole('button', { name: /sign out/i }).click();
 
     // Should redirect to login
     await page.waitForURL('**/login', { timeout: 5000 });
@@ -96,12 +99,12 @@ test.describe('Authentication System', () => {
     await page.fill('input[name="username"]', 'admin');
     await page.fill('input[name="password"]', 'admin123');
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000); // Wait for login to complete
+    await page.waitForURL(/\/(admin-dashboard)?(\?.*)?$/, { timeout: 10000 });
 
     // Reload page
     await page.reload();
 
-    // Should still be logged in (root path)
-    await expect(page).toHaveURL(/^http:\/\/localhost:3001\/\??$/);
+    // Should still be logged in (admin dashboard or regular dashboard)
+    await expect(page).toHaveURL(/^http:\/\/localhost:3001\/(admin-dashboard)?\??$/);
   });
 });
