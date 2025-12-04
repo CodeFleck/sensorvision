@@ -205,22 +205,46 @@ export const TokenModal = ({ device, isOpen, onClose }: TokenModalProps) => {
               </div>
 
               {tokenInfo?.tokenCreatedAt && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">
-                      Created
-                    </label>
-                    <div className="text-sm text-gray-900">
-                      {new Date(tokenInfo.tokenCreatedAt).toLocaleString()}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                        Created
+                      </label>
+                      <div className="text-sm text-gray-900">
+                        {new Date(tokenInfo.tokenCreatedAt).toLocaleString()}
+                      </div>
                     </div>
-                  </div>
-                  {tokenInfo.tokenLastUsedAt && (
                     <div>
                       <label className="block text-xs font-medium text-gray-500 mb-1">
                         Last Used
                       </label>
                       <div className="text-sm text-gray-900">
-                        {new Date(tokenInfo.tokenLastUsedAt).toLocaleString()}
+                        {tokenInfo.tokenLastUsedAt
+                          ? new Date(tokenInfo.tokenLastUsedAt).toLocaleString()
+                          : <span className="text-yellow-700 font-medium">Never used</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Diagnostic warning when token has never been used */}
+                  {!tokenInfo.tokenLastUsedAt && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h4 className="text-sm font-medium text-yellow-900">Token Never Used</h4>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            This token was created but no data has been received. If your device is sending data, check:
+                          </p>
+                          <ul className="text-sm text-yellow-700 mt-2 space-y-1 list-disc ml-4">
+                            <li><strong>MQTT users:</strong> Include <code className="bg-yellow-100 px-1 rounded">apiToken</code> field in JSON payload</li>
+                            <li><strong>HTTP users:</strong> Add <code className="bg-yellow-100 px-1 rounded">X-API-Key</code> header to requests</li>
+                            <li>Verify the device ID matches exactly (case-sensitive)</li>
+                            <li>Check network connectivity to the server</li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   )}

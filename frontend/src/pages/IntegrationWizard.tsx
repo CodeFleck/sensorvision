@@ -333,6 +333,11 @@ const char* password = "YOUR_WIFI_PASSWORD";
 const char* mqttServer = "${mqttServer}";  // MQTT broker address
 const int mqttPort = 1883;                 // MQTT port (must be accessible)
 const char* deviceId = "${devId}";
+
+// SECURITY: Keep this token secret! Do not commit to public repositories.
+// If compromised, rotate the token in the SensorVision dashboard.
+const char* apiToken = "${token}";         // Device API token for authentication
+
 const char* mqttTopic = "sensorvision/devices/${devId}/telemetry";
 
 WiFiClient espClient;
@@ -378,7 +383,7 @@ void connectMQTT() {
   while (!client.connected()) {
     Serial.print("Connecting to MQTT broker...");
 
-    // Connect to MQTT (no auth required for local broker)
+    // Connect to MQTT broker
     if (client.connect(deviceId)) {
       Serial.println("connected!");
     } else {
@@ -391,13 +396,14 @@ void connectMQTT() {
 }
 
 void sendData(float temperature, float humidity) {
-  // Build JSON payload
-  // IMPORTANT: All variable values must be numeric (float/int)
-  // Format: {"deviceId":"xxx","timestamp":"ISO8601","variables":{"temp":23.5}}
+  // Build JSON payload with API token for authentication
+  // IMPORTANT: The apiToken field is REQUIRED for the server to accept your data
+  // Format: {"deviceId":"xxx","apiToken":"xxx","timestamp":"ISO8601","variables":{"temp":23.5}}
 
   String timestamp = getISOTimestamp();  // See helper function below
 
   String payload = "{\\"deviceId\\":\\"" + String(deviceId) + "\\"," +
+                   "\\"apiToken\\":\\"" + String(apiToken) + "\\"," +
                    "\\"timestamp\\":\\"" + timestamp + "\\"," +
                    "\\"variables\\":{" +
                    "\\"temperature\\":" + String(temperature, 1) + "," +
@@ -409,16 +415,17 @@ void sendData(float temperature, float humidity) {
 
   // Publish to MQTT topic
   if (client.publish(mqttTopic, payload.c_str())) {
-    Serial.println("✓ Data sent successfully via MQTT");
+    Serial.println("Data sent successfully via MQTT");
   } else {
-    Serial.println("✗ Failed to send data");
+    Serial.println("Failed to send data - check MQTT connection");
   }
 }
 
 // Helper: Generate ISO 8601 timestamp
+// WARNING: This generates a PLACEHOLDER timestamp based on uptime!
 // For production, use NTP time sync (WiFiUdp + NTPClient library)
 String getISOTimestamp() {
-  // Simple timestamp - for production use NTP!
+  // PLACEHOLDER - Replace with NTP for accurate timestamps!
   unsigned long seconds = millis() / 1000;
   char timestamp[25];
   sprintf(timestamp, "2024-01-01T%02lu:%02lu:%02luZ",
