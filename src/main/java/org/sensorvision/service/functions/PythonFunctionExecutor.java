@@ -64,9 +64,9 @@ public class PythonFunctionExecutor implements FunctionExecutor {
                 objectMapper.writeValue(writer, input);
             }
 
-            // Build Python command
+            // Build Python command (OS-aware: uses "python" on Windows, "python3" elsewhere)
             List<String> command = new ArrayList<>();
-            command.add("python3");  // or "python" depending on system
+            command.add(FunctionRuntime.PYTHON_3_11.getCommand());
             command.add(scriptPath.toString());
             command.add(inputPath.toString());
             command.add(outputPath.toString());

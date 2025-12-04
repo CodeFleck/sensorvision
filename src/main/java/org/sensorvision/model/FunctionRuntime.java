@@ -21,8 +21,19 @@ public enum FunctionRuntime {
         return displayName;
     }
 
+    /**
+     * Returns the OS-appropriate command for this runtime.
+     * On Windows, Python is invoked as "python" instead of "python3".
+     */
     public String getCommand() {
+        if (this == PYTHON_3_11 && isWindows()) {
+            return "python";
+        }
         return command;
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("win");
     }
 
     public String getFileExtension() {
