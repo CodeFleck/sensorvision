@@ -250,6 +250,27 @@ class ApiService {
     });
   }
 
+  // Connectivity Checks (for Integration Wizard)
+  async checkMqttConnectivity(): Promise<{
+    status: string;
+    message: string;
+    reachable: boolean;
+    host?: string;
+    port?: number;
+    guidance?: string;
+  }> {
+    return this.request('/connectivity/mqtt');
+  }
+
+  async checkHttpConnectivity(): Promise<{
+    status: string;
+    message: string;
+    reachable: boolean;
+    guidance?: string;
+  }> {
+    return this.request('/connectivity/http');
+  }
+
   // Telemetry
   async queryTelemetry(deviceId: string, start: string, end: string): Promise<TelemetryPoint[]> {
     const params = new URLSearchParams({
