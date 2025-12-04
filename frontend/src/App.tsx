@@ -47,6 +47,7 @@ import SmsSettings from './pages/SmsSettings';
 import AdminUsers from './pages/AdminUsers';
 import AdminOrganizations from './pages/AdminOrganizations';
 import { GlobalRules } from './pages/GlobalRules';
+import LogViewer from './pages/LogViewer';
 
 import AdminDashboard from './pages/AdminDashboard';
 import { config } from './config';
@@ -129,6 +130,9 @@ function App() {
 
                       {/* Support routes */}
                       <Route path="/my-tickets" element={<MyTickets />} />
+
+                      {/* Developer tools (requires ROLE_DEVELOPER) */}
+                      <Route path="/logs" element={<ProtectedRoute requiredRole="ROLE_DEVELOPER"><LogViewer /></ProtectedRoute>} />
 
                       {/* Admin-only routes */}
                       <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />

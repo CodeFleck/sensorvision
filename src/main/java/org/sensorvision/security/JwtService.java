@@ -159,4 +159,37 @@ public class JwtService {
             return false;
         }
     }
+
+    /**
+     * Get roles from JWT token
+     *
+     * @param token the JWT token
+     * @return list of role names (e.g., ["ROLE_USER", "ROLE_DEVELOPER"])
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> getRolesFromToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            return claims.get("roles", List.class);
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    /**
+     * Check if token has a specific role
+     *
+     * @param token the JWT token
+     * @param role the role to check (e.g., "ROLE_DEVELOPER")
+     * @return true if the token has the specified role
+     */
+    public boolean hasRole(String token, String role) {
+        List<String> roles = getRolesFromToken(token);
+        return roles != null && roles.contains(role);
+    }
 }

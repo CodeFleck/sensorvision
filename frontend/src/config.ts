@@ -35,6 +35,18 @@ export const getWebSocketUrl = (): string => {
   return 'ws://localhost:8080/ws/telemetry';
 };
 
+export const getLogsWebSocketUrl = (): string => {
+  // In production, construct WebSocket URL from current location
+  if (import.meta.env.PROD) {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    return `${protocol}//${host}/ws/logs`;
+  }
+
+  // In development, backend WebSocket runs on separate port
+  return 'ws://localhost:8080/ws/logs';
+};
+
 // Config object for convenience - calls functions at access time
 export const config = {
   get apiBaseUrl() {
@@ -45,5 +57,8 @@ export const config = {
   },
   get webSocketUrl() {
     return getWebSocketUrl();
+  },
+  get logsWebSocketUrl() {
+    return getLogsWebSocketUrl();
   },
 };
