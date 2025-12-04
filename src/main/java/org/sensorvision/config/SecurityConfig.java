@@ -90,6 +90,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/forgot-password", "/api/v1/auth/reset-password").permitAll()
                         .requestMatchers("/api/v1/auth/verify-email").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/prometheus", "/actuator/metrics").permitAll()
+                        // Connectivity checks for Integration Wizard (no auth needed for diagnostics)
+                        .requestMatchers("/api/v1/connectivity/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         // Avatar images - allow anonymous reads (upload/delete still require auth)
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/*/avatar").permitAll()

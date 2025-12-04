@@ -105,9 +105,48 @@ export const IntegrationWizard: React.FC = () => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [existingDevices, setExistingDevices] = useState<Array<{ externalId: string; name: string }>>([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
+  const [mqttStatus, setMqttStatus] = useState<{
+    checked: boolean;
+    reachable: boolean;
+    message: string;
+    host?: string;
+    port?: number;
+    guidance?: string;
+  } | null>(null);
+  const [isCheckingMqtt, setIsCheckingMqtt] = useState(false);
   const apiUrl = config.backendUrl;
 
   const totalSteps = 5;
+
+  // Helper to determine if platform uses MQTT or HTTP
+  const isMqttPlatform = (platform: Platform | null): boolean => {
+    return platform === 'esp32' || platform === 'arduino';
+  };
+
+  // Check MQTT broker connectivity
+  const checkMqttConnectivity = async () => {
+    setIsCheckingMqtt(true);
+    try {
+      const result = await apiService.checkMqttConnectivity();
+      setMqttStatus({
+        checked: true,
+        reachable: result.reachable,
+        message: result.message,
+        host: result.host,
+        port: result.port,
+        guidance: result.guidance,
+      });
+    } catch (error) {
+      setMqttStatus({
+        checked: true,
+        reachable: false,
+        message: 'Failed to check MQTT connectivity',
+        guidance: 'Could not reach the server to check MQTT status.',
+      });
+    } finally {
+      setIsCheckingMqtt(false);
+    }
+  };
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     const id = Date.now();
@@ -333,6 +372,11 @@ const char* password = "YOUR_WIFI_PASSWORD";
 const char* mqttServer = "${mqttServer}";  // MQTT broker address
 const int mqttPort = 1883;                 // MQTT port (must be accessible)
 const char* deviceId = "${devId}";
+
+// SECURITY: Keep this token secret! Do not commit to public repositories.
+// If compromised, rotate the token in the SensorVision dashboard.
+const char* apiToken = "${token}";         // Device API token for authentication
+
 const char* mqttTopic = "sensorvision/devices/${devId}/telemetry";
 
 WiFiClient espClient;
@@ -378,7 +422,7 @@ void connectMQTT() {
   while (!client.connected()) {
     Serial.print("Connecting to MQTT broker...");
 
-    // Connect to MQTT (no auth required for local broker)
+    // Connect to MQTT broker
     if (client.connect(deviceId)) {
       Serial.println("connected!");
     } else {
@@ -391,13 +435,14 @@ void connectMQTT() {
 }
 
 void sendData(float temperature, float humidity) {
-  // Build JSON payload
-  // IMPORTANT: All variable values must be numeric (float/int)
-  // Format: {"deviceId":"xxx","timestamp":"ISO8601","variables":{"temp":23.5}}
+  // Build JSON payload with API token for authentication
+  // IMPORTANT: The apiToken field is REQUIRED for the server to accept your data
+  // Format: {"deviceId":"xxx","apiToken":"xxx","timestamp":"ISO8601","variables":{"temp":23.5}}
 
   String timestamp = getISOTimestamp();  // See helper function below
 
   String payload = "{\\"deviceId\\":\\"" + String(deviceId) + "\\"," +
+                   "\\"apiToken\\":\\"" + String(apiToken) + "\\"," +
                    "\\"timestamp\\":\\"" + timestamp + "\\"," +
                    "\\"variables\\":{" +
                    "\\"temperature\\":" + String(temperature, 1) + "," +
@@ -409,16 +454,17 @@ void sendData(float temperature, float humidity) {
 
   // Publish to MQTT topic
   if (client.publish(mqttTopic, payload.c_str())) {
-    Serial.println("✓ Data sent successfully via MQTT");
+    Serial.println("Data sent successfully via MQTT");
   } else {
-    Serial.println("✗ Failed to send data");
+    Serial.println("Failed to send data - check MQTT connection");
   }
 }
 
 // Helper: Generate ISO 8601 timestamp
+// WARNING: This generates a PLACEHOLDER timestamp based on uptime!
 // For production, use NTP time sync (WiFiUdp + NTPClient library)
 String getISOTimestamp() {
-  // Simple timestamp - for production use NTP!
+  // PLACEHOLDER - Replace with NTP for accurate timestamps!
   unsigned long seconds = millis() / 1000;
   char timestamp[25];
   sprintf(timestamp, "2024-01-01T%02lu:%02lu:%02luZ",
@@ -946,16 +992,83 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
                 Test Connection
               </h2>
               <p className="text-gray-600">
-                Verify that your device can send data to SensorVision
+                {isMqttPlatform(selectedPlatform)
+                  ? 'Verify MQTT broker connectivity and test your setup'
+                  : 'Verify that your device can send data to SensorVision'}
               </p>
             </div>
 
+            {/* MQTT Broker Status Check (for ESP32/Arduino) */}
+            {isMqttPlatform(selectedPlatform) && (
+              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Step 1: Check MQTT Broker Status
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  First, let's verify the MQTT broker is online and accessible from our servers.
+                </p>
+
+                {!mqttStatus?.checked && (
+                  <button
+                    onClick={checkMqttConnectivity}
+                    disabled={isCheckingMqtt}
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 font-medium transition-colors"
+                  >
+                    {isCheckingMqtt ? 'Checking MQTT Broker...' : 'Check MQTT Broker Status'}
+                  </button>
+                )}
+
+                {mqttStatus?.checked && (
+                  <div className={`rounded-lg p-4 ${mqttStatus.reachable ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                    <div className="flex items-start space-x-3">
+                      {mqttStatus.reachable ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      )}
+                      <div>
+                        <h4 className={`text-sm font-medium ${mqttStatus.reachable ? 'text-green-900' : 'text-red-900'}`}>
+                          {mqttStatus.reachable ? 'MQTT Broker Online' : 'MQTT Broker Unreachable'}
+                        </h4>
+                        <p className={`text-sm mt-1 ${mqttStatus.reachable ? 'text-green-700' : 'text-red-700'}`}>
+                          {mqttStatus.message}
+                        </p>
+                        {mqttStatus.host && mqttStatus.port && (
+                          <p className="text-sm mt-2 text-gray-600">
+                            <strong>Broker:</strong> {mqttStatus.host}:{mqttStatus.port}
+                          </p>
+                        )}
+                        {mqttStatus.guidance && (
+                          <p className="text-sm mt-2 text-gray-600">
+                            {mqttStatus.guidance}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={checkMqttConnectivity}
+                      disabled={isCheckingMqtt}
+                      className="mt-3 text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      {isCheckingMqtt ? 'Checking...' : 'Check Again'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {isMqttPlatform(selectedPlatform) ? 'Step 2: Test HTTP API' : 'Test HTTP Connection'}
+              </h3>
+              <p className="text-gray-600 text-sm mb-4">
+                {isMqttPlatform(selectedPlatform)
+                  ? 'We\'ll send a test message via HTTP to verify your device credentials work. Your actual device will use MQTT.'
+                  : 'Click the button below to send test data and verify your connection.'}
+              </p>
+
               {!connectionSuccess && !connectionError && (
                 <div className="text-center">
-                  <p className="text-gray-700 mb-6">
-                    Click the button below to send test data and verify your connection
-                  </p>
                   <button
                     onClick={testConnection}
                     disabled={isTestingConnection}
@@ -1104,6 +1217,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
                     setDeviceName('');
                     setApiToken('');
                     setConnectionSuccess(false);
+                    setMqttStatus(null);
                   }}
                   className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-center font-medium"
                 >

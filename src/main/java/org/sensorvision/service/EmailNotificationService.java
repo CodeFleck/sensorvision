@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.model.Alert;
 import org.sensorvision.model.ReportExecution;
 import org.sensorvision.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ByteArrayResource;
@@ -34,7 +33,6 @@ public class EmailNotificationService {
     @Value("${notification.admin.email:admin@sensorvision.com}")
     private String adminEmail;
 
-    @Autowired(required = false)
     public EmailNotificationService(JavaMailSender mailSender, EmailTemplateService templateService) {
         this.mailSender = mailSender;
         this.templateService = templateService;
