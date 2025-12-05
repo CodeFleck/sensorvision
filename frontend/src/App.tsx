@@ -48,6 +48,7 @@ import AdminUsers from './pages/AdminUsers';
 import AdminOrganizations from './pages/AdminOrganizations';
 import { GlobalRules } from './pages/GlobalRules';
 import LogViewer from './pages/LogViewer';
+import Settings from './pages/Settings';
 
 import AdminDashboard from './pages/AdminDashboard';
 import { config } from './config';
@@ -99,6 +100,7 @@ function App() {
                       <Route path="/dashboard-templates" element={<DashboardTemplates />} />
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="/profile" element={<Profile />} />
+                      <Route path="/settings" element={<Settings />} />
 
                       {/* Devices & Data routes (user-accessible) */}
                       <Route path="/devices" element={<Devices />} />

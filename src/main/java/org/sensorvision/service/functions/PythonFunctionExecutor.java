@@ -87,7 +87,28 @@ public class PythonFunctionExecutor implements FunctionExecutor {
                     secrets.size(), function.getId());
             }
 
-            Process process = processBuilder.start();
+            logger.debug("Executing Python function with command: {}", command);
+
+            Process process;
+            try {
+                process = processBuilder.start();
+            } catch (java.io.IOException e) {
+                String pythonCmd = command.get(0);
+                if (e.getMessage().contains("CreateProcess error=3") ||
+                    e.getMessage().contains("Cannot run program") ||
+                    e.getMessage().contains("No such file")) {
+                    throw new FunctionExecutionException(
+                        "Python interpreter not found. Please ensure Python is installed and available in PATH. " +
+                        "Attempted command: " + pythonCmd,
+                        "To fix this issue:\n" +
+                        "1. Install Python 3.10+ from https://python.org\n" +
+                        "2. During installation, check 'Add Python to PATH'\n" +
+                        "3. Or set PYTHON_HOME environment variable\n" +
+                        "4. Restart the application after installation"
+                    );
+                }
+                throw e;
+            }
 
             // Capture output and errors
             ExecutorService executor = Executors.newFixedThreadPool(2);

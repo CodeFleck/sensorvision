@@ -89,8 +89,8 @@ const navigationSections: NavigationSection[] = [
     adminOnly: false,
     items: [
       { name: 'Dashboard', href: '/', icon: Home, adminOnly: false },
-      { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false },
-      { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: false },
+      { name: 'Widget Dashboards', href: '/dashboards', icon: LayoutGrid, adminOnly: false, excludeForAdmin: true },
+      { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: false, excludeForAdmin: true },
     ],
   },
   {
@@ -98,13 +98,14 @@ const navigationSections: NavigationSection[] = [
     icon: Cpu,
     iconColor: 'text-green-600',
     adminOnly: false,
+    excludeForAdmin: true, // Hide from admin panel - user-only feature
     items: [
-      { name: 'Devices', href: '/devices', icon: Cpu, adminOnly: false },
-      { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: false },
-      { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: false },
-      { name: 'Serverless Functions', href: '/serverless-functions', icon: Code, adminOnly: false },
-      { name: 'Data Plugins', href: '/data-plugins', icon: Plug2, adminOnly: false },
-      { name: 'Plugin Marketplace', href: '/plugin-marketplace', icon: Store, adminOnly: false },
+      { name: 'Devices', href: '/devices', icon: Cpu, adminOnly: false, excludeForAdmin: true },
+      { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: false, excludeForAdmin: true },
+      { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: false, excludeForAdmin: true },
+      { name: 'Serverless Functions', href: '/serverless-functions', icon: Code, adminOnly: false, excludeForAdmin: true },
+      { name: 'Data Plugins', href: '/data-plugins', icon: Plug2, adminOnly: false, excludeForAdmin: true },
+      { name: 'Plugin Marketplace', href: '/plugin-marketplace', icon: Store, adminOnly: false, excludeForAdmin: true },
     ],
   },
   {
@@ -416,6 +417,14 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                             className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                           >
                             Edit Profile
+                          </Link>
+                          <Link
+                            to="/settings"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                          >
+                            <Settings className="mr-2 h-4 w-4" />
+                            Settings
                           </Link>
                           <button
                             onClick={() => {
