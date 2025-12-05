@@ -610,6 +610,30 @@ class ApiService {
     return this.request<User[]>(`/admin/users/organization/${organizationId}`);
   }
 
+  // Role Management
+  async getAllRoles(): Promise<{ id: number; name: string; description: string }[]> {
+    return this.request<{ id: number; name: string; description: string }[]>('/admin/users/roles');
+  }
+
+  async updateUserRoles(userId: number, roles: string[]): Promise<{ success: boolean; data: User; message: string }> {
+    return this.request(`/admin/users/${userId}/roles`, {
+      method: 'PUT',
+      body: JSON.stringify({ roles }),
+    });
+  }
+
+  async addRoleToUser(userId: number, roleName: string): Promise<{ success: boolean; data: User; message: string }> {
+    return this.request(`/admin/users/${userId}/roles/${encodeURIComponent(roleName)}`, {
+      method: 'POST',
+    });
+  }
+
+  async removeRoleFromUser(userId: number, roleName: string): Promise<{ success: boolean; data: User; message: string }> {
+    return this.request(`/admin/users/${userId}/roles/${encodeURIComponent(roleName)}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Admin Organization Management
   async getAllOrganizations(): Promise<Organization[]> {
     return this.request<Organization[]>('/admin/organizations');

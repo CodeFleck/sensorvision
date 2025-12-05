@@ -8,10 +8,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sensorvision.dto.ApiResponse;
 import org.sensorvision.dto.UserDto;
+import org.sensorvision.exception.BadRequestException;
+import org.sensorvision.exception.ResourceNotFoundException;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.Role;
 import org.sensorvision.model.User;
+import org.sensorvision.repository.RoleRepository;
 import org.sensorvision.repository.UserRepository;
+import org.sensorvision.security.SecurityUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -44,13 +48,21 @@ class AdminUserControllerTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
+    private SecurityUtils securityUtils;
+
     @InjectMocks
     private AdminUserController adminUserController;
 
     private Organization testOrganization;
     private User testUser;
+    private User adminUser;
     private Role userRole;
     private Role adminRole;
+    private Role developerRole;
 
     @BeforeEach
     void setUp() {
@@ -69,6 +81,11 @@ class AdminUserControllerTest {
         adminRole.setId(2L);
         adminRole.setName("ROLE_ADMIN");
 
+        developerRole = new Role();
+        developerRole.setId(3L);
+        developerRole.setName("ROLE_DEVELOPER");
+        developerRole.setDescription("Developer access for viewing system logs");
+
         // Setup test user with lazy-loaded relationships
         testUser = User.builder()
                 .id(100L)
@@ -80,6 +97,19 @@ class AdminUserControllerTest {
                 .emailVerified(true)
                 .organization(testOrganization) // Lazy-loaded relationship
                 .roles(new HashSet<>(Arrays.asList(userRole))) // Lazy-loaded collection
+                .build();
+
+        // Setup admin user (the current logged in admin performing actions)
+        adminUser = User.builder()
+                .id(1L)
+                .username("admin")
+                .email("admin@example.com")
+                .firstName("Admin")
+                .lastName("User")
+                .enabled(true)
+                .emailVerified(true)
+                .organization(testOrganization)
+                .roles(new HashSet<>(Arrays.asList(adminRole)))
                 .build();
     }
 
@@ -238,7 +268,7 @@ class AdminUserControllerTest {
 
         // When/Then
         assertThatThrownBy(() -> adminUserController.getUser(999L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("User not found with id: 999");
     }
 
@@ -272,7 +302,7 @@ class AdminUserControllerTest {
 
         // When/Then
         assertThatThrownBy(() -> adminUserController.enableUser(999L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("User not found with id: 999");
 
         verify(userRepository, never()).save(any(User.class));
@@ -355,7 +385,8 @@ class AdminUserControllerTest {
     @Test
     void deleteUser_withValidUserId_shouldDeleteUser() {
         // Given
-        when(userRepository.findById(100L)).thenReturn(Optional.of(testUser));
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
         doNothing().when(userRepository).delete(testUser);
 
         // When
@@ -373,12 +404,47 @@ class AdminUserControllerTest {
     @Test
     void deleteUser_withNonexistentUserId_shouldThrowException() {
         // Given
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(999L)).thenReturn(Optional.empty());
 
         // When/Then
         assertThatThrownBy(() -> adminUserController.deleteUser(999L))
-                .isInstanceOf(RuntimeException.class)
+                .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("User not found with id: 999");
+
+        verify(userRepository, never()).delete(any(User.class));
+    }
+
+    @Test
+    void deleteUser_selfDeletion_shouldThrowException() {
+        // Given - admin trying to delete themselves
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.deleteUser(1L)) // adminUser has id 1
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Cannot delete your own account");
+
+        verify(userRepository, never()).delete(any(User.class));
+    }
+
+    @Test
+    void deleteUser_lastAdmin_shouldThrowException() {
+        // Given - trying to delete the last admin user
+        User lastAdmin = User.builder()
+                .id(200L)
+                .username("lastadmin")
+                .roles(new HashSet<>(Arrays.asList(adminRole)))
+                .build();
+
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(200L)).thenReturn(Optional.of(lastAdmin));
+        when(userRepository.countByRolesName("ROLE_ADMIN")).thenReturn(1L);
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.deleteUser(200L))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Cannot delete the last admin user");
 
         verify(userRepository, never()).delete(any(User.class));
     }
@@ -466,5 +532,370 @@ class AdminUserControllerTest {
         assertThat(dto).isNotNull();
         // Timestamps should be present or null depending on AuditableEntity behavior
         // Just verify DTO conversion doesn't throw exceptions
+    }
+
+    // ========== Role Management Tests ==========
+
+    @Test
+    void getAllRoles_shouldReturnAllRoles() {
+        // Given
+        when(roleRepository.findAll()).thenReturn(Arrays.asList(userRole, adminRole, developerRole));
+
+        // When
+        ResponseEntity<List<AdminUserController.RoleDto>> response = adminUserController.getAllRoles();
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).hasSize(3);
+        assertThat(response.getBody().stream().map(AdminUserController.RoleDto::getName))
+                .containsExactlyInAnyOrder("ROLE_USER", "ROLE_ADMIN", "ROLE_DEVELOPER");
+
+        verify(roleRepository).findAll();
+    }
+
+    @Test
+    void getAllRoles_withNoRoles_shouldReturnEmptyList() {
+        // Given
+        when(roleRepository.findAll()).thenReturn(Arrays.asList());
+
+        // When
+        ResponseEntity<List<AdminUserController.RoleDto>> response = adminUserController.getAllRoles();
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEmpty();
+    }
+
+    @Test
+    void updateUserRoles_shouldReplaceAllRoles() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
+        when(roleRepository.findByName("ROLE_DEVELOPER")).thenReturn(Optional.of(developerRole));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        AdminUserController.RolesUpdateRequest request = new AdminUserController.RolesUpdateRequest();
+        request.setRoles(Arrays.asList("ROLE_ADMIN", "ROLE_DEVELOPER"));
+
+        // When
+        ResponseEntity<ApiResponse<UserDto>> response = adminUserController.updateUserRoles(100L, request);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().success()).isTrue();
+        assertThat(response.getBody().message()).isEqualTo("User roles updated successfully");
+        assertThat(testUser.getRoles()).containsExactlyInAnyOrder(adminRole, developerRole);
+
+        verify(userRepository).save(testUser);
+        verify(roleRepository).findByName("ROLE_ADMIN");
+        verify(roleRepository).findByName("ROLE_DEVELOPER");
+    }
+
+    @Test
+    void updateUserRoles_withNonexistentUser_shouldThrowException() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(999L)).thenReturn(Optional.empty());
+
+        AdminUserController.RolesUpdateRequest request = new AdminUserController.RolesUpdateRequest();
+        request.setRoles(Arrays.asList("ROLE_ADMIN"));
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.updateUserRoles(999L, request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("User not found with id: 999");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateUserRoles_withNonexistentRole_shouldThrowException() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
+        when(roleRepository.findByName("ROLE_NONEXISTENT")).thenReturn(Optional.empty());
+
+        AdminUserController.RolesUpdateRequest request = new AdminUserController.RolesUpdateRequest();
+        request.setRoles(Arrays.asList("ROLE_NONEXISTENT"));
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.updateUserRoles(100L, request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Role not found: ROLE_NONEXISTENT");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateUserRoles_withNullRolesList_shouldThrowException() {
+        // Given
+        AdminUserController.RolesUpdateRequest request = new AdminUserController.RolesUpdateRequest();
+        request.setRoles(null);
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.updateUserRoles(100L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("User must have at least one role assigned");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateUserRoles_withEmptyRolesList_shouldThrowException() {
+        // Given
+        AdminUserController.RolesUpdateRequest request = new AdminUserController.RolesUpdateRequest();
+        request.setRoles(Arrays.asList());
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.updateUserRoles(100L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("User must have at least one role assigned");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateUserRoles_selfDemotion_shouldThrowException() {
+        // Given - admin trying to remove ROLE_ADMIN from their own account
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(1L)).thenReturn(Optional.of(adminUser));
+
+        AdminUserController.RolesUpdateRequest request = new AdminUserController.RolesUpdateRequest();
+        request.setRoles(Arrays.asList("ROLE_USER")); // Removing ROLE_ADMIN
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.updateUserRoles(1L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Cannot remove ROLE_ADMIN from your own account");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateUserRoles_lastAdmin_shouldThrowException() {
+        // Given - trying to remove ROLE_ADMIN from the last admin
+        User lastAdmin = User.builder()
+                .id(200L)
+                .username("lastadmin")
+                .roles(new HashSet<>(Arrays.asList(adminRole)))
+                .build();
+
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(200L)).thenReturn(Optional.of(lastAdmin));
+        when(userRepository.countByRolesName("ROLE_ADMIN")).thenReturn(1L);
+
+        AdminUserController.RolesUpdateRequest request = new AdminUserController.RolesUpdateRequest();
+        request.setRoles(Arrays.asList("ROLE_USER")); // Removing ROLE_ADMIN
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.updateUserRoles(200L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Cannot remove ROLE_ADMIN from the last admin user");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateUserRoles_withInvalidRoleNameFormat_shouldThrowException() {
+        // Given
+        AdminUserController.RolesUpdateRequest request = new AdminUserController.RolesUpdateRequest();
+        request.setRoles(Arrays.asList("invalid_role")); // lowercase, no ROLE_ prefix
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.updateUserRoles(100L, request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Invalid role name format");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void addRoleToUser_shouldAddRole() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
+        when(roleRepository.findByName("ROLE_DEVELOPER")).thenReturn(Optional.of(developerRole));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        ResponseEntity<ApiResponse<UserDto>> response = adminUserController.addRoleToUser(100L, "ROLE_DEVELOPER");
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().success()).isTrue();
+        assertThat(response.getBody().message()).isEqualTo("Role added successfully");
+        assertThat(testUser.getRoles()).contains(developerRole);
+
+        verify(userRepository).save(testUser);
+        verify(roleRepository).findByName("ROLE_DEVELOPER");
+    }
+
+    @Test
+    void addRoleToUser_withNonexistentUser_shouldThrowException() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(999L)).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.addRoleToUser(999L, "ROLE_DEVELOPER"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("User not found with id: 999");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void addRoleToUser_withNonexistentRole_shouldThrowException() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
+        when(roleRepository.findByName("ROLE_NONEXISTENT")).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.addRoleToUser(100L, "ROLE_NONEXISTENT"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Role not found: ROLE_NONEXISTENT");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void addRoleToUser_withInvalidRoleNameFormat_shouldThrowException() {
+        // Given - invalid role name format (lowercase, no ROLE_ prefix)
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.addRoleToUser(100L, "invalid_role"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Invalid role name format");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void removeRoleFromUser_shouldRemoveRole() {
+        // Given
+        testUser.getRoles().add(developerRole); // User has ROLE_USER and ROLE_DEVELOPER
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
+        when(roleRepository.findByName("ROLE_DEVELOPER")).thenReturn(Optional.of(developerRole));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        ResponseEntity<ApiResponse<UserDto>> response = adminUserController.removeRoleFromUser(100L, "ROLE_DEVELOPER");
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().success()).isTrue();
+        assertThat(response.getBody().message()).isEqualTo("Role removed successfully");
+        assertThat(testUser.getRoles()).doesNotContain(developerRole);
+        assertThat(testUser.getRoles()).contains(userRole); // ROLE_USER still present
+
+        verify(userRepository).save(testUser);
+        verify(roleRepository).findByName("ROLE_DEVELOPER");
+    }
+
+    @Test
+    void removeRoleFromUser_withNonexistentUser_shouldThrowException() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(999L)).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.removeRoleFromUser(999L, "ROLE_DEVELOPER"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("User not found with id: 999");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void removeRoleFromUser_withNonexistentRole_shouldThrowException() {
+        // Given
+        testUser.getRoles().add(developerRole); // User has 2 roles
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
+        when(roleRepository.findByName("ROLE_NONEXISTENT")).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.removeRoleFromUser(100L, "ROLE_NONEXISTENT"))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Role not found: ROLE_NONEXISTENT");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void removeRoleFromUser_selfDemotion_shouldThrowException() {
+        // Given - admin trying to remove ROLE_ADMIN from themselves
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.removeRoleFromUser(1L, "ROLE_ADMIN"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Cannot remove ROLE_ADMIN from your own account");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void removeRoleFromUser_lastRole_shouldThrowException() {
+        // Given - user only has 1 role
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
+        // testUser only has ROLE_USER
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.removeRoleFromUser(100L, "ROLE_USER"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("User must have at least one role assigned");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void removeRoleFromUser_lastAdmin_shouldThrowException() {
+        // Given - trying to remove ROLE_ADMIN from the last admin
+        User lastAdmin = User.builder()
+                .id(200L)
+                .username("lastadmin")
+                .roles(new HashSet<>(Arrays.asList(adminRole, userRole))) // Has 2 roles so last role check passes
+                .build();
+
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(200L)).thenReturn(Optional.of(lastAdmin));
+        when(userRepository.countByRolesName("ROLE_ADMIN")).thenReturn(1L);
+
+        // When/Then
+        assertThatThrownBy(() -> adminUserController.removeRoleFromUser(200L, "ROLE_ADMIN"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Cannot remove ROLE_ADMIN from the last admin user");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void addRoleToUser_duplicateRole_shouldNotDuplicateRole() {
+        // Given - User already has ROLE_USER
+        when(securityUtils.getCurrentUser()).thenReturn(adminUser);
+        when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
+        when(roleRepository.findByName("ROLE_USER")).thenReturn(Optional.of(userRole));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When - Try to add ROLE_USER again
+        ResponseEntity<ApiResponse<UserDto>> response = adminUserController.addRoleToUser(100L, "ROLE_USER");
+
+        // Then - Should succeed but role set should not have duplicates
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().success()).isTrue();
+        // Set naturally handles duplicates - role count should remain 1
+        assertThat(testUser.getRoles()).hasSize(1);
+        assertThat(testUser.getRoles()).contains(userRole);
+
+        verify(userRepository).save(testUser);
     }
 }

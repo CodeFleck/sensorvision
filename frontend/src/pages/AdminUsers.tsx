@@ -1,17 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Users, Search, Power, Trash2, Shield, Mail, Calendar, Building2 } from 'lucide-react';
+import { Users, Search, Power, Trash2, Shield, Mail, Calendar, Building2, UserCog, X, Check } from 'lucide-react';
 import { User } from '../types';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
+
+interface RoleInfo {
+  id: number;
+  name: string;
+  description: string;
+}
 
 export const AdminUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrganization, setFilterOrganization] = useState<string>('all');
+  const [availableRoles, setAvailableRoles] = useState<RoleInfo[]>([]);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [savingRoles, setSavingRoles] = useState(false);
 
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
   }, []);
 
   const fetchUsers = async () => {
@@ -24,6 +35,49 @@ export const AdminUsers = () => {
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const roles = await apiService.getAllRoles();
+      setAvailableRoles(roles);
+    } catch (error) {
+      console.error('Failed to fetch roles:', error);
+    }
+  };
+
+  const openRoleEditor = (user: User) => {
+    setEditingUser(user);
+    setSelectedRoles([...user.roles]);
+  };
+
+  const closeRoleEditor = () => {
+    setEditingUser(null);
+    setSelectedRoles([]);
+  };
+
+  const toggleRole = (roleName: string) => {
+    setSelectedRoles(prev =>
+      prev.includes(roleName)
+        ? prev.filter(r => r !== roleName)
+        : [...prev, roleName]
+    );
+  };
+
+  const handleSaveRoles = async () => {
+    if (!editingUser) return;
+
+    try {
+      setSavingRoles(true);
+      await apiService.updateUserRoles(editingUser.id, selectedRoles);
+      toast.success('User roles updated successfully');
+      await fetchUsers();
+      closeRoleEditor();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update roles');
+    } finally {
+      setSavingRoles(false);
     }
   };
 
@@ -248,6 +302,13 @@ export const AdminUsers = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
+                          onClick={() => openRoleEditor(user)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit roles"
+                        >
+                          <UserCog className="h-5 w-5" />
+                        </button>
+                        <button
                           onClick={() => handleToggleEnabled(user.id, user.enabled)}
                           className={`p-2 rounded-lg transition-colors ${
                             user.enabled
@@ -282,6 +343,102 @@ export const AdminUsers = () => {
           <span className="font-semibold">{users.length}</span> users
         </div>
       </div>
+
+      {/* Role Editing Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Edit Roles for {editingUser.firstName} {editingUser.lastName}
+              </h3>
+              <button
+                onClick={closeRoleEditor}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="px-6 py-4">
+              <p className="text-sm text-gray-600 mb-4">
+                Select the roles for <span className="font-medium">@{editingUser.username}</span>
+              </p>
+
+              <div className="space-y-3">
+                {availableRoles.map((role) => (
+                  <label
+                    key={role.id}
+                    className={`flex items-start p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedRoles.includes(role.name)
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedRoles.includes(role.name)}
+                      onChange={() => toggleRole(role.name)}
+                      className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <div className="ml-3">
+                      <div className="flex items-center">
+                        {role.name === 'ROLE_ADMIN' && <Shield className="h-4 w-4 mr-1 text-purple-600" />}
+                        {role.name === 'ROLE_DEVELOPER' && <UserCog className="h-4 w-4 mr-1 text-cyan-600" />}
+                        <span className={`font-medium ${
+                          role.name === 'ROLE_ADMIN' ? 'text-purple-700' :
+                          role.name === 'ROLE_DEVELOPER' ? 'text-cyan-700' :
+                          'text-gray-900'
+                        }`}>
+                          {role.name.replace('ROLE_', '')}
+                        </span>
+                      </div>
+                      {role.description && (
+                        <p className="text-sm text-gray-500 mt-1">{role.description}</p>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {selectedRoles.length === 0 && (
+                <p className="text-sm text-amber-600 mt-3">
+                  Warning: User must have at least one role assigned.
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+              <button
+                onClick={closeRoleEditor}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveRoles}
+                disabled={savingRoles || selectedRoles.length === 0}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingRoles ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-1" />
+                    Save Roles
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

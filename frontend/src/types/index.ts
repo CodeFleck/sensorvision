@@ -194,10 +194,11 @@ export interface User {
   roles: string[];
   enabled: boolean;
   emailVerified?: boolean;
+  emailNotificationsEnabled?: boolean;
   lastLoginAt?: string;
   avatarUrl?: string;
   avatarVersion?: number;
-  themePreference?: 'light' | 'dark' | 'system';
+  themePreference?: 'light' | 'dark' | 'dark-dimmed' | 'dark-high-contrast' | 'system';
   createdAt?: string;
   updatedAt?: string;
 }
