@@ -16,6 +16,8 @@ import {
   ChevronDown,
   X,
   AlertCircle,
+  Copy,
+  ChevronRight,
 } from 'lucide-react';
 import { LogsWebSocketProvider, useLogsWebSocket } from '../contexts/LogsWebSocketContext';
 import { LogEntry, LogSource, LogLevel } from '../types';
@@ -43,6 +45,9 @@ const LOG_SOURCE_COLORS: Record<LogSource, string> = {
 interface LogRowProps {
   logs: LogEntry[];
   searchTerm: string;
+  expandedRows: Set<number>;
+  onToggleExpand: (index: number) => void;
+  onCopyLog: (log: LogEntry) => void;
 }
 
 interface LogRowComponentProps extends LogRowProps {
@@ -50,8 +55,18 @@ interface LogRowComponentProps extends LogRowProps {
   style: CSSProperties;
 }
 
-const LogRow = ({ index, style, logs, searchTerm }: LogRowComponentProps): ReactElement => {
+const LogRow = ({ index, style, logs, searchTerm, expandedRows, onToggleExpand, onCopyLog }: LogRowComponentProps): ReactElement => {
   const log = logs[index];
+  const isExpanded = expandedRows.has(index);
+  const messageRef = useRef<HTMLSpanElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  // Check if message is truncated
+  useEffect(() => {
+    if (messageRef.current && !isExpanded) {
+      setIsTruncated(messageRef.current.scrollWidth > messageRef.current.clientWidth);
+    }
+  }, [log.message, isExpanded]);
 
   const highlightText = (text: string, term: string) => {
     if (!term) return text;
@@ -72,6 +87,15 @@ const LogRow = ({ index, style, logs, searchTerm }: LogRowComponentProps): React
   const formatTimestamp = (timestamp: string) => {
     try {
       const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffSec = Math.floor(diffMs / 1000);
+
+      // Show relative time for recent logs
+      if (diffSec < 60) return `${diffSec}s ago`;
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+
+      // Show time for today's logs
       return date.toLocaleTimeString('en-US', {
         hour12: false,
         hour: '2-digit',
@@ -83,13 +107,51 @@ const LogRow = ({ index, style, logs, searchTerm }: LogRowComponentProps): React
     }
   };
 
+  const getFullTimestamp = (timestamp: string) => {
+    try {
+      return new Date(timestamp).toISOString();
+    } catch {
+      return timestamp;
+    }
+  };
+
+  const getLevelBadgeClass = (level: LogLevel) => {
+    switch (level) {
+      case 'ERROR':
+      case 'FATAL':
+        return 'bg-red-500/20 text-red-400 border border-red-500/30';
+      case 'WARN':
+        return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30';
+      case 'INFO':
+        return 'bg-green-500/20 text-green-400 border border-green-500/30';
+      default:
+        return 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
+    }
+  };
+
   return (
     <div
       style={style}
-      className="flex items-start gap-2 px-4 py-1 hover:bg-gray-800/50 border-b border-gray-800/50 font-mono text-sm"
+      className={`group flex items-start gap-2 px-4 py-1 hover:bg-gray-700/50 font-mono text-sm transition-colors ${
+        index % 2 === 0 ? 'bg-gray-900/40' : 'bg-gray-900/0'
+      }`}
     >
+      {/* Expand/collapse indicator for truncated messages */}
+      <button
+        onClick={() => onToggleExpand(index)}
+        className={`shrink-0 w-4 h-4 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-transform ${
+          isExpanded ? 'rotate-90' : ''
+        } ${isTruncated || isExpanded ? 'opacity-100' : 'opacity-0'}`}
+        title={isExpanded ? 'Collapse' : 'Expand'}
+      >
+        <ChevronRight className="w-3 h-3" />
+      </button>
+
       {/* Timestamp */}
-      <span className="text-gray-500 shrink-0 w-24">
+      <span
+        className="text-gray-500 shrink-0 w-16 cursor-help"
+        title={getFullTimestamp(log.timestamp)}
+      >
         {formatTimestamp(log.timestamp)}
       </span>
 
@@ -101,15 +163,33 @@ const LogRow = ({ index, style, logs, searchTerm }: LogRowComponentProps): React
         {log.source}
       </span>
 
-      {/* Level */}
-      <span className={`shrink-0 w-14 ${LOG_LEVEL_COLORS[log.level]}`}>
-        [{log.level}]
+      {/* Level badge */}
+      <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded ${getLevelBadgeClass(log.level)}`}>
+        {log.level}
       </span>
 
       {/* Message */}
-      <span className="text-gray-200 break-all flex-1 whitespace-pre-wrap">
-        {highlightText(log.message, searchTerm)}
-      </span>
+      <div className="flex-1 min-w-0 relative">
+        <span
+          ref={messageRef}
+          className={`text-gray-200 ${
+            isExpanded
+              ? 'whitespace-pre-wrap break-all'
+              : 'whitespace-nowrap overflow-hidden text-ellipsis block'
+          }`}
+        >
+          {highlightText(log.message, searchTerm)}
+        </span>
+      </div>
+
+      {/* Copy button */}
+      <button
+        onClick={() => onCopyLog(log)}
+        className="shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-600 rounded transition-opacity"
+        title="Copy log entry"
+      >
+        <Copy className="w-3 h-3 text-gray-400" />
+      </button>
     </div>
   );
 };
@@ -133,8 +213,11 @@ const LogViewerContent: React.FC = () => {
   const [autoScroll, setAutoScroll] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
 
   const listRef = useRef<ListImperativeAPI>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [listHeight, setListHeight] = useState(500);
 
@@ -231,6 +314,47 @@ const LogViewerContent: React.FC = () => {
         return 'text-red-400';
     }
   };
+
+  const handleToggleExpand = (index: number) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  };
+
+  const handleCopyLog = (log: LogEntry) => {
+    const text = `${log.timestamp} [${log.source}] [${log.level}] ${log.message}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopyFeedback('Copied!');
+      setTimeout(() => setCopyFeedback(null), 2000);
+    });
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey) {
+        switch (e.key) {
+          case 'k': // Cmd+K to focus search
+            e.preventDefault();
+            searchInputRef.current?.focus();
+            break;
+        }
+      }
+      if (e.key === 'Escape') {
+        setSearchTerm('');
+        searchInputRef.current?.blur();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   return (
     <div className="space-y-4 h-full flex flex-col">
@@ -359,10 +483,11 @@ const LogViewerContent: React.FC = () => {
         <div className="flex-1 min-w-48 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
+            ref={searchInputRef}
             type="text"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Search logs..."
+            placeholder="Search logs... (Ctrl+K)"
             className="w-full pl-9 pr-8 py-1.5 bg-gray-700 border border-gray-600 rounded text-sm text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500"
           />
           {searchTerm && (
@@ -391,6 +516,13 @@ const LogViewerContent: React.FC = () => {
           {filteredLogs.length.toLocaleString()} / {logs.length.toLocaleString()} logs
         </div>
       </div>
+
+      {/* Copy feedback toast */}
+      {copyFeedback && (
+        <div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fadeIn">
+          {copyFeedback}
+        </div>
+      )}
 
       {/* Log display */}
       <div
@@ -427,9 +559,18 @@ const LogViewerContent: React.FC = () => {
                 {...props}
                 logs={filteredLogs}
                 searchTerm={searchTerm}
+                expandedRows={expandedRows}
+                onToggleExpand={handleToggleExpand}
+                onCopyLog={handleCopyLog}
               />
             )}
-            rowProps={{ logs: filteredLogs, searchTerm }}
+            rowProps={{
+              logs: filteredLogs,
+              searchTerm,
+              expandedRows,
+              onToggleExpand: handleToggleExpand,
+              onCopyLog: handleCopyLog
+            }}
           />
         )}
       </div>
