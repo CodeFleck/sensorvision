@@ -130,7 +130,7 @@ export const Dashboards: React.FC = () => {
       clearTimeout(controlsTimeout);
     }
 
-    const timeout = setTimeout(() => {
+    const timeout = window.setTimeout(() => {
       setShowKioskControls(false);
     }, 3000);
 

@@ -143,7 +143,7 @@ const ServerlessFunctions: React.FC = () => {
 
       {functions.length === 0 ? (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800">
-          No serverless functions yet. Click "Create Function" to get started.
+          No serverless functions yet. Click &quot;Create Function&quot; to get started.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -269,7 +269,7 @@ const ServerlessFunctions: React.FC = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-4">Delete Function</h2>
             <p className="text-gray-700 mb-6">
-              Are you sure you want to delete the function "{deletingFunction.name}"?
+              Are you sure you want to delete the function &quot;{deletingFunction.name}&quot;?
               This action cannot be undone and will also delete all execution history and triggers.
             </p>
             <div className="flex justify-end gap-3">

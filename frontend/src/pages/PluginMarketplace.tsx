@@ -209,8 +209,8 @@ const PluginMarketplace: React.FC = () => {
             </p>
             <div className="bg-white/60 backdrop-blur-sm rounded-lg p-6 mb-6">
               <p className="text-gray-600 leading-relaxed">
-                We're working hard to bring you an extensive collection of plugins to extend
-                SensorVision's capabilities. Soon you'll be able to browse, install, and manage
+                We&apos;re working hard to bring you an extensive collection of plugins to extend
+                SensorVision&apos;s capabilities. Soon you&apos;ll be able to browse, install, and manage
                 plugins for data ingestion, notifications, analytics, integrations, and more.
               </p>
             </div>

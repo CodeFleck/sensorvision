@@ -678,6 +678,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
     // Remove or replace characters that are invalid in filenames
     // Invalid chars: < > : " / \ | ? * and control characters (0-31)
     return name
+      // eslint-disable-next-line no-control-regex
       .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_') // Replace invalid chars with underscore
       .replace(/\s+/g, '_') // Replace spaces with underscore
       .replace(/_{2,}/g, '_') // Replace multiple underscores with single
@@ -781,7 +782,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
                 Choose Your Platform
               </h2>
               <p className="text-gray-600">
-                Select the platform you'll use to send sensor data
+                Select the platform you&apos;ll use to send sensor data
               </p>
             </div>
 
@@ -870,7 +871,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
                         </select>
                       ) : (
                         <div className="w-full px-4 py-2 border border-gray-300 rounded-md bg-yellow-50 text-yellow-700">
-                          No devices found. Uncheck "Use existing device" to create one.
+                          No devices found. Uncheck &quot;Use existing device&quot; to create one.
                         </div>
                       )}
                       <p className="text-xs text-gray-500 mt-1">
@@ -1005,7 +1006,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
                   Step 1: Check MQTT Broker Status
                 </h3>
                 <p className="text-gray-600 text-sm mb-4">
-                  First, let's verify the MQTT broker is online and accessible from our servers.
+                  First, let&apos;s verify the MQTT broker is online and accessible from our servers.
                 </p>
 
                 {!mqttStatus?.checked && (
@@ -1122,7 +1123,7 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
             <div className="text-center mb-8">
               <CheckCircle2 className="h-20 w-20 text-green-600 mx-auto mb-4" />
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                You're All Set!
+                You&apos;re All Set!
               </h2>
               <p className="text-gray-600">
                 Your device is ready to send data to SensorVision
@@ -1161,14 +1162,14 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
               </div>
 
               <div className="border-t pt-6">
-                <h3 className="font-semibold text-gray-900 mb-3">What's Next?</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">What&apos;s Next?</h3>
                 <div className="space-y-4 text-sm text-gray-700">
                   <div className="flex items-start space-x-3">
                     <span className="font-medium text-blue-600 min-w-[24px]">1.</span>
                     <div>
                       <p className="font-medium text-gray-900">View Real-time Data</p>
                       <p className="text-gray-600 mt-1">
-                        Go to the <a href="/" className="text-blue-600 hover:underline font-medium">Dashboard</a> to see your device's live telemetry data, power consumption charts, and device status.
+                        Go to the <a href="/" className="text-blue-600 hover:underline font-medium">Dashboard</a> to see your device&apos;s live telemetry data, power consumption charts, and device status.
                       </p>
                     </div>
                   </div>

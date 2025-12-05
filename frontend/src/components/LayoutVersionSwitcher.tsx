@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layers, X } from 'lucide-react';
 
 export type LayoutVersion = 'v1' | 'v2' | 'v3';

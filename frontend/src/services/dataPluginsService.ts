@@ -70,7 +70,7 @@ const dataPluginsService = {
   /**
    * Get all data plugins
    */
-  async getPlugins(page: number = 0, size: number = 20): Promise<PageResponse<DataPlugin>> {
+  async getPlugins(page = 0, size = 20): Promise<PageResponse<DataPlugin>> {
     const response = await apiService.get<PageResponse<DataPlugin>>(`/plugins?page=${page}&size=${size}`);
     return response.data;
   },
@@ -109,7 +109,7 @@ const dataPluginsService = {
   /**
    * Get execution history for a plugin
    */
-  async getExecutions(pluginId: number, page: number = 0, size: number = 20): Promise<PageResponse<PluginExecution>> {
+  async getExecutions(pluginId: number, page = 0, size = 20): Promise<PageResponse<PluginExecution>> {
     const response = await apiService.get<PageResponse<PluginExecution>>(`/plugins/${pluginId}/executions?page=${page}&size=${size}`);
     return response.data;
   },

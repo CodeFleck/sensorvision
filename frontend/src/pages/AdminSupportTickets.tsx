@@ -285,7 +285,7 @@ export const AdminSupportTickets: React.FC = () => {
       {/* Results Summary */}
       {searchQuery && (
         <div className="mb-4 text-sm text-gray-600">
-          Found <span className="font-semibold">{filteredIssues.length}</span> ticket{filteredIssues.length !== 1 ? 's' : ''} matching "{searchQuery}"
+          Found <span className="font-semibold">{filteredIssues.length}</span> ticket{filteredIssues.length !== 1 ? 's' : ''} matching &quot;{searchQuery}&quot;
         </div>
       )}
 
@@ -611,7 +611,7 @@ export const AdminSupportTickets: React.FC = () => {
 
               {/* Description */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">User's Description</h3>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">User&apos;s Description</h3>
                 <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg whitespace-pre-wrap text-gray-700 leading-relaxed">
                   {selectedIssue.description}
                 </div>

@@ -272,7 +272,7 @@ export const Devices = () => {
               // Has devices but search found nothing
               <div className="text-gray-500">
                 <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No devices match your search "{searchTerm}"</p>
+                <p>No devices match your search &quot;{searchTerm}&quot;</p>
               </div>
             )}
           </div>

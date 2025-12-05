@@ -86,7 +86,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
         console.log(`[WebSocket] Reconnecting in ${backoffTime / 1000}s (attempt ${reconnectAttemptCount.current}/${maxReconnectAttempts})...`);
 
-        reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectTimeoutRef.current = window.setTimeout(() => {
           connect();
         }, backoffTime);
       } else if (reconnectAttemptCount.current >= maxReconnectAttempts) {

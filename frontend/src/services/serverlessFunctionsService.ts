@@ -131,8 +131,8 @@ class ServerlessFunctionsService {
 
   async getExecutionHistory(
     id: number,
-    page: number = 0,
-    size: number = 20
+    page = 0,
+    size = 20
   ): Promise<{ content: FunctionExecution[]; totalPages: number; totalElements: number }> {
     const response = await axios.get(`${API_URL}/${id}/executions`, {
       params: { page, size, sort: 'startedAt,desc' }

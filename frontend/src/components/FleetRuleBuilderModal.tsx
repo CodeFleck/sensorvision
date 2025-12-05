@@ -1,10 +1,27 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 
+interface FleetRuleFormData {
+  name: string;
+  description: string;
+  selectorType: string;
+  selectorValue: string | null;
+  aggregationFunction: string;
+  aggregationVariable: string | null;
+  aggregationParams: Record<string, unknown>;
+  operator: string;
+  threshold: number;
+  enabled: boolean;
+  evaluationInterval: string;
+  cooldownMinutes: number;
+  sendSms: boolean;
+  smsRecipients: string[] | null;
+}
+
 interface FleetRuleBuilderModalProps {
-  rule?: any;
+  rule?: Partial<FleetRuleFormData> | null;
   onClose: () => void;
-  onSave: (rule: any) => Promise<void>;
+  onSave: (rule: FleetRuleFormData) => Promise<void>;
 }
 
 const SELECTOR_TYPES = [
@@ -72,7 +89,7 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
   const requiresVariable = selectedFunction?.requiresVariable || false;
   const needsSelectorValue = formData.selectorType !== 'ORGANIZATION';
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: keyof FleetRuleFormData, value: string | number | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -85,7 +102,7 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
   };
 
   const handleRemoveSmsRecipient = (index: number) => {
-    const recipients = formData.smsRecipients.filter((_: any, i: number) => i !== index);
+    const recipients = formData.smsRecipients.filter((_, i: number) => i !== index);
     handleChange('smsRecipients', recipients);
   };
 
@@ -329,7 +346,7 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
                   </button>
                 </div>
                 <div className="space-y-1">
-                  {formData.smsRecipients.map((recipient: any, index: number) => (
+                  {formData.smsRecipients.map((recipient: string, index: number) => (
                     <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded">
                       <span className="text-sm">{recipient}</span>
                       <button

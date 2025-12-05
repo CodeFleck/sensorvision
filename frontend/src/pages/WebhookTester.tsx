@@ -146,18 +146,18 @@ const WebhookTester: React.FC = () => {
                 <ol className="list-decimal list-inside space-y-2 ml-2">
                   <li>
                     <strong>Load a Template:</strong> Select a predefined template from the dropdown
-                    (e.g., "HTTP Webhook Generic" or "LoRaWAN TTN") to auto-fill the request with example data.
+                    (e.g., &quot;HTTP Webhook Generic&quot; or &quot;LoRaWAN TTN&quot;) to auto-fill the request with example data.
                   </li>
                   <li>
                     <strong>Configure Request:</strong> Modify the URL, HTTP method, headers, and body
                     to match your webhook endpoint.
                   </li>
                   <li>
-                    <strong>Send Request:</strong> Click "Send Request" to test the webhook.
+                    <strong>Send Request:</strong> Click &quot;Send Request&quot; to test the webhook.
                     The response will appear on the right side.
                   </li>
                   <li>
-                    <strong>View History:</strong> Click "Show History" to review previous test requests
+                    <strong>View History:</strong> Click &quot;Show History&quot; to review previous test requests
                     and their responses.
                   </li>
                 </ol>

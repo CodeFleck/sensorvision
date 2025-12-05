@@ -69,7 +69,7 @@ const dataRetentionService = {
     return response.data;
   },
 
-  async getExecutions(page: number = 0, size: number = 20): Promise<PageResponse<ArchiveExecution>> {
+  async getExecutions(page = 0, size = 20): Promise<PageResponse<ArchiveExecution>> {
     const response = await apiService.get<PageResponse<ArchiveExecution>>(
       `/retention-policies/executions?page=${page}&size=${size}`
     );

@@ -385,7 +385,7 @@ const ApiPlayground: React.FC = () => {
                 <div>
                   <h3 className="font-semibold mb-2">What is the API Playground?</h3>
                   <p>
-                    The API Playground is an interactive tool for testing and exploring SensorVision's REST API
+                    The API Playground is an interactive tool for testing and exploring SensorVision&apos;s REST API
                     endpoints. It allows you to make HTTP requests directly from the browser without writing code,
                     making it perfect for debugging, learning the API, or building integration prototypes.
                   </p>
@@ -407,7 +407,7 @@ const ApiPlayground: React.FC = () => {
                       the path with actual values. Modify the request body if needed.
                     </li>
                     <li>
-                      <strong>Send Request:</strong> Click "Send Request" to execute. The response will appear
+                      <strong>Send Request:</strong> Click &quot;Send Request&quot; to execute. The response will appear
                       below with status code, duration, and response body.
                     </li>
                     <li>
@@ -449,7 +449,7 @@ const ApiPlayground: React.FC = () => {
                   <h3 className="font-semibold mb-2">Authentication:</h3>
                   <p>
                     Requests are automatically authenticated using your current session token.
-                    Endpoints marked "Requires Authentication" will include your Bearer token in the Authorization header.
+                    Endpoints marked &quot;Requires Authentication&quot; will include your Bearer token in the Authorization header.
                   </p>
                 </div>
 
@@ -466,11 +466,11 @@ const ApiPlayground: React.FC = () => {
                 <div>
                   <h3 className="font-semibold mb-2">Tips:</h3>
                   <ul className="list-disc list-inside space-y-1 ml-2">
-                    <li>Use the "Copy" button to copy responses for use in documentation or debugging</li>
+                    <li>Use the &quot;Copy&quot; button to copy responses for use in documentation or debugging</li>
                     <li>Check the duration metric to monitor API performance</li>
                     <li>Verify JSON syntax before sending POST/PUT requests - use the example bodies as templates</li>
                     <li>Click on recent requests in the history to quickly re-run them</li>
-                    <li>Use the browser's Network tab (F12) for detailed request/response inspection</li>
+                    <li>Use the browser&apos;s Network tab (F12) for detailed request/response inspection</li>
                   </ul>
                 </div>
 

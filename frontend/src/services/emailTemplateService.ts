@@ -41,8 +41,8 @@ const emailTemplateService = {
   },
 
   async getTemplates(
-    page: number = 0,
-    size: number = 20,
+    page = 0,
+    size = 20,
     templateType?: string,
     active?: boolean
   ): Promise<PageResponse<EmailTemplateResponse>> {
