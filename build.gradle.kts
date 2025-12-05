@@ -57,6 +57,10 @@ dependencies {
     // Modbus TCP client for industrial IoT integration
     implementation("com.ghgande:j2mod:3.2.1")
 
+    // Docker Java API for container log streaming
+    implementation("com.github.docker-java:docker-java-core:3.3.4")
+    implementation("com.github.docker-java:docker-java-transport-httpclient5:3.3.4")
+
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

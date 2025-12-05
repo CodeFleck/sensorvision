@@ -605,3 +605,31 @@ export interface PluginRatingRequest {
   rating: number;
   reviewText?: string;
 }
+
+// Log Viewer types
+export type LogSource = 'backend' | 'mosquitto' | 'postgres';
+export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
+
+export interface LogEntry {
+  source: LogSource;
+  level: LogLevel;
+  timestamp: string;
+  message: string;
+  logger?: string;
+}
+
+export interface LogFilter {
+  sources: LogSource[];
+  levels: LogLevel[];
+  search: string;
+}
+
+export interface LogsWebSocketMessage {
+  type: 'connected' | 'subscribed' | 'unsubscribed' | 'log' | 'history' | 'error' | 'pong';
+  message?: string;
+  availableSources?: LogSource[];
+  dockerAvailable?: boolean;
+  sources?: LogSource[];
+  entry?: LogEntry;
+  logs?: LogEntry[];
+}

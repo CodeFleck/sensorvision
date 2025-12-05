@@ -58,6 +58,7 @@ interface NavigationItem {
   icon: React.ComponentType<{ className?: string }>;
   adminOnly: boolean;
   excludeForAdmin?: boolean; // Hide this item from admins
+  requiredRole?: string; // Require specific role (e.g., 'ROLE_DEVELOPER')
 }
 
 interface NavigationSection {
@@ -139,6 +140,15 @@ const navigationSections: NavigationSection[] = [
     ],
   },
   {
+    name: 'DEVELOPER TOOLS',
+    icon: Terminal,
+    iconColor: 'text-cyan-600',
+    adminOnly: false,
+    items: [
+      { name: 'System Logs', href: '/logs', icon: Terminal, adminOnly: false, requiredRole: 'ROLE_DEVELOPER' },
+    ],
+  },
+  {
     name: 'ADMINISTRATION',
     icon: Shield,
     iconColor: 'text-indigo-600',
@@ -164,7 +174,7 @@ const navigationSections: NavigationSection[] = [
 
 export const LayoutV1 = ({ children }: LayoutProps) => {
   const location = useLocation();
-  const { user, logout, isAdmin, refreshUser } = useAuth();
+  const { user, logout, isAdmin, hasRole, refreshUser } = useAuth();
   const { unreadCount } = useUnreadTickets();
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
@@ -219,6 +229,10 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
           }
           // Hide items marked as excludeForAdmin from admins
           if (item.excludeForAdmin && isAdmin) {
+            return false;
+          }
+          // Hide items that require a specific role if user doesn't have it
+          if (item.requiredRole && !hasRole(item.requiredRole)) {
             return false;
           }
           return true;
