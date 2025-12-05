@@ -17,17 +17,17 @@ Object.defineProperty(window, 'matchMedia', {
     matches: false,
     media: query,
     onchange: null,
-    addListener: () => {}, // deprecated
-    removeListener: () => {}, // deprecated
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => {},
+    addListener: () => { /* deprecated - intentionally empty */ },
+    removeListener: () => { /* deprecated - intentionally empty */ },
+    addEventListener: () => { /* mock - intentionally empty */ },
+    removeEventListener: () => { /* mock - intentionally empty */ },
+    dispatchEvent: () => { /* mock - intentionally empty */ },
   }),
 });
 
 // Mock window.location
-delete (window as any).location;
-(window as any).location = {
+delete (window as unknown as { location: unknown }).location;
+(window as unknown as { location: object }).location = {
   origin: 'http://localhost:3000',
   protocol: 'http:',
   host: 'localhost:3000',
@@ -39,7 +39,7 @@ Object.defineProperty(navigator, 'clipboard', {
   writable: true,
   configurable: true, // Allow userEvent to redefine this
   value: {
-    writeText: async (_text: string) => {
+    writeText: async () => {
       return Promise.resolve();
     },
     readText: async () => {
@@ -49,5 +49,5 @@ Object.defineProperty(navigator, 'clipboard', {
 });
 
 // Mock global alert and confirm
-globalThis.alert = () => {};
+globalThis.alert = () => { /* mock - intentionally empty */ };
 globalThis.confirm = () => true;

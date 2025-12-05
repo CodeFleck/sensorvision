@@ -90,7 +90,7 @@ export const SmsSettings = () => {
 
   const getUtilizationColor = (percentage: number) => {
     if (percentage >= 90) return 'bg-red-600';
-    if (percentage >= settings?.budgetThresholdPercentage!) return 'bg-yellow-600';
+    if (settings?.budgetThresholdPercentage !== undefined && percentage >= settings.budgetThresholdPercentage) return 'bg-yellow-600';
     return 'bg-green-600';
   };
 

@@ -273,7 +273,7 @@ const HowItWorks = () => {
             </div>
 
             <p className="text-gray-700 mb-4">
-              The simplest way to get started is with a basic HTTP request. Here's a curl example:
+              The simplest way to get started is with a basic HTTP request. Here&apos;s a curl example:
             </p>
 
             <CodeBlock
@@ -289,7 +289,7 @@ const HowItWorks = () => {
             />
 
             <Callout type="tip" title="PRO TIP: No Device Token Yet?">
-              Use the <Link to="/integration-wizard" className="text-cyan-600 hover:text-cyan-800 font-medium underline">Integration Wizard</Link> to create your device and get a token automatically! It's the fastest way to get started.
+              Use the <Link to="/integration-wizard" className="text-cyan-600 hover:text-cyan-800 font-medium underline">Integration Wizard</Link> to create your device and get a token automatically! It&apos;s the fastest way to get started.
             </Callout>
           </section>
 

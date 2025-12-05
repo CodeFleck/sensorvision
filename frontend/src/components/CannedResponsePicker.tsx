@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MessageSquare, X, ChevronDown, TrendingUp } from 'lucide-react';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
@@ -25,13 +25,7 @@ export const CannedResponsePicker: React.FC<CannedResponsePickerProps> = ({
   const [loading, setLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
 
-  useEffect(() => {
-    if (isOpen) {
-      loadTemplates();
-    }
-  }, [isOpen, categoryFilter]);
-
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     try {
       setLoading(true);
       const params = categoryFilter !== 'ALL' ? { category: categoryFilter } : {};
@@ -43,7 +37,13 @@ export const CannedResponsePicker: React.FC<CannedResponsePickerProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadTemplates();
+    }
+  }, [isOpen, categoryFilter, loadTemplates]);
 
   const handleSelectTemplate = async (template: CannedResponse) => {
     onSelect(template.body);

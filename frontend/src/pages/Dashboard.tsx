@@ -51,7 +51,7 @@ export const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   // Update telemetry when new WebSocket message arrives

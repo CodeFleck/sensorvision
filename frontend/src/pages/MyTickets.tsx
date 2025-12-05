@@ -221,7 +221,7 @@ export const MyTickets: React.FC = () => {
               : `You don't have any ${statusFilter.toLowerCase().replace('_', ' ')} tickets.`}
           </div>
           <p className="text-sm text-gray-400">
-            Click the "Report Issue" button in the sidebar to submit a new ticket.
+            Click the &quot;Report Issue&quot; button in the sidebar to submit a new ticket.
           </p>
         </div>
       ) : (

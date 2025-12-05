@@ -48,7 +48,7 @@ export const ForgotPassword: React.FC = () => {
               Check your email
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              We've sent a password reset link to
+              We&apos;ve sent a password reset link to
             </p>
             <p className="mt-1 text-center text-sm font-medium text-gray-900">
               {email}
@@ -62,7 +62,7 @@ export const ForgotPassword: React.FC = () => {
                 </div>
                 <div className="ml-3 flex-1">
                   <p className="text-sm text-blue-700">
-                    The link will expire in 1 hour. If you don't see the email, check your spam folder.
+                    The link will expire in 1 hour. If you don&apos;t see the email, check your spam folder.
                   </p>
                 </div>
               </div>
@@ -89,7 +89,7 @@ export const ForgotPassword: React.FC = () => {
             Reset your password
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset your password.
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

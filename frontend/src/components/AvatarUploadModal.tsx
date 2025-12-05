@@ -85,8 +85,10 @@ export const AvatarUploadModal = ({ isOpen, onClose, user, onSuccess }: AvatarUp
         await onSuccess();
         handleClose();
       }, 1500);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload avatar');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to upload avatar';
+      const axiosError = err as { response?: { data?: { error?: string } } };
+      setError(axiosError.response?.data?.error || errorMessage);
       setUploading(false);
     }
   };
@@ -106,8 +108,10 @@ export const AvatarUploadModal = ({ isOpen, onClose, user, onSuccess }: AvatarUp
         await onSuccess();
         handleClose();
       }, 1500);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete avatar');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete avatar';
+      const axiosError = err as { response?: { data?: { error?: string } } };
+      setError(axiosError.response?.data?.error || errorMessage);
       setUploading(false);
     }
   };

@@ -441,7 +441,7 @@ const VerifyPhoneModal = ({ phoneId, phoneNumber, onClose, onVerify, onResend, c
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-sm text-yellow-800">
-              Code expires in 10 minutes. If you don't receive it, check your signal and try resending.
+              Code expires in 10 minutes. If you don&apos;t receive it, check your signal and try resending.
             </p>
           </div>
 

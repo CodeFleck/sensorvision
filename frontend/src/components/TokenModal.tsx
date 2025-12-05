@@ -150,7 +150,7 @@ export const TokenModal = ({ device, isOpen, onClose }: TokenModalProps) => {
                   <div className="flex-1">
                     <h3 className="text-sm font-medium text-green-900">Token Generated Successfully!</h3>
                     <p className="text-sm text-green-700 mt-1">
-                      Save this token securely - it won't be shown again!
+                      Save this token securely - it won&apos;t be shown again!
                     </p>
                   </div>
                 </div>
@@ -187,9 +187,9 @@ export const TokenModal = ({ device, isOpen, onClose }: TokenModalProps) => {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h4 className="text-sm font-medium text-blue-900 mb-2">Usage Example:</h4>
                 <code className="block text-xs font-mono text-blue-800 bg-white border border-blue-300 rounded p-3 overflow-x-auto">
-                  curl -H "Authorization: Bearer {generatedToken.substring(0, 8)}..." \<br />
+                  curl -H &quot;Authorization: Bearer {generatedToken.substring(0, 8)}...&quot; \<br />
                   &nbsp;&nbsp;-X POST http://localhost:8080/api/v1/data/ingest \<br />
-                  &nbsp;&nbsp;-d '{`{"deviceId":"${device.externalId}","variables":{"temp":23.5}}`}'
+                  &nbsp;&nbsp;-d &apos;{`{"deviceId":"${device.externalId}","variables":{"temp":23.5}}`}&apos;
                 </code>
               </div>
             </div>
@@ -274,7 +274,7 @@ export const TokenModal = ({ device, isOpen, onClose }: TokenModalProps) => {
             <div className="space-y-4">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <p className="text-sm text-yellow-800">
-                  This device doesn't have an API token yet. Generate one to enable programmatic access.
+                  This device doesn&apos;t have an API token yet. Generate one to enable programmatic access.
                 </p>
               </div>
 

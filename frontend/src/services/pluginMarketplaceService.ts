@@ -67,7 +67,7 @@ class PluginMarketplaceService {
   }
 
   // Get most popular plugins
-  async getMostPopular(limit: number = 10): Promise<PluginRegistry[]> {
+  async getMostPopular(limit = 10): Promise<PluginRegistry[]> {
     const plugins = await this.getAllPlugins();
     return plugins
       .sort((a, b) => b.installationCount - a.installationCount)
@@ -75,7 +75,7 @@ class PluginMarketplaceService {
   }
 
   // Get top rated plugins
-  async getTopRated(limit: number = 10): Promise<PluginRegistry[]> {
+  async getTopRated(limit = 10): Promise<PluginRegistry[]> {
     const plugins = await this.getAllPlugins();
     return plugins
       .filter(p => p.ratingCount > 0)
@@ -84,7 +84,7 @@ class PluginMarketplaceService {
   }
 
   // Get recent plugins
-  async getRecent(limit: number = 10): Promise<PluginRegistry[]> {
+  async getRecent(limit = 10): Promise<PluginRegistry[]> {
     const plugins = await this.getAllPlugins();
     return plugins
       .filter(p => p.publishedAt)

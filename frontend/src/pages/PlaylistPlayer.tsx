@@ -125,7 +125,7 @@ export const PlaylistPlayer: React.FC = () => {
       clearTimeout(controlsTimeout);
     }
 
-    const timeout = setTimeout(() => {
+    const timeout = window.setTimeout(() => {
       setShowControls(false);
     }, 3000);
 

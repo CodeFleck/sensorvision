@@ -181,8 +181,8 @@ describe('EditWidgetModal', () => {
   });
 
   it('should handle API errors gracefully', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* intentionally empty */ });
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => { /* intentionally empty */ });
 
     (apiService.updateWidget as any).mockRejectedValue(new Error('API Error'));
 

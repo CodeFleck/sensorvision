@@ -166,7 +166,7 @@ const SecretsManager: React.FC<SecretsManagerProps> = ({ functionId }) => {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-blue-600 mt-0.5">•</span>
-                      <span><strong>Usage:</strong> Access via <code className="bg-blue-100 px-1 rounded">os.environ.get('YOUR_KEY')</code> in Python or <code className="bg-blue-100 px-1 rounded">process.env.YOUR_KEY</code> in Node.js</span>
+                      <span><strong>Usage:</strong> Access via <code className="bg-blue-100 px-1 rounded">os.environ.get(&apos;YOUR_KEY&apos;)</code> in Python or <code className="bg-blue-100 px-1 rounded">process.env.YOUR_KEY</code> in Node.js</span>
                     </li>
                   </ul>
                 </div>

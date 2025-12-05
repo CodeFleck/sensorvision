@@ -38,7 +38,7 @@ const webhookTestService = {
     return response.data;
   },
 
-  async getHistory(page: number = 0, size: number = 20): Promise<PageResponse<WebhookTestResponse>> {
+  async getHistory(page = 0, size = 20): Promise<PageResponse<WebhookTestResponse>> {
     const response = await apiService.get<PageResponse<WebhookTestResponse>>(
       `/webhook-tests?page=${page}&size=${size}`
     );
