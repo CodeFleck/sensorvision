@@ -91,6 +91,16 @@ const LogRow = ({ index, style, logs, searchTerm, expandedRows, onToggleExpand, 
       const diffMs = now.getTime() - date.getTime();
       const diffSec = Math.floor(diffMs / 1000);
 
+      // Handle negative diff (future timestamps due to clock skew) - fall back to absolute time
+      if (diffSec < 0) {
+        return date.toLocaleTimeString('en-US', {
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        } as Intl.DateTimeFormatOptions);
+      }
+
       // Show relative time for recent logs
       if (diffSec < 60) return `${diffSec}s ago`;
       if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
@@ -139,12 +149,15 @@ const LogRow = ({ index, style, logs, searchTerm, expandedRows, onToggleExpand, 
       {/* Expand/collapse indicator for truncated messages */}
       <button
         onClick={() => onToggleExpand(index)}
-        className={`shrink-0 w-4 h-4 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-transform ${
+        className={`shrink-0 w-4 h-4 flex items-center justify-center text-gray-500 hover:text-gray-300 focus-visible:text-gray-300 transition-transform focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500 rounded ${
           isExpanded ? 'rotate-90' : ''
-        } ${isTruncated || isExpanded ? 'opacity-100' : 'opacity-0'}`}
+        } ${isTruncated || isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         title={isExpanded ? 'Collapse' : 'Expand'}
+        aria-label={isExpanded ? 'Collapse log message' : 'Expand log message'}
+        aria-expanded={isExpanded}
+        tabIndex={isTruncated || isExpanded ? 0 : -1}
       >
-        <ChevronRight className="w-3 h-3" />
+        <ChevronRight className="w-3 h-3" aria-hidden="true" />
       </button>
 
       {/* Timestamp */}
@@ -185,10 +198,11 @@ const LogRow = ({ index, style, logs, searchTerm, expandedRows, onToggleExpand, 
       {/* Copy button */}
       <button
         onClick={() => onCopyLog(log)}
-        className="shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-600 rounded transition-opacity"
+        className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 hover:bg-gray-600 focus-visible:bg-gray-600 rounded transition-opacity focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500"
         title="Copy log entry"
+        aria-label="Copy log entry to clipboard"
       >
-        <Copy className="w-3 h-3 text-gray-400" />
+        <Copy className="w-3 h-3 text-gray-400" aria-hidden="true" />
       </button>
     </div>
   );
@@ -252,6 +266,11 @@ const LogViewerContent: React.FC = () => {
       return true;
     });
   }, [logs, selectedSources, selectedLevels, searchTerm]);
+
+  // Clear expanded rows when filters change (indices become stale)
+  useEffect(() => {
+    setExpandedRows(new Set());
+  }, [selectedSources, selectedLevels, searchTerm]);
 
   // Subscribe to selected sources when they change
   useEffect(() => {
@@ -329,10 +348,16 @@ const LogViewerContent: React.FC = () => {
 
   const handleCopyLog = (log: LogEntry) => {
     const text = `${log.timestamp} [${log.source}] [${log.level}] ${log.message}`;
-    navigator.clipboard.writeText(text).then(() => {
-      setCopyFeedback('Copied!');
-      setTimeout(() => setCopyFeedback(null), 2000);
-    });
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopyFeedback('Copied!');
+        setTimeout(() => setCopyFeedback(null), 2000);
+      })
+      .catch((err) => {
+        console.error('Failed to copy to clipboard:', err);
+        setCopyFeedback('Copy failed');
+        setTimeout(() => setCopyFeedback(null), 2000);
+      });
   };
 
   // Keyboard shortcuts
@@ -346,7 +371,8 @@ const LogViewerContent: React.FC = () => {
             break;
         }
       }
-      if (e.key === 'Escape') {
+      // Only clear search if the search input is focused
+      if (e.key === 'Escape' && document.activeElement === searchInputRef.current) {
         setSearchTerm('');
         searchInputRef.current?.blur();
       }
@@ -519,7 +545,13 @@ const LogViewerContent: React.FC = () => {
 
       {/* Copy feedback toast */}
       {copyFeedback && (
-        <div className="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fadeIn">
+        <div
+          className={`fixed bottom-4 right-4 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fadeIn ${
+            copyFeedback === 'Copy failed' ? 'bg-red-600' : 'bg-green-600'
+          }`}
+          role="status"
+          aria-live="polite"
+        >
           {copyFeedback}
         </div>
       )}
