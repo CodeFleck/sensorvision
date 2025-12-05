@@ -232,12 +232,11 @@ describe('Settings', () => {
     });
   });
 
-  describe('System Logs Section', () => {
-    it('should show System Logs section for regular users (non-developers)', () => {
+  describe('Developer Tools Section', () => {
+    it('should NOT show Developer Tools section for regular users', () => {
       render(<Settings />);
 
-      // Regular users see "System Logs" section (not "Developer Tools")
-      expect(screen.getByText('System Logs')).toBeInTheDocument();
+      // Regular users should NOT see Developer Tools or System Logs toggle
       expect(screen.queryByText('Developer Tools')).not.toBeInTheDocument();
     });
 
@@ -258,21 +257,6 @@ describe('Settings', () => {
       expect(screen.getByText('Developer Tools')).toBeInTheDocument();
       // "System Logs" appears as a label within Developer Tools
       expect(screen.getByText('System Logs')).toBeInTheDocument();
-    });
-
-    it('should toggle logs enabled and save to localStorage for regular users', () => {
-      render(<Settings />);
-
-      // Find the logs toggle (second toggle button for regular users)
-      const toggles = screen.getAllByRole('button').filter(
-        btn => btn.className.includes('rounded-full') && btn.className.includes('h-6')
-      );
-      const logsToggle = toggles[1];
-
-      fireEvent.click(logsToggle);
-
-      expect(localStorage.getItem('logsEnabled_1')).toBe('false');
-      expect(toast.success).toHaveBeenCalledWith('System logs disabled');
     });
 
     it('should toggle logs enabled and save to localStorage for developers', () => {
@@ -301,8 +285,19 @@ describe('Settings', () => {
       expect(toast.success).toHaveBeenCalledWith('System logs disabled');
     });
 
-    it('should load logs preference from localStorage', () => {
+    it('should load logs preference from localStorage for developers', () => {
       localStorage.setItem('logsEnabled_1', 'false');
+
+      vi.mocked(useAuth).mockReturnValue({
+        user: mockDeveloperUser,
+        hasRole: (role: string) => mockDeveloperUser.roles.includes(role),
+        isAdmin: false,
+        isAuthenticated: true,
+        login: vi.fn(),
+        logout: vi.fn(),
+        register: vi.fn(),
+        refreshUser: vi.fn(),
+      } as any);
 
       render(<Settings />);
 

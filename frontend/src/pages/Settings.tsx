@@ -239,7 +239,7 @@ export const Settings = () => {
         </div>
       </div>
 
-      {/* Developer Tools Settings - Show to users with ROLE_DEVELOPER */}
+      {/* Developer Tools Settings - Only visible to users with ROLE_DEVELOPER */}
       {isDeveloper && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -263,55 +263,6 @@ export const Settings = () => {
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Enable real-time system log streaming
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => handleLogsEnabledChange(!logsEnabled)}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 ${
-                  logsEnabled ? 'bg-cyan-600' : 'bg-gray-200 dark:bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    logsEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              When enabled, you can view real-time logs from the System Logs page.
-              Disabling this will stop the WebSocket connection to the log stream.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* System Logs Toggle - Available to all authenticated users */}
-      {!isDeveloper && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <ScrollText className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">System Logs</h2>
-          </div>
-
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Control the real-time log streaming feature.
-            </p>
-
-            <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-md">
-                  <ScrollText className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    Enable Log Streaming
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Toggle real-time system log streaming on or off
                   </p>
                 </div>
               </div>
