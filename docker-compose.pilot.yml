@@ -1,0 +1,400 @@
+# =============================================================================
+# SensorVision Pilot Program Docker Compose Configuration
+# =============================================================================
+# This configuration is optimized for the pilot program deployment with:
+# - Enhanced security settings
+# - Performance optimizations
+# - Monitoring and logging
+# - Redis caching
+# - Backup and recovery
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database with enhanced configuration for pilot
+  postgres:
+    image: postgres:15-alpine
+    container_name: sensorvision-pilot-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sensorvision}
+      POSTGRES_USER: ${DB_USERNAME:-sensorvision}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sensorvision123}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./backups:/backups
+    command: >
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c hba_file=/etc/postgresql/pg_hba.conf
+      -c ssl=on
+      -c ssl_cert_file=/var/lib/postgresql/server.crt
+      -c ssl_key_file=/var/lib/postgresql/server.key
+      -c log_statement=all
+      -c log_min_duration_statement=1000
+      -c shared_preload_libraries=pg_stat_statements
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sensorvision} -d ${POSTGRES_DB:-sensorvision}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - pilot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis Cache for performance optimization
+  redis:
+    image: redis:7-alpine
+    container_name: sensorvision-pilot-redis
+    restart: always
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-redis123}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --appendonly yes
+      --appendfsync everysec
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - pilot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MQTT Broker with enhanced security
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: sensorvision-pilot-mosquitto
+    restart: always
+    ports:
+      - "1883:1883"
+      - "8883:8883"  # SSL/TLS port
+      - "9001:9001"  # WebSocket port
+    volumes:
+      - ./mosquitto/config:/mosquitto/config:ro
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+      - ./certs:/mosquitto/certs:ro
+    environment:
+      - MOSQUITTO_USERNAME=${MQTT_USERNAME:-sensorvision}
+      - MOSQUITTO_PASSWORD=${MQTT_PASSWORD:-sensorvision123}
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$SYS/#' -C 1 -W 3 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pilot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # SensorVision Backend Application
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - SPRING_PROFILES_ACTIVE=pilot
+    container_name: sensorvision-pilot-backend
+    restart: always
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    volumes:
+      - ./logs:/app/logs
+      - ./certs:/app/certs:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    environment:
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: pilot
+
+      # Database Configuration
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sensorvision}
+      DB_USERNAME: ${DB_USERNAME:-sensorvision}
+      DB_PASSWORD: ${DB_PASSWORD:-sensorvision123}
+
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis123}
+
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-28800000}
+      JWT_ISSUER: ${JWT_ISSUER:-https://pilot.sensorvision.io}
+
+      # MQTT Configuration
+      MQTT_BROKER_URL: ssl://mosquitto:8883
+      MQTT_USERNAME: ${MQTT_USERNAME:-sensorvision}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-sensorvision123}
+      MQTT_DEVICE_AUTH_REQUIRED: true
+
+      # Email Configuration (AWS SES)
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-true}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@pilot.sensorvision.io}
+      SMTP_HOST: ${SMTP_HOST:-email-smtp.us-west-2.amazonaws.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+
+      # SMS Configuration (Twilio)
+      SMS_ENABLED: ${SMS_ENABLED:-true}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      SMS_FROM_NUMBER: ${SMS_FROM_NUMBER:-}
+
+      # Application URLs
+      APP_BASE_URL: ${APP_BASE_URL:-https://pilot.sensorvision.io}
+      OAUTH2_REDIRECT_BASE_URL: ${OAUTH2_REDIRECT_BASE_URL:-https://pilot.sensorvision.io}
+
+      # Pilot Configuration
+      PILOT_MODE: true
+      PILOT_SUPPORT_EMAIL: ${PILOT_SUPPORT_EMAIL:-pilot-support@sensorvision.io}
+      PILOT_SUPPORT_SLACK_WEBHOOK: ${PILOT_SUPPORT_SLACK_WEBHOOK:-}
+
+      # External Integrations
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      PAGERDUTY_INTEGRATION_KEY: ${PAGERDUTY_INTEGRATION_KEY:-}
+
+      # AWS Configuration
+      AWS_REGION: ${AWS_REGION:-us-west-2}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+
+      # Backup Configuration
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-sensorvision-pilot-backups}
+      BACKUP_ENABLED: ${BACKUP_ENABLED:-true}
+
+      # JVM Options for production
+      JAVA_OPTS: >
+        -Xms1g -Xmx2g
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+UseStringDeduplication
+        -XX:+OptimizeStringConcat
+        -Djava.security.egd=file:/dev/./urandom
+        -Dspring.profiles.active=pilot
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - pilot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sensorvision-pilot-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    depends_on:
+      - backend
+    networks:
+      - pilot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sensorvision-pilot-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SERVER_ROOT_URL=https://pilot.sensorvision.io/grafana
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_INSTALL_PLUGINS=redis-datasource,postgres-datasource
+    depends_on:
+      - prometheus
+    networks:
+      - pilot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # AlertManager for alert routing
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: sensorvision-pilot-alertmanager
+    restart: always
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=https://pilot.sensorvision.io/alertmanager'
+    depends_on:
+      - prometheus
+    networks:
+      - pilot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx reverse proxy with SSL termination
+  nginx:
+    image: nginx:alpine
+    container_name: sensorvision-pilot-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certs:/etc/nginx/certs:ro
+      - nginx-cache:/var/cache/nginx
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - backend
+      - grafana
+    networks:
+      - pilot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Backup service for automated backups
+  backup:
+    image: postgres:15-alpine
+    container_name: sensorvision-pilot-backup
+    restart: "no"
+    volumes:
+      - ./backups:/backups
+      - ./scripts:/scripts:ro
+    environment:
+      - PGPASSWORD=${DB_PASSWORD:-sensorvision123}
+      - POSTGRES_DB=${POSTGRES_DB:-sensorvision}
+      - DB_USERNAME=${DB_USERNAME:-sensorvision}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - BACKUP_S3_BUCKET=${BACKUP_S3_BUCKET:-sensorvision-pilot-backups}
+    command: /scripts/backup.sh
+    depends_on:
+      - postgres
+    networks:
+      - pilot-network
+    profiles:
+      - backup
+
+  # Log aggregation service
+  fluentd:
+    image: fluent/fluentd:v1.16-debian-1
+    container_name: sensorvision-pilot-fluentd
+    restart: always
+    volumes:
+      - ./fluentd/fluent.conf:/fluentd/etc/fluent.conf:ro
+      - ./logs:/var/log/sensorvision:ro
+    environment:
+      - FLUENTD_CONF=fluent.conf
+      - AWS_REGION=${AWS_REGION:-us-west-2}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - CLOUDWATCH_LOG_GROUP=${CLOUDWATCH_LOG_GROUP:-/aws/sensorvision/pilot}
+    networks:
+      - pilot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+  nginx-cache:
+    driver: local
+  nginx-logs:
+    driver: local
+
+networks:
+  pilot-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
