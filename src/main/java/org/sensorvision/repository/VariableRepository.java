@@ -46,8 +46,11 @@ public interface VariableRepository extends JpaRepository<Variable, Long> {
 
     /**
      * Find all variables for a device, ordered by name.
+     * Uses JOIN FETCH to eagerly load the device association to avoid
+     * LazyInitializationException when mapping to DTOs.
      */
-    List<Variable> findByDeviceIdOrderByNameAsc(UUID deviceId);
+    @Query("SELECT v FROM Variable v JOIN FETCH v.device WHERE v.device.id = :deviceId ORDER BY v.name ASC")
+    List<Variable> findByDeviceIdOrderByNameAsc(@Param("deviceId") UUID deviceId);
 
     /**
      * Check if a variable exists for a specific device.
