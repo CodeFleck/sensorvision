@@ -66,7 +66,6 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, devi
     fetchData();
     const interval = setInterval(fetchData, (widget.config.refreshInterval as number | undefined) ?? 30000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId, widget.variableName, widget.config.refreshInterval]);
 
   if (loading) {
