@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Widget, TelemetryPoint } from '../../types';
+import { Widget, TelemetryPoint, DeviceVariable } from '../../types';
 import { apiService } from '../../services/api';
 
 interface TableWidgetProps {
@@ -11,6 +11,28 @@ interface TableWidgetProps {
 export const TableWidget: React.FC<TableWidgetProps> = ({ widget, deviceId, latestData }) => {
   const [data, setData] = useState<TelemetryPoint | null>(null);
   const [loading, setLoading] = useState(true);
+  const [variables, setVariables] = useState<DeviceVariable[]>([]);
+
+  // Fetch device variables
+  useEffect(() => {
+    const loadVariables = async () => {
+      if (!deviceId) return;
+
+      try {
+        // deviceId in props is externalId, we need to find the UUID
+        const devices = await apiService.getDevices();
+        const device = devices.find(d => d.externalId === deviceId);
+        if (device?.id) {
+          const vars = await apiService.getDeviceVariables(device.id);
+          setVariables(vars);
+        }
+      } catch (error) {
+        console.error('Failed to load variables for table:', error);
+      }
+    };
+
+    loadVariables();
+  }, [deviceId]);
 
   // Update value when real-time data arrives
   useEffect(() => {
@@ -59,20 +81,16 @@ export const TableWidget: React.FC<TableWidgetProps> = ({ widget, deviceId, late
     );
   }
 
-  // Define which fields to display and their labels
-  const fields = [
-    { key: 'kwConsumption', label: 'Power (kW)', unit: 'kW', decimals: 2 },
-    { key: 'voltage', label: 'Voltage', unit: 'V', decimals: 1 },
-    { key: 'current', label: 'Current', unit: 'A', decimals: 2 },
-    { key: 'powerFactor', label: 'Power Factor', unit: '', decimals: 3 },
-    { key: 'frequency', label: 'Frequency', unit: 'Hz', decimals: 1 },
-  ];
-
-  // Filter fields to only show those configured in widget or all if none specified
-  const configuredFields = widget.config.fields as string[] | undefined;
-  const displayFields = configuredFields
-    ? fields.filter(f => configuredFields.includes(f.key))
-    : fields;
+  // Build display fields from dynamic variables
+  const displayFields = variables.length > 0
+    ? variables.map(v => ({
+        key: v.name,
+        label: v.displayName || v.name,
+        unit: v.unit || '',
+        decimals: v.decimalPlaces ?? 2,
+      }))
+    : // Fallback to widget config fields if variables not loaded yet
+      (widget.config.fields as Array<{ key: string; label: string; unit: string; decimals: number }> | undefined) || [];
 
   return (
     <div className="w-full h-full overflow-auto">

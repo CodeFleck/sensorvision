@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, BarChart3, Download } from 'lucide-react';
-import { Device } from '../types';
+import { Device, DeviceVariable } from '../types';
 import { apiService } from '../services/api';
 import { AggregationChart } from '../components/AggregationChart';
 
 export const Analytics = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<string>('');
-  const [selectedVariable, setSelectedVariable] = useState<'kwConsumption' | 'voltage' | 'current'>('kwConsumption');
+  const [selectedVariable, setSelectedVariable] = useState<string>('');
+  const [variables, setVariables] = useState<DeviceVariable[]>([]);
+  const [loadingVariables, setLoadingVariables] = useState(false);
   const [aggregationType, setAggregationType] = useState<'MIN' | 'MAX' | 'AVG' | 'SUM'>('AVG');
   const [dateRange, setDateRange] = useState({
     from: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 24 hours ago
@@ -32,6 +34,42 @@ export const Analytics = () => {
     fetchDevices();
   }, []);
 
+  // Fetch variables when device is selected
+  useEffect(() => {
+    const loadVariables = async () => {
+      if (!selectedDevice) {
+        setVariables([]);
+        return;
+      }
+
+      setLoadingVariables(true);
+      try {
+        // Find the device to get its UUID (needed for the variables API)
+        const device = devices.find(d => d.externalId === selectedDevice);
+        if (device?.id) {
+          const vars = await apiService.getDeviceVariables(device.id);
+          setVariables(vars);
+          // Auto-select the first variable if none selected
+          if (vars.length > 0 && !selectedVariable) {
+            setSelectedVariable(vars[0].name);
+          } else if (vars.length > 0 && !vars.some(v => v.name === selectedVariable)) {
+            // If current variable doesn't exist on new device, select first
+            setSelectedVariable(vars[0].name);
+          }
+        } else {
+          setVariables([]);
+        }
+      } catch (error) {
+        console.error('Failed to load variables:', error);
+        setVariables([]);
+      } finally {
+        setLoadingVariables(false);
+      }
+    };
+
+    loadVariables();
+  }, [selectedDevice, devices]);
+
   const handleAnalyze = async () => {
     if (!selectedDevice) return;
 
@@ -53,10 +91,13 @@ export const Analytics = () => {
     }
   };
 
-  const variableLabels = {
-    kwConsumption: 'Power Consumption (kW)',
-    voltage: 'Voltage (V)',
-    current: 'Current (A)',
+  // Get display label for the selected variable
+  const getVariableLabel = (varName: string): string => {
+    const variable = variables.find(v => v.name === varName);
+    if (variable) {
+      return variable.displayName || variable.name;
+    }
+    return varName;
   };
 
   // Calculate statistics from aggregated data
@@ -157,12 +198,22 @@ export const Analytics = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Variable</label>
             <select
               value={selectedVariable}
-              onChange={(e) => setSelectedVariable(e.target.value as 'kwConsumption' | 'voltage' | 'current')}
+              onChange={(e) => setSelectedVariable(e.target.value)}
+              disabled={loadingVariables}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="kwConsumption">Power Consumption</option>
-              <option value="voltage">Voltage</option>
-              <option value="current">Current</option>
+              {loadingVariables ? (
+                <option value="">Loading variables...</option>
+              ) : variables.length === 0 ? (
+                <option value="">No variables available</option>
+              ) : (
+                variables.map((variable) => (
+                  <option key={variable.id} value={variable.name}>
+                    {variable.displayName || variable.name}
+                    {variable.unit ? ` (${variable.unit})` : ''}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
@@ -218,7 +269,7 @@ export const Analytics = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              {aggregationType} {variableLabels[selectedVariable]} - {selectedDevice}
+              {aggregationType} {getVariableLabel(selectedVariable)} - {selectedDevice}
             </h2>
             <button
               onClick={handleExportCSV}
