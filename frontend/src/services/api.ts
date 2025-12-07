@@ -1,4 +1,4 @@
-import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization, PluginRegistry, InstalledPlugin, PluginRating } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization, PluginRegistry, InstalledPlugin, PluginRating, DeviceVariable, VariableValue, VariableStatistics } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -802,6 +802,88 @@ class ApiService {
 
   async getPluginRatings(pluginKey: string): Promise<PluginRating[]> {
     return this.request(`/marketplace/plugins/${pluginKey}/ratings`);
+  }
+
+  // ========== Device Variables (EAV Pattern - Dynamic Variables) ==========
+
+  /**
+   * Get all dynamic variables for a device.
+   * Variables are auto-provisioned when telemetry is received.
+   */
+  async getDeviceVariables(deviceId: string): Promise<DeviceVariable[]> {
+    return this.request(`/devices/${deviceId}/variables`);
+  }
+
+  /**
+   * Get latest values for all variables of a device.
+   * Returns a map of variable names to their most recent values.
+   */
+  async getDeviceLatestValues(deviceId: string): Promise<Record<string, number>> {
+    return this.request(`/devices/${deviceId}/variables/latest`);
+  }
+
+  /**
+   * Get a specific variable details.
+   */
+  async getDeviceVariable(deviceId: string, variableId: number): Promise<DeviceVariable> {
+    return this.request(`/devices/${deviceId}/variables/${variableId}`);
+  }
+
+  /**
+   * Get time-series history for a variable.
+   */
+  async getVariableHistory(
+    deviceId: string,
+    variableId: number,
+    startTime?: string,
+    endTime?: string
+  ): Promise<VariableValue[]> {
+    const params = new URLSearchParams();
+    if (startTime) params.append('startTime', startTime);
+    if (endTime) params.append('endTime', endTime);
+    const query = params.toString();
+    return this.request(`/devices/${deviceId}/variables/${variableId}/values${query ? `?${query}` : ''}`);
+  }
+
+  /**
+   * Get latest N values for a variable.
+   */
+  async getVariableLatestValues(
+    deviceId: string,
+    variableId: number,
+    count: number = 100
+  ): Promise<VariableValue[]> {
+    return this.request(`/devices/${deviceId}/variables/${variableId}/values/latest?count=${count}`);
+  }
+
+  /**
+   * Get statistics (avg, min, max, sum, count) for a variable.
+   */
+  async getVariableStatistics(
+    deviceId: string,
+    variableId: number,
+    startTime?: string,
+    endTime?: string
+  ): Promise<VariableStatistics> {
+    const params = new URLSearchParams();
+    if (startTime) params.append('startTime', startTime);
+    if (endTime) params.append('endTime', endTime);
+    const query = params.toString();
+    return this.request(`/devices/${deviceId}/variables/${variableId}/statistics${query ? `?${query}` : ''}`);
+  }
+
+  /**
+   * Update variable metadata (display name, unit, color, etc.)
+   */
+  async updateDeviceVariable(
+    deviceId: string,
+    variableId: number,
+    updates: Partial<Pick<DeviceVariable, 'displayName' | 'description' | 'unit' | 'icon' | 'color' | 'decimalPlaces' | 'minValue' | 'maxValue'>>
+  ): Promise<DeviceVariable> {
+    return this.request(`/devices/${deviceId}/variables/${variableId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
   }
 }
 

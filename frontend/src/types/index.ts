@@ -607,6 +607,59 @@ export interface PluginRatingRequest {
   reviewText?: string;
 }
 
+// Device Variable types (EAV pattern - dynamic variables like Ubidots)
+export type VariableDataType = 'NUMBER' | 'BOOLEAN' | 'STRING' | 'JSON';
+export type VariableDataSource = 'MANUAL' | 'AUTO' | 'SYNTHETIC';
+
+export interface DeviceVariable {
+  id: number;
+  deviceId: string;
+  deviceExternalId: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  unit?: string;
+  dataType: VariableDataType;
+  dataSource: VariableDataSource;
+  icon?: string;
+  color?: string;
+  minValue?: number;
+  maxValue?: number;
+  decimalPlaces: number;
+  lastValue?: number;
+  lastValueAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VariableValue {
+  id: string;
+  variableId: number;
+  timestamp: string;
+  value: number;
+  context?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface VariableStatistics {
+  variableId: number;
+  variableName: string;
+  startTime: string;
+  endTime: string;
+  average?: number;
+  min?: number;
+  max?: number;
+  sum?: number;
+  count: number;
+}
+
+export interface DynamicTelemetryPoint {
+  type: 'DYNAMIC_TELEMETRY';
+  deviceId: string;
+  timestamp: string;
+  variables: Record<string, number>;
+}
+
 // Log Viewer types
 export type LogSource = 'backend' | 'mosquitto' | 'postgres';
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
