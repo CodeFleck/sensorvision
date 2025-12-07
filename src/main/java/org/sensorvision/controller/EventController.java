@@ -4,17 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.sensorvision.dto.EventResponse;
 import org.sensorvision.model.Event;
 import org.sensorvision.model.Organization;
-import org.sensorvision.model.User;
-import org.sensorvision.repository.OrganizationRepository;
-import org.sensorvision.repository.UserRepository;
-import org.sensorvision.security.UserPrincipal;
+import org.sensorvision.security.SecurityUtils;
 import org.sensorvision.service.EventService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -26,15 +22,13 @@ import java.util.Map;
 public class EventController {
 
     private final EventService eventService;
-    private final UserRepository userRepository;
-    private final OrganizationRepository organizationRepository;
+    private final SecurityUtils securityUtils;
 
     /**
      * Get events with optional filters
      */
     @GetMapping
     public ResponseEntity<Page<EventResponse>> getEvents(
-            Authentication authentication,
             @RequestParam(required = false) String eventType,
             @RequestParam(required = false) String severity,
             @RequestParam(required = false) String deviceId,
@@ -44,7 +38,7 @@ public class EventController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size
     ) {
-        Organization organization = getCurrentUserOrganization(authentication);
+        Organization organization = securityUtils.getCurrentUserOrganization();
         Pageable pageable = PageRequest.of(page, size);
 
         Event.EventType eventTypeEnum = eventType != null ? Event.EventType.valueOf(eventType) : null;
@@ -70,10 +64,9 @@ public class EventController {
      */
     @GetMapping("/recent")
     public ResponseEntity<java.util.List<EventResponse>> getRecentEvents(
-            Authentication authentication,
             @RequestParam(defaultValue = "24") int hours
     ) {
-        Organization organization = getCurrentUserOrganization(authentication);
+        Organization organization = securityUtils.getCurrentUserOrganization();
         java.util.List<Event> events = eventService.getRecentEvents(organization, hours);
         java.util.List<EventResponse> response = events.stream()
                 .map(EventResponse::fromEvent)
@@ -86,10 +79,9 @@ public class EventController {
      */
     @GetMapping("/statistics/by-type")
     public ResponseEntity<Map<String, Long>> getEventStatisticsByType(
-            Authentication authentication,
             @RequestParam(defaultValue = "24") int hours
     ) {
-        Organization organization = getCurrentUserOrganization(authentication);
+        Organization organization = securityUtils.getCurrentUserOrganization();
         Map<String, Long> statistics = eventService.getEventStatisticsByType(organization, hours);
         return ResponseEntity.ok(statistics);
     }
@@ -99,18 +91,10 @@ public class EventController {
      */
     @GetMapping("/statistics/by-severity")
     public ResponseEntity<Map<String, Long>> getEventStatisticsBySeverity(
-            Authentication authentication,
             @RequestParam(defaultValue = "24") int hours
     ) {
-        Organization organization = getCurrentUserOrganization(authentication);
+        Organization organization = securityUtils.getCurrentUserOrganization();
         Map<String, Long> statistics = eventService.getEventStatisticsBySeverity(organization, hours);
         return ResponseEntity.ok(statistics);
-    }
-
-    private Organization getCurrentUserOrganization(Authentication authentication) {
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return user.getOrganization();
     }
 }
