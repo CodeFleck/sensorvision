@@ -249,12 +249,15 @@ public class DeviceVariableController {
 
     /**
      * Get variable and verify it belongs to the device and user has access.
+     * Uses findByIdWithDevice to eagerly fetch device association and avoid
+     * LazyInitializationException when mapping to DTOs.
      */
     private Variable getVariableWithAccessCheck(UUID deviceId, Long variableId) {
         // First verify device access
         Device device = getDeviceWithAccessCheck(deviceId);
 
-        Variable variable = variableRepository.findById(variableId)
+        // Use findByIdWithDevice to eagerly fetch device association
+        Variable variable = variableRepository.findByIdWithDevice(variableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Variable not found: " + variableId));
 
         // Verify variable belongs to this device

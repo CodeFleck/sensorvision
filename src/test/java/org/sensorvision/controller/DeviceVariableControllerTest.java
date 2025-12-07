@@ -169,7 +169,7 @@ class DeviceVariableControllerTest {
                 .thenReturn(Optional.of(testDevice));
         when(securityUtils.getCurrentUserOrganization())
                 .thenReturn(testOrg);
-        when(variableRepository.findById(testVariable.getId()))
+        when(variableRepository.findByIdWithDevice(testVariable.getId()))
                 .thenReturn(Optional.of(testVariable));
         when(variableRepository.save(any(Variable.class)))
                 .thenAnswer(i -> i.getArgument(0));
@@ -211,7 +211,7 @@ class DeviceVariableControllerTest {
                 .thenReturn(Optional.of(testDevice));
         when(securityUtils.getCurrentUserOrganization())
                 .thenReturn(testOrg);
-        when(variableRepository.findById(2L))
+        when(variableRepository.findByIdWithDevice(2L))
                 .thenReturn(Optional.of(variableFromDifferentDevice));
 
         // Act & Assert
@@ -236,7 +236,7 @@ class DeviceVariableControllerTest {
                 .thenReturn(Optional.of(testDevice));
         when(securityUtils.getCurrentUserOrganization())
                 .thenReturn(testOrg);
-        when(variableRepository.findById(3L))
+        when(variableRepository.findByIdWithDevice(3L))
                 .thenReturn(Optional.of(orgLevelVariable));
 
         // Act & Assert
