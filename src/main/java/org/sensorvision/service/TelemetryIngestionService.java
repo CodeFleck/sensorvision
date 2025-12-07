@@ -54,6 +54,8 @@ public class TelemetryIngestionService {
     private final ConcurrentHashMap<String, AtomicDouble> powerFactorGauges = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicDouble> frequencyGauges = new ConcurrentHashMap<>();
     // Dynamic gauges for any variable (EAV pattern support)
+    // Limited to prevent unbounded metric cardinality
+    private static final int MAX_DYNAMIC_GAUGES = 1000;
     private final ConcurrentHashMap<String, AtomicDouble> dynamicGauges = new ConcurrentHashMap<>();
 
     public TelemetryIngestionService(DeviceRepository deviceRepository,
@@ -212,11 +214,28 @@ public class TelemetryIngestionService {
 
     /**
      * Update a dynamic gauge for any variable name (EAV pattern support).
+     * Limited to MAX_DYNAMIC_GAUGES to prevent unbounded metric cardinality.
      */
     private void updateDynamicGauge(String deviceId, String variableName, BigDecimal value) {
         String gaugeKey = deviceId + ":" + variableName;
-        String metricName = "iot_dynamic_" + sanitizeMetricName(variableName);
 
+        // Check if gauge already exists
+        AtomicDouble existingGauge = dynamicGauges.get(gaugeKey);
+        if (existingGauge != null) {
+            if (value != null) {
+                existingGauge.set(value.doubleValue());
+            }
+            return;
+        }
+
+        // Check cardinality limit before creating new gauge
+        if (dynamicGauges.size() >= MAX_DYNAMIC_GAUGES) {
+            log.warn("Dynamic gauge limit ({}) reached. Skipping gauge for device '{}', variable '{}'",
+                    MAX_DYNAMIC_GAUGES, deviceId, variableName);
+            return;
+        }
+
+        String metricName = "iot_dynamic_" + sanitizeMetricName(variableName);
         AtomicDouble gauge = dynamicGauges.computeIfAbsent(gaugeKey, k ->
                 meterRegistry.gauge(metricName,
                         Tags.of("deviceId", deviceId, "variable", variableName),

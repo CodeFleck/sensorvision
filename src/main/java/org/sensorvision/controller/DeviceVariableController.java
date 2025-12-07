@@ -4,6 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.dto.DeviceVariableResponse;
@@ -192,7 +197,7 @@ public class DeviceVariableController {
     public ResponseEntity<DeviceVariableResponse> updateVariable(
             @PathVariable UUID deviceId,
             @PathVariable Long variableId,
-            @RequestBody UpdateVariableRequest request) {
+            @Valid @RequestBody UpdateVariableRequest request) {
         log.debug("REST request to update variable {} (device {})", variableId, deviceId);
 
         Variable variable = getVariableWithAccessCheck(deviceId, variableId);
@@ -264,12 +269,25 @@ public class DeviceVariableController {
      * Request DTO for updating variable metadata.
      */
     public record UpdateVariableRequest(
+            @Size(max = 255, message = "Display name must be at most 255 characters")
             String displayName,
+
+            @Size(max = 500, message = "Description must be at most 500 characters")
             String description,
+
+            @Size(max = 50, message = "Unit must be at most 50 characters")
             String unit,
+
+            @Size(max = 100, message = "Icon must be at most 100 characters")
             String icon,
+
+            @Pattern(regexp = "^#[0-9A-Fa-f]{6}$|^$", message = "Color must be in hex format (#RRGGBB)")
             String color,
+
+            @Min(value = 0, message = "Decimal places must be at least 0")
+            @Max(value = 10, message = "Decimal places must be at most 10")
             Integer decimalPlaces,
+
             Double minValue,
             Double maxValue
     ) {}

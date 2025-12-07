@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiService } from '../services/api';
 import { DeviceVariable } from '../types';
 
@@ -21,11 +21,7 @@ export const DeviceVariablesPanel: React.FC<DeviceVariablesPanelProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadVariables();
-  }, [deviceId]);
-
-  const loadVariables = async () => {
+  const loadVariables = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -36,7 +32,11 @@ export const DeviceVariablesPanel: React.FC<DeviceVariablesPanelProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [deviceId]);
+
+  useEffect(() => {
+    loadVariables();
+  }, [loadVariables]);
 
   const formatValue = (value: number | undefined, decimalPlaces: number, unit?: string): string => {
     if (value === undefined || value === null) return '-';

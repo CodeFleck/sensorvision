@@ -4,6 +4,7 @@ import org.sensorvision.model.VariableValue;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -147,6 +148,7 @@ public interface VariableValueRepository extends JpaRepository<VariableValue, UU
     /**
      * Delete old values for data retention.
      */
+    @Modifying
     @Query("DELETE FROM VariableValue v WHERE v.variable.id = :variableId AND v.timestamp < :cutoffTime")
     void deleteOldValues(@Param("variableId") Long variableId, @Param("cutoffTime") Instant cutoffTime);
 

@@ -9,6 +9,7 @@ import org.sensorvision.model.Variable.DataSource;
 import org.sensorvision.model.VariableValue;
 import org.sensorvision.repository.VariableRepository;
 import org.sensorvision.repository.VariableValueRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,7 @@ public class DynamicVariableService {
     /**
      * Get or create a device-specific variable.
      * This is the core method for auto-provisioning variables.
+     * Handles race conditions when multiple threads try to create the same variable.
      *
      * @param device The device this variable belongs to
      * @param variableName The variable name (e.g., "temperature", "custom_sensor_1")
@@ -48,21 +50,30 @@ public class DynamicVariableService {
     public Variable getOrCreateVariable(Device device, String variableName) {
         return variableRepository.findByDeviceAndName(device, variableName)
                 .orElseGet(() -> {
-                    log.info("Auto-provisioning new variable '{}' for device '{}'",
-                            variableName, device.getExternalId());
+                    try {
+                        log.info("Auto-provisioning new variable '{}' for device '{}'",
+                                variableName, device.getExternalId());
 
-                    Variable variable = Variable.builder()
-                            .device(device)
-                            .organization(device.getOrganization())
-                            .name(variableName)
-                            .displayName(humanizeVariableName(variableName))
-                            .dataType(Variable.DataType.NUMBER)
-                            .dataSource(DataSource.AUTO)
-                            .isSystemVariable(false)
-                            .decimalPlaces(2)
-                            .build();
+                        Variable variable = Variable.builder()
+                                .device(device)
+                                .organization(device.getOrganization())
+                                .name(variableName)
+                                .displayName(humanizeVariableName(variableName))
+                                .dataType(Variable.DataType.NUMBER)
+                                .dataSource(DataSource.AUTO)
+                                .isSystemVariable(false)
+                                .decimalPlaces(2)
+                                .build();
 
-                    return variableRepository.save(variable);
+                        return variableRepository.save(variable);
+                    } catch (DataIntegrityViolationException e) {
+                        // Race condition - another thread created it first, fetch the existing one
+                        log.debug("Variable '{}' for device '{}' was created by another thread",
+                                variableName, device.getExternalId());
+                        return variableRepository.findByDeviceAndName(device, variableName)
+                                .orElseThrow(() -> new RuntimeException(
+                                        "Failed to create or find variable: " + variableName, e));
+                    }
                 });
     }
 
