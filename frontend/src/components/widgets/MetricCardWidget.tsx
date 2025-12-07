@@ -20,13 +20,19 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, devi
   useEffect(() => {
     if (latestData && widget.variableName) {
       const varName = widget.variableName as keyof TelemetryPoint;
-      const newValue = latestData[varName] as number ?? 0;
+      const rawValue = latestData[varName];
 
-      setPreviousValue(value);
-      setValue(newValue);
-      setLoading(false);
+      // Only update if the variable is actually present in the data and is a number
+      // This prevents resetting to 0 when data for other variables arrives
+      if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
+        // Use functional update to avoid stale closure issues with previousValue
+        setValue(prevValue => {
+          setPreviousValue(prevValue);
+          return rawValue;
+        });
+        setLoading(false);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latestData, widget.variableName]);
 
   // Initial data fetch and fallback polling
@@ -40,10 +46,16 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, devi
       try {
         const data = await apiService.getLatestForDevice(deviceId);
         const varName = widget.variableName as keyof typeof data;
-        const newValue = data[varName] as number ?? 0;
+        const rawValue = data[varName];
 
-        setPreviousValue(value);
-        setValue(newValue);
+        // Only update if the variable has a value and is a number
+        if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
+          // Use functional update to avoid stale closure issues with previousValue
+          setValue(prevValue => {
+            setPreviousValue(prevValue);
+            return rawValue;
+          });
+        }
       } catch (error) {
         console.error('Error fetching metric data:', error);
       } finally {
@@ -54,7 +66,6 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, devi
     fetchData();
     const interval = setInterval(fetchData, (widget.config.refreshInterval as number | undefined) ?? 30000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId, widget.variableName, widget.config.refreshInterval]);
 
   if (loading) {
