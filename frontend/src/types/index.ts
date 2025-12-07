@@ -11,6 +11,7 @@ export interface DeviceGroup {
 }
 
 export interface Device {
+  id: string; // UUID - for use with /variables endpoint
   externalId: string;
   name: string;
   description?: string;
