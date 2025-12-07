@@ -458,6 +458,7 @@ public class DeviceService {
         String healthStatus = deviceHealthService.getHealthStatus(healthScore);
 
         return new DeviceResponse(
+                device.getId(),
                 device.getExternalId(),
                 device.getName(),
                 device.getDescription(),
