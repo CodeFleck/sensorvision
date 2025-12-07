@@ -2,10 +2,13 @@ package org.sensorvision.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.sensorvision.dto.DynamicTelemetryPointDto;
 import org.sensorvision.dto.TelemetryPointDto;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -126,6 +129,66 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
 
         } catch (Exception e) {
             log.error("Failed to broadcast telemetry data: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Broadcast dynamic telemetry data (EAV pattern) to WebSocket clients in the same organization.
+     * This sends all variables as a map, supporting any variable name.
+     *
+     * @param dynamicPoint The dynamic telemetry data with all variables
+     * @param organizationId The organization ID that owns this device/data
+     */
+    public void broadcastDynamicTelemetryData(DynamicTelemetryPointDto dynamicPoint, Long organizationId) {
+        if (sessions.isEmpty()) {
+            return;
+        }
+
+        try {
+            // Wrap in a message envelope with type indicator
+            Map<String, Object> envelope = new HashMap<>();
+            envelope.put("type", "DYNAMIC_TELEMETRY");
+            envelope.put("deviceId", dynamicPoint.deviceId());
+            envelope.put("timestamp", dynamicPoint.timestamp());
+            envelope.put("variables", dynamicPoint.variables());
+
+            String message = objectMapper.writeValueAsString(envelope);
+            TextMessage textMessage = new TextMessage(message);
+
+            // Collect failed sessions separately to avoid concurrent modification
+            List<WebSocketSession> failedSessions = new ArrayList<>();
+            int sentCount = 0;
+
+            for (WebSocketSession session : sessions) {
+                try {
+                    synchronized (session) {
+                        if (session.isOpen()) {
+                            Long sessionOrgId = (Long) session.getAttributes().get("organizationId");
+
+                            if (sessionOrgId != null && sessionOrgId.equals(organizationId)) {
+                                session.sendMessage(textMessage);
+                                sentCount++;
+                            }
+                        } else {
+                            failedSessions.add(session);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to send dynamic telemetry to WebSocket session {}: {}",
+                            session.getId(), e.getMessage());
+                    failedSessions.add(session);
+                }
+            }
+
+            if (!failedSessions.isEmpty()) {
+                sessions.removeAll(failedSessions);
+            }
+
+            log.debug("Broadcast dynamic telemetry ({} variables) for device {} to {} sessions",
+                    dynamicPoint.variables().size(), dynamicPoint.deviceId(), sentCount);
+
+        } catch (Exception e) {
+            log.error("Failed to broadcast dynamic telemetry data: {}", e.getMessage());
         }
     }
 

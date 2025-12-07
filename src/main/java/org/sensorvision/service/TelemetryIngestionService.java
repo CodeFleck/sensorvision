@@ -4,7 +4,9 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import com.google.common.util.concurrent.AtomicDouble;
+import lombok.extern.slf4j.Slf4j;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,11 +14,13 @@ import org.sensorvision.model.Device;
 import org.sensorvision.model.DeviceStatus;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.TelemetryRecord;
+import org.sensorvision.model.VariableValue;
 import org.sensorvision.mqtt.TelemetryPayload;
 import org.sensorvision.repository.DeviceRepository;
 import org.sensorvision.repository.OrganizationRepository;
 import org.sensorvision.repository.TelemetryRecordRepository;
 import org.sensorvision.dto.TelemetryPointDto;
+import org.sensorvision.dto.DynamicTelemetryPointDto;
 import org.sensorvision.websocket.TelemetryWebSocketHandler;
 import org.sensorvision.config.TelemetryConfigurationProperties;
 import org.sensorvision.security.DeviceTokenAuthenticationFilter.DeviceTokenAuthentication;
@@ -25,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @Transactional
 public class TelemetryIngestionService {
@@ -38,6 +43,7 @@ public class TelemetryIngestionService {
     private final TelemetryWebSocketHandler webSocketHandler;
     private final RuleEngineService ruleEngineService;
     private final SyntheticVariableService syntheticVariableService;
+    private final DynamicVariableService dynamicVariableService;
     private final MeterRegistry meterRegistry;
     private final TelemetryConfigurationProperties telemetryConfig;
     private final Counter mqttMessagesCounter;
@@ -47,6 +53,8 @@ public class TelemetryIngestionService {
     private final ConcurrentHashMap<String, AtomicDouble> currentGauges = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicDouble> powerFactorGauges = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AtomicDouble> frequencyGauges = new ConcurrentHashMap<>();
+    // Dynamic gauges for any variable (EAV pattern support)
+    private final ConcurrentHashMap<String, AtomicDouble> dynamicGauges = new ConcurrentHashMap<>();
 
     public TelemetryIngestionService(DeviceRepository deviceRepository,
                                      DeviceService deviceService,
@@ -55,6 +63,7 @@ public class TelemetryIngestionService {
                                      TelemetryWebSocketHandler webSocketHandler,
                                      RuleEngineService ruleEngineService,
                                      SyntheticVariableService syntheticVariableService,
+                                     DynamicVariableService dynamicVariableService,
                                      MeterRegistry meterRegistry,
                                      TelemetryConfigurationProperties telemetryConfig) {
         this.deviceRepository = deviceRepository;
@@ -64,6 +73,7 @@ public class TelemetryIngestionService {
         this.webSocketHandler = webSocketHandler;
         this.ruleEngineService = ruleEngineService;
         this.syntheticVariableService = syntheticVariableService;
+        this.dynamicVariableService = dynamicVariableService;
         this.meterRegistry = meterRegistry;
         this.telemetryConfig = telemetryConfig;
         this.mqttMessagesCounter = meterRegistry.counter("mqtt_messages_total");
@@ -142,7 +152,30 @@ public class TelemetryIngestionService {
         updateGauge("iot_power_factor", powerFactorGauges, device.getExternalId(), powerFactor);
         updateGauge("iot_frequency", frequencyGauges, device.getExternalId(), frequency);
 
+        // ========== EAV Pattern: Store ALL variables dynamically ==========
+        // This enables Ubidots-like functionality where any variable is accepted
+        Map<String, VariableValue> storedVariables = null;
+        if (payload.variables() != null && !payload.variables().isEmpty()) {
+            storedVariables = dynamicVariableService.processTelemetry(
+                    device,
+                    payload.variables(),
+                    payload.timestamp(),
+                    metadata
+            );
+
+            // Update dynamic Prometheus gauges for all variables
+            for (Map.Entry<String, BigDecimal> entry : payload.variables().entrySet()) {
+                if (entry.getValue() != null) {
+                    updateDynamicGauge(device.getExternalId(), entry.getKey(), entry.getValue());
+                }
+            }
+
+            log.debug("Stored {} dynamic variables for device '{}'",
+                    storedVariables.size(), device.getExternalId());
+        }
+
         // Broadcast telemetry data to WebSocket clients (only to same organization)
+        // Legacy format for backward compatibility
         TelemetryPointDto telemetryPoint = new TelemetryPointDto(
                 device.getExternalId(),
                 payload.timestamp(),
@@ -154,11 +187,54 @@ public class TelemetryIngestionService {
         );
         webSocketHandler.broadcastTelemetryData(telemetryPoint, device.getOrganization().getId());
 
+        // NEW: Also broadcast dynamic telemetry with ALL variables
+        if (payload.variables() != null && !payload.variables().isEmpty()) {
+            Map<String, Double> allVariables = new HashMap<>();
+            for (Map.Entry<String, BigDecimal> entry : payload.variables().entrySet()) {
+                if (entry.getValue() != null) {
+                    allVariables.put(entry.getKey(), entry.getValue().doubleValue());
+                }
+            }
+            DynamicTelemetryPointDto dynamicPoint = new DynamicTelemetryPointDto(
+                    device.getExternalId(),
+                    payload.timestamp(),
+                    allVariables
+            );
+            webSocketHandler.broadcastDynamicTelemetryData(dynamicPoint, device.getOrganization().getId());
+        }
+
         // Evaluate rules and trigger alerts if conditions are met
         ruleEngineService.evaluateRules(record);
 
         // Calculate synthetic variables (derived metrics)
         syntheticVariableService.calculateSyntheticVariables(record);
+    }
+
+    /**
+     * Update a dynamic gauge for any variable name (EAV pattern support).
+     */
+    private void updateDynamicGauge(String deviceId, String variableName, BigDecimal value) {
+        String gaugeKey = deviceId + ":" + variableName;
+        String metricName = "iot_dynamic_" + sanitizeMetricName(variableName);
+
+        AtomicDouble gauge = dynamicGauges.computeIfAbsent(gaugeKey, k ->
+                meterRegistry.gauge(metricName,
+                        Tags.of("deviceId", deviceId, "variable", variableName),
+                        new AtomicDouble(0.0)));
+
+        if (gauge != null && value != null) {
+            gauge.set(value.doubleValue());
+        }
+    }
+
+    /**
+     * Sanitize variable name for use as Prometheus metric name.
+     */
+    private String sanitizeMetricName(String name) {
+        return name.toLowerCase()
+                .replaceAll("[^a-z0-9_]", "_")
+                .replaceAll("_+", "_")
+                .replaceAll("^_|_$", "");
     }
 
     private void updateDeviceGauge(String deviceId, boolean online) {

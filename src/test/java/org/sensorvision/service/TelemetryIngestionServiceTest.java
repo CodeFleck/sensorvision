@@ -55,6 +55,9 @@ class TelemetryIngestionServiceTest {
     @Mock
     private SyntheticVariableService syntheticVariableService;
 
+    @Mock
+    private DynamicVariableService dynamicVariableService;
+
     private MeterRegistry meterRegistry;
 
     private TelemetryConfigurationProperties telemetryConfig;
@@ -75,6 +78,7 @@ class TelemetryIngestionServiceTest {
                 webSocketHandler,
                 ruleEngineService,
                 syntheticVariableService,
+                dynamicVariableService,
                 meterRegistry,
                 telemetryConfig
         );
