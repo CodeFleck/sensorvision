@@ -66,8 +66,12 @@ export class SensorVisionClient {
   /**
    * Send telemetry data for a device
    *
+   * **DYNAMIC VARIABLES**: Send ANY variable names in the data object.
+   * Variables are automatically provisioned on first use - no schema changes needed!
+   *
    * @param deviceId - Unique identifier for the device
-   * @param data - Telemetry data (variable names mapped to numeric values)
+   * @param data - Telemetry data (variable names mapped to numeric values).
+   *               Variable names can be anything - they're auto-created on first use.
    * @returns Response with success status and message
    * @throws {ValidationError} If device ID or data is invalid
    * @throws {AuthenticationError} If API key is invalid
@@ -77,10 +81,18 @@ export class SensorVisionClient {
    *
    * @example
    * ```typescript
+   * // Standard variables
    * const response = await client.sendData('sensor-001', {
    *   temperature: 23.5,
    *   humidity: 65.2,
    *   pressure: 1013.25
+   * });
+   *
+   * // Custom variables are auto-provisioned!
+   * await client.sendData('sensor-001', {
+   *   soil_moisture: 45.0,
+   *   light_level: 850.0,
+   *   my_custom_sensor: 100.0
    * });
    * ```
    */

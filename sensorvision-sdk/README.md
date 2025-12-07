@@ -10,6 +10,7 @@ Build IoT applications with enterprise-grade infrastructure and developer-friend
 ## Features
 
 - 🚀 **Simple API** - Send telemetry data with just a few lines of code
+- 🔮 **Dynamic Variables** - Send ANY variable name - auto-provisioned on first use!
 - ⚡ **Async Support** - Built-in asyncio support for high-performance applications
 - 🔄 **Auto-Retry** - Automatic retry logic with exponential backoff
 - 🛡️ **Type Safety** - Full type hints for IDE autocomplete and type checking
@@ -241,6 +242,42 @@ with SensorVisionClient(
         client.send_data("multi-sensor-station", data)
         time.sleep(30)
 ```
+
+### Dynamic Variables (Custom Sensors)
+
+SensorVision supports **dynamic variable provisioning** - send ANY variable name and it's automatically created!
+
+```python
+from sensorvision import SensorVisionClient
+
+with SensorVisionClient(
+    api_url="http://localhost:8080",
+    api_key="your-token"
+) as client:
+    # Standard variables work as expected
+    client.send_data("my-device", {
+        "temperature": 23.5,
+        "humidity": 65.2
+    })
+
+    # Custom variables are auto-provisioned on first use!
+    # No schema changes needed - just send them!
+    client.send_data("my-device", {
+        "soil_moisture": 45.0,        # Custom sensor
+        "light_level_lux": 850.0,     # Custom sensor
+        "battery_voltage": 3.7,        # Device telemetry
+        "my_special_reading": 100.0    # Any variable name works!
+    })
+
+    # Variables appear in the API and dashboard automatically
+    # GET /api/v1/devices/{deviceId}/variables - lists all auto-provisioned variables
+    # GET /api/v1/devices/{deviceId}/variables/latest - get latest values
+```
+
+**Variable Naming:**
+- Use snake_case or camelCase
+- Avoid special characters
+- Display names are auto-generated (e.g., "soil_moisture" → "Soil Moisture")
 
 ## Error Handling
 

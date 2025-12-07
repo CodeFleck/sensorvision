@@ -84,9 +84,13 @@ class SensorVisionClient:
         """
         Send telemetry data to SensorVision.
 
+        DYNAMIC VARIABLES: Send ANY variable names in the data dictionary.
+        Variables are automatically provisioned on first use - no schema changes needed!
+
         Args:
             device_id: Unique identifier for the device
-            data: Dictionary of variable names to values (must be numeric)
+            data: Dictionary of variable names to values (must be numeric).
+                  Variable names can be anything - they're auto-created on first use.
 
         Returns:
             IngestionResponse with success status and message
@@ -99,9 +103,16 @@ class SensorVisionClient:
 
         Example:
             >>> client = SensorVisionClient("http://localhost:8080", "your-api-key")
+            >>> # Standard variables
             >>> response = client.send_data("sensor-001", {
             ...     "temperature": 23.5,
             ...     "humidity": 65.2
+            ... })
+            >>> # Custom variables are auto-provisioned!
+            >>> response = client.send_data("sensor-001", {
+            ...     "soil_moisture": 45.0,
+            ...     "light_level": 850.0,
+            ...     "my_custom_sensor": 100.0
             ... })
             >>> print(response.message)
             Data ingested successfully
@@ -276,9 +287,13 @@ class AsyncSensorVisionClient:
         """
         Send telemetry data to SensorVision asynchronously.
 
+        DYNAMIC VARIABLES: Send ANY variable names in the data dictionary.
+        Variables are automatically provisioned on first use - no schema changes needed!
+
         Args:
             device_id: Unique identifier for the device
-            data: Dictionary of variable names to values
+            data: Dictionary of variable names to values (must be numeric).
+                  Variable names can be anything - they're auto-created on first use.
 
         Returns:
             IngestionResponse with success status and message
@@ -291,9 +306,15 @@ class AsyncSensorVisionClient:
 
         Example:
             >>> async with AsyncSensorVisionClient("http://localhost:8080", "key") as client:
+            ...     # Standard variables
             ...     response = await client.send_data("sensor-001", {
             ...         "temperature": 23.5,
             ...         "humidity": 65.2
+            ...     })
+            ...     # Custom variables are auto-provisioned!
+            ...     response = await client.send_data("sensor-001", {
+            ...         "soil_moisture": 45.0,
+            ...         "custom_reading": 100.0
             ...     })
         """
         validate_device_id(device_id)

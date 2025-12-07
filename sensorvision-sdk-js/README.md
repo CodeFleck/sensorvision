@@ -11,6 +11,7 @@ Build IoT applications with enterprise-grade infrastructure and developer-friend
 ## Features
 
 - 🚀 **Easy to Use** - Simple API for sending telemetry data
+- 🔮 **Dynamic Variables** - Send ANY variable name - auto-provisioned on first use!
 - 📡 **Real-time** - WebSocket support for live telemetry subscriptions
 - 🌐 **Universal** - Works in Node.js and browsers
 - 📘 **TypeScript** - Full type definitions included
@@ -252,6 +253,43 @@ monitorSensor();
 ### Real-time Dashboard
 
 See [examples/browser-dashboard.html](examples/browser-dashboard.html) for a complete browser-based dashboard example.
+
+### Dynamic Variables (Custom Sensors)
+
+SensorVision supports **dynamic variable provisioning** - send ANY variable name and it's automatically created!
+
+```typescript
+import { SensorVisionClient } from 'sensorvision-sdk';
+
+const client = new SensorVisionClient({
+  apiUrl: 'http://localhost:8080',
+  apiKey: 'your-device-token'
+});
+
+// Standard variables work as expected
+await client.sendData('my-device', {
+  temperature: 23.5,
+  humidity: 65.2
+});
+
+// Custom variables are auto-provisioned on first use!
+// No schema changes needed - just send them!
+await client.sendData('my-device', {
+  soil_moisture: 45.0,        // Custom sensor
+  light_level_lux: 850.0,     // Custom sensor
+  battery_voltage: 3.7,        // Device telemetry
+  my_special_reading: 100.0    // Any variable name works!
+});
+
+// Variables appear in the API and dashboard automatically
+// GET /api/v1/devices/{deviceId}/variables - lists all auto-provisioned variables
+// GET /api/v1/devices/{deviceId}/variables/latest - get latest values
+```
+
+**Variable Naming:**
+- Use snake_case or camelCase
+- Avoid special characters
+- Display names are auto-generated (e.g., "soil_moisture" → "Soil Moisture")
 
 ### Error Handling
 

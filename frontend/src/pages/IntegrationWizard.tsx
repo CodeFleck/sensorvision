@@ -437,16 +437,23 @@ void connectMQTT() {
 void sendData(float temperature, float humidity) {
   // Build JSON payload with API token for authentication
   // IMPORTANT: The apiToken field is REQUIRED for the server to accept your data
+  //
+  // DYNAMIC VARIABLES: Add ANY variable to the "variables" object!
+  // They will be auto-provisioned on first use - no code changes needed on server.
   // Format: {"deviceId":"xxx","apiToken":"xxx","timestamp":"ISO8601","variables":{"temp":23.5}}
 
   String timestamp = getISOTimestamp();  // See helper function below
 
+  // You can add ANY custom variables here - they auto-provision on first use!
   String payload = "{\\"deviceId\\":\\"" + String(deviceId) + "\\"," +
                    "\\"apiToken\\":\\"" + String(apiToken) + "\\"," +
                    "\\"timestamp\\":\\"" + timestamp + "\\"," +
                    "\\"variables\\":{" +
                    "\\"temperature\\":" + String(temperature, 1) + "," +
                    "\\"humidity\\":" + String(humidity, 1) +
+                   // Add custom variables below (uncomment):
+                   // ",\\"soil_moisture\\":" + String(soilMoisture, 1) +
+                   // ",\\"light_level\\":" + String(lightLevel, 1) +
                    "}}";
 
   Serial.print("Publishing: ");
@@ -494,8 +501,11 @@ API_URL = "${apiUrl}"
 API_KEY = "${token}"
 DEVICE_ID = "${devId}"
 
-def send_data(temperature, humidity):
+def send_data(**variables):
     """Send sensor data to SensorVision
+
+    DYNAMIC VARIABLES: Send ANY variable names - they are auto-provisioned!
+    Example: send_data(temperature=23.5, humidity=65.2, my_custom_sensor=100.0)
 
     IMPORTANT: All values must be numbers (int/float) or numeric strings.
     Do NOT send booleans, lists, dicts, or other non-numeric types.
@@ -507,15 +517,13 @@ def send_data(temperature, humidity):
         "Content-Type": "application/json"
     }
     # All values must be numeric - no booleans, objects, or arrays
-    data = {
-        "temperature": temperature,
-        "humidity": humidity
-    }
+    # Variable names are auto-created on first use!
+    data = variables
 
     try:
         response = requests.post(url, json=data, headers=headers, timeout=10)
         if response.status_code in (200, 201):
-            print("Data sent successfully")
+            print(f"Data sent successfully: {list(variables.keys())}")
             return True
         else:
             print(f"Error: {response.status_code} - {response.text}")
@@ -524,16 +532,35 @@ def send_data(temperature, humidity):
         print(f"Failed to send data: {e}")
         return False
 
+def get_device_variables():
+    """Fetch all auto-provisioned variables for this device"""
+    url = f"{API_URL}/api/v1/devices/{quote(DEVICE_ID)}/variables"
+    headers = {"X-API-Key": API_KEY}
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            return response.json()
+        return []
+    except Exception as e:
+        print(f"Failed to fetch variables: {e}")
+        return []
+
 if __name__ == "__main__":
     print("Starting SensorVision data collection...")
+    print("TIP: Send ANY variable name - they are auto-provisioned!")
 
     while True:
         # Read sensor data (example)
-        temperature = 23.5  # Replace with actual sensor reading
-        humidity = 65.2     # Replace with actual sensor reading
-
-        # Send to SensorVision
-        send_data(temperature, humidity)
+        # You can add ANY custom variables - they auto-provision on first use!
+        send_data(
+            temperature=23.5,           # Standard variable
+            humidity=65.2,              # Standard variable
+            # Add your own custom variables below:
+            # soil_moisture=45.0,       # Custom sensor
+            # light_level=850.0,        # Custom sensor
+            # battery_voltage=3.7,      # Device telemetry
+        )
 
         # Wait 60 seconds
         time.sleep(60)`;
@@ -549,17 +576,20 @@ const DEVICE_ID = '${devId}';
 
 /**
  * Send telemetry data to SensorVision
+ *
+ * DYNAMIC VARIABLES: Send ANY variable names - they are auto-provisioned!
+ * Example: sendData({ temperature: 23.5, myCustomSensor: 100.0 })
+ *
  * IMPORTANT: All values must be numbers. Do NOT send booleans, objects, or arrays.
+ *
+ * @param {Object} variables - Object with variable names as keys and numeric values
  */
-async function sendData(temperature, humidity) {
+async function sendData(variables) {
   try {
     // URL-encode device ID to handle special characters
     const response = await axios.post(
       \`\${API_URL}/api/v1/ingest/\${encodeURIComponent(DEVICE_ID)}\`,
-      {
-        temperature,  // Must be a number
-        humidity      // Must be a number
-      },
+      variables,  // Variable names are auto-created on first use!
       {
         headers: {
           'X-API-Key': API_KEY,
@@ -569,7 +599,7 @@ async function sendData(temperature, humidity) {
       }
     );
 
-    console.log('Data sent successfully:', response.data);
+    console.log('Data sent successfully:', Object.keys(variables));
     return true;
   } catch (error) {
     console.error('Failed to send data:', error.message);
@@ -577,16 +607,38 @@ async function sendData(temperature, humidity) {
   }
 }
 
+/**
+ * Fetch all auto-provisioned variables for this device
+ */
+async function getDeviceVariables() {
+  try {
+    const response = await axios.get(
+      \`\${API_URL}/api/v1/devices/\${encodeURIComponent(DEVICE_ID)}/variables\`,
+      { headers: { 'X-API-Key': API_KEY } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch variables:', error.message);
+    return [];
+  }
+}
+
 // Main loop
 async function main() {
   console.log('Starting SensorVision data collection...');
+  console.log('TIP: Send ANY variable name - they are auto-provisioned!');
 
   setInterval(async () => {
     // Read sensor data (example)
-    const temperature = 23.5;  // Replace with actual sensor reading
-    const humidity = 65.2;     // Replace with actual sensor reading
-
-    await sendData(temperature, humidity);
+    // You can add ANY custom variables - they auto-provision on first use!
+    await sendData({
+      temperature: 23.5,           // Standard variable
+      humidity: 65.2,              // Standard variable
+      // Add your own custom variables below:
+      // soilMoisture: 45.0,       // Custom sensor
+      // lightLevel: 850.0,        // Custom sensor
+      // batteryVoltage: 3.7,      // Device telemetry
+    });
   }, 60000); // Send data every minute
 }
 
@@ -601,15 +653,20 @@ API_URL="${apiUrl}"
 API_KEY="${token}"
 DEVICE_ID="${devId}"
 
+# ==============================================================================
+# DYNAMIC VARIABLES: Send ANY variable name - they are auto-provisioned!
+# Just add new fields to the JSON and they'll be automatically created.
+# ==============================================================================
+
 # Example sensor data (must be numeric values - no booleans or strings)
 TEMPERATURE=23.5
 HUMIDITY=65.2
+# CUSTOM_SENSOR=100.0  # Add any custom variable!
 
 # IMPORTANT: All field values must be numbers
 # Do NOT use true/false, strings, or other non-numeric values
 
-# URL-encode device ID (bash handles special chars in variables when quoted)
-# Send data to SensorVision
+# Send data to SensorVision (variable names are auto-created on first use!)
 curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
   -H "X-API-Key: $API_KEY" \\
   -H "Content-Type: application/json" \\
@@ -618,15 +675,24 @@ curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
     \\"humidity\\": $HUMIDITY
   }"
 
-# Example: Continuous monitoring (uncomment to use)
+# Fetch all auto-provisioned variables for this device:
+# curl -X GET "$API_URL/api/v1/devices/$DEVICE_ID/variables" \\
+#   -H "X-API-Key: $API_KEY"
+
+# Get latest values for all variables:
+# curl -X GET "$API_URL/api/v1/devices/$DEVICE_ID/variables/latest" \\
+#   -H "X-API-Key: $API_KEY"
+
+# Example: Continuous monitoring with custom variables (uncomment to use)
 # while true; do
-#   TEMPERATURE=$(echo "scale=1; 20 + $RANDOM % 10" | bc)  # Random temp 20-30
-#   HUMIDITY=$(echo "scale=1; 50 + $RANDOM % 30" | bc)      # Random humidity 50-80
+#   TEMPERATURE=$(echo "scale=1; 20 + $RANDOM % 10" | bc)
+#   HUMIDITY=$(echo "scale=1; 50 + $RANDOM % 30" | bc)
+#   SOIL_MOISTURE=$(echo "scale=1; 30 + $RANDOM % 40" | bc)  # Custom variable!
 #
 #   curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
 #     -H "X-API-Key: $API_KEY" \\
-#     -H "Content-Type: "application/json" \\
-#     -d "{\\"temperature\\": $TEMPERATURE, \\"humidity\\": $HUMIDITY}"
+#     -H "Content-Type: application/json" \\
+#     -d "{\\"temperature\\": $TEMPERATURE, \\"humidity\\": $HUMIDITY, \\"soil_moisture\\": $SOIL_MOISTURE}"
 #
 #   sleep 60  # Wait 60 seconds
 # done`;

@@ -84,10 +84,11 @@ The `TelemetryIngestionService` is the central orchestrator that:
 - **AnalyticsService**: Provides data aggregation (MIN/MAX/AVG/SUM) with time intervals
 
 ### Database Schema Evolution
-The system uses Flyway migrations with three main schemas:
+The system uses Flyway migrations with main schemas:
 - **V1**: Core devices and telemetry_records tables
 - **V2**: Rules engine (rules, alerts tables)
 - **V3**: Synthetic variables (synthetic_variables, synthetic_variable_values tables)
+- **V56**: Dynamic variables EAV pattern (variables extended with device_id, variable_values table)
 
 ### Frontend Architecture
 React SPA with TypeScript organized by feature:
@@ -123,6 +124,26 @@ sensorvision/devices/{deviceId}/commands     # Command channel (reserved)
 ## Development Patterns
 
 ### Adding New Telemetry Variables
+
+**Option 1: Dynamic Variables (EAV Pattern) - Recommended**
+No code changes required! Simply send any variable in the telemetry payload:
+```json
+{
+  "deviceId": "my-device",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "variables": {
+    "temperature": 23.5,
+    "humidity": 65.0,
+    "custom_sensor_xyz": 100.0
+  }
+}
+```
+Variables are auto-provisioned on first use. Access via:
+- REST API: `GET /api/v1/devices/{deviceId}/variables`
+- WebSocket: Subscribe to dynamic telemetry updates
+
+**Option 2: Fixed Schema (Legacy)**
+For variables requiring special handling:
 1. Update `TelemetryRecord` entity with new field
 2. Create Flyway migration to add database column
 3. Modify `TelemetryIngestionService` to process new variable
@@ -134,6 +155,50 @@ The rules engine supports operators: GT, GTE, LT, LTE, EQ with automatic severit
 
 ### Synthetic Variables
 Mathematical expressions like "kwConsumption * voltage" are parsed and calculated automatically. The expression engine supports basic arithmetic operations and references to telemetry variables.
+
+### Dynamic Variables (EAV Pattern)
+The system supports Ubidots-like dynamic variable auto-provisioning using the Entity-Attribute-Value pattern.
+
+**Key Components:**
+- **DynamicVariableService**: Auto-provisions variables when new telemetry arrives
+- **Variable entity**: Extended with `device_id` for device-specific variables
+- **VariableValue entity**: Time-series storage for variable values
+- **DeviceVariableController**: REST API for variable management
+
+**How It Works:**
+1. Device sends telemetry with any variables in the `variables` map
+2. `TelemetryIngestionService` calls `DynamicVariableService.processTelemetry()`
+3. For each variable, `getOrCreateVariable()` finds or auto-provisions the variable
+4. Values are stored in `variable_values` table with timestamps
+5. `lastValue` and `lastValueAt` cached on Variable entity for quick access
+6. WebSocket broadcasts include all dynamic variables
+
+**REST API Endpoints:**
+```
+GET  /api/v1/devices/{deviceId}/variables              # List all variables
+GET  /api/v1/devices/{deviceId}/variables/latest       # Get latest values map
+GET  /api/v1/devices/{deviceId}/variables/{id}         # Get specific variable
+GET  /api/v1/devices/{deviceId}/variables/{id}/values  # Get time-series history
+GET  /api/v1/devices/{deviceId}/variables/{id}/values/latest?count=100  # Latest N values
+GET  /api/v1/devices/{deviceId}/variables/{id}/statistics  # Aggregated stats
+PUT  /api/v1/devices/{deviceId}/variables/{id}         # Update variable metadata
+```
+
+**Race Condition Handling:**
+`getOrCreateVariable()` handles concurrent variable creation:
+```java
+try {
+    return variableRepository.save(newVariable);
+} catch (DataIntegrityViolationException e) {
+    // Another thread created it first, fetch existing
+    return variableRepository.findByDeviceAndName(device, name).orElseThrow();
+}
+```
+
+**Prometheus Metrics:**
+Dynamic gauges are created for each variable with cardinality limit (MAX_DYNAMIC_GAUGES=1000):
+- Metric name: `iot_dynamic_{sanitized_variable_name}`
+- Tags: `deviceId`, `variable`
 
 ### Rate Limiting
 The application uses rate limiting to protect against abuse:
