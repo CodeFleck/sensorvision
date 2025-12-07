@@ -59,8 +59,28 @@ public class SensorVisionClient {
     /**
      * Send telemetry data for a device.
      *
+     * <p><b>DYNAMIC VARIABLES:</b> Send ANY variable names in the data map.
+     * Variables are automatically provisioned on first use - no schema changes needed!</p>
+     *
+     * <p>Example with custom variables:</p>
+     * <pre>{@code
+     * // Standard variables
+     * client.sendData("sensor-001", Map.of(
+     *     "temperature", 23.5,
+     *     "humidity", 65.2
+     * ));
+     *
+     * // Custom variables are auto-provisioned!
+     * client.sendData("sensor-001", Map.of(
+     *     "soil_moisture", 45.0,
+     *     "light_level", 850.0,
+     *     "my_custom_sensor", 100.0
+     * ));
+     * }</pre>
+     *
      * @param deviceId Unique identifier for the device
-     * @param data Map of variable names to numeric/boolean values
+     * @param data Map of variable names to numeric/boolean values.
+     *             Variable names can be anything - they're auto-created on first use.
      * @return IngestionResponse containing success message and metadata
      * @throws ValidationException if deviceId or data is invalid
      * @throws AuthenticationException if API key is invalid (401)
