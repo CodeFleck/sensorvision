@@ -326,4 +326,242 @@ class TelemetryIngestionServiceTest {
         assertEquals("Test Organization", savedRecord.getOrganization().getName());
         assertEquals(device.getId(), savedRecord.getDevice().getId());
     }
+
+    // ==================== Dynamic Variable (EAV) Tests ====================
+
+    @Test
+    void ingest_shouldCallDynamicVariableServiceToProcessTelemetry() {
+        // Arrange
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device device = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("device-with-dynamic-vars")
+                .name("Dynamic Vars Device")
+                .organization(org)
+                .build();
+
+        Map<String, BigDecimal> variables = new HashMap<>();
+        variables.put("temperature", new BigDecimal("23.5"));
+        variables.put("humidity", new BigDecimal("65.0"));
+        variables.put("custom_sensor", new BigDecimal("100.0"));
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "device-with-dynamic-vars",
+                Instant.now(),
+                variables,
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("device-with-dynamic-vars"))
+                .thenReturn(Optional.of(device));
+        when(deviceRepository.save(any(Device.class))).thenReturn(device);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+        when(dynamicVariableService.processTelemetry(any(), any(), any(), any()))
+                .thenReturn(Collections.emptyMap());
+
+        // Act
+        telemetryIngestionService.ingest(payload);
+
+        // Assert - verify DynamicVariableService.processTelemetry was called with correct parameters
+        verify(dynamicVariableService).processTelemetry(
+                eq(device),
+                eq(variables),
+                eq(payload.timestamp()),
+                any()
+        );
+    }
+
+    @Test
+    void ingest_withEmptyVariables_shouldNotCallDynamicVariableService() {
+        // Arrange
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device device = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("device-empty-vars")
+                .name("Empty Vars Device")
+                .organization(org)
+                .build();
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "device-empty-vars",
+                Instant.now(),
+                Collections.emptyMap(),
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("device-empty-vars"))
+                .thenReturn(Optional.of(device));
+        when(deviceRepository.save(any(Device.class))).thenReturn(device);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        telemetryIngestionService.ingest(payload);
+
+        // Assert - verify DynamicVariableService.processTelemetry was NOT called
+        verify(dynamicVariableService, never()).processTelemetry(any(), any(), any(), any());
+    }
+
+    @Test
+    void ingest_shouldCreateDynamicPrometheusGaugesForVariables() {
+        // Arrange
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device device = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("device-metrics")
+                .name("Metrics Device")
+                .organization(org)
+                .build();
+
+        Map<String, BigDecimal> variables = new HashMap<>();
+        variables.put("custom_temp", new BigDecimal("25.5"));
+        variables.put("custom_pressure", new BigDecimal("1013.25"));
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "device-metrics",
+                Instant.now(),
+                variables,
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("device-metrics"))
+                .thenReturn(Optional.of(device));
+        when(deviceRepository.save(any(Device.class))).thenReturn(device);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+        when(dynamicVariableService.processTelemetry(any(), any(), any(), any()))
+                .thenReturn(Collections.emptyMap());
+
+        // Act
+        telemetryIngestionService.ingest(payload);
+
+        // Assert - verify Prometheus gauges were created
+        assertNotNull(meterRegistry.find("iot_dynamic_custom_temp").gauge());
+        assertNotNull(meterRegistry.find("iot_dynamic_custom_pressure").gauge());
+
+        // Verify gauge values
+        assertEquals(25.5, meterRegistry.find("iot_dynamic_custom_temp").gauge().value(), 0.01);
+        assertEquals(1013.25, meterRegistry.find("iot_dynamic_custom_pressure").gauge().value(), 0.01);
+    }
+
+    @Test
+    void ingest_shouldReuseDynamicGaugesForSameDeviceAndVariable() {
+        // Arrange
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device device = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("device-reuse-gauges")
+                .name("Reuse Gauges Device")
+                .organization(org)
+                .build();
+
+        when(deviceRepository.findByExternalIdWithOrganization("device-reuse-gauges"))
+                .thenReturn(Optional.of(device));
+        when(deviceRepository.save(any(Device.class))).thenReturn(device);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+        when(dynamicVariableService.processTelemetry(any(), any(), any(), any()))
+                .thenReturn(Collections.emptyMap());
+
+        // First ingestion
+        TelemetryPayload payload1 = new TelemetryPayload(
+                "device-reuse-gauges",
+                Instant.now(),
+                Map.of("sensor_value", new BigDecimal("100.0")),
+                Map.of()
+        );
+        telemetryIngestionService.ingest(payload1);
+
+        // Verify first value
+        assertEquals(100.0, meterRegistry.find("iot_dynamic_sensor_value").gauge().value(), 0.01);
+
+        // Second ingestion with same variable but different value
+        TelemetryPayload payload2 = new TelemetryPayload(
+                "device-reuse-gauges",
+                Instant.now(),
+                Map.of("sensor_value", new BigDecimal("200.0")),
+                Map.of()
+        );
+        telemetryIngestionService.ingest(payload2);
+
+        // Assert - gauge should be reused and value updated
+        assertEquals(200.0, meterRegistry.find("iot_dynamic_sensor_value").gauge().value(), 0.01);
+
+        // Verify only one gauge was created (not multiple)
+        assertEquals(1, meterRegistry.find("iot_dynamic_sensor_value").gauges().size());
+    }
+
+    @Test
+    void ingest_dynamicGauges_shouldSanitizeVariableNamesForPrometheus() {
+        // Arrange
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device device = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("device-sanitize")
+                .name("Sanitize Device")
+                .organization(org)
+                .build();
+
+        // Variable names with special characters that need sanitization
+        Map<String, BigDecimal> variables = new HashMap<>();
+        variables.put("sensor-reading", new BigDecimal("50.0"));  // Contains hyphen
+        variables.put("Temperature.Value", new BigDecimal("22.5")); // Contains dot
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "device-sanitize",
+                Instant.now(),
+                variables,
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("device-sanitize"))
+                .thenReturn(Optional.of(device));
+        when(deviceRepository.save(any(Device.class))).thenReturn(device);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+        when(dynamicVariableService.processTelemetry(any(), any(), any(), any()))
+                .thenReturn(Collections.emptyMap());
+
+        // Act
+        telemetryIngestionService.ingest(payload);
+
+        // Assert - variable names should be sanitized (hyphens/dots replaced with underscores)
+        assertNotNull(meterRegistry.find("iot_dynamic_sensor_reading").gauge());
+        assertNotNull(meterRegistry.find("iot_dynamic_temperature_value").gauge());
+    }
+
+    @Test
+    void ingest_dynamicGauges_shouldHandleNullVariableValues() {
+        // Arrange
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device device = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("device-null-values")
+                .name("Null Values Device")
+                .organization(org)
+                .build();
+
+        Map<String, BigDecimal> variables = new HashMap<>();
+        variables.put("valid_sensor", new BigDecimal("75.0"));
+        variables.put("null_sensor", null);  // Null value
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "device-null-values",
+                Instant.now(),
+                variables,
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("device-null-values"))
+                .thenReturn(Optional.of(device));
+        when(deviceRepository.save(any(Device.class))).thenReturn(device);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+        when(dynamicVariableService.processTelemetry(any(), any(), any(), any()))
+                .thenReturn(Collections.emptyMap());
+
+        // Act - should not throw exception
+        assertDoesNotThrow(() -> telemetryIngestionService.ingest(payload));
+
+        // Assert - valid sensor gauge should be created, null sensor should be skipped
+        assertNotNull(meterRegistry.find("iot_dynamic_valid_sensor").gauge());
+        assertEquals(75.0, meterRegistry.find("iot_dynamic_valid_sensor").gauge().value(), 0.01);
+        // Null value sensor should NOT create a gauge
+        assertNull(meterRegistry.find("iot_dynamic_null_sensor").gauge());
+    }
 }

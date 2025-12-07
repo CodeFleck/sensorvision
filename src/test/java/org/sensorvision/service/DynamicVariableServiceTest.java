@@ -14,6 +14,7 @@ import org.sensorvision.model.Variable.DataSource;
 import org.sensorvision.model.VariableValue;
 import org.sensorvision.repository.VariableRepository;
 import org.sensorvision.repository.VariableValueRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -394,5 +395,88 @@ class DynamicVariableServiceTest {
         assertEquals(27.0, result.max());
         assertEquals(235.0, result.sum());
         assertEquals(10L, result.count());
+    }
+
+    // ==================== Race Condition Tests ====================
+
+    @Test
+    void getOrCreateVariable_raceCondition_shouldReturnExistingVariableAfterConflict() {
+        // Arrange - Simulate race condition where another thread creates the variable
+        // between our check and our save
+        Variable existingVariable = Variable.builder()
+                .id(1L)
+                .device(testDevice)
+                .organization(testOrg)
+                .name("temperature")
+                .displayName("Temperature")
+                .dataSource(DataSource.AUTO)
+                .build();
+
+        // First call returns empty (variable doesn't exist yet)
+        // Second call (after exception) returns the variable created by another thread
+        when(variableRepository.findByDeviceAndName(testDevice, "temperature"))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(existingVariable));
+
+        // Save throws DataIntegrityViolationException (unique constraint violation)
+        when(variableRepository.save(any(Variable.class)))
+                .thenThrow(new DataIntegrityViolationException("Duplicate key"));
+
+        // Act
+        Variable result = dynamicVariableService.getOrCreateVariable(testDevice, "temperature");
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("temperature", result.getName());
+        assertEquals(existingVariable.getId(), result.getId());
+
+        // Verify findByDeviceAndName was called twice (once initially, once after exception)
+        verify(variableRepository, times(2)).findByDeviceAndName(testDevice, "temperature");
+        // Verify save was attempted once
+        verify(variableRepository, times(1)).save(any(Variable.class));
+    }
+
+    @Test
+    void getOrCreateVariable_raceCondition_shouldThrowIfVariableNotFoundAfterConflict() {
+        // Arrange - Edge case: constraint violation but variable still not found
+        // (shouldn't happen in practice, but we need to handle it)
+        when(variableRepository.findByDeviceAndName(testDevice, "temperature"))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.empty()); // Still not found after exception
+
+        when(variableRepository.save(any(Variable.class)))
+                .thenThrow(new DataIntegrityViolationException("Duplicate key"));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                dynamicVariableService.getOrCreateVariable(testDevice, "temperature"));
+
+        assertTrue(exception.getMessage().contains("Failed to create or find variable"));
+        assertTrue(exception.getCause() instanceof DataIntegrityViolationException);
+    }
+
+    @Test
+    void getOrCreateVariable_noRaceCondition_shouldCreateNormally() {
+        // Arrange - Normal case: no race condition
+        when(variableRepository.findByDeviceAndName(testDevice, "newVariable"))
+                .thenReturn(Optional.empty());
+        when(variableRepository.save(any(Variable.class)))
+                .thenAnswer(invocation -> {
+                    Variable v = invocation.getArgument(0);
+                    v.setId(100L);
+                    return v;
+                });
+
+        // Act
+        Variable result = dynamicVariableService.getOrCreateVariable(testDevice, "newVariable");
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("newVariable", result.getName());
+        assertEquals(100L, result.getId());
+
+        // Verify findByDeviceAndName was called only once (no retry needed)
+        verify(variableRepository, times(1)).findByDeviceAndName(testDevice, "newVariable");
+        verify(variableRepository, times(1)).save(any(Variable.class));
     }
 }
