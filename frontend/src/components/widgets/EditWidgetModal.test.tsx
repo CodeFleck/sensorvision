@@ -16,12 +16,14 @@ vi.mock('../../services/api', () => ({
 describe('EditWidgetModal', () => {
   const mockDevices: Device[] = [
     {
+      id: '550e8400-e29b-41d4-a716-446655440001',
       externalId: 'device-001',
       name: 'Test Device 1',
       status: 'ONLINE' as const,
       location: 'Building A',
     },
     {
+      id: '550e8400-e29b-41d4-a716-446655440002',
       externalId: 'device-002',
       name: 'Test Device 2',
       status: 'ONLINE' as const,

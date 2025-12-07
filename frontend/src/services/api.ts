@@ -851,7 +851,7 @@ class ApiService {
   async getVariableLatestValues(
     deviceId: string,
     variableId: number,
-    count: number = 100
+    count = 100
   ): Promise<VariableValue[]> {
     return this.request(`/devices/${deviceId}/variables/${variableId}/values/latest?count=${count}`);
   }
