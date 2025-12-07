@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.cache.annotation.Cacheable;
 
 @Slf4j
 @RestController
@@ -42,6 +43,8 @@ public class TelemetryController {
     private final SecurityUtils securityUtils;
 
     @GetMapping("/query")
+    @Cacheable(value = "telemetry-query", key = "#deviceId + '_' + #from + '_' + #to", 
+               condition = "#to.isBefore(T(java.time.Instant).now().minusSeconds(300))")
     public List<TelemetryPointDto> queryTelemetry(@RequestParam String deviceId,
                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
                                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to) {
