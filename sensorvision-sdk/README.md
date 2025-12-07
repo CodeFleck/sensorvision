@@ -412,8 +412,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Related Projects
 
 - [SensorVision](https://github.com/CodeFleck/sensorvision) - Main IoT monitoring platform
-- ESP32/Arduino SDK - Coming soon
-- JavaScript/Node.js SDK - Coming soon
+- [JavaScript/TypeScript SDK](../sensorvision-sdk-js/) - JavaScript/TypeScript SDK for SensorVision
+- [Java SDK](../sensorvision-sdk-java/) - Java SDK for SensorVision
+- ESP32/Arduino - See Integration Wizard in the SensorVision dashboard
 
 ## Changelog
 

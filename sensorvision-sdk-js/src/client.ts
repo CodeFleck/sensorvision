@@ -218,9 +218,9 @@ export class SensorVisionClient {
         throw new ValidationError('Telemetry keys must be strings');
       }
 
-      if (typeof value !== 'number' && typeof value !== 'boolean') {
+      if (typeof value !== 'number') {
         throw new ValidationError(
-          `Telemetry value for '${key}' must be a number or boolean, got ${typeof value}`
+          `Telemetry value for '${key}' must be a number, got ${typeof value}`
         );
       }
     }

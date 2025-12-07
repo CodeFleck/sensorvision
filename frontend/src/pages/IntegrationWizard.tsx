@@ -201,6 +201,13 @@ export const IntegrationWizard: React.FC = () => {
   const handleDeviceSetup = async () => {
     if (!deviceId || (!useExistingDevice && !deviceName)) return;
 
+    // Validate device ID for MQTT-incompatible characters
+    // MQTT topics use /, #, + as special characters that could cause routing issues
+    if (/[/#+]/.test(deviceId)) {
+      showToast('Device ID cannot contain /, #, or + characters (reserved for MQTT topics)', 'error');
+      return;
+    }
+
     // If we already have a token for THIS SAME device, just proceed to code generation
     // (Prevents re-creating if user clicks Continue multiple times)
     if (apiToken && generatedCode && lastSetupDeviceId === deviceId) {
@@ -390,6 +397,8 @@ const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
 // SensorVision configuration (pre-filled with your device credentials)
+// ⚠️  SECURITY WARNING: Never commit this file with your real token!
+//     For production, load the token from SPIFFS/EEPROM or use a config file.
 const char* mqttServer = "${mqttServer}";
 const int mqttPort = 1883;
 const char* deviceId = "${devId}";
@@ -517,7 +526,9 @@ void sendData(float temperature, float humidity) {
   }
 }
 
-// Generate a timestamp (placeholder - use NTP for accurate time)
+// ⚠️  WARNING: This generates a PLACEHOLDER timestamp (not accurate!)
+// For production, use NTP time sync. See:
+// https://randomnerdtutorials.com/esp32-ntp-client-date-time-arduino-ide/
 String getISOTimestamp() {
   unsigned long seconds = millis() / 1000;
   char timestamp[25];
@@ -567,6 +578,9 @@ from urllib.parse import quote
 # ==============================================================================
 # CONFIGURATION (pre-filled with your device credentials)
 # ==============================================================================
+# ⚠️  SECURITY WARNING: Never commit this file with your real token!
+#     For production, use environment variables:
+#     API_KEY = os.environ.get("SENSORVISION_API_KEY")
 API_URL = "${apiUrl}"
 API_KEY = "${token}"
 DEVICE_ID = "${devId}"
@@ -673,6 +687,9 @@ const axios = require('axios');
 // ==============================================================================
 // CONFIGURATION (pre-filled with your device credentials)
 // ==============================================================================
+// ⚠️  SECURITY WARNING: Never commit this file with your real token!
+//     For production, use environment variables:
+//     const API_KEY = process.env.SENSORVISION_API_KEY;
 const API_URL = '${apiUrl}';
 const API_KEY = '${token}';
 const DEVICE_ID = '${devId}';
@@ -781,6 +798,9 @@ main();`;
 # ==============================================================================
 
 # ----- CONFIGURATION (pre-filled with your device credentials) -----
+# ⚠️  SECURITY WARNING: Never commit this file with your real token!
+#     For production, use environment variables:
+#     API_KEY="\${SENSORVISION_API_KEY}"
 API_URL="${apiUrl}"
 API_KEY="${token}"
 DEVICE_ID="${devId}"
