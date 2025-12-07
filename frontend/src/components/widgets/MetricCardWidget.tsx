@@ -22,16 +22,17 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, devi
       const varName = widget.variableName as keyof TelemetryPoint;
       const rawValue = latestData[varName];
 
-      // Only update if the variable is actually present in the data
+      // Only update if the variable is actually present in the data and is a number
       // This prevents resetting to 0 when data for other variables arrives
-      if (rawValue !== undefined && rawValue !== null) {
-        const newValue = rawValue as number;
-        setPreviousValue(value);
-        setValue(newValue);
+      if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
+        // Use functional update to avoid stale closure issues with previousValue
+        setValue(prevValue => {
+          setPreviousValue(prevValue);
+          return rawValue;
+        });
         setLoading(false);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latestData, widget.variableName]);
 
   // Initial data fetch and fallback polling
@@ -47,11 +48,13 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, devi
         const varName = widget.variableName as keyof typeof data;
         const rawValue = data[varName];
 
-        // Only update if the variable has a value
-        if (rawValue !== undefined && rawValue !== null) {
-          const newValue = rawValue as number;
-          setPreviousValue(value);
-          setValue(newValue);
+        // Only update if the variable has a value and is a number
+        if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
+          // Use functional update to avoid stale closure issues with previousValue
+          setValue(prevValue => {
+            setPreviousValue(prevValue);
+            return rawValue;
+          });
         }
       } catch (error) {
         console.error('Error fetching metric data:', error);

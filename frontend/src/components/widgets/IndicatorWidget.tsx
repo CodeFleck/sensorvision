@@ -17,13 +17,13 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, device
   useEffect(() => {
     if (latestData && widget.variableName) {
       const varName = widget.variableName as keyof TelemetryPoint;
-      const value = latestData[varName] as number;
+      const rawValue = latestData[varName];
 
       // Only update if the variable is actually present in the data
       // This prevents resetting when data for other variables arrives
-      if (value !== null && value !== undefined) {
-        setCurrentValue(value);
-        calculateStatus(value);
+      if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
+        setCurrentValue(rawValue);
+        calculateStatus(rawValue);
         setLoading(false);
       }
     }
