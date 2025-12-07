@@ -148,6 +148,7 @@ describe('ApiService', () => {
       // Given
       const mockDevices: Device[] = [
         {
+          id: '550e8400-e29b-41d4-a716-446655440001',
           externalId: 'device-001',
           name: 'Test Device',
           status: 'ONLINE',
@@ -202,8 +203,8 @@ describe('ApiService', () => {
     it('should get all devices', async () => {
       // Given
       const mockDevices: Device[] = [
-        { externalId: 'device-001', name: 'Device 1', status: 'ONLINE' },
-        { externalId: 'device-002', name: 'Device 2', status: 'OFFLINE' },
+        { id: '550e8400-e29b-41d4-a716-446655440001', externalId: 'device-001', name: 'Device 1', status: 'ONLINE' },
+        { id: '550e8400-e29b-41d4-a716-446655440002', externalId: 'device-002', name: 'Device 2', status: 'OFFLINE' },
       ];
 
       fetchMock.mockResolvedValue(createMockResponse(mockDevices));
@@ -219,6 +220,7 @@ describe('ApiService', () => {
     it('should get device by external ID', async () => {
       // Given
       const mockDevice: Device = {
+        id: '550e8400-e29b-41d4-a716-446655440001',
         externalId: 'device-001',
         name: 'Test Device',
         status: 'ONLINE',
@@ -237,7 +239,7 @@ describe('ApiService', () => {
     it('should create device with POST request', async () => {
       // Given
       const newDevice = { externalId: 'device-001', name: 'New Device' };
-      const createdDevice: Device = { ...newDevice, status: 'UNKNOWN' };
+      const createdDevice: Device = { id: '550e8400-e29b-41d4-a716-446655440001', ...newDevice, status: 'UNKNOWN' };
 
       fetchMock.mockResolvedValue(createMockResponse(createdDevice));
 
@@ -259,6 +261,7 @@ describe('ApiService', () => {
       // Given
       const updates = { name: 'Updated Device' };
       const updatedDevice: Device = {
+        id: '550e8400-e29b-41d4-a716-446655440001',
         externalId: 'device-001',
         name: 'Updated Device',
         status: 'ONLINE',

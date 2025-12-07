@@ -529,4 +529,18 @@ class DeviceServiceTest {
         assertThat(response.description()).isEqualTo("Test description");
         assertThat(response.active()).isFalse();
     }
+
+    @Test
+    void toResponse_shouldIncludeDeviceId() {
+        // Given - testDevice already has an id set in setUp()
+        when(deviceRepository.findByExternalId("test-device-001"))
+                .thenReturn(Optional.of(testDevice));
+
+        // When
+        DeviceResponse response = deviceService.getDevice("test-device-001");
+
+        // Then
+        assertThat(response.id()).isNotNull();
+        assertThat(response.id()).isEqualTo(testDevice.getId());
+    }
 }
