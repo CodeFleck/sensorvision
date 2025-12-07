@@ -58,6 +58,13 @@ public interface VariableRepository extends JpaRepository<Variable, Long> {
     boolean existsByDeviceIdAndName(UUID deviceId, String name);
 
     /**
+     * Find a variable by ID with device eagerly fetched.
+     * Prevents LazyInitializationException when mapping to DTOs.
+     */
+    @Query("SELECT v FROM Variable v JOIN FETCH v.device WHERE v.id = :id")
+    Optional<Variable> findByIdWithDevice(@Param("id") Long id);
+
+    /**
      * Find all device-specific variables for an organization.
      */
     @Query("SELECT v FROM Variable v WHERE v.organization.id = :orgId AND v.device IS NOT NULL")
