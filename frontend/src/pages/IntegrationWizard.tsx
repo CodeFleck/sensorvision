@@ -352,126 +352,173 @@ export const IntegrationWizard: React.FC = () => {
     switch (platform) {
       case 'esp32':
       case 'arduino':
-        code = `// ESP32/Arduino MQTT Example for SensorVision
-// Install library: PubSubClient by Nick O'Leary
-// Arduino IDE: Sketch -> Include Library -> Manage Libraries -> Search "PubSubClient"
-//
-// IMPORTANT - NETWORK REQUIREMENTS:
-// - MQTT broker must be accessible on port 1883
-// - If connecting from outside your network, ensure port 1883 is open in firewall
-// - For production: ${apiUrl} -> MQTT at ${mqttServer}:1883
+        code = `/*
+ * ==============================================================================
+ * SensorVision - ESP32/Arduino Data Sender
+ * ==============================================================================
+ * This sketch sends sensor data to SensorVision via MQTT.
+ *
+ * HOW TO USE:
+ * 1. Install the PubSubClient library:
+ *    Arduino IDE: Sketch -> Include Library -> Manage Libraries
+ *    Search for "PubSubClient" by Nick O'Leary and click Install
+ *
+ * 2. Update the WiFi credentials below (YOUR_WIFI_SSID and YOUR_WIFI_PASSWORD)
+ *
+ * 3. Upload this sketch to your ESP32
+ *
+ * 4. Open Serial Monitor (115200 baud) to see the output
+ *
+ * 5. Check your data in the SensorVision dashboard!
+ *
+ * DYNAMIC VARIABLES: You can send ANY variable name - they are auto-created!
+ * Just add new variables in the sendData() function.
+ *
+ * NETWORK NOTE: MQTT uses port 1883. Make sure this port is accessible.
+ * ==============================================================================
+ */
 
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-// WiFi credentials
+// ==============================================================================
+// CONFIGURATION - UPDATE THESE VALUES
+// ==============================================================================
+
+// Your WiFi network credentials (CHANGE THESE!)
 const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
-// SensorVision MQTT configuration
-const char* mqttServer = "${mqttServer}";  // MQTT broker address
-const int mqttPort = 1883;                 // MQTT port (must be accessible)
+// SensorVision configuration (pre-filled with your device credentials)
+const char* mqttServer = "${mqttServer}";
+const int mqttPort = 1883;
 const char* deviceId = "${devId}";
-
-// SECURITY: Keep this token secret! Do not commit to public repositories.
-// If compromised, rotate the token in the SensorVision dashboard.
-const char* apiToken = "${token}";         // Device API token for authentication
-
+const char* apiToken = "${token}";
 const char* mqttTopic = "sensorvision/devices/${devId}/telemetry";
 
+// ==============================================================================
+// INTERNAL VARIABLES (don't change these)
+// ==============================================================================
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+// ==============================================================================
+// SETUP - Runs once when the device starts
+// ==============================================================================
 void setup() {
   Serial.begin(115200);
+  Serial.println("");
+  Serial.println("==================================================");
+  Serial.println("SensorVision ESP32 Data Sender");
+  Serial.println("==================================================");
 
   // Connect to WiFi
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(ssid);
   WiFi.begin(ssid, password);
-  Serial.print("Connecting to WiFi");
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\\nWiFi connected!");
-  Serial.print("IP address: ");
+
+  Serial.println("");
+  Serial.println("✓ WiFi connected!");
+  Serial.print("  IP address: ");
   Serial.println(WiFi.localIP());
 
-  // Setup MQTT
+  // Setup MQTT connection
   client.setServer(mqttServer, mqttPort);
   connectMQTT();
+
+  Serial.println("");
+  Serial.println("Sending data every 60 seconds...");
+  Serial.println("==================================================");
 }
 
+// ==============================================================================
+// MAIN LOOP - Runs repeatedly
+// ==============================================================================
 void loop() {
-  // Maintain MQTT connection
+  // Make sure MQTT is connected
   if (!client.connected()) {
     connectMQTT();
   }
   client.loop();
 
-  // Read sensor data (example - replace with actual sensor readings)
-  float temperature = 23.5 + (random(-20, 20) / 10.0);  // Simulated
-  float humidity = 65.2 + (random(-50, 50) / 10.0);     // Simulated
+  // --------------------------------------------------------
+  // READ YOUR SENSORS HERE
+  // --------------------------------------------------------
+  // Replace these example values with your actual sensor readings.
+  // Example: float temperature = dht.readTemperature();
 
-  // Send data to SensorVision via MQTT
+  float temperature = 23.5 + (random(-20, 20) / 10.0);  // Simulated value
+  float humidity = 65.2 + (random(-50, 50) / 10.0);     // Simulated value
+
+  // Send the data to SensorVision
   sendData(temperature, humidity);
 
-  delay(60000); // Send data every 60 seconds
+  // Wait before sending again (60 seconds = 60000 milliseconds)
+  delay(60000);
 }
+
+// ==============================================================================
+// HELPER FUNCTIONS
+// ==============================================================================
 
 void connectMQTT() {
   while (!client.connected()) {
     Serial.print("Connecting to MQTT broker...");
 
-    // Connect to MQTT broker
     if (client.connect(deviceId)) {
-      Serial.println("connected!");
+      Serial.println(" ✓ connected!");
     } else {
-      Serial.print("failed, rc=");
+      Serial.print(" ✗ failed (error ");
       Serial.print(client.state());
-      Serial.println(" retrying in 5 seconds");
+      Serial.println("). Retrying in 5 seconds...");
       delay(5000);
     }
   }
 }
 
 void sendData(float temperature, float humidity) {
-  // Build JSON payload with API token for authentication
-  // IMPORTANT: The apiToken field is REQUIRED for the server to accept your data
-  //
-  // DYNAMIC VARIABLES: Add ANY variable to the "variables" object!
-  // They will be auto-provisioned on first use - no code changes needed on server.
-  // Format: {"deviceId":"xxx","apiToken":"xxx","timestamp":"ISO8601","variables":{"temp":23.5}}
+  // Build the data payload
+  // DYNAMIC VARIABLES: Add ANY variable here - they are auto-created!
 
-  String timestamp = getISOTimestamp();  // See helper function below
+  String timestamp = getISOTimestamp();
 
-  // You can add ANY custom variables here - they auto-provision on first use!
+  // --------------------------------------------------------
+  // ADD YOUR SENSOR VARIABLES HERE
+  // --------------------------------------------------------
+  // Format: "variable_name": value
+  // You can add any variable name - they are auto-created!
+
   String payload = "{\\"deviceId\\":\\"" + String(deviceId) + "\\"," +
                    "\\"apiToken\\":\\"" + String(apiToken) + "\\"," +
                    "\\"timestamp\\":\\"" + timestamp + "\\"," +
                    "\\"variables\\":{" +
                    "\\"temperature\\":" + String(temperature, 1) + "," +
                    "\\"humidity\\":" + String(humidity, 1) +
-                   // Add custom variables below (uncomment):
+                   // Add more sensors below (remove the // to enable):
                    // ",\\"soil_moisture\\":" + String(soilMoisture, 1) +
-                   // ",\\"light_level\\":" + String(lightLevel, 1) +
+                   // ",\\"light_level\\":" + String(lightLevel, 0) +
+                   // ",\\"battery_voltage\\":" + String(batteryVoltage, 2) +
                    "}}";
 
-  Serial.print("Publishing: ");
-  Serial.println(payload);
+  Serial.print("Sending: temp=");
+  Serial.print(temperature, 1);
+  Serial.print(", humidity=");
+  Serial.print(humidity, 1);
 
-  // Publish to MQTT topic
   if (client.publish(mqttTopic, payload.c_str())) {
-    Serial.println("Data sent successfully via MQTT");
+    Serial.println(" ✓");
   } else {
-    Serial.println("Failed to send data - check MQTT connection");
+    Serial.println(" ✗ FAILED");
   }
 }
 
-// Helper: Generate ISO 8601 timestamp
-// WARNING: This generates a PLACEHOLDER timestamp based on uptime!
-// For production, use NTP time sync (WiFiUdp + NTPClient library)
+// Generate a timestamp (placeholder - use NTP for accurate time)
 String getISOTimestamp() {
-  // PLACEHOLDER - Replace with NTP for accurate timestamps!
   unsigned long seconds = millis() / 1000;
   char timestamp[25];
   sprintf(timestamp, "2024-01-01T%02lu:%02lu:%02luZ",
@@ -481,115 +528,173 @@ String getISOTimestamp() {
   return String(timestamp);
 }
 
-// PRODUCTION IMPROVEMENTS:
-// 1. Use NTP for accurate timestamps: WiFiUdp + NTPClient
-// 2. Read actual sensors (DHT22, BME280, etc.)
-// 3. Add deep sleep for battery-powered devices
-// 4. Implement reconnection logic with exponential backoff
-// 5. Store failed messages in SPIFFS and retry when reconnected`;
+/*
+ * ==============================================================================
+ * TIPS FOR PRODUCTION USE
+ * ==============================================================================
+ * 1. Use NTP for accurate timestamps (install NTPClient library)
+ * 2. Connect real sensors (DHT22, BME280, soil moisture, etc.)
+ * 3. Add deep sleep for battery-powered devices
+ * 4. Add error handling for sensor read failures
+ * ==============================================================================
+ */`;
 
         break;
 
       case 'python':
       case 'raspberry-pi':
-        code = `import requests
+        code = `"""
+==============================================================================
+SensorVision - Python Data Sender
+==============================================================================
+This script sends sensor data to SensorVision from your Python application,
+Raspberry Pi, or any device running Python.
+
+HOW TO USE:
+1. Install the requests library: pip install requests
+2. Run this script: python your_script_name.py
+3. Check your data in the SensorVision dashboard!
+
+DYNAMIC VARIABLES: You can send ANY variable name - they are auto-created!
+Just add new variables to send_data() and they appear automatically.
+==============================================================================
+"""
+
+import requests
 import time
 from urllib.parse import quote
 
-# SensorVision configuration
+# ==============================================================================
+# CONFIGURATION (pre-filled with your device credentials)
+# ==============================================================================
 API_URL = "${apiUrl}"
 API_KEY = "${token}"
 DEVICE_ID = "${devId}"
 
+# ==============================================================================
+# MAIN FUNCTION - Send data to SensorVision
+# ==============================================================================
 def send_data(**variables):
-    """Send sensor data to SensorVision
-
-    DYNAMIC VARIABLES: Send ANY variable names - they are auto-provisioned!
-    Example: send_data(temperature=23.5, humidity=65.2, my_custom_sensor=100.0)
-
-    IMPORTANT: All values must be numbers (int/float) or numeric strings.
-    Do NOT send booleans, lists, dicts, or other non-numeric types.
     """
-    # URL-encode device ID to handle special characters
+    Send sensor data to SensorVision.
+
+    Usage examples:
+        send_data(temperature=23.5)
+        send_data(temperature=23.5, humidity=65.2)
+        send_data(soil_moisture=45.0, battery_level=85)  # Custom variables work too!
+
+    IMPORTANT: All values must be numbers. Strings like "23.5" won't work.
+    """
     url = f"{API_URL}/api/v1/ingest/{quote(DEVICE_ID)}"
     headers = {
         "X-API-Key": API_KEY,
         "Content-Type": "application/json"
     }
-    # All values must be numeric - no booleans, objects, or arrays
-    # Variable names are auto-created on first use!
-    data = variables
 
     try:
-        response = requests.post(url, json=data, headers=headers, timeout=10)
+        response = requests.post(url, json=variables, headers=headers, timeout=10)
         if response.status_code in (200, 201):
-            print(f"Data sent successfully: {list(variables.keys())}")
+            print(f"✓ Data sent: {variables}")
             return True
         else:
-            print(f"Error: {response.status_code} - {response.text}")
+            print(f"✗ Error {response.status_code}: {response.text}")
             return False
     except Exception as e:
-        print(f"Failed to send data: {e}")
+        print(f"✗ Connection failed: {e}")
         return False
 
-def get_device_variables():
-    """Fetch all auto-provisioned variables for this device"""
-    url = f"{API_URL}/api/v1/devices/{quote(DEVICE_ID)}/variables"
-    headers = {"X-API-Key": API_KEY}
 
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code == 200:
-            return response.json()
-        return []
-    except Exception as e:
-        print(f"Failed to fetch variables: {e}")
-        return []
+# ==============================================================================
+# OPTION 1: SINGLE TEST (runs once)
+# ==============================================================================
+# Uncomment the lines below to send a single test reading:
+
+# print("Sending test data...")
+# send_data(temperature=23.5, humidity=65.2)
+# print("Done! Check your dashboard at ${apiUrl}")
+
+
+# ==============================================================================
+# OPTION 2: CONTINUOUS MONITORING (runs forever)
+# ==============================================================================
+# This is the default - sends data every 60 seconds.
+# Replace the example values with your actual sensor readings.
 
 if __name__ == "__main__":
-    print("Starting SensorVision data collection...")
-    print("TIP: Send ANY variable name - they are auto-provisioned!")
+    print("=" * 50)
+    print("SensorVision Data Sender")
+    print("=" * 50)
+    print(f"Device: {DEVICE_ID}")
+    print(f"Server: {API_URL}")
+    print("")
+    print("Sending data every 60 seconds. Press Ctrl+C to stop.")
+    print("")
 
     while True:
-        # Read sensor data (example)
-        # You can add ANY custom variables - they auto-provision on first use!
+        # --------------------------------------------------------
+        # ADD YOUR SENSOR READINGS HERE
+        # --------------------------------------------------------
+        # Replace these example values with your actual sensor data.
+        # You can add ANY variable name - they are auto-created!
+
         send_data(
-            temperature=23.5,           # Standard variable
-            humidity=65.2,              # Standard variable
-            # Add your own custom variables below:
-            # soil_moisture=45.0,       # Custom sensor
-            # light_level=850.0,        # Custom sensor
-            # battery_voltage=3.7,      # Device telemetry
+            temperature=23.5,       # Example: temperature reading
+            humidity=65.2,          # Example: humidity reading
+            # Add more sensors below (remove the # to enable):
+            # soil_moisture=45.0,   # Soil moisture sensor
+            # light_level=850.0,    # Light sensor (lux)
+            # battery_voltage=3.7,  # Battery monitoring
+            # pressure=1013.25,     # Barometric pressure
         )
 
-        # Wait 60 seconds
-        time.sleep(60)`;
+        # Wait before sending again
+        time.sleep(60)  # 60 seconds = 1 minute`;
         break;
 
       case 'nodejs':
-        code = `const axios = require('axios');
+        code = `/**
+ * ==============================================================================
+ * SensorVision - Node.js Data Sender
+ * ==============================================================================
+ * This script sends sensor data to SensorVision from your Node.js application.
+ *
+ * HOW TO USE:
+ * 1. Install axios: npm install axios
+ * 2. Run this script: node your_script_name.js
+ * 3. Check your data in the SensorVision dashboard!
+ *
+ * DYNAMIC VARIABLES: You can send ANY variable name - they are auto-created!
+ * Just add new properties to the sendData() object and they appear automatically.
+ * ==============================================================================
+ */
 
-// SensorVision configuration
+const axios = require('axios');
+
+// ==============================================================================
+// CONFIGURATION (pre-filled with your device credentials)
+// ==============================================================================
 const API_URL = '${apiUrl}';
 const API_KEY = '${token}';
 const DEVICE_ID = '${devId}';
 
+// ==============================================================================
+// MAIN FUNCTION - Send data to SensorVision
+// ==============================================================================
 /**
- * Send telemetry data to SensorVision
+ * Send sensor data to SensorVision.
  *
- * DYNAMIC VARIABLES: Send ANY variable names - they are auto-provisioned!
- * Example: sendData({ temperature: 23.5, myCustomSensor: 100.0 })
+ * Usage examples:
+ *   sendData({ temperature: 23.5 })
+ *   sendData({ temperature: 23.5, humidity: 65.2 })
+ *   sendData({ soilMoisture: 45.0, batteryLevel: 85 })  // Custom variables work too!
  *
- * IMPORTANT: All values must be numbers. Do NOT send booleans, objects, or arrays.
- *
- * @param {Object} variables - Object with variable names as keys and numeric values
+ * IMPORTANT: All values must be numbers. Strings like "23.5" won't work.
  */
 async function sendData(variables) {
   try {
-    // URL-encode device ID to handle special characters
     const response = await axios.post(
       \`\${API_URL}/api/v1/ingest/\${encodeURIComponent(DEVICE_ID)}\`,
-      variables,  // Variable names are auto-created on first use!
+      variables,
       {
         headers: {
           'X-API-Key': API_KEY,
@@ -599,47 +704,64 @@ async function sendData(variables) {
       }
     );
 
-    console.log('Data sent successfully:', Object.keys(variables));
+    console.log('✓ Data sent:', variables);
     return true;
   } catch (error) {
-    console.error('Failed to send data:', error.message);
+    console.error('✗ Error:', error.message);
     return false;
   }
 }
 
-/**
- * Fetch all auto-provisioned variables for this device
- */
-async function getDeviceVariables() {
-  try {
-    const response = await axios.get(
-      \`\${API_URL}/api/v1/devices/\${encodeURIComponent(DEVICE_ID)}/variables\`,
-      { headers: { 'X-API-Key': API_KEY } }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Failed to fetch variables:', error.message);
-    return [];
-  }
+
+// ==============================================================================
+// OPTION 1: SINGLE TEST (runs once)
+// ==============================================================================
+// Uncomment the lines below to send a single test reading:
+
+// console.log('Sending test data...');
+// sendData({ temperature: 23.5, humidity: 65.2 });
+// console.log('Done! Check your dashboard at ${apiUrl}');
+
+
+// ==============================================================================
+// OPTION 2: CONTINUOUS MONITORING (runs forever)
+// ==============================================================================
+// This is the default - sends data every 60 seconds.
+// Replace the example values with your actual sensor readings.
+
+async function main() {
+  console.log('==================================================');
+  console.log('SensorVision Data Sender');
+  console.log('==================================================');
+  console.log('Device:', DEVICE_ID);
+  console.log('Server:', API_URL);
+  console.log('');
+  console.log('Sending data every 60 seconds. Press Ctrl+C to stop.');
+  console.log('');
+
+  // Send data immediately on startup
+  await sendReadings();
+
+  // Then send every 60 seconds
+  setInterval(sendReadings, 60000);
 }
 
-// Main loop
-async function main() {
-  console.log('Starting SensorVision data collection...');
-  console.log('TIP: Send ANY variable name - they are auto-provisioned!');
+async function sendReadings() {
+  // --------------------------------------------------------
+  // ADD YOUR SENSOR READINGS HERE
+  // --------------------------------------------------------
+  // Replace these example values with your actual sensor data.
+  // You can add ANY variable name - they are auto-created!
 
-  setInterval(async () => {
-    // Read sensor data (example)
-    // You can add ANY custom variables - they auto-provision on first use!
-    await sendData({
-      temperature: 23.5,           // Standard variable
-      humidity: 65.2,              // Standard variable
-      // Add your own custom variables below:
-      // soilMoisture: 45.0,       // Custom sensor
-      // lightLevel: 850.0,        // Custom sensor
-      // batteryVoltage: 3.7,      // Device telemetry
-    });
-  }, 60000); // Send data every minute
+  await sendData({
+    temperature: 23.5,       // Example: temperature reading
+    humidity: 65.2,          // Example: humidity reading
+    // Add more sensors below (remove the // to enable):
+    // soilMoisture: 45.0,   // Soil moisture sensor
+    // lightLevel: 850.0,    // Light sensor (lux)
+    // batteryVoltage: 3.7,  // Battery monitoring
+    // pressure: 1013.25,    // Barometric pressure
+  });
 }
 
 main();`;
@@ -647,55 +769,77 @@ main();`;
 
       case 'curl':
         code = `#!/bin/bash
+# ==============================================================================
+# SensorVision - Telemetry Data Sender
+# ==============================================================================
+# This script sends sensor data to SensorVision using the REST API.
+#
+# DYNAMIC VARIABLES: You can send ANY variable name - they are auto-provisioned!
+# Just add new fields to the JSON payload and they'll be automatically created.
+#
+# IMPORTANT: All field values must be NUMBERS (no booleans, strings, or objects)
+# ==============================================================================
 
-# SensorVision configuration
+# ----- CONFIGURATION (pre-filled with your device credentials) -----
 API_URL="${apiUrl}"
 API_KEY="${token}"
 DEVICE_ID="${devId}"
 
 # ==============================================================================
-# DYNAMIC VARIABLES: Send ANY variable name - they are auto-provisioned!
-# Just add new fields to the JSON and they'll be automatically created.
+# OPTION 1: SINGLE TEST REQUEST
 # ==============================================================================
+# Use this to test your connection and send a single data point.
+# Run this script once to verify everything works.
 
-# Example sensor data (must be numeric values - no booleans or strings)
-TEMPERATURE=23.5
-HUMIDITY=65.2
-# CUSTOM_SENSOR=100.0  # Add any custom variable!
+echo "Sending test data to SensorVision..."
 
-# IMPORTANT: All field values must be numbers
-# Do NOT use true/false, strings, or other non-numeric values
-
-# Send data to SensorVision (variable names are auto-created on first use!)
 curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
   -H "X-API-Key: $API_KEY" \\
   -H "Content-Type: application/json" \\
-  -d "{
-    \\"temperature\\": $TEMPERATURE,
-    \\"humidity\\": $HUMIDITY
-  }"
+  -d '{
+    "temperature": 23.5,
+    "humidity": 65.2
+  }'
 
-# Fetch all auto-provisioned variables for this device:
-# curl -X GET "$API_URL/api/v1/devices/$DEVICE_ID/variables" \\
-#   -H "X-API-Key: $API_KEY"
+echo ""
+echo "Done! Check your dashboard at ${apiUrl}"
 
-# Get latest values for all variables:
-# curl -X GET "$API_URL/api/v1/devices/$DEVICE_ID/variables/latest" \\
-#   -H "X-API-Key: $API_KEY"
+# ==============================================================================
+# OPTION 2: CONTINUOUS MONITORING (uncomment the section below to use)
+# ==============================================================================
+# Replace OPTION 1 above with this loop for continuous data collection.
+# This generates random sensor values every 60 seconds.
+#
+# To use: Comment out OPTION 1 above, then uncomment the lines below.
 
-# Example: Continuous monitoring with custom variables (uncomment to use)
+# echo "Starting continuous monitoring (Ctrl+C to stop)..."
+#
 # while true; do
+#   # Generate random sensor values (replace with your actual sensor readings)
 #   TEMPERATURE=$(echo "scale=1; 20 + $RANDOM % 10" | bc)
 #   HUMIDITY=$(echo "scale=1; 50 + $RANDOM % 30" | bc)
 #   SOIL_MOISTURE=$(echo "scale=1; 30 + $RANDOM % 40" | bc)  # Custom variable!
 #
-#   curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
+#   echo "Sending: temp=$TEMPERATURE, humidity=$HUMIDITY, soil=$SOIL_MOISTURE"
+#
+#   curl -s -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
 #     -H "X-API-Key: $API_KEY" \\
 #     -H "Content-Type: application/json" \\
 #     -d "{\\"temperature\\": $TEMPERATURE, \\"humidity\\": $HUMIDITY, \\"soil_moisture\\": $SOIL_MOISTURE}"
 #
-#   sleep 60  # Wait 60 seconds
-# done`;
+#   echo ""
+#   sleep 60  # Wait 60 seconds before next reading
+# done
+
+# ==============================================================================
+# USEFUL API ENDPOINTS
+# ==============================================================================
+# List all auto-provisioned variables for this device:
+#   curl -H "X-API-Key: $API_KEY" "$API_URL/api/v1/devices/$DEVICE_ID/variables"
+#
+# Get latest values for all variables:
+#   curl -H "X-API-Key: $API_KEY" "$API_URL/api/v1/devices/$DEVICE_ID/variables/latest"
+`;
         break;
     }
 
