@@ -20,9 +20,14 @@ export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, deviceId, late
   useEffect(() => {
     if (latestData && widget.variableName) {
       const varName = widget.variableName as keyof TelemetryPoint;
-      const newValue = latestData[varName] as number ?? 0;
-      setValue(newValue);
-      setLoading(false);
+      const rawValue = latestData[varName];
+
+      // Only update if the variable is actually present in the data
+      // This prevents resetting to 0 when data for other variables arrives
+      if (rawValue !== undefined && rawValue !== null) {
+        setValue(rawValue as number);
+        setLoading(false);
+      }
     }
   }, [latestData, widget.variableName]);
 
@@ -37,8 +42,12 @@ export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, deviceId, late
       try {
         const data = await apiService.getLatestForDevice(deviceId);
         const varName = widget.variableName as keyof typeof data;
-        const newValue = data[varName] as number ?? 0;
-        setValue(newValue);
+        const rawValue = data[varName];
+
+        // Only update if the variable has a value
+        if (rawValue !== undefined && rawValue !== null) {
+          setValue(rawValue as number);
+        }
       } catch (error) {
         console.error('Error fetching gauge data:', error);
       } finally {

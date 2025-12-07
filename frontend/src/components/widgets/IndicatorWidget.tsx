@@ -13,6 +13,24 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, device
   const [status, setStatus] = useState<'off' | 'normal' | 'warning' | 'critical'>('off');
   const [loading, setLoading] = useState(true);
 
+  // Update value when real-time data arrives via WebSocket
+  useEffect(() => {
+    if (latestData && widget.variableName) {
+      const varName = widget.variableName as keyof TelemetryPoint;
+      const value = latestData[varName] as number;
+
+      // Only update if the variable is actually present in the data
+      // This prevents resetting when data for other variables arrives
+      if (value !== null && value !== undefined) {
+        setCurrentValue(value);
+        calculateStatus(value);
+        setLoading(false);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [latestData, widget.variableName]);
+
+  // Initial data fetch and fallback polling
   useEffect(() => {
     const fetchData = async () => {
       if (!deviceId || !widget.variableName) {
@@ -40,7 +58,7 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, device
     const interval = setInterval(fetchData, (widget.config.refreshInterval as number | undefined) || 5000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deviceId, widget.variableName, widget.config.refreshInterval, latestData]);
+  }, [deviceId, widget.variableName, widget.config.refreshInterval]);
 
   const calculateStatus = (value: number) => {
     // Status calculation based on thresholds in config
