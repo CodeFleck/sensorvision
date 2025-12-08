@@ -8,9 +8,12 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * One-time migration task to hash existing plaintext API keys.
@@ -24,6 +27,7 @@ import java.util.List;
  * - key_value: NULL (cleared for security)
  * <p>
  * This is idempotent - running multiple times is safe.
+ * Each key is migrated in its own transaction for partial progress support.
  */
 @Component
 @Slf4j
@@ -56,10 +60,9 @@ public class ApiKeyMigrationTask {
     /**
      * Migrate all legacy plaintext API keys to hashed storage.
      * <p>
-     * This method is transactional and will roll back if any error occurs.
-     * Each key is processed individually to allow partial progress.
+     * Each key is processed in its own transaction to allow partial progress.
+     * If the application crashes mid-migration, already-migrated keys are preserved.
      */
-    @Transactional
     public void migrateLegacyApiKeys() {
         long count = userApiKeyRepository.countLegacyPlaintextKeys();
 
@@ -72,60 +75,99 @@ public class ApiKeyMigrationTask {
 
         List<UserApiKey> legacyKeys = userApiKeyRepository.findLegacyPlaintextKeys();
         int migrated = 0;
+        int skipped = 0;
         int failed = 0;
+
+        // Track prefixes used in this batch to detect collisions within the migration
+        Set<String> prefixesInBatch = new HashSet<>();
 
         for (UserApiKey key : legacyKeys) {
             try {
-                migrateKey(key);
+                String plaintextValue = key.getKeyValue();
+
+                // Skip keys with null/blank values
+                if (plaintextValue == null || plaintextValue.isBlank()) {
+                    log.warn("API key {} has null/blank keyValue but no hash - skipping", key.getId());
+                    skipped++;
+                    continue;
+                }
+
+                // Generate prefix
+                String keyPrefix = plaintextValue.length() >= KEY_PREFIX_LENGTH
+                        ? plaintextValue.substring(0, KEY_PREFIX_LENGTH)
+                        : plaintextValue;
+
+                // Check for collision within current migration batch
+                if (prefixesInBatch.contains(keyPrefix)) {
+                    log.warn("API key {} has prefix collision within migration batch - skipping", key.getId());
+                    skipped++;
+                    continue;
+                }
+
+                // Check for collision with already-migrated keys in database
+                if (userApiKeyRepository.existsByKeyPrefix(keyPrefix)) {
+                    log.warn("API key {} has prefix collision with existing key - skipping", key.getId());
+                    skipped++;
+                    continue;
+                }
+
+                // Track this prefix to prevent collisions within the batch
+                prefixesInBatch.add(keyPrefix);
+
+                // Migrate the key in its own transaction
+                migrateKeyInTransaction(key, keyPrefix);
                 migrated++;
+
             } catch (Exception e) {
                 log.error("Failed to migrate API key {}: {}", key.getId(), e.getMessage());
                 failed++;
             }
         }
 
-        if (failed == 0) {
+        if (failed == 0 && skipped == 0) {
             log.info("Successfully migrated {} API keys to hashed storage", migrated);
         } else {
-            log.warn("API key migration completed: {} migrated, {} failed", migrated, failed);
+            log.warn("API key migration completed: {} migrated, {} skipped, {} failed", migrated, skipped, failed);
         }
     }
 
     /**
-     * Migrate a single API key from plaintext to hashed storage.
+     * Migrate a single API key in its own transaction.
+     * Using REQUIRES_NEW ensures each key migration is committed independently.
      *
-     * @param key The API key to migrate
+     * @param key       The API key to migrate
+     * @param keyPrefix The pre-computed prefix (collision-checked)
      */
-    private void migrateKey(UserApiKey key) {
-        String plaintextValue = key.getKeyValue();
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void migrateKeyInTransaction(UserApiKey key, String keyPrefix) {
+        // Re-fetch the key to ensure we have the latest state within this transaction
+        UserApiKey freshKey = userApiKeyRepository.findById(key.getId())
+                .orElseThrow(() -> new IllegalStateException("API key " + key.getId() + " not found"));
 
-        if (plaintextValue == null || plaintextValue.isBlank()) {
-            log.warn("API key {} has null/blank keyValue but no hash - skipping", key.getId());
+        // Double-check it still needs migration (could have been migrated by another instance)
+        if (freshKey.getKeyHash() != null) {
+            log.debug("API key {} already migrated by another process - skipping", key.getId());
             return;
         }
 
-        // Generate prefix and hash
-        String keyPrefix = plaintextValue.length() >= KEY_PREFIX_LENGTH
-                ? plaintextValue.substring(0, KEY_PREFIX_LENGTH)
-                : plaintextValue;
-
-        String keyHash = passwordEncoder.encode(plaintextValue);
-
-        // Check for prefix collision with existing migrated keys
-        if (key.getKeyPrefix() == null && userApiKeyRepository.existsByKeyPrefix(keyPrefix)) {
-            // This shouldn't happen with UUIDs, but handle it gracefully
-            log.warn("API key {} has prefix collision with existing key - using full prefix anyway", key.getId());
+        String plaintextValue = freshKey.getKeyValue();
+        if (plaintextValue == null || plaintextValue.isBlank()) {
+            log.warn("API key {} has null/blank keyValue - skipping", key.getId());
+            return;
         }
 
-        // Update the key
-        key.setKeyPrefix(keyPrefix);
-        key.setKeyHash(keyHash);
-        key.setKeyValue(null); // Clear the plaintext value for security
+        // Generate hash
+        String keyHash = passwordEncoder.encode(plaintextValue);
 
-        userApiKeyRepository.save(key);
+        // Update the key
+        freshKey.setKeyPrefix(keyPrefix);
+        freshKey.setKeyHash(keyHash);
+        freshKey.setKeyValue(null); // Clear the plaintext value for security
+
+        userApiKeyRepository.save(freshKey);
 
         log.debug("Migrated API key {} (user: {}) to hashed storage",
-                key.getId(),
-                key.getUser() != null ? key.getUser().getUsername() : "unknown");
+                freshKey.getId(),
+                freshKey.getUser() != null ? freshKey.getUser().getUsername() : "unknown");
     }
 }

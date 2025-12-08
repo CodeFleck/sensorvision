@@ -12,8 +12,8 @@ import org.sensorvision.model.UserApiKey;
 import org.sensorvision.repository.UserApiKeyRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,8 +87,9 @@ class ApiKeyMigrationTaskTest {
 
         when(userApiKeyRepository.countLegacyPlaintextKeys()).thenReturn(1L);
         when(userApiKeyRepository.findLegacyPlaintextKeys()).thenReturn(List.of(legacyKey));
-        when(passwordEncoder.encode(plaintextKey)).thenReturn(hashedValue);
         when(userApiKeyRepository.existsByKeyPrefix(expectedPrefix)).thenReturn(false);
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(legacyKey));
+        when(passwordEncoder.encode(plaintextKey)).thenReturn(hashedValue);
         when(userApiKeyRepository.save(any())).thenReturn(legacyKey);
 
         // When
@@ -123,8 +124,10 @@ class ApiKeyMigrationTaskTest {
 
         when(userApiKeyRepository.countLegacyPlaintextKeys()).thenReturn(2L);
         when(userApiKeyRepository.findLegacyPlaintextKeys()).thenReturn(List.of(key1, key2));
-        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashed");
         when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(key1));
+        when(userApiKeyRepository.findById(2L)).thenReturn(Optional.of(key2));
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashed");
         when(userApiKeyRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         // When
@@ -136,7 +139,7 @@ class ApiKeyMigrationTaskTest {
     }
 
     @Test
-    void migrateLegacyApiKeys_shouldHandlePrefixCollision() {
+    void migrateLegacyApiKeys_shouldSkipOnPrefixCollisionWithExistingKey() {
         // Given
         String plaintextKey = "550e8400-e29b-41d4-a716-446655440000";
 
@@ -151,15 +154,45 @@ class ApiKeyMigrationTaskTest {
 
         when(userApiKeyRepository.countLegacyPlaintextKeys()).thenReturn(1L);
         when(userApiKeyRepository.findLegacyPlaintextKeys()).thenReturn(List.of(legacyKey));
-        when(passwordEncoder.encode(plaintextKey)).thenReturn("$2a$10$hashed");
         when(userApiKeyRepository.existsByKeyPrefix("550e8400")).thenReturn(true); // Collision!
-        when(userApiKeyRepository.save(any())).thenReturn(legacyKey);
 
         // When
         migrationTask.migrateLegacyApiKeys();
 
-        // Then - should still migrate despite collision (logged as warning)
-        verify(userApiKeyRepository).save(any());
+        // Then - should skip, not save
+        verify(userApiKeyRepository, never()).save(any());
+        verify(passwordEncoder, never()).encode(anyString());
+    }
+
+    @Test
+    void migrateLegacyApiKeys_shouldSkipOnPrefixCollisionWithinBatch() {
+        // Given - two keys with the same prefix
+        UserApiKey key1 = UserApiKey.builder()
+                .id(1L)
+                .user(testUser)
+                .keyValue("550e8400-aaaa-bbbb-cccc-111111111111")
+                .name("Token 1")
+                .build();
+
+        UserApiKey key2 = UserApiKey.builder()
+                .id(2L)
+                .user(testUser)
+                .keyValue("550e8400-dddd-eeee-ffff-222222222222") // Same prefix!
+                .name("Token 2")
+                .build();
+
+        when(userApiKeyRepository.countLegacyPlaintextKeys()).thenReturn(2L);
+        when(userApiKeyRepository.findLegacyPlaintextKeys()).thenReturn(List.of(key1, key2));
+        when(userApiKeyRepository.existsByKeyPrefix("550e8400")).thenReturn(false);
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(key1));
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashed");
+        when(userApiKeyRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        // When
+        migrationTask.migrateLegacyApiKeys();
+
+        // Then - only first key should be migrated, second skipped due to batch collision
+        verify(userApiKeyRepository, times(1)).save(any());
     }
 
     @Test
@@ -204,11 +237,14 @@ class ApiKeyMigrationTaskTest {
 
         when(userApiKeyRepository.countLegacyPlaintextKeys()).thenReturn(2L);
         when(userApiKeyRepository.findLegacyPlaintextKeys()).thenReturn(List.of(key1, key2));
+        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(key1));
+        when(userApiKeyRepository.findById(2L)).thenReturn(Optional.of(key2));
+        // First key encoding fails
         when(passwordEncoder.encode("11111111-0000-0000-0000-000000000001"))
                 .thenThrow(new RuntimeException("Encoding failed"));
         when(passwordEncoder.encode("22222222-0000-0000-0000-000000000002"))
                 .thenReturn("$2a$10$hashed");
-        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
         when(userApiKeyRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         // When
@@ -234,8 +270,9 @@ class ApiKeyMigrationTaskTest {
 
         when(userApiKeyRepository.countLegacyPlaintextKeys()).thenReturn(1L);
         when(userApiKeyRepository.findLegacyPlaintextKeys()).thenReturn(List.of(legacyKey));
-        when(passwordEncoder.encode(shortKey)).thenReturn("$2a$10$hashed");
         when(userApiKeyRepository.existsByKeyPrefix(shortKey)).thenReturn(false);
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(legacyKey));
+        when(passwordEncoder.encode(shortKey)).thenReturn("$2a$10$hashed");
         when(userApiKeyRepository.save(any())).thenReturn(legacyKey);
 
         // When
@@ -247,5 +284,27 @@ class ApiKeyMigrationTaskTest {
 
         UserApiKey savedKey = keyCaptor.getValue();
         assertThat(savedKey.getKeyPrefix()).isEqualTo(shortKey); // Uses full value as prefix
+    }
+
+    @Test
+    void migrateKeyInTransaction_shouldSkipAlreadyMigratedKey() {
+        // Given - key was already migrated (by another instance)
+        UserApiKey alreadyMigratedKey = UserApiKey.builder()
+                .id(1L)
+                .user(testUser)
+                .keyValue("550e8400-e29b-41d4-a716-446655440000")
+                .keyPrefix("550e8400")
+                .keyHash("$2a$10$alreadyhashed") // Already has hash!
+                .name("Already Migrated")
+                .build();
+
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(alreadyMigratedKey));
+
+        // When
+        migrationTask.migrateKeyInTransaction(alreadyMigratedKey, "550e8400");
+
+        // Then - should not save or encode
+        verify(userApiKeyRepository, never()).save(any());
+        verify(passwordEncoder, never()).encode(anyString());
     }
 }
