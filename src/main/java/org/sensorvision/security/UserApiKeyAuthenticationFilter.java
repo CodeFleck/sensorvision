@@ -117,8 +117,6 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        Timer.Sample timerSample = Timer.start();
-
         try {
             // Skip if already authenticated (e.g., by device token filter)
             if (SecurityContextHolder.getContext().getAuthentication() != null &&
@@ -140,50 +138,56 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
             String apiKey = extractApiKeyFromRequest(request);
 
             if (apiKey != null && isValidApiKeyFormat(apiKey)) {
-                Optional<UserApiKey> userApiKeyOpt = userApiKeyService.validateApiKey(apiKey);
+                // Start timer only when we're actually doing authentication work
+                Timer.Sample timerSample = Timer.start();
 
-                if (userApiKeyOpt.isPresent()) {
-                    UserApiKey userApiKey = userApiKeyOpt.get();
-                    User user = userApiKey.getUser();
+                try {
+                    Optional<UserApiKey> userApiKeyOpt = userApiKeyService.validateApiKey(apiKey);
 
-                    // Create authentication with user's roles
-                    UserApiKeyAuthentication authentication = new UserApiKeyAuthentication(
-                            user,
-                            userApiKey,
-                            user.getRoles().stream()
-                                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()))
-                                    .collect(Collectors.toList())
-                    );
+                    if (userApiKeyOpt.isPresent()) {
+                        UserApiKey userApiKey = userApiKeyOpt.get();
+                        User user = userApiKey.getUser();
 
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        // Create authentication with user's roles
+                        UserApiKeyAuthentication authentication = new UserApiKeyAuthentication(
+                                user,
+                                userApiKey,
+                                user.getRoles().stream()
+                                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()))
+                                        .collect(Collectors.toList())
+                        );
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    // Update last used timestamp asynchronously to avoid blocking
-                    userApiKeyService.updateLastUsedAtAsync(userApiKey.getId());
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    // Clear any failed attempts on successful auth
-                    failedAttempts.remove(clientIp);
+                        // Update last used timestamp asynchronously to avoid blocking
+                        userApiKeyService.updateLastUsedAtAsync(userApiKey.getId());
 
-                    // Record successful authentication metric
-                    authSuccessCounter.increment();
+                        // Clear any failed attempts on successful auth
+                        failedAttempts.remove(clientIp);
+
+                        // Record successful authentication metric
+                        authSuccessCounter.increment();
+
+                        log.info("API key '{}' authenticated user '{}' (org: {}) from IP {} for {}",
+                                userApiKey.getName(),
+                                user.getUsername(),
+                                user.getOrganization() != null ? user.getOrganization().getName() : "N/A",
+                                clientIp,
+                                request.getRequestURI());
+                    } else {
+                        // Track failed attempt for rate limiting
+                        recordFailedAttempt(clientIp);
+
+                        // Record failed authentication metric
+                        authFailureCounter.increment();
+
+                        log.debug("Invalid user API key provided from IP {} (key value not logged for security)", clientIp);
+                    }
+                } finally {
+                    // Always stop the timer when authentication is attempted
                     timerSample.stop(authTimer);
-
-                    log.info("API key '{}' authenticated user '{}' (org: {}) from IP {} for {}",
-                            userApiKey.getName(),
-                            user.getUsername(),
-                            user.getOrganization() != null ? user.getOrganization().getName() : "N/A",
-                            clientIp,
-                            request.getRequestURI());
-                } else {
-                    // Track failed attempt for rate limiting
-                    recordFailedAttempt(clientIp);
-
-                    // Record failed authentication metric
-                    authFailureCounter.increment();
-                    timerSample.stop(authTimer);
-
-                    log.debug("Invalid user API key provided from IP {} (key value not logged for security)", clientIp);
                 }
             }
         } catch (Exception e) {
