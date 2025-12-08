@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Widget, TelemetryPoint } from '../../types';
+import { Widget, TelemetryPoint, DeviceVariable } from '../../types';
 import { apiService } from '../../services/api';
 import {
   Chart as ChartJS,
@@ -23,6 +23,28 @@ export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, deviceId
   const [data, setData] = useState<ChartData<'pie'> | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [variables, setVariables] = useState<DeviceVariable[]>([]);
+
+  // Fetch device variables
+  useEffect(() => {
+    const loadVariables = async () => {
+      if (!deviceId) return;
+
+      try {
+        // deviceId in props is externalId, we need to find the UUID
+        const devices = await apiService.getDevices();
+        const device = devices.find(d => d.externalId === deviceId);
+        if (device?.id) {
+          const vars = await apiService.getDeviceVariables(device.id);
+          setVariables(vars);
+        }
+      } catch (error) {
+        console.error('Failed to load variables for pie chart:', error);
+      }
+    };
+
+    loadVariables();
+  }, [deviceId]);
 
   // Trigger refresh when new real-time data arrives
   useEffect(() => {
@@ -42,24 +64,21 @@ export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, deviceId
         // For pie chart, we'll show the distribution of all variables for a device
         const telemetryData = await apiService.getLatestForDevice(deviceId);
 
-        // Define variables to include in the pie chart
-        const variables = [
-          { key: 'kwConsumption', label: 'Power (kW)' },
-          { key: 'voltage', label: 'Voltage (V)' },
-          { key: 'current', label: 'Current (A)' },
-          { key: 'powerFactor', label: 'Power Factor' },
-          { key: 'frequency', label: 'Frequency (Hz)' },
-        ];
+        // Use dynamic variables if available, otherwise wait for them to load
+        if (variables.length === 0) {
+          setLoading(false);
+          return;
+        }
 
         // Filter to only configured variables if specified
         const configuredVariables = widget.config.variables as string[] | undefined;
         const displayVariables = configuredVariables
-          ? variables.filter(v => configuredVariables.includes(v.key))
+          ? variables.filter(v => configuredVariables.includes(v.name))
           : variables;
 
-        const labels = displayVariables.map(v => v.label);
+        const labels = displayVariables.map(v => v.displayName || v.name);
         const values = displayVariables.map(v => {
-          const val = telemetryData[v.key as keyof TelemetryPoint];
+          const val = telemetryData[v.name as keyof TelemetryPoint];
           return typeof val === 'number' ? Math.abs(val) : 0;
         });
 
@@ -96,7 +115,7 @@ export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, deviceId
     fetchData();
     const interval = setInterval(fetchData, widget.config.refreshInterval || 30000);
     return () => clearInterval(interval);
-  }, [deviceId, widget.config.variables, widget.config.colors, widget.config.refreshInterval, refreshTrigger]);
+  }, [deviceId, widget.config.variables, widget.config.colors, widget.config.refreshInterval, refreshTrigger, variables]);
 
   if (loading) {
     return (

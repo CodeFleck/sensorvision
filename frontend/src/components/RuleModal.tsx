@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2, MessageSquare } from 'lucide-react';
-import { Rule, Device, PhoneNumber } from '../types';
+import { Rule, Device, PhoneNumber, DeviceVariable } from '../types';
 import { apiService } from '../services/api';
 
 interface RuleModalProps {
@@ -14,7 +14,7 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
     name: rule?.name || '',
     description: rule?.description || '',
     deviceId: rule?.deviceId || (devices[0]?.externalId || ''),
-    variable: rule?.variable || 'kwConsumption',
+    variable: rule?.variable || '',
     operator: rule?.operator || 'GT',
     threshold: rule?.threshold?.toString() || '',
     enabled: rule?.enabled ?? true,
@@ -25,10 +25,49 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
   const [error, setError] = useState<string | null>(null);
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
   const [newRecipient, setNewRecipient] = useState('');
+  const [variables, setVariables] = useState<DeviceVariable[]>([]);
+  const [loadingVariables, setLoadingVariables] = useState(false);
 
   useEffect(() => {
     fetchPhoneNumbers();
   }, []);
+
+  // Fetch variables when device is selected
+  useEffect(() => {
+    const loadVariables = async () => {
+      if (!formData.deviceId) {
+        setVariables([]);
+        return;
+      }
+
+      setLoadingVariables(true);
+      try {
+        // Find the device to get its UUID (needed for the variables API)
+        const device = devices.find(d => d.externalId === formData.deviceId);
+        if (device?.id) {
+          const vars = await apiService.getDeviceVariables(device.id);
+          setVariables(vars);
+          // Auto-select the first variable if none selected or if current is not in list
+          if (vars.length > 0) {
+            const currentVarExists = vars.some(v => v.name === formData.variable);
+            if (!currentVarExists) {
+              setFormData(prev => ({ ...prev, variable: vars[0].name }));
+            }
+          }
+        } else {
+          setVariables([]);
+        }
+      } catch (error) {
+        console.error('Failed to load variables:', error);
+        setVariables([]);
+      } finally {
+        setLoadingVariables(false);
+      }
+    };
+
+    loadVariables();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.deviceId, devices]);
 
   const fetchPhoneNumbers = async () => {
     try {
@@ -89,14 +128,6 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }));
   };
-
-  const variableOptions = [
-    { value: 'kwConsumption', label: 'Power Consumption (kW)' },
-    { value: 'voltage', label: 'Voltage (V)' },
-    { value: 'current', label: 'Current (A)' },
-    { value: 'powerFactor', label: 'Power Factor' },
-    { value: 'frequency', label: 'Frequency (Hz)' },
-  ];
 
   const operatorOptions = [
     { value: 'GT', label: 'Greater than (>)' },
@@ -190,13 +221,21 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
                 required
                 value={formData.variable}
                 onChange={handleChange}
+                disabled={loadingVariables}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                {variableOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                {loadingVariables ? (
+                  <option value="">Loading...</option>
+                ) : variables.length === 0 ? (
+                  <option value="">No variables</option>
+                ) : (
+                  variables.map((variable) => (
+                    <option key={variable.id} value={variable.name}>
+                      {variable.displayName || variable.name}
+                      {variable.unit ? ` (${variable.unit})` : ''}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
