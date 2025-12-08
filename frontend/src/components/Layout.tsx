@@ -34,6 +34,8 @@ import {
   Code,
   Webhook,
   FlaskConical,
+  HelpCircle,
+  Play,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -41,7 +43,8 @@ import { SubmitIssueModal } from './SubmitIssueModal';
 import { AvatarUploadModal } from './AvatarUploadModal';
 import { UserAvatar } from './UserAvatar';
 import { Footer } from './Footer';
-import { useState } from 'react';
+import { WelcomeTour, hasTourBeenCompleted, resetTour } from './WelcomeTour';
+import { useState, useEffect } from 'react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -104,6 +107,16 @@ export const Layout = ({ children }: LayoutProps) => {
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [showHelpMenu, setShowHelpMenu] = useState(false);
+  const [startTour, setStartTour] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+
+  // Check if user is new (hasn't completed the tour)
+  useEffect(() => {
+    if (user && !isAdmin) {
+      setIsNewUser(!hasTourBeenCompleted());
+    }
+  }, [user, isAdmin]);
 
   // Toggle expansion state for parent items
   const toggleExpanded = (itemName: string) => {
@@ -328,6 +341,56 @@ export const Layout = ({ children }: LayoutProps) => {
                   <BookOpen className="h-5 w-5" />
                   <span>Documentation</span>
                 </Link>
+
+                {/* Help Menu with Tour Option */}
+                {!isAdmin && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowHelpMenu(!showHelpMenu)}
+                      className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                    >
+                      <HelpCircle className="h-5 w-5" />
+                      <span>Help</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+
+                    {showHelpMenu && (
+                      <>
+                        {/* Backdrop to close menu */}
+                        <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setShowHelpMenu(false)}
+                        />
+                        {/* Dropdown menu */}
+                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
+                          <div className="py-1">
+                            <button
+                              onClick={() => {
+                                setShowHelpMenu(false);
+                                resetTour();
+                                setStartTour(true);
+                              }}
+                              className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                            >
+                              <Play className="h-4 w-4 mr-3" />
+                              Take the Tour
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowHelpMenu(false);
+                                setIsIssueModalOpen(true);
+                              }}
+                              className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                            >
+                              <TicketIcon className="h-4 w-4 mr-3" />
+                              Report an Issue
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </header>
@@ -359,6 +422,18 @@ export const Layout = ({ children }: LayoutProps) => {
           user={user}
           onSuccess={() => {
             refreshUser();
+          }}
+        />
+      )}
+
+      {/* Welcome Tour for New Users */}
+      {!isAdmin && (
+        <WelcomeTour
+          isNewUser={isNewUser}
+          forceStart={startTour}
+          onComplete={() => {
+            setStartTour(false);
+            setIsNewUser(false);
           }}
         />
       )}
