@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Playlist, Dashboard, TelemetryPoint } from '../types';
 import { apiService } from '../services/api';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { config } from '../config';
 import GridLayout from 'react-grid-layout';
 import { WidgetRenderer } from '../components/widgets/WidgetRenderer';
 
@@ -21,7 +22,7 @@ export const PlaylistPlayer: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState(0);
 
   // WebSocket connection for real-time updates
-  const { lastMessage, connectionStatus } = useWebSocket('ws://localhost:8080/ws/telemetry');
+  const { lastMessage, connectionStatus } = useWebSocket(config.webSocketUrl);
 
   // Process incoming WebSocket messages
   useEffect(() => {
