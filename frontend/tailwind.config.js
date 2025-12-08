@@ -7,6 +7,11 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Satoshi', 'system-ui', 'sans-serif'],
+        display: ['Satoshi', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+      },
       colors: {
         // Map Tailwind colors to CSS variables
         canvas: 'var(--bg-canvas)',

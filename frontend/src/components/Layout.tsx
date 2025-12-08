@@ -18,7 +18,6 @@ import {
   LogOut,
   Shield,
   ChevronDown,
-  ChevronRight,
   Zap,
   BookOpen,
   Plug,
@@ -181,21 +180,25 @@ export const Layout = ({ children }: LayoutProps) => {
   const filteredNavigation = filterNavigation(navigation);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#030712]">
       <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-white shadow-sm flex flex-col h-screen">
-          <div className="flex-shrink-0">
-            <div className="p-6">
-              <div className="flex items-center space-x-2">
-                <Activity className="h-8 w-8 text-blue-600" />
-                <h1 className="text-xl font-bold text-gray-900">SensorVision</h1>
+        {/* Premium Glassmorphism Sidebar */}
+        <div className="w-72 glass-nav flex flex-col h-screen sticky top-0">
+          {/* Logo Section */}
+          <div className="flex-shrink-0 p-6 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500/30 blur-xl rounded-full" />
+                <Activity className="relative h-8 w-8 text-blue-400" />
               </div>
+              <span className="text-xl font-bold text-white tracking-tight font-display">
+                SensorVision
+              </span>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="mt-6 flex-1 overflow-y-auto">
+          <nav className="flex-1 overflow-y-auto scrollbar-thin py-4">
             {filteredNavigation.map((item) => {
               const isActive = item.href ? location.pathname === item.href : false;
               const hasActiveChild = isChildActive(item);
@@ -204,16 +207,17 @@ export const Layout = ({ children }: LayoutProps) => {
               const hasChildren = item.children && item.children.length > 0;
 
               return (
-                <div key={item.name}>
+                <div key={item.name} className="px-3">
                   {/* Parent Item */}
                   {item.href ? (
                     <Link
                       to={item.href}
+                      aria-current={isActive ? 'page' : undefined}
                       className={clsx(
-                        'flex items-center px-6 py-3 text-sm font-medium transition-colors',
+                        'group flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-1',
                         isActive || hasActiveChild
-                          ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          ? 'bg-gradient-to-r from-blue-500/20 to-emerald-500/10 text-white border border-blue-500/30'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
                       )}
                       onClick={(e) => {
                         if (hasChildren) {
@@ -222,41 +226,60 @@ export const Layout = ({ children }: LayoutProps) => {
                         }
                       }}
                     >
-                      <Icon className="mr-3 h-5 w-5" />
+                      <div className={clsx(
+                        'p-1.5 rounded-lg mr-3 transition-all duration-200',
+                        isActive || hasActiveChild
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'text-gray-500 group-hover:text-gray-300'
+                      )}>
+                        <Icon className="h-4 w-4" />
+                      </div>
                       <span className="flex-1">{item.name}</span>
                       {hasChildren && (
-                        isExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )
+                        <div className={clsx(
+                          'transition-transform duration-200',
+                          isExpanded && 'rotate-180'
+                        )}>
+                          <ChevronDown className="h-4 w-4 text-gray-500" />
+                        </div>
+                      )}
+                      {(isActive || hasActiveChild) && (
+                        <div className="absolute left-0 w-1 h-6 bg-gradient-to-b from-blue-400 to-emerald-400 rounded-r-full" />
                       )}
                     </Link>
                   ) : (
                     <button
                       onClick={() => toggleExpanded(item.name)}
                       className={clsx(
-                        'w-full flex items-center px-6 py-3 text-sm font-medium transition-colors',
+                        'group w-full flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-1',
                         hasActiveChild
-                          ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          ? 'bg-gradient-to-r from-blue-500/20 to-emerald-500/10 text-white border border-blue-500/30'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
                       )}
                     >
-                      <Icon className="mr-3 h-5 w-5" />
+                      <div className={clsx(
+                        'p-1.5 rounded-lg mr-3 transition-all duration-200',
+                        hasActiveChild
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'text-gray-500 group-hover:text-gray-300'
+                      )}>
+                        <Icon className="h-4 w-4" />
+                      </div>
                       <span className="flex-1 text-left">{item.name}</span>
                       {hasChildren && (
-                        isExpanded ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )
+                        <div className={clsx(
+                          'transition-transform duration-200',
+                          isExpanded && 'rotate-180'
+                        )}>
+                          <ChevronDown className="h-4 w-4 text-gray-500" />
+                        </div>
                       )}
                     </button>
                   )}
 
                   {/* Child Items */}
                   {hasChildren && isExpanded && item.children && (
-                    <div className="bg-gray-50">
+                    <div className="ml-4 pl-4 border-l border-white/5 mb-2">
                       {item.children.map((child) => {
                         const isChildItemActive = child.href === location.pathname;
                         const ChildIcon = child.icon;
@@ -265,13 +288,16 @@ export const Layout = ({ children }: LayoutProps) => {
                             key={child.name}
                             to={child.href}
                             className={clsx(
-                              'flex items-center pl-12 pr-6 py-2.5 text-sm font-medium transition-colors',
+                              'group flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 mb-1',
                               isChildItemActive
-                                ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-600'
-                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ? 'bg-blue-500/15 text-blue-400'
+                                : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
                             )}
                           >
-                            <ChildIcon className="mr-3 h-4 w-4" />
+                            <ChildIcon className={clsx(
+                              'mr-2.5 h-4 w-4 transition-colors',
+                              isChildItemActive ? 'text-blue-400' : 'text-gray-600 group-hover:text-gray-400'
+                            )} />
                             {child.name}
                           </Link>
                         ) : null;
@@ -283,63 +309,65 @@ export const Layout = ({ children }: LayoutProps) => {
             })}
           </nav>
 
-          {/* User info and actions */}
-          <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50">
-            <div className="p-4">
-              <div className="flex items-start mb-3 group cursor-pointer hover:bg-white rounded-lg p-2 -m-2 transition-colors"
-                   onClick={() => setIsAvatarModalOpen(true)}>
-                <div className="flex-shrink-0">
-                  {user && <UserAvatar user={user} size="md" editable={true} />}
-                </div>
-                <div className="ml-3 flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {user?.username || 'User'}
-                    </p>
-                    {isAdmin && (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 border border-amber-200 flex-shrink-0">
-                        <Shield className="h-3 w-3 text-amber-600" />
-                        <span className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide">
-                          Admin
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate" title={user?.organizationName}>
-                    {user?.organizationName || 'No Organization'}
-                  </p>
-                </div>
+          {/* User Section */}
+          <div className="flex-shrink-0 border-t border-white/5 p-4">
+            {/* User Profile */}
+            <div
+              className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-all duration-200 mb-3"
+              onClick={() => setIsAvatarModalOpen(true)}
+            >
+              <div className="relative">
+                {user && <UserAvatar user={user} size="md" editable={true} />}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0d1117]" />
               </div>
-
-              {/* Sign Out Button */}
-              <button
-                onClick={logout}
-                className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-white truncate">
+                    {user?.username || 'User'}
+                  </p>
+                  {isAdmin && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30">
+                      <Shield className="h-2.5 w-2.5 text-amber-400" />
+                      <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">
+                        Admin
+                      </span>
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 truncate" title={user?.organizationName}>
+                  {user?.organizationName || 'No Organization'}
+                </p>
+              </div>
             </div>
+
+            {/* Sign Out Button */}
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 rounded-xl transition-all duration-200"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </button>
           </div>
         </div>
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex-1 flex flex-col min-h-screen">
+          {/* Premium Header */}
+          <header className="sticky top-0 z-10 border-b border-white/5 bg-[#030712]/80 backdrop-blur-xl">
             <div className="flex items-center justify-between px-8 py-4">
               <div className="flex-1">
-                {/* Future: Add breadcrumbs or page title here */}
+                {/* Breadcrumb or page title area */}
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-2">
                 <Link
                   to="/how-it-works"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
                 >
-                  <BookOpen className="h-5 w-5" />
-                  <span>Documentation</span>
+                  <BookOpen className="h-4 w-4" />
+                  <span>Docs</span>
                 </Link>
 
                 {/* Help Menu with Tour Option */}
@@ -347,11 +375,17 @@ export const Layout = ({ children }: LayoutProps) => {
                   <div className="relative">
                     <button
                       onClick={() => setShowHelpMenu(!showHelpMenu)}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                      aria-expanded={showHelpMenu}
+                      aria-haspopup="menu"
+                      aria-controls="help-menu"
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
                     >
-                      <HelpCircle className="h-5 w-5" />
+                      <HelpCircle className="h-4 w-4" />
                       <span>Help</span>
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className={clsx(
+                        "h-3 w-3 transition-transform duration-200",
+                        showHelpMenu && "rotate-180"
+                      )} />
                     </button>
 
                     {showHelpMenu && (
@@ -362,27 +396,33 @@ export const Layout = ({ children }: LayoutProps) => {
                           onClick={() => setShowHelpMenu(false)}
                         />
                         {/* Dropdown menu */}
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
+                        <div
+                          id="help-menu"
+                          role="menu"
+                          className="absolute right-0 mt-2 w-56 glass-card rounded-xl overflow-hidden z-20 animate-fadeIn"
+                        >
                           <div className="py-1">
                             <button
+                              role="menuitem"
                               onClick={() => {
                                 setShowHelpMenu(false);
                                 resetTour();
                                 setStartTour(true);
                               }}
-                              className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                              className="w-full flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                             >
-                              <Play className="h-4 w-4 mr-3" />
+                              <Play className="h-4 w-4 mr-3 text-blue-400" />
                               Take the Tour
                             </button>
                             <button
+                              role="menuitem"
                               onClick={() => {
                                 setShowHelpMenu(false);
                                 setIsIssueModalOpen(true);
                               }}
-                              className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                              className="w-full flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors"
                             >
-                              <TicketIcon className="h-4 w-4 mr-3" />
+                              <TicketIcon className="h-4 w-4 mr-3 text-amber-400" />
                               Report an Issue
                             </button>
                           </div>
@@ -396,7 +436,7 @@ export const Layout = ({ children }: LayoutProps) => {
           </header>
 
           {/* Main content area */}
-          <main className="flex-1 p-8 overflow-y-auto">
+          <main className="flex-1 p-8">
             {children}
           </main>
 
