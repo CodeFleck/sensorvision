@@ -14,6 +14,8 @@ import org.sensorvision.model.Organization;
 import org.sensorvision.model.TelemetryRecord;
 import org.sensorvision.repository.DeviceRepository;
 import org.sensorvision.repository.TelemetryRecordRepository;
+import org.sensorvision.repository.VariableRepository;
+import org.sensorvision.repository.VariableValueRepository;
 import org.sensorvision.security.SecurityUtils;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -42,6 +44,12 @@ class AnalyticsServiceTest {
 
     @Mock
     private DeviceRepository deviceRepository;
+
+    @Mock
+    private VariableRepository variableRepository;
+
+    @Mock
+    private VariableValueRepository variableValueRepository;
 
     @Mock
     private SecurityUtils securityUtils;
@@ -166,12 +174,17 @@ class AnalyticsServiceTest {
     }
 
     @Test
-    void aggregateData_shouldThrowException_whenVariableIsInvalid() {
+    void aggregateData_shouldThrowException_whenDynamicVariableNotFound() {
+        // Given - for non-legacy variables, we need device lookup to succeed first
+        when(securityUtils.getCurrentUserOrganization()).thenReturn(userOrganization);
+        when(deviceRepository.findByExternalId("device-001")).thenReturn(Optional.of(userDevice));
+        when(variableRepository.findByDeviceIdAndName(any(), eq("invalidVariable"))).thenReturn(Optional.empty());
+
         // When/Then
         assertThatThrownBy(() -> analyticsService.aggregateData(
                 "device-001", "invalidVariable", "AVG", from, to, null))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("Invalid variable: invalidVariable");
+                .hasMessageContaining("Variable 'invalidVariable' not found for device");
     }
 
     // ===== SECURITY TESTS =====
