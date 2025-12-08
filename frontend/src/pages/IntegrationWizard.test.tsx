@@ -50,6 +50,7 @@ describe('IntegrationWizard', () => {
     vi.mocked(apiService.apiService.getDeviceGroups).mockResolvedValue([]);
     vi.mocked(apiService.apiService.getDeviceTags).mockResolvedValue([]);
     vi.mocked(apiService.apiService.checkMqttConnectivity).mockResolvedValue({
+      status: 'CONNECTED',
       reachable: true,
       message: 'MQTT broker is online',
       host: 'localhost',
