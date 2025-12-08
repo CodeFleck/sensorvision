@@ -79,4 +79,17 @@ public interface UserApiKeyRepository extends JpaRepository<UserApiKey, Long> {
      * Check if a key prefix already exists.
      */
     boolean existsByKeyPrefix(String keyPrefix);
+
+    /**
+     * Find all API keys that need to be migrated from plaintext to hashed storage.
+     * These are keys where keyHash is NULL but keyValue is not NULL.
+     */
+    @Query("SELECT k FROM UserApiKey k WHERE k.keyHash IS NULL AND k.keyValue IS NOT NULL")
+    List<UserApiKey> findLegacyPlaintextKeys();
+
+    /**
+     * Count the number of legacy plaintext keys that need migration.
+     */
+    @Query("SELECT COUNT(k) FROM UserApiKey k WHERE k.keyHash IS NULL AND k.keyValue IS NOT NULL")
+    long countLegacyPlaintextKeys();
 }
