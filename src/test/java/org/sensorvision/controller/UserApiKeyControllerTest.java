@@ -7,6 +7,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sensorvision.dto.CreateUserApiKeyRequest;
+import org.sensorvision.dto.RotateApiKeyResponse;
+import org.sensorvision.dto.RotationResult;
 import org.sensorvision.dto.UserApiKeyDto;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.User;
@@ -17,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -204,15 +207,43 @@ class UserApiKeyControllerTest {
 
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(userApiKeyService.getApiKeysForUser(1L)).thenReturn(List.of(testApiKey));
-        when(userApiKeyService.rotateApiKey(1L)).thenReturn(newKey);
+        when(userApiKeyService.rotateApiKey(eq(1L), isNull())).thenReturn(RotationResult.immediate(newKey));
 
-        // When
-        ResponseEntity<UserApiKeyDto> response = controller.rotateApiKey(1L);
+        // When - default grace period is 0 (immediate)
+        ResponseEntity<RotateApiKeyResponse> response = controller.rotateApiKey(1L, 0);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody().getId()).isEqualTo(2L);
-        assertThat(response.getBody().getKeyValue()).isEqualTo("660e8400-e29b-41d4-a716-446655440001");
+        assertThat(response.getBody().getNewKey().getId()).isEqualTo(2L);
+        assertThat(response.getBody().getNewKey().getKeyValue()).isEqualTo("660e8400-e29b-41d4-a716-446655440001");
+        assertThat(response.getBody().getOldKeyValidUntil()).isNull();
+    }
+
+    @Test
+    void rotateApiKey_withGracePeriod_shouldReturnOldKeyValidUntil() {
+        // Given
+        UserApiKey newKey = UserApiKey.builder()
+                .id(2L)
+                .user(testUser)
+                .keyValue("660e8400-e29b-41d4-a716-446655440001")
+                .name("Default Token")
+                .createdAt(LocalDateTime.now())
+                .build();
+        LocalDateTime scheduledRevocation = LocalDateTime.now().plusMinutes(30);
+
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(userApiKeyService.getApiKeysForUser(1L)).thenReturn(List.of(testApiKey));
+        when(userApiKeyService.rotateApiKey(eq(1L), any(Duration.class)))
+                .thenReturn(RotationResult.withGracePeriod(newKey, scheduledRevocation));
+
+        // When - 30 minute grace period
+        ResponseEntity<RotateApiKeyResponse> response = controller.rotateApiKey(1L, 30);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getNewKey().getId()).isEqualTo(2L);
+        assertThat(response.getBody().getOldKeyValidUntil()).isEqualTo(scheduledRevocation);
+        assertThat(response.getBody().getGracePeriodMinutes()).isEqualTo(30);
     }
 
     @Test
@@ -222,7 +253,7 @@ class UserApiKeyControllerTest {
         when(userApiKeyService.getApiKeysForUser(1L)).thenReturn(Collections.emptyList());
 
         // When/Then
-        assertThatThrownBy(() -> controller.rotateApiKey(999L))
+        assertThatThrownBy(() -> controller.rotateApiKey(999L, 0))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("Access denied to API key");
     }
@@ -266,10 +297,10 @@ class UserApiKeyControllerTest {
         // Given
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(userApiKeyService.getApiKeysForUser(1L)).thenReturn(List.of(testApiKey));
-        when(userApiKeyService.rotateApiKey(1L)).thenReturn(testApiKey);
+        when(userApiKeyService.rotateApiKey(eq(1L), isNull())).thenReturn(RotationResult.immediate(testApiKey));
 
         // When/Then - should not throw
-        ResponseEntity<UserApiKeyDto> response = controller.rotateApiKey(1L);
+        ResponseEntity<RotateApiKeyResponse> response = controller.rotateApiKey(1L, 0);
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
     }
 
@@ -286,7 +317,38 @@ class UserApiKeyControllerTest {
         when(userApiKeyService.getApiKeysForUser(2L)).thenReturn(Collections.emptyList());
 
         // When/Then
-        assertThatThrownBy(() -> controller.rotateApiKey(1L))
+        assertThatThrownBy(() -> controller.rotateApiKey(1L, 0))
                 .isInstanceOf(AccessDeniedException.class);
+    }
+
+    // ==================== DELETE /api/v1/api-keys/{keyId}/scheduled-revocation Tests ====================
+
+    @Test
+    void cancelScheduledRevocation_forOwnKey_shouldCancelSuccessfully() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(userApiKeyService.getApiKeysForUser(1L)).thenReturn(List.of(testApiKey));
+        doNothing().when(userApiKeyService).cancelScheduledRevocation(1L);
+
+        // When
+        ResponseEntity<UserApiKeyDto> response = controller.cancelScheduledRevocation(1L);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().getId()).isEqualTo(1L);
+        assertThat(response.getBody().isSuccess()).isTrue();
+        assertThat(response.getBody().getMessage()).isEqualTo("Scheduled revocation cancelled");
+    }
+
+    @Test
+    void cancelScheduledRevocation_forOtherUsersKey_shouldThrow403() {
+        // Given
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(userApiKeyService.getApiKeysForUser(1L)).thenReturn(Collections.emptyList());
+
+        // When/Then
+        assertThatThrownBy(() -> controller.cancelScheduledRevocation(999L))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Access denied to API key");
     }
 }

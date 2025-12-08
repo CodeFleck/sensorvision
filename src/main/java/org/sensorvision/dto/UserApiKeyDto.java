@@ -34,6 +34,7 @@ public class UserApiKeyDto {
     private LocalDateTime createdAt;
     private LocalDateTime lastUsedAt;
     private LocalDateTime revokedAt;
+    private LocalDateTime scheduledRevocationAt;
     private boolean active;
 
     private String message;
