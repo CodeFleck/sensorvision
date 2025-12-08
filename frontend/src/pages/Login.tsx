@@ -138,7 +138,11 @@ export const Login: React.FC = () => {
                 </div>
 
                 {error && (
-                  <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 backdrop-blur-sm">
+                  <div
+                    role="alert"
+                    aria-live="assertive"
+                    className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 backdrop-blur-sm"
+                  >
                     <p className="text-sm text-red-400">{error}</p>
                   </div>
                 )}
@@ -161,11 +165,13 @@ export const Login: React.FC = () => {
                       type="text"
                       autoComplete="username"
                       required
+                      aria-label="Username"
+                      aria-required="true"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       onFocus={() => setFocusedField('username')}
                       onBlur={() => setFocusedField(null)}
-                      className="w-full px-4 py-3.5 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder-transparent focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                      className="w-full px-4 py-3.5 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder-transparent focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#030712] transition-all duration-200"
                     />
                   </div>
 
@@ -186,11 +192,13 @@ export const Login: React.FC = () => {
                       type="password"
                       autoComplete="current-password"
                       required
+                      aria-label="Password"
+                      aria-required="true"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onFocus={() => setFocusedField('password')}
                       onBlur={() => setFocusedField(null)}
-                      className="w-full px-4 py-3.5 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder-transparent focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+                      className="w-full px-4 py-3.5 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder-transparent focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#030712] transition-all duration-200"
                     />
                   </div>
 

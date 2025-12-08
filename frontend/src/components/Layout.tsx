@@ -213,6 +213,7 @@ export const Layout = ({ children }: LayoutProps) => {
                   {item.href ? (
                     <Link
                       to={item.href}
+                      aria-current={isActive ? 'page' : undefined}
                       className={clsx(
                         'group flex items-center px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-1',
                         isActive || hasActiveChild
@@ -375,6 +376,9 @@ export const Layout = ({ children }: LayoutProps) => {
                   <div className="relative">
                     <button
                       onClick={() => setShowHelpMenu(!showHelpMenu)}
+                      aria-expanded={showHelpMenu}
+                      aria-haspopup="menu"
+                      aria-controls="help-menu"
                       className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
                     >
                       <HelpCircle className="h-4 w-4" />
@@ -393,9 +397,14 @@ export const Layout = ({ children }: LayoutProps) => {
                           onClick={() => setShowHelpMenu(false)}
                         />
                         {/* Dropdown menu */}
-                        <div className="absolute right-0 mt-2 w-56 glass-card rounded-xl overflow-hidden z-20 animate-fadeIn">
+                        <div
+                          id="help-menu"
+                          role="menu"
+                          className="absolute right-0 mt-2 w-56 glass-card rounded-xl overflow-hidden z-20 animate-fadeIn"
+                        >
                           <div className="py-1">
                             <button
+                              role="menuitem"
                               onClick={() => {
                                 setShowHelpMenu(false);
                                 resetTour();
@@ -407,6 +416,7 @@ export const Layout = ({ children }: LayoutProps) => {
                               Take the Tour
                             </button>
                             <button
+                              role="menuitem"
                               onClick={() => {
                                 setShowHelpMenu(false);
                                 setIsIssueModalOpen(true);
