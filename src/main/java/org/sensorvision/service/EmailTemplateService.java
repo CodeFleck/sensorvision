@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +31,43 @@ public class EmailTemplateService {
     private final ObjectMapper objectMapper;
 
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{\\s*(\\w+)\\s*\\}\\}");
+
+    // Allowed URL schemes for links in emails
+    private static final Set<String> ALLOWED_URL_SCHEMES = Set.of("http://", "https://");
+
+    /**
+     * Escape HTML special characters to prevent XSS attacks in email content
+     */
+    private String escapeHtml(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#x27;");
+    }
+
+    /**
+     * Validate and sanitize URL to prevent javascript: and other injection attacks
+     */
+    private String sanitizeUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return "#";
+        }
+        String trimmedUrl = url.trim();
+        // Only allow http:// and https:// URLs
+        for (String scheme : ALLOWED_URL_SCHEMES) {
+            if (trimmedUrl.toLowerCase().startsWith(scheme)) {
+                return escapeHtml(trimmedUrl);
+            }
+        }
+        // If not a valid URL scheme, return safe fallback
+        log.warn("Invalid URL scheme detected and sanitized: {}", trimmedUrl.substring(0, Math.min(trimmedUrl.length(), 20)));
+        return "#";
+    }
 
     @Transactional
     public EmailTemplateResponse createTemplate(EmailTemplateRequest request, Organization organization, User user) {
@@ -147,7 +185,8 @@ public class EmailTemplateService {
         while (matcher.find()) {
             String variableName = matcher.group(1);
             Object value = variables.get(variableName);
-            String replacement = value != null ? value.toString() : "{{" + variableName + "}}";
+            // HTML-escape all variable values to prevent XSS
+            String replacement = value != null ? escapeHtml(value.toString()) : "{{" + variableName + "}}";
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(result);
@@ -192,7 +231,14 @@ public class EmailTemplateService {
      * Matches the premium UI aesthetic with teal accents and glassmorphism
      */
     public String generateAlertNotificationEmail(String alertType, String deviceName, String message, String severity, String dashboardLink) {
-        String severityColor = switch (severity.toUpperCase()) {
+        // Sanitize all user-provided content to prevent XSS
+        String safeAlertType = escapeHtml(alertType);
+        String safeDeviceName = escapeHtml(deviceName);
+        String safeMessage = escapeHtml(message);
+        String safeSeverity = escapeHtml(severity);
+        String safeDashboardLink = sanitizeUrl(dashboardLink);
+
+        String severityColor = switch (severity != null ? severity.toUpperCase() : "") {
             case "CRITICAL" -> "#ef4444";
             case "HIGH" -> "#f97316";
             case "MEDIUM" -> "#eab308";
@@ -299,7 +345,7 @@ public class EmailTemplateService {
                     </table>
                 </body>
                 </html>
-                """, severityColor, severity, alertType, deviceName, message, dashboardLink);
+                """, severityColor, safeSeverity, safeAlertType, safeDeviceName, safeMessage, safeDashboardLink);
     }
 
     /**
@@ -320,6 +366,8 @@ public class EmailTemplateService {
      * Features true black background, teal accents, and glassmorphism matching UI
      */
     public String generatePasswordResetEmail(String resetLink) {
+        // Sanitize URL to prevent javascript: injection
+        String safeResetLink = sanitizeUrl(resetLink);
         return String.format("""
                 <!DOCTYPE html>
                 <html lang="en">
@@ -454,13 +502,16 @@ public class EmailTemplateService {
                     </table>
                 </body>
                 </html>
-                """, resetLink, resetLink);
+                """, safeResetLink, safeResetLink);
     }
 
     /**
      * Generate welcome email for new users with Dark OLED Luxury design
      */
     public String generateWelcomeEmail(String username, String dashboardLink) {
+        // Sanitize user-provided content to prevent XSS
+        String safeUsername = escapeHtml(username);
+        String safeDashboardLink = sanitizeUrl(dashboardLink);
         return String.format("""
                 <!DOCTYPE html>
                 <html lang="en">
@@ -545,6 +596,6 @@ public class EmailTemplateService {
                     </table>
                 </body>
                 </html>
-                """, username, dashboardLink);
+                """, safeUsername, safeDashboardLink);
     }
 }
