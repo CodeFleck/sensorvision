@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { apiService } from '../services/api';
+import { config } from '../config';
 
 interface Variable {
   name: string;
@@ -259,7 +260,7 @@ const DataIngestion: React.FC = () => {
         <p className="text-gray-700 mb-4">
           For complete API documentation, visit:{' '}
           <a
-            href="http://localhost:8080/swagger-ui.html"
+            href={`${config.backendUrl}/swagger-ui.html`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:underline"

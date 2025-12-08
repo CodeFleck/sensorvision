@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
+import { config } from '../config';
 
 interface Device {
   id: number;
@@ -265,7 +266,7 @@ const DataExport: React.FC = () => {
         <div className="mt-6 text-center">
           <p className="text-gray-600 mb-2">Need to automate exports?</p>
           <a
-            href="http://localhost:8080/swagger-ui.html"
+            href={`${config.backendUrl}/swagger-ui.html`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:underline font-medium"
