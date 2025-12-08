@@ -8,15 +8,15 @@
 
 -- Composite index for telemetry queries by device and time range (most common query pattern)
 CREATE INDEX IF NOT EXISTS idx_telemetry_device_timestamp_desc
-    ON telemetry_records(device_id, timestamp DESC);
+    ON telemetry_records(device_id, measurement_timestamp DESC);
 
 -- Index for variable-specific queries with time range
 CREATE INDEX IF NOT EXISTS idx_telemetry_variable_time
-    ON telemetry_records(variable_name, timestamp DESC);
+    ON telemetry_records(variable_name, measurement_timestamp DESC);
 
 -- Composite index for analytics queries (aggregations by device and variable)
 CREATE INDEX IF NOT EXISTS idx_telemetry_analytics
-    ON telemetry_records(device_id, variable_name, timestamp, numeric_value);
+    ON telemetry_records(device_id, variable_name, measurement_timestamp, numeric_value);
 
 -- ==============================================================================
 -- DEVICE PERFORMANCE INDEXES
@@ -104,7 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_synthetic_variables_device_enabled
 
 -- Index for synthetic variable values with time range
 CREATE INDEX IF NOT EXISTS idx_synthetic_values_var_time
-    ON synthetic_variable_values(synthetic_variable_id, calculated_at DESC);
+    ON synthetic_variable_values(synthetic_variable_id, timestamp DESC);
 
 -- ==============================================================================
 -- GLOBAL RULES PERFORMANCE (Fleet Monitoring)
