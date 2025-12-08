@@ -18,7 +18,6 @@ import {
   LogOut,
   Shield,
   ChevronDown,
-  ChevronRight,
   Zap,
   BookOpen,
   Plug,
