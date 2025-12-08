@@ -7,6 +7,20 @@ const ThemeToggle: React.FC = () => {
 
   const themes = [
     {
+      value: 'light-luxury' as const,
+      label: 'Light Luxury',
+      description: 'Premium light with teal accents',
+      icon: '✨',
+      colors: ['#fafafa', '#ffffff', '#0d9488'],
+    },
+    {
+      value: 'dark-luxury' as const,
+      label: 'Dark Luxury',
+      description: 'Premium OLED dark with teal',
+      icon: '🌌',
+      colors: ['#000000', '#0a0a0a', '#14b8a6'],
+    },
+    {
       value: 'light' as const,
       label: 'Light',
       description: 'Classic bright mode',
