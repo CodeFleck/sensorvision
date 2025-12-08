@@ -1,5 +1,9 @@
 package org.sensorvision.security;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -59,11 +63,44 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
     // Rate limiting: track failed attempts per IP
     private final ConcurrentMap<String, RateLimitEntry> failedAttempts = new ConcurrentHashMap<>();
 
+    // Prometheus metrics
+    private final Counter authSuccessCounter;
+    private final Counter authFailureCounter;
+    private final Counter rateLimitedCounter;
+    private final Timer authTimer;
+
     public UserApiKeyAuthenticationFilter(
             UserApiKeyService userApiKeyService,
+            MeterRegistry meterRegistry,
             @Value("${security.proxy.trust-forwarded-headers:false}") boolean trustProxyHeaders) {
         this.userApiKeyService = userApiKeyService;
         this.trustProxyHeaders = trustProxyHeaders;
+
+        // Initialize Prometheus metrics
+        this.authSuccessCounter = Counter.builder("sensorvision.api_key.auth")
+                .tag("result", "success")
+                .description("Total successful API key authentications")
+                .register(meterRegistry);
+
+        this.authFailureCounter = Counter.builder("sensorvision.api_key.auth")
+                .tag("result", "failure")
+                .description("Total failed API key authentications")
+                .register(meterRegistry);
+
+        this.rateLimitedCounter = Counter.builder("sensorvision.api_key.auth")
+                .tag("result", "rate_limited")
+                .description("Total requests blocked by rate limiting")
+                .register(meterRegistry);
+
+        this.authTimer = Timer.builder("sensorvision.api_key.auth.duration")
+                .description("API key authentication duration")
+                .register(meterRegistry);
+
+        // Gauge for tracking current rate limit entries
+        Gauge.builder("sensorvision.api_key.rate_limit.entries", failedAttempts, ConcurrentMap::size)
+                .description("Current number of IPs being tracked for rate limiting")
+                .register(meterRegistry);
+
         if (!trustProxyHeaders) {
             log.info("X-Forwarded-For header trust is DISABLED (default). " +
                     "Set security.proxy.trust-forwarded-headers=true when behind a trusted reverse proxy.");
@@ -93,6 +130,7 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
             // Check rate limiting
             if (isRateLimited(clientIp)) {
                 log.warn("Rate limited API key authentication attempts from IP: {}", clientIp);
+                rateLimitedCounter.increment();
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -100,41 +138,56 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
             String apiKey = extractApiKeyFromRequest(request);
 
             if (apiKey != null && isValidApiKeyFormat(apiKey)) {
-                Optional<UserApiKey> userApiKeyOpt = userApiKeyService.validateApiKey(apiKey);
+                // Start timer only when we're actually doing authentication work
+                Timer.Sample timerSample = Timer.start();
 
-                if (userApiKeyOpt.isPresent()) {
-                    UserApiKey userApiKey = userApiKeyOpt.get();
-                    User user = userApiKey.getUser();
+                try {
+                    Optional<UserApiKey> userApiKeyOpt = userApiKeyService.validateApiKey(apiKey);
 
-                    // Create authentication with user's roles
-                    UserApiKeyAuthentication authentication = new UserApiKeyAuthentication(
-                            user,
-                            userApiKey,
-                            user.getRoles().stream()
-                                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()))
-                                    .collect(Collectors.toList())
-                    );
+                    if (userApiKeyOpt.isPresent()) {
+                        UserApiKey userApiKey = userApiKeyOpt.get();
+                        User user = userApiKey.getUser();
 
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        // Create authentication with user's roles
+                        UserApiKeyAuthentication authentication = new UserApiKeyAuthentication(
+                                user,
+                                userApiKey,
+                                user.getRoles().stream()
+                                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()))
+                                        .collect(Collectors.toList())
+                        );
 
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    // Update last used timestamp asynchronously to avoid blocking
-                    userApiKeyService.updateLastUsedAtAsync(userApiKey.getId());
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    // Clear any failed attempts on successful auth
-                    failedAttempts.remove(clientIp);
+                        // Update last used timestamp asynchronously to avoid blocking
+                        userApiKeyService.updateLastUsedAtAsync(userApiKey.getId());
 
-                    log.info("API key '{}' authenticated user '{}' (org: {}) from IP {} for {}",
-                            userApiKey.getName(),
-                            user.getUsername(),
-                            user.getOrganization() != null ? user.getOrganization().getName() : "N/A",
-                            clientIp,
-                            request.getRequestURI());
-                } else {
-                    // Track failed attempt for rate limiting
-                    recordFailedAttempt(clientIp);
-                    log.debug("Invalid user API key provided from IP {} (key value not logged for security)", clientIp);
+                        // Clear any failed attempts on successful auth
+                        failedAttempts.remove(clientIp);
+
+                        // Record successful authentication metric
+                        authSuccessCounter.increment();
+
+                        log.info("API key '{}' authenticated user '{}' (org: {}) from IP {} for {}",
+                                userApiKey.getName(),
+                                user.getUsername(),
+                                user.getOrganization() != null ? user.getOrganization().getName() : "N/A",
+                                clientIp,
+                                request.getRequestURI());
+                    } else {
+                        // Track failed attempt for rate limiting
+                        recordFailedAttempt(clientIp);
+
+                        // Record failed authentication metric
+                        authFailureCounter.increment();
+
+                        log.debug("Invalid user API key provided from IP {} (key value not logged for security)", clientIp);
+                    }
+                } finally {
+                    // Always stop the timer when authentication is attempted
+                    timerSample.stop(authTimer);
                 }
             }
         } catch (Exception e) {
