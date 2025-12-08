@@ -10,14 +10,6 @@
 CREATE INDEX IF NOT EXISTS idx_telemetry_device_timestamp_desc
     ON telemetry_records(device_id, measurement_timestamp DESC);
 
--- Index for variable-specific queries with time range
-CREATE INDEX IF NOT EXISTS idx_telemetry_variable_time
-    ON telemetry_records(variable_name, measurement_timestamp DESC);
-
--- Composite index for analytics queries (aggregations by device and variable)
-CREATE INDEX IF NOT EXISTS idx_telemetry_analytics
-    ON telemetry_records(device_id, variable_name, measurement_timestamp, numeric_value);
-
 -- ==============================================================================
 -- DEVICE PERFORMANCE INDEXES
 -- ==============================================================================
