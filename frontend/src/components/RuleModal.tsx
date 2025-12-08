@@ -14,7 +14,7 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
     name: rule?.name || '',
     description: rule?.description || '',
     deviceId: rule?.deviceId || (devices[0]?.externalId || ''),
-    variable: rule?.variable || 'kwConsumption',
+    variable: rule?.variable || '',
     operator: rule?.operator || 'GT',
     threshold: rule?.threshold?.toString() || '',
     enabled: rule?.enabled ?? true,

@@ -18,6 +18,8 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
   const [devices, setDevices] = useState<Device[]>([]);
   const [variables, setVariables] = useState<DeviceVariable[]>([]);
   const [loadingVariables, setLoadingVariables] = useState(false);
+  const [secondDeviceVariables, setSecondDeviceVariables] = useState<DeviceVariable[]>([]);
+  const [loadingSecondVariables, setLoadingSecondVariables] = useState(false);
   const [enableDualDevice, setEnableDualDevice] = useState(false);
   const [formData, setFormData] = useState<WidgetCreateRequest>({
     name: '',
@@ -76,6 +78,38 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
 
     loadVariables();
   }, [formData.deviceId, devices]);
+
+  // Fetch variables for second device when selected (dual-device mode)
+  useEffect(() => {
+    const loadSecondVariables = async () => {
+      if (!formData.secondDeviceId || !enableDualDevice) {
+        setSecondDeviceVariables([]);
+        return;
+      }
+
+      setLoadingSecondVariables(true);
+      try {
+        const device = devices.find(d => d.externalId === formData.secondDeviceId);
+        if (device?.id) {
+          const vars = await apiService.getDeviceVariables(device.id);
+          setSecondDeviceVariables(vars);
+          // Auto-select the first variable if none selected
+          if (vars.length > 0 && !formData.secondVariableName) {
+            setFormData(prev => ({ ...prev, secondVariableName: vars[0].name }));
+          }
+        } else {
+          setSecondDeviceVariables([]);
+        }
+      } catch (error) {
+        console.error('Failed to load second device variables:', error);
+        setSecondDeviceVariables([]);
+      } finally {
+        setLoadingSecondVariables(false);
+      }
+    };
+
+    loadSecondVariables();
+  }, [formData.secondDeviceId, devices, enableDualDevice]);
 
   const loadDevices = async () => {
     try {
@@ -314,14 +348,16 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
                   value={formData.secondVariableName || ''}
                   onChange={(e) => setFormData({ ...formData, secondVariableName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  disabled={loadingVariables}
+                  disabled={loadingSecondVariables || !formData.secondDeviceId}
                 >
-                  {loadingVariables ? (
+                  {!formData.secondDeviceId ? (
+                    <option value="">Select a device first</option>
+                  ) : loadingSecondVariables ? (
                     <option value="">Loading variables...</option>
-                  ) : variables.length === 0 ? (
+                  ) : secondDeviceVariables.length === 0 ? (
                     <option value="">No variables available</option>
                   ) : (
-                    variables.map((variable) => (
+                    secondDeviceVariables.map((variable) => (
                       <option key={variable.id} value={variable.name}>
                         {variable.displayName || variable.name}
                         {variable.unit ? ` (${variable.unit})` : ''}
@@ -329,6 +365,11 @@ export const AddWidgetModal: React.FC<AddWidgetModalProps> = ({
                     ))
                   )}
                 </select>
+                {!loadingSecondVariables && secondDeviceVariables.length === 0 && formData.secondDeviceId && (
+                  <p className="text-xs text-yellow-600 mt-1">
+                    No variables found. Send telemetry data to this device first.
+                  </p>
+                )}
               </div>
 
               {/* Second Device Label */}
