@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.sensorvision.dto.AggregationResponse;
@@ -14,8 +15,12 @@ import org.sensorvision.exception.ResourceNotFoundException;
 import org.sensorvision.model.Device;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.TelemetryRecord;
+import org.sensorvision.model.Variable;
+import org.sensorvision.model.VariableValue;
 import org.sensorvision.repository.DeviceRepository;
 import org.sensorvision.repository.TelemetryRecordRepository;
+import org.sensorvision.repository.VariableRepository;
+import org.sensorvision.repository.VariableValueRepository;
 import org.sensorvision.security.SecurityUtils;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -28,9 +33,12 @@ public class AnalyticsService {
 
     private final TelemetryRecordRepository telemetryRecordRepository;
     private final DeviceRepository deviceRepository;
+    private final VariableRepository variableRepository;
+    private final VariableValueRepository variableValueRepository;
     private final SecurityUtils securityUtils;
 
-    private static final Set<String> VALID_VARIABLES = Set.of(
+    // Legacy variables stored in TelemetryRecord table
+    private static final Set<String> LEGACY_VARIABLES = Set.of(
             "kwConsumption", "voltage", "current", "powerFactor", "frequency"
     );
 
@@ -62,9 +70,8 @@ public class AnalyticsService {
             throw new BadRequestException("Invalid aggregation type: " + aggregation +
                     ". Valid types are: " + VALID_AGGREGATIONS);
         }
-        if (!VALID_VARIABLES.contains(variable)) {
-            throw new BadRequestException("Invalid variable: " + variable +
-                    ". Valid variables are: " + VALID_VARIABLES);
+        if (variable == null || variable.trim().isEmpty()) {
+            throw new BadRequestException("Variable name is required");
         }
 
         // Verify device ownership
@@ -76,6 +83,22 @@ public class AnalyticsService {
             throw new AccessDeniedException("Access denied to device: " + deviceId);
         }
 
+        // Check if this is a legacy variable or a dynamic variable
+        if (LEGACY_VARIABLES.contains(variable)) {
+            // Use legacy TelemetryRecord-based aggregation
+            return aggregateLegacyVariable(device, deviceId, variable, aggregation, from, to, interval);
+        } else {
+            // Use dynamic variable (EAV pattern) aggregation
+            return aggregateDynamicVariable(device, variable, aggregation, from, to, interval);
+        }
+    }
+
+    /**
+     * Aggregate data from legacy TelemetryRecord table
+     */
+    private List<AggregationResponse> aggregateLegacyVariable(Device device, String deviceId, String variable,
+                                                              String aggregation, Instant from, Instant to,
+                                                              String interval) {
         // Get telemetry records for the time range
         List<TelemetryRecord> records = telemetryRecordRepository
                 .findByDeviceExternalIdAndTimestampBetweenOrderByTimestamp(deviceId, from, to);
@@ -86,21 +109,57 @@ public class AnalyticsService {
 
         // If no interval specified, return single aggregation
         if (interval == null || interval.isEmpty()) {
-            AggregationResponse result = calculateAggregation(records, deviceId, variable, aggregation, from);
+            AggregationResponse result = calculateLegacyAggregation(records, deviceId, variable, aggregation, from);
             return result != null ? List.of(result) : List.of();
         }
 
         // Calculate interval-based aggregation
-        return calculateIntervalAggregation(records, deviceId, variable, aggregation, from, to, interval);
+        return calculateLegacyIntervalAggregation(records, deviceId, variable, aggregation, from, to, interval);
     }
 
-    private List<AggregationResponse> calculateIntervalAggregation(List<TelemetryRecord> records,
-                                                                  String deviceId,
-                                                                  String variable,
-                                                                  String aggregation,
-                                                                  Instant from,
-                                                                  Instant to,
-                                                                  String interval) {
+    /**
+     * Aggregate data from dynamic VariableValue table (EAV pattern)
+     */
+    private List<AggregationResponse> aggregateDynamicVariable(Device device, String variableName,
+                                                               String aggregation, Instant from, Instant to,
+                                                               String interval) {
+        // Find the dynamic variable for this device
+        Optional<Variable> variableOpt = variableRepository.findByDeviceIdAndName(device.getId(), variableName);
+        if (variableOpt.isEmpty()) {
+            throw new BadRequestException("Variable '" + variableName + "' not found for device. " +
+                    "Send telemetry data with this variable first.");
+        }
+        Variable variable = variableOpt.get();
+
+        // Get variable values for the time range
+        List<VariableValue> values = variableValueRepository.findByVariableIdAndTimeRange(
+                variable.getId(), from, to);
+
+        if (values.isEmpty()) {
+            return List.of();
+        }
+
+        // If no interval specified, return single aggregation
+        if (interval == null || interval.isEmpty()) {
+            AggregationResponse result = calculateDynamicAggregation(values, device.getExternalId(),
+                    variableName, aggregation, from);
+            return result != null ? List.of(result) : List.of();
+        }
+
+        // Calculate interval-based aggregation
+        return calculateDynamicIntervalAggregation(values, device.getExternalId(), variableName,
+                aggregation, from, to, interval);
+    }
+
+    // ========== Legacy TelemetryRecord-based methods ==========
+
+    private List<AggregationResponse> calculateLegacyIntervalAggregation(List<TelemetryRecord> records,
+                                                                         String deviceId,
+                                                                         String variable,
+                                                                         String aggregation,
+                                                                         Instant from,
+                                                                         Instant to,
+                                                                         String interval) {
 
         long intervalMinutes = parseInterval(interval);
         List<AggregationResponse> results = new ArrayList<>();
@@ -116,7 +175,7 @@ public class AnalyticsService {
                     .toList();
 
             if (!intervalRecords.isEmpty()) {
-                AggregationResponse result = calculateAggregation(intervalRecords, deviceId, variable, aggregation, current);
+                AggregationResponse result = calculateLegacyAggregation(intervalRecords, deviceId, variable, aggregation, current);
                 if (result != null) {
                     results.add(result);
                 }
@@ -128,13 +187,13 @@ public class AnalyticsService {
         return results;
     }
 
-    private AggregationResponse calculateAggregation(List<TelemetryRecord> records,
-                                                    String deviceId,
-                                                    String variable,
-                                                    String aggregation,
-                                                    Instant timestamp) {
+    private AggregationResponse calculateLegacyAggregation(List<TelemetryRecord> records,
+                                                           String deviceId,
+                                                           String variable,
+                                                           String aggregation,
+                                                           Instant timestamp) {
 
-        List<BigDecimal> values = extractVariableValues(records, variable);
+        List<BigDecimal> values = extractLegacyVariableValues(records, variable);
         if (values.isEmpty()) {
             return null;
         }
@@ -158,7 +217,7 @@ public class AnalyticsService {
         );
     }
 
-    private List<BigDecimal> extractVariableValues(List<TelemetryRecord> records, String variable) {
+    private List<BigDecimal> extractLegacyVariableValues(List<TelemetryRecord> records, String variable) {
         return records.stream()
                 .map(record -> switch (variable) {
                     case "kwConsumption" -> record.getKwConsumption();
@@ -170,6 +229,76 @@ public class AnalyticsService {
                 })
                 .filter(value -> value != null && value.compareTo(BigDecimal.ZERO) != 0)
                 .toList();
+    }
+
+    // ========== Dynamic VariableValue-based methods (EAV pattern) ==========
+
+    private List<AggregationResponse> calculateDynamicIntervalAggregation(List<VariableValue> values,
+                                                                          String deviceId,
+                                                                          String variableName,
+                                                                          String aggregation,
+                                                                          Instant from,
+                                                                          Instant to,
+                                                                          String interval) {
+
+        long intervalMinutes = parseInterval(interval);
+        List<AggregationResponse> results = new ArrayList<>();
+
+        Instant current = from;
+        while (current.isBefore(to)) {
+            final Instant intervalStart = current;
+            final Instant intervalEnd = current.plus(intervalMinutes, ChronoUnit.MINUTES).isAfter(to) ? to : current.plus(intervalMinutes, ChronoUnit.MINUTES);
+
+            // Filter values for this interval
+            List<VariableValue> intervalValues = values.stream()
+                    .filter(v -> !v.getTimestamp().isBefore(intervalStart) && v.getTimestamp().isBefore(intervalEnd))
+                    .toList();
+
+            if (!intervalValues.isEmpty()) {
+                AggregationResponse result = calculateDynamicAggregation(intervalValues, deviceId, variableName, aggregation, current);
+                if (result != null) {
+                    results.add(result);
+                }
+            }
+
+            current = intervalEnd;
+        }
+
+        return results;
+    }
+
+    private AggregationResponse calculateDynamicAggregation(List<VariableValue> values,
+                                                            String deviceId,
+                                                            String variableName,
+                                                            String aggregation,
+                                                            Instant timestamp) {
+
+        List<BigDecimal> numericValues = values.stream()
+                .map(VariableValue::getValue)
+                .filter(v -> v != null && v.compareTo(BigDecimal.ZERO) != 0)
+                .toList();
+
+        if (numericValues.isEmpty()) {
+            return null;
+        }
+
+        BigDecimal result = switch (aggregation.toUpperCase()) {
+            case "MIN" -> numericValues.stream().min(BigDecimal::compareTo).orElse(null);
+            case "MAX" -> numericValues.stream().max(BigDecimal::compareTo).orElse(null);
+            case "AVG" -> calculateAverage(numericValues);
+            case "SUM" -> numericValues.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+            case "COUNT" -> BigDecimal.valueOf(numericValues.size());
+            default -> throw new IllegalArgumentException("Unsupported aggregation: " + aggregation);
+        };
+
+        return new AggregationResponse(
+                deviceId,
+                variableName,
+                aggregation,
+                timestamp,
+                result,
+                (long) numericValues.size()
+        );
     }
 
     private BigDecimal calculateAverage(List<BigDecimal> values) {
