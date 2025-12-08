@@ -92,4 +92,19 @@ public interface UserApiKeyRepository extends JpaRepository<UserApiKey, Long> {
      */
     @Query("SELECT COUNT(k) FROM UserApiKey k WHERE k.keyHash IS NULL AND k.keyValue IS NOT NULL")
     long countLegacyPlaintextKeys();
+
+    /**
+     * Find all API keys with scheduled revocation times that have passed.
+     * These keys should be revoked by the scheduled task.
+     */
+    @Query("SELECT k FROM UserApiKey k WHERE k.scheduledRevocationAt IS NOT NULL " +
+           "AND k.scheduledRevocationAt <= :now AND k.revokedAt IS NULL")
+    List<UserApiKey> findKeysWithExpiredGracePeriod(@Param("now") LocalDateTime now);
+
+    /**
+     * Count keys with expired grace periods (for logging).
+     */
+    @Query("SELECT COUNT(k) FROM UserApiKey k WHERE k.scheduledRevocationAt IS NOT NULL " +
+           "AND k.scheduledRevocationAt <= :now AND k.revokedAt IS NULL")
+    long countKeysWithExpiredGracePeriod(@Param("now") LocalDateTime now);
 }

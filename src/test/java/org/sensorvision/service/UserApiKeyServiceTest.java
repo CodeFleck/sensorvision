@@ -14,6 +14,7 @@ import org.sensorvision.repository.UserApiKeyRepository;
 import org.sensorvision.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -508,5 +509,195 @@ class UserApiKeyServiceTest {
 
         // Then
         verify(userApiKeyRepository, times(2)).updateLastUsedAt(any(), any());
+    }
+
+    // ==================== rotateApiKey() with Grace Period Tests ====================
+
+    @Test
+    void rotateApiKey_withGracePeriod_shouldScheduleRevocationInsteadOfImmediateRevoke() {
+        // Given
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(testApiKey));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(0L);
+        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
+        when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$newhashedvalue");
+        when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
+            UserApiKey key = invocation.getArgument(0);
+            if (key.getId() == null) {
+                key.setId(2L);
+            }
+            return key;
+        });
+
+        // When
+        UserApiKey newKey = userApiKeyService.rotateApiKey(1L, Duration.ofMinutes(30));
+
+        // Then
+        assertThat(newKey).isNotNull();
+        assertThat(newKey.getId()).isEqualTo(2L);
+        assertThat(testApiKey.getRevokedAt()).isNull(); // Not immediately revoked
+        assertThat(testApiKey.getScheduledRevocationAt()).isNotNull();
+        assertThat(testApiKey.getScheduledRevocationAt()).isAfter(LocalDateTime.now());
+        assertThat(testApiKey.getScheduledRevocationAt()).isBefore(LocalDateTime.now().plusMinutes(31));
+    }
+
+    @Test
+    void rotateApiKey_withZeroGracePeriod_shouldRevokeImmediately() {
+        // Given
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(testApiKey));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(0L);
+        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
+        when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$newhashedvalue");
+        when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
+            UserApiKey key = invocation.getArgument(0);
+            if (key.getId() == null) {
+                key.setId(2L);
+            }
+            return key;
+        });
+
+        // When
+        UserApiKey newKey = userApiKeyService.rotateApiKey(1L, Duration.ZERO);
+
+        // Then
+        assertThat(testApiKey.getRevokedAt()).isNotNull();
+        assertThat(testApiKey.getScheduledRevocationAt()).isNull();
+    }
+
+    @Test
+    void rotateApiKey_withNullGracePeriod_shouldRevokeImmediately() {
+        // Given
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(testApiKey));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userApiKeyRepository.countActiveByUserId(1L)).thenReturn(0L);
+        when(userApiKeyRepository.existsByKeyPrefix(anyString())).thenReturn(false);
+        when(userApiKeyRepository.existsByKeyValue(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$newhashedvalue");
+        when(userApiKeyRepository.save(any(UserApiKey.class))).thenAnswer(invocation -> {
+            UserApiKey key = invocation.getArgument(0);
+            if (key.getId() == null) {
+                key.setId(2L);
+            }
+            return key;
+        });
+
+        // When
+        UserApiKey newKey = userApiKeyService.rotateApiKey(1L, null);
+
+        // Then
+        assertThat(testApiKey.getRevokedAt()).isNotNull();
+        assertThat(testApiKey.getScheduledRevocationAt()).isNull();
+    }
+
+    @Test
+    void rotateApiKey_withExcessiveGracePeriod_shouldThrowException() {
+        // Given
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(testApiKey));
+
+        // When/Then - 8 days exceeds 7 day max
+        assertThatThrownBy(() -> userApiKeyService.rotateApiKey(1L, Duration.ofDays(8)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Grace period cannot exceed 7 days");
+    }
+
+    @Test
+    void rotateApiKey_withPendingRotation_shouldThrowException() {
+        // Given - key already has a pending revocation
+        testApiKey.setScheduledRevocationAt(LocalDateTime.now().plusMinutes(30));
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(testApiKey));
+
+        // When/Then
+        assertThatThrownBy(() -> userApiKeyService.rotateApiKey(1L, Duration.ofMinutes(30)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("already has a pending rotation");
+    }
+
+    // ==================== cancelScheduledRevocation() Tests ====================
+
+    @Test
+    void cancelScheduledRevocation_withPendingRevocation_shouldClearSchedule() {
+        // Given
+        testApiKey.setScheduledRevocationAt(LocalDateTime.now().plusMinutes(30));
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(testApiKey));
+        when(userApiKeyRepository.save(any())).thenReturn(testApiKey);
+
+        // When
+        userApiKeyService.cancelScheduledRevocation(1L);
+
+        // Then
+        verify(userApiKeyRepository).save(apiKeyCaptor.capture());
+        assertThat(apiKeyCaptor.getValue().getScheduledRevocationAt()).isNull();
+    }
+
+    @Test
+    void cancelScheduledRevocation_withNoSchedule_shouldThrowException() {
+        // Given
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(testApiKey));
+
+        // When/Then
+        assertThatThrownBy(() -> userApiKeyService.cancelScheduledRevocation(1L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("has no scheduled revocation");
+    }
+
+    @Test
+    void cancelScheduledRevocation_withRevokedKey_shouldThrowException() {
+        // Given
+        testApiKey.setRevokedAt(LocalDateTime.now());
+        testApiKey.setScheduledRevocationAt(LocalDateTime.now().plusMinutes(30));
+        when(userApiKeyRepository.findById(1L)).thenReturn(Optional.of(testApiKey));
+
+        // When/Then
+        assertThatThrownBy(() -> userApiKeyService.cancelScheduledRevocation(1L))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("already revoked");
+    }
+
+    // ==================== UserApiKey.isActive() with Scheduled Revocation Tests ====================
+
+    @Test
+    void isActive_withScheduledRevocationInFuture_shouldReturnTrue() {
+        // Given
+        testApiKey.setScheduledRevocationAt(LocalDateTime.now().plusMinutes(30));
+
+        // Then
+        assertThat(testApiKey.isActive()).isTrue();
+    }
+
+    @Test
+    void isActive_withScheduledRevocationInPast_shouldReturnFalse() {
+        // Given
+        testApiKey.setScheduledRevocationAt(LocalDateTime.now().minusMinutes(1));
+
+        // Then
+        assertThat(testApiKey.isActive()).isFalse();
+    }
+
+    @Test
+    void hasPendingRevocation_withScheduledRevocation_shouldReturnTrue() {
+        // Given
+        testApiKey.setScheduledRevocationAt(LocalDateTime.now().plusMinutes(30));
+
+        // Then
+        assertThat(testApiKey.hasPendingRevocation()).isTrue();
+    }
+
+    @Test
+    void hasPendingRevocation_withoutScheduledRevocation_shouldReturnFalse() {
+        // Then
+        assertThat(testApiKey.hasPendingRevocation()).isFalse();
+    }
+
+    @Test
+    void hasPendingRevocation_whenRevoked_shouldReturnFalse() {
+        // Given
+        testApiKey.setScheduledRevocationAt(LocalDateTime.now().plusMinutes(30));
+        testApiKey.setRevokedAt(LocalDateTime.now());
+
+        // Then
+        assertThat(testApiKey.hasPendingRevocation()).isFalse();
     }
 }

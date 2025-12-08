@@ -74,16 +74,40 @@ public class UserApiKey {
     @Column(name = "revoked_at")
     private LocalDateTime revokedAt;
 
+    /**
+     * Future timestamp when the key will be automatically revoked.
+     * Used for grace period during key rotation to enable zero-downtime updates.
+     */
+    @Column(name = "scheduled_revocation_at")
+    private LocalDateTime scheduledRevocationAt;
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 
     /**
-     * Check if this API key is active (not revoked).
+     * Check if this API key is currently active.
+     * A key is active if:
+     * - It has not been revoked (revokedAt is null)
+     * - AND either has no scheduled revocation OR the scheduled time has not passed yet
      */
     public boolean isActive() {
-        return revokedAt == null;
+        if (revokedAt != null) {
+            return false;
+        }
+        // If scheduled for revocation, check if the time has passed
+        if (scheduledRevocationAt != null && LocalDateTime.now().isAfter(scheduledRevocationAt)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Check if this key has a pending scheduled revocation.
+     */
+    public boolean hasPendingRevocation() {
+        return scheduledRevocationAt != null && revokedAt == null;
     }
 
     /**
