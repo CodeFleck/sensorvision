@@ -1,5 +1,9 @@
 package org.sensorvision.security;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -59,11 +63,44 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
     // Rate limiting: track failed attempts per IP
     private final ConcurrentMap<String, RateLimitEntry> failedAttempts = new ConcurrentHashMap<>();
 
+    // Prometheus metrics
+    private final Counter authSuccessCounter;
+    private final Counter authFailureCounter;
+    private final Counter rateLimitedCounter;
+    private final Timer authTimer;
+
     public UserApiKeyAuthenticationFilter(
             UserApiKeyService userApiKeyService,
+            MeterRegistry meterRegistry,
             @Value("${security.proxy.trust-forwarded-headers:false}") boolean trustProxyHeaders) {
         this.userApiKeyService = userApiKeyService;
         this.trustProxyHeaders = trustProxyHeaders;
+
+        // Initialize Prometheus metrics
+        this.authSuccessCounter = Counter.builder("sensorvision.api_key.auth")
+                .tag("result", "success")
+                .description("Total successful API key authentications")
+                .register(meterRegistry);
+
+        this.authFailureCounter = Counter.builder("sensorvision.api_key.auth")
+                .tag("result", "failure")
+                .description("Total failed API key authentications")
+                .register(meterRegistry);
+
+        this.rateLimitedCounter = Counter.builder("sensorvision.api_key.auth")
+                .tag("result", "rate_limited")
+                .description("Total requests blocked by rate limiting")
+                .register(meterRegistry);
+
+        this.authTimer = Timer.builder("sensorvision.api_key.auth.duration")
+                .description("API key authentication duration")
+                .register(meterRegistry);
+
+        // Gauge for tracking current rate limit entries
+        Gauge.builder("sensorvision.api_key.rate_limit.entries", failedAttempts, ConcurrentMap::size)
+                .description("Current number of IPs being tracked for rate limiting")
+                .register(meterRegistry);
+
         if (!trustProxyHeaders) {
             log.info("X-Forwarded-For header trust is DISABLED (default). " +
                     "Set security.proxy.trust-forwarded-headers=true when behind a trusted reverse proxy.");
@@ -80,6 +117,8 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        Timer.Sample timerSample = Timer.start();
+
         try {
             // Skip if already authenticated (e.g., by device token filter)
             if (SecurityContextHolder.getContext().getAuthentication() != null &&
@@ -93,6 +132,7 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
             // Check rate limiting
             if (isRateLimited(clientIp)) {
                 log.warn("Rate limited API key authentication attempts from IP: {}", clientIp);
+                rateLimitedCounter.increment();
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -125,6 +165,10 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
                     // Clear any failed attempts on successful auth
                     failedAttempts.remove(clientIp);
 
+                    // Record successful authentication metric
+                    authSuccessCounter.increment();
+                    timerSample.stop(authTimer);
+
                     log.info("API key '{}' authenticated user '{}' (org: {}) from IP {} for {}",
                             userApiKey.getName(),
                             user.getUsername(),
@@ -134,6 +178,11 @@ public class UserApiKeyAuthenticationFilter extends OncePerRequestFilter {
                 } else {
                     // Track failed attempt for rate limiting
                     recordFailedAttempt(clientIp);
+
+                    // Record failed authentication metric
+                    authFailureCounter.increment();
+                    timerSample.stop(authTimer);
+
                     log.debug("Invalid user API key provided from IP {} (key value not logged for security)", clientIp);
                 }
             }

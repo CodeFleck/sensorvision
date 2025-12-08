@@ -1,5 +1,6 @@
 package org.sensorvision.security;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -47,6 +48,7 @@ class UserApiKeyAuthenticationFilterTest {
     @Mock
     private FilterChain filterChain;
 
+    private SimpleMeterRegistry meterRegistry;
     private UserApiKeyAuthenticationFilter filter;
 
     private Organization testOrganization;
@@ -55,8 +57,10 @@ class UserApiKeyAuthenticationFilterTest {
 
     @BeforeEach
     void setUp() {
+        // Create a simple meter registry for testing
+        meterRegistry = new SimpleMeterRegistry();
         // Default to trusting proxy headers for backwards compatibility in tests
-        filter = new UserApiKeyAuthenticationFilter(userApiKeyService, true);
+        filter = new UserApiKeyAuthenticationFilter(userApiKeyService, meterRegistry, true);
         SecurityContextHolder.clearContext();
 
         testOrganization = Organization.builder()
@@ -360,7 +364,7 @@ class UserApiKeyAuthenticationFilterTest {
     @Test
     void cleanupExpiredRateLimitEntries_shouldRemoveExpiredEntries() throws Exception {
         // Given - Create a new filter instance for clean state
-        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, false);
+        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, new SimpleMeterRegistry(), false);
 
         // Simulate failed attempts from two different IPs
         String apiKey = "550e8400-e29b-41d4-a716-446655440000";
@@ -394,7 +398,7 @@ class UserApiKeyAuthenticationFilterTest {
     @Test
     void cleanupExpiredRateLimitEntries_shouldNotFailOnEmptyMap() {
         // Given - Fresh filter with no rate limit entries
-        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, false);
+        UserApiKeyAuthenticationFilter cleanFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, new SimpleMeterRegistry(), false);
 
         // When/Then - Should not throw
         cleanFilter.cleanupExpiredRateLimitEntries();
@@ -405,7 +409,7 @@ class UserApiKeyAuthenticationFilterTest {
     @Test
     void doFilterInternal_whenProxyHeadersNotTrusted_shouldIgnoreXForwardedFor() throws Exception {
         // Given - Filter configured to NOT trust proxy headers
-        UserApiKeyAuthenticationFilter untrustedFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, false);
+        UserApiKeyAuthenticationFilter untrustedFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, new SimpleMeterRegistry(), false);
 
         String apiKey = "550e8400-e29b-41d4-a716-446655440000";
         when(request.getHeader("X-API-Key")).thenReturn(apiKey);
@@ -431,7 +435,7 @@ class UserApiKeyAuthenticationFilterTest {
     @Test
     void doFilterInternal_whenProxyHeadersTrusted_shouldUseXForwardedFor() throws Exception {
         // Given - Filter configured to trust proxy headers
-        UserApiKeyAuthenticationFilter trustedFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, true);
+        UserApiKeyAuthenticationFilter trustedFilter = new UserApiKeyAuthenticationFilter(userApiKeyService, new SimpleMeterRegistry(), true);
 
         String apiKey = "550e8400-e29b-41d4-a716-446655440000";
         when(request.getHeader("X-API-Key")).thenReturn(apiKey);
