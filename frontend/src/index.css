@@ -130,6 +130,70 @@
     --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.65);
   }
 
+  /* Light OLED Luxury - Premium light theme */
+  .light-luxury {
+    --bg-canvas: #fafafa;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --bg-tertiary: #ebebed;
+    --bg-overlay: rgba(255, 255, 255, 0.98);
+    --bg-hover: rgba(0, 0, 0, 0.03);
+    --bg-active: rgba(0, 0, 0, 0.06);
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a4a4a;
+    --text-tertiary: #8a8a8a;
+    --text-link: #0d9488;
+    --text-link-hover: #0f766e;
+    --text-danger: #dc2626;
+    --text-success: #059669;
+    --text-warning: #d97706;
+    --border-default: #e5e5e5;
+    --border-muted: #f0f0f0;
+    --border-subtle: #f5f5f5;
+    --accent-primary: #0d9488;
+    --accent-secondary: #6b7280;
+    --accent-success: #059669;
+    --accent-warning: #d97706;
+    --accent-danger: #dc2626;
+    --accent-info: #0284c7;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.08);
+    --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Dark OLED Luxury - Premium dark theme */
+  .dark-luxury {
+    --bg-canvas: #000000;
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #111111;
+    --bg-tertiary: #1a1a1a;
+    --bg-overlay: rgba(10, 10, 10, 0.98);
+    --bg-hover: rgba(255, 255, 255, 0.04);
+    --bg-active: rgba(255, 255, 255, 0.08);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-tertiary: rgba(255, 255, 255, 0.4);
+    --text-link: #2dd4bf;
+    --text-link-hover: #5eead4;
+    --text-danger: #f87171;
+    --text-success: #34d399;
+    --text-warning: #fbbf24;
+    --border-default: rgba(255, 255, 255, 0.08);
+    --border-muted: rgba(255, 255, 255, 0.04);
+    --border-subtle: rgba(255, 255, 255, 0.02);
+    --accent-primary: #14b8a6;
+    --accent-secondary: rgba(255, 255, 255, 0.5);
+    --accent-success: #34d399;
+    --accent-warning: #fbbf24;
+    --accent-danger: #f87171;
+    --accent-info: #38bdf8;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 8px 16px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.7);
+    --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.8);
+  }
+
   /* Dark High Contrast - Maximum readability */
   .dark-high-contrast {
     /* Backgrounds */
