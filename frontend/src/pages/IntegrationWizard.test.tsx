@@ -13,6 +13,14 @@ vi.mock('../services/api', () => ({
     generateDeviceToken: vi.fn(),
     rotateDeviceToken: vi.fn(),
     getDeviceTokenInfo: vi.fn(),
+    checkMqttConnectivity: vi.fn(),
+    // Device Groups & Tags API
+    getDeviceGroups: vi.fn(),
+    getDeviceTags: vi.fn(),
+    createDeviceGroup: vi.fn(),
+    createDeviceTag: vi.fn(),
+    addDeviceToGroup: vi.fn(),
+    addTagToDevice: vi.fn(),
   },
 }));
 
@@ -38,6 +46,16 @@ describe('IntegrationWizard', () => {
     vi.clearAllMocks();
     // Default mock: return empty array for getDevices (can be overridden in specific tests)
     vi.mocked(apiService.apiService.getDevices).mockResolvedValue([]);
+    // Default mock: return empty arrays for device groups and tags
+    vi.mocked(apiService.apiService.getDeviceGroups).mockResolvedValue([]);
+    vi.mocked(apiService.apiService.getDeviceTags).mockResolvedValue([]);
+    vi.mocked(apiService.apiService.checkMqttConnectivity).mockResolvedValue({
+      status: 'CONNECTED',
+      reachable: true,
+      message: 'MQTT broker is online',
+      host: 'localhost',
+      port: 1883,
+    });
   });
 
   describe('Utility Functions', () => {
@@ -256,6 +274,10 @@ describe('IntegrationWizard', () => {
         externalId: 'existing-device',
         name: 'Existing Device',
         status: 'ONLINE',
+      } as any);
+      vi.mocked(apiService.apiService.getDeviceTokenInfo).mockResolvedValue({
+        maskedToken: 'existing***789',
+        expiresAt: null,
       } as any);
       vi.mocked(apiService.apiService.rotateDeviceToken).mockResolvedValue({
         token: mockToken,
