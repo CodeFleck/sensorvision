@@ -130,6 +130,8 @@ export const IntegrationWizard: React.FC = () => {
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [loadingTags, setLoadingTags] = useState(false);
+  const [groupsLoaded, setGroupsLoaded] = useState(false);
+  const [tagsLoaded, setTagsLoaded] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [creatingGroup, setCreatingGroup] = useState(false);
@@ -199,29 +201,37 @@ export const IntegrationWizard: React.FC = () => {
   React.useEffect(() => {
     if (showOrganization) {
       // Fetch groups if not already loaded
-      if (deviceGroups.length === 0 && !loadingGroups) {
+      if (!groupsLoaded && !loadingGroups) {
         setLoadingGroups(true);
         apiService.getDeviceGroups()
-          .then(groups => setDeviceGroups(groups))
+          .then(groups => {
+            setDeviceGroups(groups);
+            setGroupsLoaded(true);
+          })
           .catch(err => {
             console.error('Failed to fetch device groups:', err);
             showToast('Failed to load device groups', 'error');
+            setGroupsLoaded(true); // Mark as loaded even on error to prevent retry loops
           })
           .finally(() => setLoadingGroups(false));
       }
       // Fetch tags if not already loaded
-      if (deviceTags.length === 0 && !loadingTags) {
+      if (!tagsLoaded && !loadingTags) {
         setLoadingTags(true);
         apiService.getDeviceTags()
-          .then(tags => setDeviceTags(tags))
+          .then(tags => {
+            setDeviceTags(tags);
+            setTagsLoaded(true);
+          })
           .catch(err => {
             console.error('Failed to fetch device tags:', err);
             showToast('Failed to load device tags', 'error');
+            setTagsLoaded(true); // Mark as loaded even on error to prevent retry loops
           })
           .finally(() => setLoadingTags(false));
       }
     }
-  }, [showOrganization]);
+  }, [showOrganization, groupsLoaded, tagsLoaded, loadingGroups, loadingTags]);
 
   const goToNextStep = () => {
     if (currentStep < totalSteps) {
@@ -1358,15 +1368,19 @@ echo "Done! Check your dashboard at ${apiUrl}"
                                 }}
                                 className={clsx(
                                   'px-3 py-1 rounded-full text-sm font-medium transition-all flex items-center space-x-1',
-                                  isSelected
-                                    ? 'ring-2 ring-offset-1'
-                                    : 'opacity-60 hover:opacity-100'
+                                  !isSelected && 'opacity-60 hover:opacity-100'
                                 )}
                                 style={{
                                   backgroundColor: `${tag.color}20`,
                                   color: tag.color,
                                   borderColor: tag.color,
-                                  ...(isSelected && { ringColor: tag.color }),
+                                  // Use outline instead of ring for dynamic color support
+                                  ...(isSelected && {
+                                    outlineColor: tag.color,
+                                    outlineWidth: '2px',
+                                    outlineStyle: 'solid',
+                                    outlineOffset: '2px',
+                                  }),
                                 }}
                               >
                                 <span>{tag.name}</span>
@@ -1711,12 +1725,14 @@ echo "Done! Check your dashboard at ${apiUrl}"
                     setApiToken('');
                     setConnectionSuccess(false);
                     setMqttStatus(null);
-                    // Reset organization state
+                    // Reset organization state (but keep cached groups/tags)
                     setShowOrganization(false);
                     setSelectedGroupId(null);
                     setSelectedTagIds([]);
                     setNewGroupName('');
                     setNewTagName('');
+                    // Note: We intentionally keep groupsLoaded/tagsLoaded and the data
+                    // so users don't have to wait for refetch when adding multiple devices
                   }}
                   className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-center font-medium"
                 >
