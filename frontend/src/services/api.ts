@@ -885,6 +885,80 @@ class ApiService {
       body: JSON.stringify(updates),
     });
   }
+
+  // ========== Device Groups ==========
+
+  /**
+   * Get all device groups for the current user's organization.
+   */
+  async getDeviceGroups(): Promise<Array<{ id: number; name: string; description?: string }>> {
+    return this.request('/device-groups');
+  }
+
+  /**
+   * Create a new device group.
+   */
+  async createDeviceGroup(data: { name: string; description?: string }): Promise<{ id: number; name: string; description?: string }> {
+    return this.request('/device-groups', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Add a device to a group.
+   */
+  async addDeviceToGroup(groupId: number, deviceId: string): Promise<void> {
+    return this.request(`/device-groups/${groupId}/devices/${deviceId}`, {
+      method: 'POST',
+    });
+  }
+
+  /**
+   * Remove a device from a group.
+   */
+  async removeDeviceFromGroup(groupId: number, deviceId: string): Promise<void> {
+    return this.request(`/device-groups/${groupId}/devices/${deviceId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ========== Device Tags ==========
+
+  /**
+   * Get all device tags for the current user's organization.
+   */
+  async getDeviceTags(): Promise<Array<{ id: number; name: string; color: string }>> {
+    return this.request('/device-tags');
+  }
+
+  /**
+   * Create a new device tag.
+   */
+  async createDeviceTag(data: { name: string; color: string }): Promise<{ id: number; name: string; color: string }> {
+    return this.request('/device-tags', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Add a tag to a device.
+   */
+  async addTagToDevice(tagId: number, deviceId: string): Promise<void> {
+    return this.request(`/device-tags/${tagId}/devices/${deviceId}`, {
+      method: 'POST',
+    });
+  }
+
+  /**
+   * Remove a tag from a device.
+   */
+  async removeTagFromDevice(tagId: number, deviceId: string): Promise<void> {
+    return this.request(`/device-tags/${tagId}/devices/${deviceId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiService = new ApiService();

@@ -13,6 +13,12 @@ import {
   Terminal,
   Wifi,
   AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  FolderTree,
+  Tags,
+  Plus,
+  X,
 } from 'lucide-react';
 import { apiService } from '../services/api';
 import { clsx } from 'clsx';
@@ -116,6 +122,19 @@ export const IntegrationWizard: React.FC = () => {
   const [isCheckingMqtt, setIsCheckingMqtt] = useState(false);
   const apiUrl = config.backendUrl;
 
+  // Device Organization (Groups & Tags)
+  const [showOrganization, setShowOrganization] = useState(false);
+  const [deviceGroups, setDeviceGroups] = useState<Array<{ id: number; name: string; description?: string }>>([]);
+  const [deviceTags, setDeviceTags] = useState<Array<{ id: number; name: string; color: string }>>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+  const [loadingTags, setLoadingTags] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newTagName, setNewTagName] = useState('');
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const [creatingTag, setCreatingTag] = useState(false);
+
   const totalSteps = 5;
 
   // Helper to determine if platform uses MQTT or HTTP
@@ -176,6 +195,34 @@ export const IntegrationWizard: React.FC = () => {
     }
   }, [useExistingDevice]);
 
+  // Fetch device groups and tags when organization section is expanded
+  React.useEffect(() => {
+    if (showOrganization) {
+      // Fetch groups if not already loaded
+      if (deviceGroups.length === 0 && !loadingGroups) {
+        setLoadingGroups(true);
+        apiService.getDeviceGroups()
+          .then(groups => setDeviceGroups(groups))
+          .catch(err => {
+            console.error('Failed to fetch device groups:', err);
+            showToast('Failed to load device groups', 'error');
+          })
+          .finally(() => setLoadingGroups(false));
+      }
+      // Fetch tags if not already loaded
+      if (deviceTags.length === 0 && !loadingTags) {
+        setLoadingTags(true);
+        apiService.getDeviceTags()
+          .then(tags => setDeviceTags(tags))
+          .catch(err => {
+            console.error('Failed to fetch device tags:', err);
+            showToast('Failed to load device tags', 'error');
+          })
+          .finally(() => setLoadingTags(false));
+      }
+    }
+  }, [showOrganization]);
+
   const goToNextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -196,6 +243,76 @@ export const IntegrationWizard: React.FC = () => {
   const handlePlatformSelect = (platform: Platform) => {
     setSelectedPlatform(platform);
     goToNextStep();
+  };
+
+  // Create a new device group inline
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim()) return;
+    setCreatingGroup(true);
+    try {
+      const newGroup = await apiService.createDeviceGroup({ name: newGroupName.trim() });
+      setDeviceGroups(prev => [...prev, newGroup]);
+      setSelectedGroupId(newGroup.id);
+      setNewGroupName('');
+      showToast(`Group "${newGroup.name}" created`, 'success');
+    } catch (error) {
+      console.error('Failed to create group:', error);
+      showToast('Failed to create group', 'error');
+    } finally {
+      setCreatingGroup(false);
+    }
+  };
+
+  // Create a new device tag inline
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) return;
+    setCreatingTag(true);
+    try {
+      // Generate a random color for the tag
+      const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      const newTag = await apiService.createDeviceTag({ name: newTagName.trim(), color: randomColor });
+      setDeviceTags(prev => [...prev, newTag]);
+      setSelectedTagIds(prev => [...prev, newTag.id]);
+      setNewTagName('');
+      showToast(`Tag "${newTag.name}" created`, 'success');
+    } catch (error) {
+      console.error('Failed to create tag:', error);
+      showToast('Failed to create tag', 'error');
+    } finally {
+      setCreatingTag(false);
+    }
+  };
+
+  // Apply device organization (groups and tags) after device setup
+  const applyDeviceOrganization = async (deviceExternalId: string) => {
+    const promises: Promise<void>[] = [];
+
+    // Add device to selected group
+    if (selectedGroupId) {
+      promises.push(
+        apiService.addDeviceToGroup(selectedGroupId, deviceExternalId)
+          .catch(err => {
+            console.error('Failed to add device to group:', err);
+            showToast('Failed to add device to group', 'error');
+          })
+      );
+    }
+
+    // Add selected tags to device
+    for (const tagId of selectedTagIds) {
+      promises.push(
+        apiService.addTagToDevice(tagId, deviceExternalId)
+          .catch(err => {
+            console.error('Failed to add tag to device:', err);
+            showToast('Failed to add tag to device', 'error');
+          })
+      );
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
   };
 
   const handleDeviceSetup = async () => {
@@ -303,6 +420,12 @@ export const IntegrationWizard: React.FC = () => {
       if (tokenResponse && tokenResponse.token) {
         setApiToken(tokenResponse.token);
         setLastSetupDeviceId(deviceId); // Remember which device we just set up
+
+        // Apply device organization (groups and tags) if selected
+        if (selectedGroupId || selectedTagIds.length > 0) {
+          await applyDeviceOrganization(deviceId);
+        }
+
         generateCode(selectedPlatform!, deviceId, tokenResponse.token);
         goToNextStep();
       } else {
@@ -1144,6 +1267,145 @@ echo "Done! Check your dashboard at ${apiUrl}"
                   </div>
                 )}
 
+                {/* Organization Section (Optional) */}
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowOrganization(!showOrganization)}
+                    className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <FolderTree className="h-5 w-5 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-700">
+                        Organization (Optional)
+                      </span>
+                    </div>
+                    {showOrganization ? (
+                      <ChevronUp className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
+
+                  {showOrganization && (
+                    <div className="p-4 space-y-4 border-t border-gray-200">
+                      <p className="text-xs text-gray-500">
+                        Organize your device into groups and add tags for easier management.
+                      </p>
+
+                      {/* Device Group Selection */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                          <FolderTree className="h-4 w-4" />
+                          <span>Device Group</span>
+                        </label>
+                        <div className="flex space-x-2">
+                          <select
+                            value={selectedGroupId || ''}
+                            onChange={(e) => setSelectedGroupId(e.target.value ? Number(e.target.value) : null)}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            disabled={loadingGroups}
+                          >
+                            <option value="">No group selected</option>
+                            {deviceGroups.map((group) => (
+                              <option key={group.id} value={group.id}>
+                                {group.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {/* Inline Create Group */}
+                        <div className="mt-2 flex space-x-2">
+                          <input
+                            type="text"
+                            value={newGroupName}
+                            onChange={(e) => setNewGroupName(e.target.value)}
+                            placeholder="New group name"
+                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onKeyDown={(e) => e.key === 'Enter' && handleCreateGroup()}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCreateGroup}
+                            disabled={!newGroupName.trim() || creatingGroup}
+                            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-1"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span>{creatingGroup ? '...' : 'Add'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Device Tags Selection */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-1">
+                          <Tags className="h-4 w-4" />
+                          <span>Device Tags</span>
+                        </label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {deviceTags.map((tag) => {
+                            const isSelected = selectedTagIds.includes(tag.id);
+                            return (
+                              <button
+                                key={tag.id}
+                                type="button"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setSelectedTagIds(prev => prev.filter(id => id !== tag.id));
+                                  } else {
+                                    setSelectedTagIds(prev => [...prev, tag.id]);
+                                  }
+                                }}
+                                className={clsx(
+                                  'px-3 py-1 rounded-full text-sm font-medium transition-all flex items-center space-x-1',
+                                  isSelected
+                                    ? 'ring-2 ring-offset-1'
+                                    : 'opacity-60 hover:opacity-100'
+                                )}
+                                style={{
+                                  backgroundColor: `${tag.color}20`,
+                                  color: tag.color,
+                                  borderColor: tag.color,
+                                  ...(isSelected && { ringColor: tag.color }),
+                                }}
+                              >
+                                <span>{tag.name}</span>
+                                {isSelected && <X className="h-3 w-3" />}
+                              </button>
+                            );
+                          })}
+                          {loadingTags && (
+                            <span className="text-sm text-gray-400">Loading tags...</span>
+                          )}
+                          {!loadingTags && deviceTags.length === 0 && (
+                            <span className="text-sm text-gray-400">No tags yet</span>
+                          )}
+                        </div>
+                        {/* Inline Create Tag */}
+                        <div className="flex space-x-2">
+                          <input
+                            type="text"
+                            value={newTagName}
+                            onChange={(e) => setNewTagName(e.target.value)}
+                            placeholder="New tag name"
+                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCreateTag}
+                            disabled={!newTagName.trim() || creatingTag}
+                            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center space-x-1"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span>{creatingTag ? '...' : 'Add'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={handleDeviceSetup}
                   disabled={loading || !deviceId || (!useExistingDevice && !deviceName)}
@@ -1449,6 +1711,12 @@ echo "Done! Check your dashboard at ${apiUrl}"
                     setApiToken('');
                     setConnectionSuccess(false);
                     setMqttStatus(null);
+                    // Reset organization state
+                    setShowOrganization(false);
+                    setSelectedGroupId(null);
+                    setSelectedTagIds([]);
+                    setNewGroupName('');
+                    setNewTagName('');
                   }}
                   className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-center font-medium"
                 >
