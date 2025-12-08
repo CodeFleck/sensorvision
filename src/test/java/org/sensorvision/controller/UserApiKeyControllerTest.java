@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.sensorvision.dto.CreateUserApiKeyRequest;
 import org.sensorvision.dto.RotateApiKeyResponse;
+import org.sensorvision.dto.RotationResult;
 import org.sensorvision.dto.UserApiKeyDto;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.User;
@@ -206,7 +207,7 @@ class UserApiKeyControllerTest {
 
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(userApiKeyService.getApiKeysForUser(1L)).thenReturn(List.of(testApiKey));
-        when(userApiKeyService.rotateApiKey(eq(1L), isNull())).thenReturn(newKey);
+        when(userApiKeyService.rotateApiKey(eq(1L), isNull())).thenReturn(RotationResult.immediate(newKey));
 
         // When - default grace period is 0 (immediate)
         ResponseEntity<RotateApiKeyResponse> response = controller.rotateApiKey(1L, 0);
@@ -228,10 +229,12 @@ class UserApiKeyControllerTest {
                 .name("Default Token")
                 .createdAt(LocalDateTime.now())
                 .build();
+        LocalDateTime scheduledRevocation = LocalDateTime.now().plusMinutes(30);
 
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(userApiKeyService.getApiKeysForUser(1L)).thenReturn(List.of(testApiKey));
-        when(userApiKeyService.rotateApiKey(eq(1L), any(Duration.class))).thenReturn(newKey);
+        when(userApiKeyService.rotateApiKey(eq(1L), any(Duration.class)))
+                .thenReturn(RotationResult.withGracePeriod(newKey, scheduledRevocation));
 
         // When - 30 minute grace period
         ResponseEntity<RotateApiKeyResponse> response = controller.rotateApiKey(1L, 30);
@@ -239,7 +242,7 @@ class UserApiKeyControllerTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getNewKey().getId()).isEqualTo(2L);
-        assertThat(response.getBody().getOldKeyValidUntil()).isNotNull();
+        assertThat(response.getBody().getOldKeyValidUntil()).isEqualTo(scheduledRevocation);
         assertThat(response.getBody().getGracePeriodMinutes()).isEqualTo(30);
     }
 
@@ -294,7 +297,7 @@ class UserApiKeyControllerTest {
         // Given
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(userApiKeyService.getApiKeysForUser(1L)).thenReturn(List.of(testApiKey));
-        when(userApiKeyService.rotateApiKey(eq(1L), isNull())).thenReturn(testApiKey);
+        when(userApiKeyService.rotateApiKey(eq(1L), isNull())).thenReturn(RotationResult.immediate(testApiKey));
 
         // When/Then - should not throw
         ResponseEntity<RotateApiKeyResponse> response = controller.rotateApiKey(1L, 0);

@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.sensorvision.dto.RotationResult;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -153,17 +155,33 @@ public class UserApiKeyService {
         // Validate hash for each candidate (BCrypt provides constant-time comparison)
         for (UserApiKey candidate : candidates) {
             if (candidate.getKeyHash() != null && passwordEncoder.matches(keyValue, candidate.getKeyHash())) {
+                // Check if key is still active (handles scheduled revocation)
+                if (!candidate.isActive()) {
+                    log.debug("API key {} matched but is not active (may have expired scheduled revocation)", candidate.getId());
+                    continue;
+                }
                 return Optional.of(candidate);
             }
             // Fallback for legacy keys that still have plaintext keyValue
             if (candidate.getKeyValue() != null && candidate.getKeyValue().equals(keyValue)) {
+                // Check if key is still active (handles scheduled revocation)
+                if (!candidate.isActive()) {
+                    log.debug("Legacy API key {} matched but is not active", candidate.getId());
+                    continue;
+                }
                 log.warn("API key {} is using legacy plaintext storage - should be migrated", candidate.getId());
                 return Optional.of(candidate);
             }
         }
 
         // Also check legacy plaintext keys for backwards compatibility
-        return userApiKeyRepository.findActiveByKeyValue(keyValue);
+        Optional<UserApiKey> legacyKey = userApiKeyRepository.findActiveByKeyValue(keyValue);
+        // Also verify isActive() for legacy keys (handles scheduled revocation)
+        if (legacyKey.isPresent() && !legacyKey.get().isActive()) {
+            log.debug("Legacy API key {} found but is not active", legacyKey.get().getId());
+            return Optional.empty();
+        }
+        return legacyKey;
     }
 
     /**
@@ -192,12 +210,12 @@ public class UserApiKeyService {
      * Rotate an API key with immediate revocation of the old key.
      *
      * @param keyId The ID of the key to rotate
-     * @return The new API key
+     * @return RotationResult containing the new API key (oldKeyValidUntil will be null)
      * @throws IllegalArgumentException if key not found or access denied
      * @throws IllegalStateException    if key is already revoked
      */
     @Transactional
-    public UserApiKey rotateApiKey(Long keyId) {
+    public RotationResult rotateApiKey(Long keyId) {
         return rotateApiKey(keyId, null);
     }
 
@@ -211,12 +229,12 @@ public class UserApiKeyService {
      * @param gracePeriod Optional grace period during which the old key remains valid.
      *                    If null or zero, the old key is revoked immediately.
      *                    Maximum allowed value is 7 days.
-     * @return The new API key
+     * @return RotationResult containing the new API key and the old key's expiration time (if grace period used)
      * @throws IllegalArgumentException if key not found or access denied, or grace period exceeds maximum
      * @throws IllegalStateException    if key is already revoked or has pending revocation
      */
     @Transactional
-    public UserApiKey rotateApiKey(Long keyId, Duration gracePeriod) {
+    public RotationResult rotateApiKey(Long keyId, Duration gracePeriod) {
         UserApiKey oldKey = userApiKeyRepository.findById(keyId)
                 .orElseThrow(() -> new IllegalArgumentException("API key not found or access denied"));
 
@@ -231,18 +249,23 @@ public class UserApiKeyService {
         // Validate grace period
         Duration effectiveGracePeriod = validateGracePeriod(gracePeriod);
 
+        LocalDateTime oldKeyValidUntil = null;
         if (effectiveGracePeriod != null && !effectiveGracePeriod.isZero()) {
             // Schedule future revocation
-            oldKey.setScheduledRevocationAt(LocalDateTime.now().plus(effectiveGracePeriod));
+            oldKeyValidUntil = LocalDateTime.now().plus(effectiveGracePeriod);
+            oldKey.setScheduledRevocationAt(oldKeyValidUntil);
             userApiKeyRepository.save(oldKey);
             log.info("Scheduled revocation of API key '{}' for user {} at {}",
-                    oldKey.getName(), oldKey.getUser().getUsername(), oldKey.getScheduledRevocationAt());
+                    oldKey.getName(),
+                    oldKey.getUser() != null ? oldKey.getUser().getUsername() : "unknown",
+                    oldKey.getScheduledRevocationAt());
         } else {
             // Immediate revocation
             oldKey.setRevokedAt(LocalDateTime.now());
             userApiKeyRepository.save(oldKey);
             log.info("Immediately revoked API key '{}' for user {}",
-                    oldKey.getName(), oldKey.getUser().getUsername());
+                    oldKey.getName(),
+                    oldKey.getUser() != null ? oldKey.getUser().getUsername() : "unknown");
         }
 
         // Generate a new key with the same name (doesn't count against limit since we just revoked one)
@@ -250,12 +273,14 @@ public class UserApiKeyService {
 
         log.info("Rotated API key '{}' for user {}{}",
                 oldKey.getName(),
-                oldKey.getUser().getUsername(),
+                oldKey.getUser() != null ? oldKey.getUser().getUsername() : "unknown",
                 effectiveGracePeriod != null && !effectiveGracePeriod.isZero()
                         ? " (old key valid for " + effectiveGracePeriod.toMinutes() + " minutes)"
                         : "");
 
-        return newKey;
+        return oldKeyValidUntil != null
+                ? RotationResult.withGracePeriod(newKey, oldKeyValidUntil)
+                : RotationResult.immediate(newKey);
     }
 
     /**

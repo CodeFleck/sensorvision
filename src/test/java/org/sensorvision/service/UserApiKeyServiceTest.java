@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.User;
 import org.sensorvision.model.UserApiKey;
+import org.sensorvision.dto.RotationResult;
 import org.sensorvision.repository.UserApiKeyRepository;
 import org.sensorvision.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -367,12 +368,14 @@ class UserApiKeyServiceTest {
         });
 
         // When
-        UserApiKey newKey = userApiKeyService.rotateApiKey(1L);
+        RotationResult result = userApiKeyService.rotateApiKey(1L);
 
         // Then
-        assertThat(newKey).isNotNull();
-        assertThat(newKey.getName()).isEqualTo("Default Token");
-        assertThat(newKey.getKeyHash()).isEqualTo("$2a$10$newhashedvalue");
+        assertThat(result).isNotNull();
+        assertThat(result.newKey()).isNotNull();
+        assertThat(result.newKey().getName()).isEqualTo("Default Token");
+        assertThat(result.newKey().getKeyHash()).isEqualTo("$2a$10$newhashedvalue");
+        assertThat(result.oldKeyValidUntil()).isNull(); // Immediate revocation
         assertThat(testApiKey.getRevokedAt()).isNotNull(); // Old key revoked
 
         verify(userApiKeyRepository, times(2)).save(any(UserApiKey.class));
@@ -531,15 +534,16 @@ class UserApiKeyServiceTest {
         });
 
         // When
-        UserApiKey newKey = userApiKeyService.rotateApiKey(1L, Duration.ofMinutes(30));
+        RotationResult result = userApiKeyService.rotateApiKey(1L, Duration.ofMinutes(30));
 
         // Then
-        assertThat(newKey).isNotNull();
-        assertThat(newKey.getId()).isEqualTo(2L);
+        assertThat(result).isNotNull();
+        assertThat(result.newKey().getId()).isEqualTo(2L);
+        assertThat(result.oldKeyValidUntil()).isNotNull();
+        assertThat(result.oldKeyValidUntil()).isAfter(LocalDateTime.now());
+        assertThat(result.oldKeyValidUntil()).isBefore(LocalDateTime.now().plusMinutes(31));
         assertThat(testApiKey.getRevokedAt()).isNull(); // Not immediately revoked
         assertThat(testApiKey.getScheduledRevocationAt()).isNotNull();
-        assertThat(testApiKey.getScheduledRevocationAt()).isAfter(LocalDateTime.now());
-        assertThat(testApiKey.getScheduledRevocationAt()).isBefore(LocalDateTime.now().plusMinutes(31));
     }
 
     @Test
@@ -560,9 +564,10 @@ class UserApiKeyServiceTest {
         });
 
         // When
-        UserApiKey newKey = userApiKeyService.rotateApiKey(1L, Duration.ZERO);
+        RotationResult result = userApiKeyService.rotateApiKey(1L, Duration.ZERO);
 
         // Then
+        assertThat(result.oldKeyValidUntil()).isNull();
         assertThat(testApiKey.getRevokedAt()).isNotNull();
         assertThat(testApiKey.getScheduledRevocationAt()).isNull();
     }
@@ -585,9 +590,10 @@ class UserApiKeyServiceTest {
         });
 
         // When
-        UserApiKey newKey = userApiKeyService.rotateApiKey(1L, null);
+        RotationResult result = userApiKeyService.rotateApiKey(1L, null);
 
         // Then
+        assertThat(result.oldKeyValidUntil()).isNull();
         assertThat(testApiKey.getRevokedAt()).isNotNull();
         assertThat(testApiKey.getScheduledRevocationAt()).isNull();
     }

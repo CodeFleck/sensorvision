@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.sensorvision.dto.CreateUserApiKeyRequest;
 import org.sensorvision.dto.RotateApiKeyResponse;
+import org.sensorvision.dto.RotationResult;
 import org.sensorvision.dto.UserApiKeyDto;
 import org.sensorvision.model.User;
 import org.sensorvision.model.UserApiKey;
@@ -19,7 +20,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -129,16 +129,13 @@ public class UserApiKeyController {
         // Verify the key belongs to the current user
         verifyKeyOwnership(keyId, currentUser.getId());
 
-        // Get the old key's scheduled revocation time for the response
-        LocalDateTime oldKeyValidUntil = null;
-        Duration gracePeriod = null;
+        Duration gracePeriod = (gracePeriodMinutes != null && gracePeriodMinutes > 0)
+                ? Duration.ofMinutes(gracePeriodMinutes)
+                : null;
 
-        if (gracePeriodMinutes != null && gracePeriodMinutes > 0) {
-            gracePeriod = Duration.ofMinutes(gracePeriodMinutes);
-            oldKeyValidUntil = LocalDateTime.now().plus(gracePeriod);
-        }
-
-        UserApiKey newKey = userApiKeyService.rotateApiKey(keyId, gracePeriod);
+        // Perform rotation and get both new key and actual scheduled revocation time
+        RotationResult result = userApiKeyService.rotateApiKey(keyId, gracePeriod);
+        UserApiKey newKey = result.newKey();
 
         log.info("User {} rotated API key '{}' {}",
                 currentUser.getUsername(),
@@ -151,7 +148,7 @@ public class UserApiKeyController {
                         newKey.getName(),
                         newKey.getDisplayKeyValue(),
                         newKey.getCreatedAt()))
-                .oldKeyValidUntil(oldKeyValidUntil)
+                .oldKeyValidUntil(result.oldKeyValidUntil())  // Use actual timestamp from service
                 .gracePeriodMinutes(gracePeriodMinutes)
                 .build());
     }
