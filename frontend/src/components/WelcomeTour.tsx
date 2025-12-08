@@ -131,11 +131,13 @@ export const WelcomeTour = ({ isNewUser = false, forceStart = false, onComplete 
   const location = useLocation();
 
   useEffect(() => {
+    let isMounted = true;
+
     // Check if tour should start
     if (forceStart) {
       setRun(true);
       setStepIndex(0);
-      return;
+      return () => { isMounted = false; };
     }
 
     // For new users, check if they've seen the tour
@@ -144,11 +146,18 @@ export const WelcomeTour = ({ isNewUser = false, forceStart = false, onComplete 
       if (!hasSeenTour) {
         // Small delay to let the page render first
         const timer = setTimeout(() => {
-          setRun(true);
+          if (isMounted) {
+            setRun(true);
+          }
         }, 500);
-        return () => clearTimeout(timer);
+        return () => {
+          isMounted = false;
+          clearTimeout(timer);
+        };
       }
     }
+
+    return () => { isMounted = false; };
   }, [isNewUser, forceStart]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
