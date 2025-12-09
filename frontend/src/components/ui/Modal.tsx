@@ -56,6 +56,9 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'modal-title' : undefined}
         className={clsx(
           'relative w-full bg-[var(--bg-primary)] rounded-lg shadow-[var(--shadow-xl)] border border-[var(--border-default)] animate-fadeIn',
           sizeClasses[size]
@@ -66,7 +69,7 @@ export const Modal: React.FC<ModalProps> = ({
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-muted)]">
             {title && (
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+              <h2 id="modal-title" className="text-lg font-semibold text-[var(--text-primary)]">
                 {title}
               </h2>
             )}

@@ -214,7 +214,7 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
 
       {/* Description */}
       {(widget.config.description as string | undefined) && (
-        <div className="text-sm text-gray-400 text-center max-w-xs">
+        <div className="text-sm text-[var(--text-secondary)] text-center max-w-xs">
           {widget.config.description as string}
         </div>
       )}
@@ -224,8 +224,8 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
         <div
           className={`text-sm font-medium px-4 py-2 rounded ${
             lastResult.success
-              ? 'bg-green-500/20 text-green-400'
-              : 'bg-red-500/20 text-red-400'
+              ? 'bg-[var(--accent-success)]/20 text-[var(--accent-success)]'
+              : 'bg-[var(--accent-danger)]/20 text-[var(--accent-danger)]'
           }`}
         >
           {lastResult.message}
@@ -234,7 +234,7 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
 
       {/* Command Info */}
       {(widget.config.showCommandInfo as boolean | undefined) && (
-        <div className="text-xs text-gray-500 space-y-1">
+        <div className="text-xs text-[var(--text-muted)] space-y-1">
           <div>Method: {((widget.config.command as CommandConfig | undefined)?.method || 'mqtt')}</div>
           <div>Target: {((widget.config.command as CommandConfig | undefined)?.topic || (widget.config.command as CommandConfig | undefined)?.url || 'N/A')}</div>
         </div>

@@ -1,10 +1,9 @@
 import { Bug } from 'lucide-react';
+import { Button } from './ui/Button';
 
 interface FooterProps {
   onReportIssue: () => void;
 }
-
-import { Button } from './ui/Button';
 
 export const Footer = ({ onReportIssue }: FooterProps) => {
   return (
