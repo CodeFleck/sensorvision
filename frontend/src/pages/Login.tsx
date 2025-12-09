@@ -187,7 +187,7 @@ export const Login: React.FC = () => {
               >
                 <div className="mb-8">
                   <h2 className="text-2xl font-bold text-white tracking-tight mb-2">Welcome back</h2>
-                  <p className="text-white/40 font-light">
+                  <p className="text-white/70 font-light">
                     Sign in to access your dashboard
                   </p>
                 </div>

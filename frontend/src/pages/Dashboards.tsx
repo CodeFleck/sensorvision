@@ -8,6 +8,7 @@ import { EditWidgetModal } from '../components/widgets/EditWidgetModal';
 import { WidgetFullscreenModal } from '../components/widgets/WidgetFullscreenModal';
 import { MultiWidgetFullscreenModal } from '../components/widgets/MultiWidgetFullscreenModal';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { Button } from '../components/ui';
 import GridLayout from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 
@@ -258,19 +259,19 @@ export const Dashboards: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center max-w-2xl px-4">
-          <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-16 h-16 text-danger mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Dashboard</h2>
-          <div className="text-left bg-gray-50 rounded-lg p-4 mb-4">
-            <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">{error}</pre>
+          <h2 className="text-2xl font-bold text-primary mb-2">Error Loading Dashboard</h2>
+          <div className="text-left bg-secondary rounded-lg p-4 mb-4">
+            <pre className="text-sm text-primary whitespace-pre-wrap font-mono">{error}</pre>
           </div>
-          <button
+          <Button
             onClick={loadDashboard}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            variant="primary"
           >
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -280,8 +281,8 @@ export const Dashboards: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">No Dashboard Found</h2>
-          <p className="text-gray-600">Create a dashboard to get started</p>
+          <h2 className="text-2xl font-bold text-primary mb-2">No Dashboard Found</h2>
+          <p className="text-secondary">Create a dashboard to get started</p>
         </div>
       </div>
     );
@@ -301,23 +302,23 @@ export const Dashboards: React.FC = () => {
         <div className="mb-6 flex justify-between items-start">
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-800">{dashboard.name}</h1>
+              <h1 className="text-3xl font-bold text-primary">{dashboard.name}</h1>
               {/* WebSocket Status Indicator */}
               <div className="flex items-center gap-2 text-sm">
-                <div className={`w-2 h-2 rounded-full ${connectionStatus === 'Open' ? 'bg-green-500' : 'bg-gray-400'}`} />
-                <span className="text-gray-600">
+                <div className={`w-2 h-2 rounded-full ${connectionStatus === 'Open' ? 'bg-[var(--accent-success)]' : 'bg-[var(--text-tertiary)]'}`} />
+                <span className="text-secondary">
                   {connectionStatus === 'Open' ? 'Live' : connectionStatus}
                 </span>
               </div>
             </div>
             {dashboard.description && (
-              <p className="text-gray-600 mt-1">{dashboard.description}</p>
+              <p className="text-secondary mt-1">{dashboard.description}</p>
             )}
           </div>
 
           <div className="flex gap-2">
             {selectionMode && selectedWidgets.size > 0 && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium">
+              <div className="flex items-center gap-2 px-3 py-2 bg-[var(--status-info-bg)] text-[var(--status-info-text)] rounded-lg font-medium">
                 {selectedWidgets.size} widget{selectedWidgets.size !== 1 ? 's' : ''} selected
               </div>
             )}
@@ -325,8 +326,8 @@ export const Dashboards: React.FC = () => {
               onClick={toggleSelectionMode}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                 selectionMode
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                  ? 'bg-[var(--accent-danger)] text-white hover:bg-[var(--accent-danger-hover)]'
+                  : 'bg-[var(--accent-success)] text-white hover:bg-[var(--accent-success-hover)]'
               }`}
               title={selectionMode ? "Exit selection mode" : "Select multiple widgets for fullscreen"}
             >
@@ -393,7 +394,7 @@ export const Dashboards: React.FC = () => {
               <select
                 value={dashboard.id}
                 onChange={(e) => switchDashboard(Number(e.target.value))}
-                className="px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                className="px-3 py-2 bg-secondary text-primary border border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] text-sm"
               >
                 {allDashboards.map((dash) => (
                   <option key={dash.id} value={dash.id}>
@@ -406,7 +407,7 @@ export const Dashboards: React.FC = () => {
             {/* Exit Fullscreen Button */}
             <button
               onClick={exitKioskMode}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--accent-danger)] text-white rounded-lg hover:bg-[var(--accent-danger-hover)] transition-colors text-sm"
               title="Exit fullscreen (ESC)"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -420,12 +421,12 @@ export const Dashboards: React.FC = () => {
 
       {/* Widgets Grid */}
       {dashboard.widgets.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="text-center py-12 bg-secondary rounded-lg">
+          <svg className="w-16 h-16 text-tertiary mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
           </svg>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">No Widgets Yet</h3>
-          <p className="text-gray-500">Add widgets to start monitoring your devices</p>
+          <h3 className="text-xl font-semibold text-primary mb-2">No Widgets Yet</h3>
+          <p className="text-secondary">Add widgets to start monitoring your devices</p>
         </div>
       ) : (
         <GridLayout

@@ -85,7 +85,7 @@ const navigationSections: NavigationSection[] = [
   {
     name: 'CORE',
     icon: Home,
-    iconColor: 'text-blue-600',
+    iconColor: 'text-link',
     adminOnly: false,
     items: [
       { name: 'Dashboard', href: '/', icon: Home, adminOnly: false },
@@ -252,15 +252,15 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
   const visibleSections = getVisibleSections();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-canvas">
       <div className="flex">
         {/* Sidebar */}
-        <div className="w-64 bg-white dark:bg-gray-800 shadow-sm flex flex-col h-screen border-r border-gray-200 dark:border-gray-700">
+        <div className="w-64 bg-primary shadow-sm flex flex-col h-screen border-r border-default">
           <div className="flex-shrink-0">
             <div className="p-6">
               <div className="flex items-center space-x-2">
-                <Activity className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">SensorVision</h1>
+                <Activity className="h-8 w-8 text-link" />
+                <h1 className="text-xl font-bold text-primary">SensorVision</h1>
               </div>
             </div>
           </div>
@@ -280,14 +280,14 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                     onClick={() => toggleSection(section.name)}
                     onMouseEnter={() => setHoveredSection(section.name)}
                     onMouseLeave={() => setHoveredSection(null)}
-                    className="w-full flex items-center px-3 py-2 mb-1 text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-all duration-200 group"
+                    className="w-full flex items-center px-3 py-2 mb-1 text-xs font-semibold text-secondary hover:text-primary hover:bg-hover rounded-md transition-all duration-200 group"
                   >
                     <SectionIcon className={clsx('h-4 w-4 mr-2 flex-shrink-0', section.iconColor)} />
                     <span className="flex-1 text-left tracking-wide">{section.name}</span>
                     {isCollapsed ? (
-                      <ChevronRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                      <ChevronRight className="h-3.5 w-3.5 text-secondary group-hover:text-primary transition-colors" />
                     ) : (
-                      <ChevronDown className="h-3.5 w-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                      <ChevronDown className="h-3.5 w-3.5 text-secondary group-hover:text-primary transition-colors" />
                     )}
                   </button>
 
@@ -310,14 +310,14 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                             className={clsx(
                               'flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200 relative',
                               isActive
-                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm'
-                                : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                                ? 'bg-hover text-link shadow-sm'
+                                : 'text-secondary hover:text-primary hover:bg-hover'
                             )}
                           >
                             <ItemIcon
                               className={clsx(
                                 'mr-3 h-4.5 w-4.5 flex-shrink-0',
-                                isActive ? 'text-blue-600' : 'text-gray-400'
+                                isActive ? 'text-link' : 'text-secondary'
                               )}
                             />
                             <span className="flex-1">{item.name}</span>
@@ -335,7 +335,7 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
 
                   {/* Divider after section (except last) */}
                   {sectionIndex < visibleSections.length - 1 && (
-                    <div className="mt-4 border-t border-gray-200" />
+                    <div className="mt-4 border-t border-muted" />
                   )}
                 </div>
               );
@@ -346,7 +346,7 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
         {/* Main content */}
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+          <header className="bg-primary border-b border-default shadow-sm">
             <div className="flex items-center justify-between px-8 py-4">
               <div className="flex-1">
                 {/* Future: Add breadcrumbs or page title here */}
@@ -356,7 +356,7 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                   to="/how-it-works"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-secondary hover:text-link hover:bg-hover rounded-md transition-colors"
                 >
                   <BookOpen className="h-5 w-5" />
                   <span>Documentation</span>
@@ -366,25 +366,25 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                 <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md hover:bg-hover transition-colors"
                   >
                     {user && <UserAvatar user={user} size="sm" />}
                     <div className="flex flex-col items-start">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        <span className="text-sm font-medium text-primary">
                           {user?.username || 'User'}
                         </span>
                         {isAdmin && (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
-                            <Shield className="h-3 w-3 text-amber-600 dark:text-amber-500" />
-                            <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[var(--status-warning-bg)] border border-[var(--accent-warning)]/30">
+                            <Shield className="h-3 w-3 text-[var(--status-warning-text)]" />
+                            <span className="text-[10px] font-semibold text-[var(--status-warning-text)] uppercase tracking-wide">
                               Admin
                             </span>
                           </span>
                         )}
                       </div>
                     </div>
-                    <ChevronDown className={`h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`h-4 w-4 text-secondary transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {isUserMenuOpen && (
@@ -393,18 +393,18 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                         className="fixed inset-0 z-10"
                         onClick={() => setIsUserMenuOpen(false)}
                       />
-                      <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-20 animate-fadeIn">
-                        <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      <div className="absolute right-0 mt-2 w-64 bg-dropdown rounded-md shadow-lg border border-default z-20 animate-fadeIn">
+                        <div className="p-3 border-b border-muted">
+                          <p className="text-sm font-medium text-primary">
                             {user?.username || 'User'}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          <p className="text-xs text-secondary mt-0.5">
                             {user?.organizationName || 'No Organization'}
                           </p>
                         </div>
 
-                        <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">
+                        <div className="p-3 border-b border-muted">
+                          <div className="text-xs font-semibold text-secondary mb-2">
                             Theme
                           </div>
                           <ThemeToggle />
@@ -414,14 +414,14 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                           <Link
                             to="/profile"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                            className="w-full flex items-center px-3 py-2 text-sm text-secondary hover:bg-hover rounded-md transition-colors"
                           >
                             Edit Profile
                           </Link>
                           <Link
                             to="/settings"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                            className="w-full flex items-center px-3 py-2 text-sm text-secondary hover:bg-hover rounded-md transition-colors"
                           >
                             <Settings className="mr-2 h-4 w-4" />
                             Settings
@@ -431,7 +431,7 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
                               setIsUserMenuOpen(false);
                               logout();
                             }}
-                            className="w-full flex items-center px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                            className="w-full flex items-center px-3 py-2 text-sm text-danger hover:bg-[var(--status-error-bg)] rounded-md transition-colors"
                           >
                             <LogOut className="mr-2 h-4 w-4" />
                             Sign Out

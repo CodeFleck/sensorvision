@@ -142,11 +142,11 @@ export const ControlButtonWidget: React.FC<ControlButtonWidgetProps> = ({ widget
 
     // Style classes
     const styleClasses = {
-      primary: 'bg-blue-600 hover:bg-blue-700 text-white',
-      success: 'bg-green-600 hover:bg-green-700 text-white',
-      danger: 'bg-red-600 hover:bg-red-700 text-white',
-      warning: 'bg-yellow-600 hover:bg-yellow-700 text-white',
-      secondary: 'bg-gray-600 hover:bg-gray-700 text-white',
+      primary: 'bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] text-white',
+      success: 'bg-[var(--accent-success)] hover:bg-[var(--accent-success-hover)] text-white',
+      danger: 'bg-[var(--accent-danger)] hover:bg-[var(--accent-danger-hover)] text-white',
+      warning: 'bg-[var(--accent-warning)] hover:bg-[var(--accent-warning-hover)] text-white',
+      secondary: 'bg-[var(--bg-secondary)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] border border-[var(--border-default)]',
     };
     baseClasses += styleClasses[buttonStyle as keyof typeof styleClasses];
 
