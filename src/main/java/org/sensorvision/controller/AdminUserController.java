@@ -345,6 +345,7 @@ public class AdminUserController {
     private UserDto convertToDto(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());
+        dto.setUuid(user.getUuid());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setFirstName(user.getFirstName());

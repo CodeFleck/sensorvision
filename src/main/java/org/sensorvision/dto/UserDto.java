@@ -2,9 +2,11 @@ package org.sensorvision.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 public class UserDto {
     private Long id;
+    private UUID uuid;
     private String username;
     private String email;
     private String firstName;
@@ -25,6 +27,14 @@ public class UserDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
     }
 
     public String getUsername() {

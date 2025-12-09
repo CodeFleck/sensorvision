@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Search, Power, Trash2, Shield, Mail, Calendar, Building2, UserCog, X, Check } from 'lucide-react';
+import { Users, Search, Power, Trash2, Shield, Mail, Calendar, Building2, UserCog, X, Check, Copy, Eye, EyeOff } from 'lucide-react';
 import { User } from '../types';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
@@ -19,6 +19,7 @@ export const AdminUsers = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [savingRoles, setSavingRoles] = useState(false);
+  const [showUuid, setShowUuid] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -126,6 +127,15 @@ export const AdminUsers = () => {
 
   const organizations = Array.from(new Set(users.map(u => u.organizationName))).sort();
 
+  const copyToClipboard = async (text: string | number) => {
+    try {
+      await navigator.clipboard.writeText(String(text));
+      toast.success('UUID copied to clipboard');
+    } catch {
+      toast.error('Failed to copy UUID');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -158,7 +168,7 @@ export const AdminUsers = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
@@ -182,6 +192,25 @@ export const AdminUsers = () => {
               ))}
             </select>
           </div>
+
+          <div className="flex items-center">
+            <button
+              onClick={() => setShowUuid(!showUuid)}
+              className={`flex items-center px-4 py-2 rounded-lg border transition-colors ${
+                showUuid
+                  ? 'bg-blue-50 border-blue-500 text-blue-700'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+              title={showUuid ? 'Hide UUID column' : 'Show UUID column'}
+            >
+              {showUuid ? (
+                <EyeOff className="h-4 w-4 mr-2" />
+              ) : (
+                <Eye className="h-4 w-4 mr-2" />
+              )}
+              {showUuid ? 'Hide UUID' : 'Show UUID'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -191,6 +220,11 @@ export const AdminUsers = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                {showUuid && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    UUID
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   User
                 </th>
@@ -214,7 +248,7 @@ export const AdminUsers = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={showUuid ? 7 : 6} className="px-6 py-12 text-center text-gray-500">
                     <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                     <p className="text-lg font-medium">No users found</p>
                     <p className="text-sm mt-1">Try adjusting your search or filters</p>
@@ -223,6 +257,22 @@ export const AdminUsers = () => {
               ) : (
                 filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
+                    {showUuid && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded max-w-[280px] truncate" title={user.uuid}>
+                            {user.uuid}
+                          </code>
+                          <button
+                            onClick={() => copyToClipboard(user.uuid)}
+                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            title="Copy UUID to clipboard"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">

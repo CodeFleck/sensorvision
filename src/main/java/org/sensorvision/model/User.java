@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -20,6 +21,10 @@ public class User extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "uuid", nullable = false, unique = true, updatable = false)
+    @Builder.Default
+    private UUID uuid = UUID.randomUUID();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
