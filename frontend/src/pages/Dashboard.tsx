@@ -8,6 +8,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { Device, LatestTelemetry, TelemetryPoint } from '../types';
 import { Activity, Zap, Cpu, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Card, CardBody } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 
 export const Dashboard = () => {
   const { isAdmin } = useAuth();
@@ -76,7 +78,7 @@ export const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading dashboard...</div>
+        <div className="text-secondary">Loading dashboard...</div>
       </div>
     );
   }
@@ -85,18 +87,18 @@ export const Dashboard = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
-          <p className="text-red-500 mb-4">{error}</p>
-          <button
+          <AlertTriangle className="mx-auto h-12 w-12 text-danger mb-4" />
+          <p className="text-danger mb-4">{error}</p>
+          <Button
             onClick={() => {
               setLoading(true);
               fetchData();
             }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors"
+            variant="primary"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -107,8 +109,8 @@ export const Dashboard = () => {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Real-time IoT monitoring overview</p>
+          <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
+          <p className="text-secondary mt-1">Real-time IoT monitoring overview</p>
         </div>
         <GettingStarted />
       </div>
@@ -118,64 +120,74 @@ export const Dashboard = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Real-time IoT monitoring overview</p>
+        <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
+        <p className="text-secondary mt-1">Real-time IoT monitoring overview</p>
       </div>
 
       {/* Connection Status */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex items-center space-x-2">
-          <Activity className={`h-4 w-4 ${connectionStatus === 'Open' ? 'text-green-500' : 'text-red-500'}`} />
-          <span className="text-sm font-medium">
-            Real-time Connection: {connectionStatus}
-          </span>
-        </div>
-      </div>
+      <Card>
+        <CardBody>
+          <div className="flex items-center space-x-2">
+            <Activity className={`h-4 w-4 ${connectionStatus === 'Open' ? 'text-success' : 'text-danger'}`} />
+            <span className="text-sm font-medium text-primary">
+              Real-time Connection: {connectionStatus}
+            </span>
+          </div>
+        </CardBody>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center">
-            <Cpu className="h-8 w-8 text-blue-600" />
-            <div className="ml-4">
-              <div className="text-2xl font-bold text-gray-900">{devices.length}</div>
-              <div className="text-sm text-gray-600">Total Devices</div>
+        <Card>
+          <CardBody>
+            <div className="flex items-center">
+              <Cpu className="h-8 w-8 text-link" />
+              <div className="ml-4">
+                <div className="text-2xl font-bold text-primary">{devices.length}</div>
+                <div className="text-sm text-secondary">Total Devices</div>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center">
-            <Activity className="h-8 w-8 text-green-600" />
-            <div className="ml-4">
-              <div className="text-2xl font-bold text-gray-900">{onlineDevices}</div>
-              <div className="text-sm text-gray-600">Online Devices</div>
+        <Card>
+          <CardBody>
+            <div className="flex items-center">
+              <Activity className="h-8 w-8 text-success" />
+              <div className="ml-4">
+                <div className="text-2xl font-bold text-primary">{onlineDevices}</div>
+                <div className="text-sm text-secondary">Online Devices</div>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center">
-            <Zap className="h-8 w-8 text-yellow-600" />
-            <div className="ml-4">
-              <div className="text-2xl font-bold text-gray-900">{totalPower.toFixed(1)} kW</div>
-              <div className="text-sm text-gray-600">Total Power</div>
+        <Card>
+          <CardBody>
+            <div className="flex items-center">
+              <Zap className="h-8 w-8 text-warning" />
+              <div className="ml-4">
+                <div className="text-2xl font-bold text-primary">{totalPower.toFixed(1)} kW</div>
+                <div className="text-sm text-secondary">Total Power</div>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </div>
 
       {/* Real-time Chart - Only show when there's telemetry data */}
       {Object.keys(latestTelemetry).length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Real-time Power Consumption</h2>
-          <RealTimeChart telemetryData={Object.values(latestTelemetry)} />
-        </div>
+        <Card>
+          <CardBody>
+            <h2 className="text-lg font-semibold text-primary mb-4">Real-time Power Consumption</h2>
+            <RealTimeChart telemetryData={Object.values(latestTelemetry)} />
+          </CardBody>
+        </Card>
       )}
 
       {/* Device Grid */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Device Overview</h2>
+        <h2 className="text-lg font-semibold text-primary mb-4">Device Overview</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {devices.map((device) => (
             <DeviceCard
