@@ -199,6 +199,7 @@ public class AuthService {
 
         return UserResponse.builder()
                 .id(user.getId())
+                .uuid(user.getUuid())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
@@ -377,6 +378,7 @@ public class AuthService {
 
         return UserResponse.builder()
                 .id(user.getId())
+                .uuid(user.getUuid())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
