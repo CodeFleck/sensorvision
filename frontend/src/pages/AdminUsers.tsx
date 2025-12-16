@@ -207,8 +207,10 @@ export const AdminUsers = () => {
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
             }`}
             title="List view"
+            aria-label="Switch to list view"
+            aria-pressed={viewMode === 'list'}
           >
-            <List className="h-5 w-5" />
+            <List className="h-5 w-5" aria-hidden="true" />
           </button>
           <button
             onClick={() => setViewMode('cards')}
@@ -218,8 +220,10 @@ export const AdminUsers = () => {
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
             }`}
             title="Card view"
+            aria-label="Switch to card view"
+            aria-pressed={viewMode === 'cards'}
           >
-            <LayoutGrid className="h-5 w-5" />
+            <LayoutGrid className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -329,7 +333,7 @@ export const AdminUsers = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center">
                       <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-lg">
-                        {user.firstName?.[0]}{user.lastName?.[0]}
+                        {user.firstName?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || '?'}{user.lastName?.[0]?.toUpperCase() || ''}
                       </div>
                       <div className="ml-3">
                         <h3 className="text-sm font-semibold text-gray-900">
@@ -464,7 +468,7 @@ export const AdminUsers = () => {
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
                             <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                              {user.firstName?.[0]}{user.lastName?.[0]}
+                              {user.firstName?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || '?'}{user.lastName?.[0]?.toUpperCase() || ''}
                             </div>
                           </div>
                           <div className="ml-4">

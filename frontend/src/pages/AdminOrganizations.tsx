@@ -160,8 +160,10 @@ export const AdminOrganizations = () => {
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
             }`}
             title="List view"
+            aria-label="Switch to list view"
+            aria-pressed={viewMode === 'list'}
           >
-            <List className="h-5 w-5" />
+            <List className="h-5 w-5" aria-hidden="true" />
           </button>
           <button
             onClick={() => setViewMode('cards')}
@@ -171,8 +173,10 @@ export const AdminOrganizations = () => {
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
             }`}
             title="Card view"
+            aria-label="Switch to card view"
+            aria-pressed={viewMode === 'cards'}
           >
-            <LayoutGrid className="h-5 w-5" />
+            <LayoutGrid className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       </div>
