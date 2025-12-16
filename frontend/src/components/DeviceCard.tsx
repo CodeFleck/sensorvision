@@ -1,6 +1,5 @@
 import { Device, TelemetryPoint } from '../types';
 import { Cpu, MapPin, Zap, Clock } from 'lucide-react';
-import { clsx } from 'clsx';
 import { formatTimeAgo } from '../utils/timeUtils';
 import { Card, CardBody } from './ui/Card';
 import { Badge } from './ui/Badge';

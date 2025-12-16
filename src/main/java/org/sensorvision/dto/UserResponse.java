@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -13,6 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserResponse {
     private Long id;
+    private UUID uuid;
     private String username;
     private String email;
     private String firstName;
