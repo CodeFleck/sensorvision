@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-sensorvision}
       POSTGRES_USER: ${DB_USERNAME:-sensorvision}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-sensorvision123}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD environment variable is required}
     ports:
       - "5432:5432"
     volumes:
@@ -52,17 +52,17 @@ services:
       # Database
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sensorvision}
       DB_USERNAME: ${DB_USERNAME:-sensorvision}
-      DB_PASSWORD: ${DB_PASSWORD:-sensorvision123}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD environment variable is required}
 
-      # JWT
-      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      # JWT - SECURITY: Never use default secrets in production
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET environment variable is required}
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
       JWT_ISSUER: ${JWT_ISSUER:-http://localhost:8080}
 
       # MQTT
       MQTT_BROKER_URL: tcp://mosquitto:1883
       MQTT_USERNAME: ${MQTT_USERNAME:-sensorvision}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:-sensorvision123}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?MQTT_PASSWORD environment variable is required}
       MQTT_DEVICE_AUTH_REQUIRED: ${MQTT_DEVICE_AUTH_REQUIRED:-false}
 
       # Application

@@ -1,0 +1,67 @@
+# ==========================================
+# Local Development Profile Configuration
+# ==========================================
+# SETUP INSTRUCTIONS:
+# 1. Copy this file: cp application-local.properties.example application-local.properties
+# 2. Fill in your credentials below
+# 3. NEVER commit application-local.properties to git
+#
+# Activate this profile in IntelliJ: Run Configuration > Environment Variables > SPRING_PROFILES_ACTIVE=local
+# Or via command line: ./gradlew bootRun --args='--spring.profiles.active=local'
+
+# ==========================================
+# DATABASE CONFIGURATION - Local PostgreSQL
+# ==========================================
+spring.datasource.url=jdbc:postgresql://localhost:5432/sensorvision
+spring.datasource.username=sensorvision
+spring.datasource.password=CHANGE_ME_DB_PASSWORD
+
+# ==========================================
+# JPA CONFIGURATION - Disable SQL logging
+# ==========================================
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=false
+
+# ==========================================
+# EMAIL/SMTP CONFIGURATION
+# ==========================================
+# Option 1: Gmail (for development only)
+# spring.mail.host=smtp.gmail.com
+# spring.mail.port=587
+# spring.mail.username=your-email@gmail.com
+# spring.mail.password=YOUR_APP_PASSWORD
+# spring.mail.properties.mail.smtp.auth=true
+# spring.mail.properties.mail.smtp.starttls.enable=true
+# spring.mail.properties.mail.smtp.starttls.required=true
+
+# Option 2: AWS SES (recommended for production)
+# Configure via AWS credentials and set EMAIL_ENABLED=true in .env
+
+# ==========================================
+# MQTT BROKER CONFIGURATION - Local
+# ==========================================
+mqtt.broker.url=tcp://localhost:1883
+mqtt.broker.username=sensorvision
+mqtt.broker.password=CHANGE_ME_MQTT_PASSWORD
+mqtt.device-auth.required=false
+
+# ==========================================
+# JWT CONFIGURATION - Local Credentials
+# ==========================================
+# Generate a secure secret: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+app.jwt.secret=CHANGE_ME_GENERATE_SECURE_JWT_SECRET
+app.jwt.expiration-ms=86400000
+app.jwt.issuer=http://localhost:8080
+
+# ==========================================
+# SIMULATOR CONFIGURATION - Enabled for Testing
+# ==========================================
+simulator.enabled=true
+simulator.device-count=5
+simulator.interval-seconds=30
+
+# ==========================================
+# NOTIFICATION CONFIGURATION
+# ==========================================
+notification.email.enabled=false
+notification.email.from=noreply@example.com
