@@ -1,5 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Users, Search, Power, Trash2, Shield, Mail, Calendar, Building2, UserCog, X, Check } from 'lucide-react';
+import {
+  Users,
+  Search,
+  Power,
+  Trash2,
+  Shield,
+  Mail,
+  Calendar,
+  Building2,
+  UserCog,
+  X,
+  Check,
+  LayoutGrid,
+  List,
+  UserCheck,
+  UserX,
+} from 'lucide-react';
 import { User } from '../types';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
@@ -10,11 +26,15 @@ interface RoleInfo {
   description: string;
 }
 
+type ViewMode = 'list' | 'cards';
+
 export const AdminUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOrganization, setFilterOrganization] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [availableRoles, setAvailableRoles] = useState<RoleInfo[]>([]);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
@@ -106,7 +126,6 @@ export const AdminUsers = () => {
       const trashId = response.data.trashId;
       const daysRemaining = response.data.daysRemaining;
 
-      // Show toast with undo button
       toast(
         (t) => (
           <div className="flex items-center gap-3">
@@ -147,10 +166,21 @@ export const AdminUsers = () => {
       filterOrganization === 'all' ||
       user.organizationName === filterOrganization;
 
-    return matchesSearch && matchesOrganization;
+    const matchesStatus =
+      filterStatus === 'all' ||
+      (filterStatus === 'active' && user.enabled) ||
+      (filterStatus === 'inactive' && !user.enabled);
+
+    return matchesSearch && matchesOrganization && matchesStatus;
   });
 
   const organizations = Array.from(new Set(users.map(u => u.organizationName))).sort();
+
+  // Stats
+  const totalUsers = users.length;
+  const activeUsers = users.filter(u => u.enabled).length;
+  const inactiveUsers = users.filter(u => !u.enabled).length;
+  const adminUsers = users.filter(u => u.roles.includes('ROLE_ADMIN')).length;
 
   if (loading) {
     return (
@@ -162,29 +192,89 @@ export const AdminUsers = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-1">Manage system users and their access</p>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">
-            Total Users: <span className="font-semibold">{users.length}</span>
-          </span>
-          <span className="text-sm text-gray-600">•</span>
-          <span className="text-sm text-gray-600">
-            Active: <span className="font-semibold text-green-600">{users.filter(u => u.enabled).length}</span>
-          </span>
-          <span className="text-sm text-gray-600">•</span>
-          <span className="text-sm text-gray-600">
-            Inactive: <span className="font-semibold text-red-600">{users.filter(u => !u.enabled).length}</span>
-          </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'list'
+                ? 'bg-blue-100 text-blue-600'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+            }`}
+            title="List view"
+          >
+            <List className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => setViewMode('cards')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'cards'
+                ? 'bg-blue-100 text-blue-600'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+            }`}
+            title="Card view"
+          >
+            <LayoutGrid className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Users</p>
+              <p className="text-2xl font-bold text-gray-900">{totalUsers}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Active Users</p>
+              <p className="text-2xl font-bold text-green-600">{activeUsers}</p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <UserCheck className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Inactive Users</p>
+              <p className="text-2xl font-bold text-red-600">{inactiveUsers}</p>
+            </div>
+            <div className="p-3 bg-red-100 rounded-full">
+              <UserX className="h-6 w-6 text-red-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Admin Users</p>
+              <p className="text-2xl font-bold text-purple-600">{adminUsers}</p>
+            </div>
+            <div className="p-3 bg-purple-100 rounded-full">
+              <Shield className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
@@ -208,159 +298,281 @@ export const AdminUsers = () => {
               ))}
             </select>
           </div>
+
+          <div>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Organization
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Roles
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Login
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                    <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-lg font-medium">No users found</p>
-                    <p className="text-sm mt-1">Try adjusting your search or filters</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-                            {user.firstName?.[0]}{user.lastName?.[0]}
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {user.firstName} {user.lastName}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            @{user.username}
-                          </div>
-                          <div className="text-sm text-gray-500 flex items-center mt-1">
-                            <Mail className="h-3 w-3 mr-1" />
-                            {user.email}
-                          </div>
-                        </div>
+      {/* Card View */}
+      {viewMode === 'cards' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredUsers.length === 0 ? (
+            <div className="col-span-full bg-white rounded-lg shadow p-12 text-center">
+              <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <p className="text-lg font-medium text-gray-900">No users found</p>
+              <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filters</p>
+            </div>
+          ) : (
+            filteredUsers.map((user) => (
+              <div key={user.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                <div className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center">
+                      <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-lg">
+                        {user.firstName?.[0]}{user.lastName?.[0]}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <Building2 className="h-4 w-4 mr-2 text-gray-400" />
-                        {user.organizationName}
+                      <div className="ml-3">
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          {user.firstName} {user.lastName}
+                        </h3>
+                        <p className="text-sm text-gray-500">@{user.username}</p>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        {user.roles.map((role) => (
-                          <span
-                            key={role}
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              role === 'ROLE_ADMIN'
-                                ? 'bg-purple-100 text-purple-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {role === 'ROLE_ADMIN' && <Shield className="h-3 w-3 mr-1" />}
-                            {role.replace('ROLE_', '')}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
+                    </div>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        user.enabled
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {user.enabled ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                      {user.email}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Building2 className="h-4 w-4 mr-2 text-gray-400" />
+                      {user.organizationName}
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {user.roles.map((role) => (
                         <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            user.enabled
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                          key={role}
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            role === 'ROLE_ADMIN'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-gray-100 text-gray-800'
                           }`}
                         >
-                          {user.enabled ? 'Active' : 'Disabled'}
+                          {role === 'ROLE_ADMIN' && <Shield className="h-3 w-3 mr-1" />}
+                          {role.replace('ROLE_', '')}
                         </span>
-                        {user.emailVerified ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Email Verified
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Email Unverified
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                    <div className="text-xs text-gray-500">
                       {user.lastLoginAt ? (
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                          {new Date(user.lastLoginAt).toLocaleDateString()}
-                        </div>
+                        <span className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          Last login: {new Date(user.lastLoginAt).toLocaleDateString()}
+                        </span>
                       ) : (
-                        <span className="text-gray-400">Never</span>
+                        <span>Never logged in</span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => openRoleEditor(user)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit roles"
-                        >
-                          <UserCog className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleToggleEnabled(user.id, user.enabled)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            user.enabled
-                              ? 'text-green-600 hover:bg-green-50'
-                              : 'text-gray-600 hover:bg-gray-50'
-                          }`}
-                          title={user.enabled ? 'Disable user' : 'Enable user'}
-                        >
-                          <Power className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.id, user.username)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete user"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => openRoleEditor(user)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="Edit roles"
+                      >
+                        <UserCog className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleToggleEnabled(user.id, user.enabled)}
+                        className={`p-1.5 rounded transition-colors ${
+                          user.enabled
+                            ? 'text-green-600 hover:bg-green-50'
+                            : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                        title={user.enabled ? 'Disable user' : 'Enable user'}
+                      >
+                        <Power className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id, user.username)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Delete user"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Organization
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Roles
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Last Login
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                      <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                      <p className="text-lg font-medium">No users found</p>
+                      <p className="text-sm mt-1">Try adjusting your search or filters</p>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                              {user.firstName?.[0]}{user.lastName?.[0]}
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.firstName} {user.lastName}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              @{user.username}
+                            </div>
+                            <div className="text-sm text-gray-500 flex items-center mt-1">
+                              <Mail className="h-3 w-3 mr-1" />
+                              {user.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center text-sm text-gray-900">
+                          <Building2 className="h-4 w-4 mr-2 text-gray-400" />
+                          {user.organizationName}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1">
+                          {user.roles.map((role) => (
+                            <span
+                              key={role}
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                role === 'ROLE_ADMIN'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {role === 'ROLE_ADMIN' && <Shield className="h-3 w-3 mr-1" />}
+                              {role.replace('ROLE_', '')}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              user.enabled
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {user.enabled ? 'Active' : 'Disabled'}
+                          </span>
+                          {user.emailVerified ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Email Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              Email Unverified
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.lastLoginAt ? (
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                            {new Date(user.lastLoginAt).toLocaleDateString()}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Never</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => openRoleEditor(user)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit roles"
+                          >
+                            <UserCog className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleEnabled(user.id, user.enabled)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              user.enabled
+                                ? 'text-green-600 hover:bg-green-50'
+                                : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                            title={user.enabled ? 'Disable user' : 'Enable user'}
+                          >
+                            <Power className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id, user.username)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete user"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Summary Footer */}
       <div className="bg-white rounded-lg shadow p-4">
