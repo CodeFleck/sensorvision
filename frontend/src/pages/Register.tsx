@@ -457,17 +457,17 @@ export const Register: React.FC = () => {
                   type="submit"
                   disabled={loading}
                   aria-busy={loading}
-                  className="group w-full relative overflow-hidden px-6 py-4 rounded-xl font-semibold text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 shadow-lg shadow-[#0969da]/25 hover:shadow-xl hover:shadow-[#0969da]/30"
+                  className="group w-full relative overflow-hidden px-6 py-4 rounded-xl font-semibold text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-6 shadow-lg shadow-[#0969da]/25 hover:shadow-xl hover:shadow-[#14b8a6]/30 hover:scale-[1.02]"
                 >
-                  {/* Button gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0969da] to-[#0550ae] transition-all duration-300 group-hover:from-[#0550ae] group-hover:to-[#0969da]" />
+                  {/* Animated gradient background - matches "IoT journey" text */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0969da] via-[#14b8a6] to-[#0969da] bg-[length:200%_auto] animate-gradient rounded-xl" />
 
-                  {/* Shimmer effect */}
+                  {/* Shimmer effect on hover */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                     <div
-                      className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
+                      className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"
                       style={{
-                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)'
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)'
                       }}
                     />
                   </div>
