@@ -23,6 +23,11 @@ public class CustomUserDetailsService implements UserDetailsService {
                         new UsernameNotFoundException("User not found with username: " + username)
                 );
 
+        // Block soft-deleted users from authenticating
+        if (user.isDeleted()) {
+            throw new UsernameNotFoundException("User account has been deleted: " + username);
+        }
+
         return UserPrincipal.create(user);
     }
 
@@ -32,6 +37,11 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found with id: " + id)
                 );
+
+        // Block soft-deleted users from authenticating
+        if (user.isDeleted()) {
+            throw new UsernameNotFoundException("User account has been deleted with id: " + id);
+        }
 
         return UserPrincipal.create(user);
     }

@@ -43,4 +43,17 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
     @Query("SELECT DISTINCT d FROM Device d JOIN d.groups g WHERE d.organization = :organization AND g.id = :groupId")
     List<Device> findByOrganizationAndGroupId(@Param("organization") Organization organization,
             @Param("groupId") Long groupId);
+
+    // Soft delete support
+    @Query("SELECT d FROM Device d WHERE d.deletedAt IS NULL")
+    List<Device> findAllActive();
+
+    @Query("SELECT d FROM Device d WHERE d.organization = :organization AND d.deletedAt IS NULL")
+    List<Device> findActiveByOrganization(@Param("organization") Organization organization);
+
+    @Query("SELECT d FROM Device d WHERE d.id = :id AND d.deletedAt IS NULL")
+    Optional<Device> findActiveById(@Param("id") UUID id);
+
+    @Query("SELECT d FROM Device d WHERE d.externalId = :externalId AND d.deletedAt IS NULL")
+    Optional<Device> findActiveByExternalId(@Param("externalId") String externalId);
 }

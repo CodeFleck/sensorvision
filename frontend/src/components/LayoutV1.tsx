@@ -36,6 +36,7 @@ import {
   User,
   Building2,
   Rocket,
+  Trash2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -156,7 +157,9 @@ const navigationSections: NavigationSection[] = [
     adminOnly: true,
     items: [
       { name: 'User Management', href: '/admin/users', icon: User, adminOnly: true },
+      { name: 'Device Management', href: '/admin/devices', icon: Cpu, adminOnly: true },
       { name: 'Organizations', href: '/admin/organizations', icon: Building2, adminOnly: true },
+      { name: 'Trash', href: '/admin/trash', icon: Trash2, adminOnly: true },
     ],
   },
   {

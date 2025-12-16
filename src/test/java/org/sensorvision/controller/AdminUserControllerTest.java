@@ -12,10 +12,12 @@ import org.sensorvision.exception.BadRequestException;
 import org.sensorvision.exception.ResourceNotFoundException;
 import org.sensorvision.model.Organization;
 import org.sensorvision.model.Role;
+import org.sensorvision.model.TrashLog;
 import org.sensorvision.model.User;
 import org.sensorvision.repository.RoleRepository;
 import org.sensorvision.repository.UserRepository;
 import org.sensorvision.security.SecurityUtils;
+import org.sensorvision.service.TrashService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -27,7 +29,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -53,6 +55,9 @@ class AdminUserControllerTest {
 
     @Mock
     private SecurityUtils securityUtils;
+
+    @Mock
+    private TrashService trashService;
 
     @InjectMocks
     private AdminUserController adminUserController;
@@ -120,7 +125,7 @@ class AdminUserControllerTest {
     @Test
     void REGRESSION_getAllUsers_shouldAccessLazyLoadedOrganization() {
         // Given - User with lazy-loaded Organization
-        when(userRepository.findAllWithOrganizationAndRoles()).thenReturn(Arrays.asList(testUser));
+        when(userRepository.findAllActiveWithOrganizationAndRoles()).thenReturn(Arrays.asList(testUser));
 
         // When - getAllUsers() accesses user.getOrganization().getId() and getName()
         ResponseEntity<List<UserDto>> response = adminUserController.getAllUsers();
@@ -135,7 +140,7 @@ class AdminUserControllerTest {
         assertThat(dto.getOrganizationName()).isEqualTo("Test Organization"); // Eager-fetched Organization.name
         assertThat(dto.getRoles()).contains("ROLE_USER"); // Eager-fetched Roles collection
 
-        verify(userRepository).findAllWithOrganizationAndRoles();
+        verify(userRepository).findAllActiveWithOrganizationAndRoles();
     }
 
     @Test
@@ -184,7 +189,7 @@ class AdminUserControllerTest {
     void REGRESSION_getAllUsers_shouldAccessLazyLoadedRolesCollection() {
         // Given - User with multiple roles (eager-fetched collection)
         testUser.getRoles().add(adminRole); // User has both ROLE_USER and ROLE_ADMIN
-        when(userRepository.findAllWithOrganizationAndRoles()).thenReturn(Arrays.asList(testUser));
+        when(userRepository.findAllActiveWithOrganizationAndRoles()).thenReturn(Arrays.asList(testUser));
 
         // When - getAllUsers() accesses user.getRoles() stream
         ResponseEntity<List<UserDto>> response = adminUserController.getAllUsers();
@@ -216,7 +221,7 @@ class AdminUserControllerTest {
                 .roles(new HashSet<>(Arrays.asList(userRole)))
                 .build();
 
-        when(userRepository.findAllWithOrganizationAndRoles()).thenReturn(Arrays.asList(testUser, user2));
+        when(userRepository.findAllActiveWithOrganizationAndRoles()).thenReturn(Arrays.asList(testUser, user2));
 
         // When
         ResponseEntity<List<UserDto>> response = adminUserController.getAllUsers();
@@ -231,7 +236,7 @@ class AdminUserControllerTest {
     @Test
     void getAllUsers_withNoUsers_shouldReturnEmptyList() {
         // Given
-        when(userRepository.findAllWithOrganizationAndRoles()).thenReturn(Arrays.asList());
+        when(userRepository.findAllActiveWithOrganizationAndRoles()).thenReturn(Arrays.asList());
 
         // When
         ResponseEntity<List<UserDto>> response = adminUserController.getAllUsers();
@@ -383,22 +388,33 @@ class AdminUserControllerTest {
     }
 
     @Test
-    void deleteUser_withValidUserId_shouldDeleteUser() {
+    void deleteUser_withValidUserId_shouldSoftDeleteUser() {
         // Given
+        java.time.Instant expiresAt = java.time.Instant.now().plus(30, java.time.temporal.ChronoUnit.DAYS);
+        TrashLog trashLog = TrashLog.builder()
+                .id(1L)
+                .entityType("USER")
+                .entityId("100")
+                .entityName("testuser")
+                .expiresAt(expiresAt)
+                .deletedAt(java.time.Instant.now())
+                .build();
+
         when(securityUtils.getCurrentUser()).thenReturn(adminUser);
         when(userRepository.findByIdWithOrganizationAndRoles(100L)).thenReturn(Optional.of(testUser));
-        doNothing().when(userRepository).delete(testUser);
+        when(trashService.softDeleteUser(100L, null)).thenReturn(trashLog);
 
         // When
-        ResponseEntity<ApiResponse<Void>> response = adminUserController.deleteUser(100L);
+        ResponseEntity<ApiResponse<AdminUserController.SoftDeleteResponse>> response =
+            adminUserController.deleteUser(100L, null);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().success()).isTrue();
-        assertThat(response.getBody().message()).isEqualTo("User deleted successfully");
+        assertThat(response.getBody().message()).contains("moved to trash");
 
-        verify(userRepository).delete(testUser);
+        verify(trashService).softDeleteUser(100L, null);
     }
 
     @Test
@@ -408,11 +424,11 @@ class AdminUserControllerTest {
         when(userRepository.findByIdWithOrganizationAndRoles(999L)).thenReturn(Optional.empty());
 
         // When/Then
-        assertThatThrownBy(() -> adminUserController.deleteUser(999L))
+        assertThatThrownBy(() -> adminUserController.deleteUser(999L, null))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("User not found with id: 999");
 
-        verify(userRepository, never()).delete(any(User.class));
+        verify(trashService, never()).softDeleteUser(anyLong(), anyString());
     }
 
     @Test
@@ -421,11 +437,11 @@ class AdminUserControllerTest {
         when(securityUtils.getCurrentUser()).thenReturn(adminUser);
 
         // When/Then
-        assertThatThrownBy(() -> adminUserController.deleteUser(1L)) // adminUser has id 1
+        assertThatThrownBy(() -> adminUserController.deleteUser(1L, null)) // adminUser has id 1
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Cannot delete your own account");
 
-        verify(userRepository, never()).delete(any(User.class));
+        verify(trashService, never()).softDeleteUser(anyLong(), anyString());
     }
 
     @Test
@@ -442,11 +458,11 @@ class AdminUserControllerTest {
         when(userRepository.countByRolesName("ROLE_ADMIN")).thenReturn(1L);
 
         // When/Then
-        assertThatThrownBy(() -> adminUserController.deleteUser(200L))
+        assertThatThrownBy(() -> adminUserController.deleteUser(200L, null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("Cannot delete the last admin user");
 
-        verify(userRepository, never()).delete(any(User.class));
+        verify(trashService, never()).softDeleteUser(anyLong(), anyString());
     }
 
     @Test

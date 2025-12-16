@@ -2,9 +2,13 @@ package org.sensorvision.controller;
 
 import org.sensorvision.dto.ApiResponse;
 import org.sensorvision.dto.OrganizationDto;
+import org.sensorvision.exception.BadRequestException;
+import org.sensorvision.exception.ResourceNotFoundException;
 import org.sensorvision.model.Organization;
+import org.sensorvision.model.TrashLog;
 import org.sensorvision.repository.OrganizationRepository;
 import org.sensorvision.repository.UserRepository;
+import org.sensorvision.service.TrashService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,16 +24,20 @@ public class AdminOrganizationController {
 
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
+    private final TrashService trashService;
 
     public AdminOrganizationController(OrganizationRepository organizationRepository,
-                                       UserRepository userRepository) {
+                                       UserRepository userRepository,
+                                       TrashService trashService) {
         this.organizationRepository = organizationRepository;
         this.userRepository = userRepository;
+        this.trashService = trashService;
     }
 
     @GetMapping
     public ResponseEntity<List<OrganizationDto>> getAllOrganizations() {
-        List<Organization> organizations = organizationRepository.findAll();
+        // Only return non-deleted organizations
+        List<Organization> organizations = organizationRepository.findAllActive();
         List<OrganizationDto> organizationDtos = organizations.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -39,14 +47,14 @@ public class AdminOrganizationController {
     @GetMapping("/{organizationId}")
     public ResponseEntity<OrganizationDto> getOrganization(@PathVariable Long organizationId) {
         Organization organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + organizationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + organizationId));
         return ResponseEntity.ok(convertToDto(organization));
     }
 
     @PutMapping("/{organizationId}/enable")
     public ResponseEntity<ApiResponse<OrganizationDto>> enableOrganization(@PathVariable Long organizationId) {
         Organization organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + organizationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + organizationId));
 
         organization.setEnabled(true);
         organization = organizationRepository.save(organization);
@@ -60,7 +68,7 @@ public class AdminOrganizationController {
     @PutMapping("/{organizationId}/disable")
     public ResponseEntity<ApiResponse<OrganizationDto>> disableOrganization(@PathVariable Long organizationId) {
         Organization organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + organizationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + organizationId));
 
         organization.setEnabled(false);
         organization = organizationRepository.save(organization);
@@ -76,7 +84,7 @@ public class AdminOrganizationController {
             @PathVariable Long organizationId,
             @RequestBody OrganizationUpdateRequest request) {
         Organization organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + organizationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + organizationId));
 
         if (request.getName() != null) {
             organization.setName(request.getName());
@@ -94,23 +102,44 @@ public class AdminOrganizationController {
     }
 
     @DeleteMapping("/{organizationId}")
-    public ResponseEntity<ApiResponse<Void>> deleteOrganization(@PathVariable Long organizationId) {
+    public ResponseEntity<ApiResponse<SoftDeleteResponse>> deleteOrganization(
+            @PathVariable Long organizationId,
+            @RequestParam(required = false) String reason) {
         Organization organization = organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + organizationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Organization not found with id: " + organizationId));
 
-        // Check if organization has users
-        long userCount = userRepository.countByOrganizationId(organizationId);
-        if (userCount > 0) {
-            throw new RuntimeException("Cannot delete organization with existing users. Please remove all users first.");
+        // Don't allow deleting already deleted organizations
+        if (organization.isDeleted()) {
+            throw new BadRequestException("Organization is already deleted");
         }
 
-        organizationRepository.delete(organization);
+        // Use soft delete (TrashService checks for active users)
+        TrashLog trashLog = trashService.softDeleteOrganization(organizationId, reason);
+
+        SoftDeleteResponse response = new SoftDeleteResponse(
+                trashLog.getId(),
+                trashLog.getEntityType(),
+                trashLog.getEntityName(),
+                trashLog.getExpiresAt().toString(),
+                trashLog.getDaysRemaining()
+        );
 
         return ResponseEntity.ok(ApiResponse.success(
-                null,
-                "Organization deleted successfully"
+                response,
+                "Organization moved to trash. You can restore it within " + TrashLog.RETENTION_DAYS + " days."
         ));
     }
+
+    /**
+     * Response for soft delete operations, including undo info.
+     */
+    public record SoftDeleteResponse(
+            Long trashId,
+            String entityType,
+            String entityName,
+            String expiresAt,
+            long daysRemaining
+    ) {}
 
     private OrganizationDto convertToDto(Organization organization) {
         OrganizationDto dto = new OrganizationDto();

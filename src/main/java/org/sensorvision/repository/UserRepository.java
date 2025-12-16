@@ -44,4 +44,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Role management methods
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = :roleName")
     long countByRolesName(@Param("roleName") String roleName);
+
+    // Soft delete support
+    @Query("SELECT COUNT(u) FROM User u WHERE u.organization.id = :organizationId AND u.deletedAt IS NULL")
+    long countByOrganizationIdAndDeletedAtIsNull(@Param("organizationId") Long organizationId);
+
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.organization LEFT JOIN FETCH u.roles WHERE u.deletedAt IS NULL")
+    List<User> findAllActiveWithOrganizationAndRoles();
+
+    @Query("SELECT u FROM User u WHERE u.id = :id AND u.deletedAt IS NULL")
+    Optional<User> findActiveById(@Param("id") Long id);
 }
