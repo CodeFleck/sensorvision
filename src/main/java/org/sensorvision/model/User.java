@@ -3,6 +3,7 @@ package org.sensorvision.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -16,7 +17,7 @@ import java.util.Set;
 @Builder
 @EqualsAndHashCode(callSuper = false, of = "id")
 @ToString(exclude = {"organization", "roles"})
-public class User extends AuditableEntity {
+public class User extends AuditableEntity implements SoftDeletable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -83,4 +84,34 @@ public class User extends AuditableEntity {
     )
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
+
+    // Soft delete fields
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by")
+    private String deletedBy;
+
+    @Column(name = "deletion_reason", length = 500)
+    private String deletionReason;
+
+    // SoftDeletable implementation
+    @Override
+    public String getEntityId() {
+        return id != null ? id.toString() : null;
+    }
+
+    @Override
+    public String getEntityName() {
+        String name = "";
+        if (firstName != null) name += firstName;
+        if (lastName != null) name += (name.isEmpty() ? "" : " ") + lastName;
+        if (name.isEmpty()) name = username;
+        return name;
+    }
+
+    @Override
+    public String getEntityType() {
+        return "USER";
+    }
 }

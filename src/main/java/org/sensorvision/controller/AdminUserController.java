@@ -6,10 +6,12 @@ import org.sensorvision.dto.UserDto;
 import org.sensorvision.exception.BadRequestException;
 import org.sensorvision.exception.ResourceNotFoundException;
 import org.sensorvision.model.Role;
+import org.sensorvision.model.TrashLog;
 import org.sensorvision.model.User;
 import org.sensorvision.repository.RoleRepository;
 import org.sensorvision.repository.UserRepository;
 import org.sensorvision.security.SecurityUtils;
+import org.sensorvision.service.TrashService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -33,16 +35,20 @@ public class AdminUserController {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final SecurityUtils securityUtils;
+    private final TrashService trashService;
 
-    public AdminUserController(UserRepository userRepository, RoleRepository roleRepository, SecurityUtils securityUtils) {
+    public AdminUserController(UserRepository userRepository, RoleRepository roleRepository,
+                               SecurityUtils securityUtils, TrashService trashService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.securityUtils = securityUtils;
+        this.trashService = trashService;
     }
 
     @GetMapping
     public ResponseEntity<List<UserDto>> getAllUsers() {
-        List<User> users = userRepository.findAllWithOrganizationAndRoles();
+        // Only return non-deleted users
+        List<User> users = userRepository.findAllActiveWithOrganizationAndRoles();
         List<UserDto> userDtos = users.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -119,7 +125,9 @@ public class AdminUserController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<SoftDeleteResponse>> deleteUser(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String reason) {
         User currentUser = securityUtils.getCurrentUser();
 
         // Prevent self-deletion
@@ -129,6 +137,11 @@ public class AdminUserController {
 
         User user = userRepository.findByIdWithOrganizationAndRoles(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // Don't allow deleting already deleted users
+        if (user.isDeleted()) {
+            throw new BadRequestException("User is already deleted");
+        }
 
         // Check if this is the last admin user
         boolean userIsAdmin = user.getRoles().stream()
@@ -141,15 +154,32 @@ public class AdminUserController {
             }
         }
 
-        log.info("ADMIN_ACTION: User {} deleted user {} (id: {})",
-                currentUser.getUsername(), user.getUsername(), userId);
+        // Use soft delete instead of hard delete
+        TrashLog trashLog = trashService.softDeleteUser(userId, reason);
 
-        userRepository.delete(user);
+        SoftDeleteResponse response = new SoftDeleteResponse(
+                trashLog.getId(),
+                trashLog.getEntityType(),
+                trashLog.getEntityName(),
+                trashLog.getExpiresAt().toString(),
+                trashLog.getDaysRemaining()
+        );
 
         return ResponseEntity.ok(ApiResponse.success(
-                null,
-                "User deleted successfully"));
+                response,
+                "User moved to trash. You can restore it within " + TrashLog.RETENTION_DAYS + " days."));
     }
+
+    /**
+     * Response for soft delete operations, including undo info.
+     */
+    public record SoftDeleteResponse(
+            Long trashId,
+            String entityType,
+            String entityName,
+            String expiresAt,
+            long daysRemaining
+    ) {}
 
     @GetMapping("/organization/{organizationId}")
     public ResponseEntity<List<UserDto>> getUsersByOrganization(@PathVariable Long organizationId) {

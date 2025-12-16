@@ -87,6 +87,7 @@ const navigation: NavigationItem[] = [
   // Admin-only features
   { name: 'Admin Dashboard', href: '/admin-dashboard', icon: Gauge, adminOnly: true },
   { name: 'User Management', href: '/admin/users', icon: Users, adminOnly: true },
+  { name: 'Device Management', href: '/admin/devices', icon: Cpu, adminOnly: true },
   { name: 'Organizations', href: '/admin/organizations', icon: Building, adminOnly: true },
   { name: 'Support Tickets', href: '/admin/support-tickets', icon: TicketIcon, adminOnly: true },
   { name: 'Canned Responses', href: '/admin/canned-responses', icon: MessageSquare, adminOnly: true },

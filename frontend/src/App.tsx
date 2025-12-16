@@ -46,6 +46,8 @@ import PhoneNumbers from './pages/PhoneNumbers';
 import SmsSettings from './pages/SmsSettings';
 import AdminUsers from './pages/AdminUsers';
 import AdminOrganizations from './pages/AdminOrganizations';
+import AdminDevices from './pages/AdminDevices';
+import { AdminTrash } from './pages/AdminTrash';
 import { GlobalRules } from './pages/GlobalRules';
 import LogViewer from './pages/LogViewer';
 import Settings from './pages/Settings';
@@ -139,9 +141,11 @@ function App() {
                       {/* Admin-only routes */}
                       <Route path="/admin-dashboard" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />
                       <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><AdminUsers /></ProtectedRoute>} />
+                      <Route path="/admin/devices" element={<ProtectedRoute adminOnly={true}><AdminDevices /></ProtectedRoute>} />
                       <Route path="/admin/organizations" element={<ProtectedRoute adminOnly={true}><AdminOrganizations /></ProtectedRoute>} />
                       <Route path="/admin/support-tickets" element={<ProtectedRoute adminOnly={true}><AdminSupportTickets /></ProtectedRoute>} />
                       <Route path="/admin/canned-responses" element={<ProtectedRoute adminOnly={true}><AdminCannedResponses /></ProtectedRoute>} />
+                      <Route path="/admin/trash" element={<ProtectedRoute adminOnly={true}><AdminTrash /></ProtectedRoute>} />
                       <Route path="/email-templates" element={<ProtectedRoute adminOnly={true}><EmailTemplateBuilder /></ProtectedRoute>} />
                     </Routes>
                   </LayoutV1>

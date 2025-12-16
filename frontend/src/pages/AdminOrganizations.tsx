@@ -61,13 +61,39 @@ export const AdminOrganizations = () => {
   };
 
   const handleDeleteOrganization = async (orgId: number, orgName: string) => {
-    if (!window.confirm(`Are you sure you want to delete organization "${orgName}"? This action cannot be undone and will fail if the organization has users.`)) {
+    if (!window.confirm(`Are you sure you want to move organization "${orgName}" to trash? You can restore it within 30 days. This will fail if the organization has active users.`)) {
       return;
     }
 
     try {
-      await apiService.deleteOrganization(orgId);
-      toast.success('Organization deleted successfully');
+      const response = await apiService.softDeleteOrganization(orgId);
+      const trashId = response.data.trashId;
+      const daysRemaining = response.data.daysRemaining;
+
+      // Show toast with undo button
+      toast(
+        (t) => (
+          <div className="flex items-center gap-3">
+            <span>Organization moved to trash ({daysRemaining} days to restore)</span>
+            <button
+              onClick={async () => {
+                try {
+                  await apiService.restoreTrashItem(trashId);
+                  toast.dismiss(t.id);
+                  toast.success('Organization restored successfully');
+                  await fetchOrganizations();
+                } catch (err) {
+                  toast.error('Failed to restore organization');
+                }
+              }}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700"
+            >
+              Undo
+            </button>
+          </div>
+        ),
+        { duration: 10000 }
+      );
       await fetchOrganizations();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete organization');

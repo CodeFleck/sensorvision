@@ -959,6 +959,210 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // ========== Admin Device Management ==========
+
+  /**
+   * Get all devices across all organizations (admin only).
+   */
+  async getAllAdminDevices(): Promise<AdminDevice[]> {
+    return this.request<AdminDevice[]>('/admin/devices');
+  }
+
+  /**
+   * Get a specific device by ID (admin only).
+   */
+  async getAdminDevice(deviceId: string): Promise<AdminDevice> {
+    return this.request<AdminDevice>(`/admin/devices/${deviceId}`);
+  }
+
+  /**
+   * Get a device by external ID (admin only).
+   */
+  async getAdminDeviceByExternalId(externalId: string): Promise<AdminDevice> {
+    return this.request<AdminDevice>(`/admin/devices/external/${externalId}`);
+  }
+
+  /**
+   * Enable a device (admin only).
+   */
+  async enableAdminDevice(deviceId: string): Promise<{ success: boolean; data: AdminDevice; message: string }> {
+    return this.request(`/admin/devices/${deviceId}/enable`, {
+      method: 'PUT',
+    });
+  }
+
+  /**
+   * Disable a device (admin only).
+   */
+  async disableAdminDevice(deviceId: string): Promise<{ success: boolean; data: AdminDevice; message: string }> {
+    return this.request(`/admin/devices/${deviceId}/disable`, {
+      method: 'PUT',
+    });
+  }
+
+  /**
+   * Update a device (admin only).
+   */
+  async updateAdminDevice(deviceId: string, data: {
+    name?: string;
+    description?: string;
+    location?: string;
+    sensorType?: string;
+    firmwareVersion?: string;
+  }): Promise<{ success: boolean; data: AdminDevice; message: string }> {
+    return this.request(`/admin/devices/${deviceId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Delete a device (admin only).
+   */
+  async deleteAdminDevice(deviceId: string): Promise<void> {
+    await this.request(`/admin/devices/${deviceId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Get devices by organization (admin only).
+   */
+  async getAdminDevicesByOrganization(organizationId: number): Promise<AdminDevice[]> {
+    return this.request<AdminDevice[]>(`/admin/devices/organization/${organizationId}`);
+  }
+
+  /**
+   * Get device statistics (admin only).
+   */
+  async getAdminDeviceStats(): Promise<AdminDeviceStats> {
+    return this.request<AdminDeviceStats>('/admin/devices/stats');
+  }
+
+  // ========== Admin Trash Management ==========
+
+  /**
+   * Get all trash items (admin only).
+   */
+  async getAllTrashItems(): Promise<TrashItem[]> {
+    return this.request<TrashItem[]>('/admin/trash');
+  }
+
+  /**
+   * Get trash items by entity type (admin only).
+   */
+  async getTrashItemsByType(entityType: string): Promise<TrashItem[]> {
+    return this.request<TrashItem[]>(`/admin/trash/type/${entityType}`);
+  }
+
+  /**
+   * Get trash statistics (admin only).
+   */
+  async getTrashStats(): Promise<TrashStats> {
+    return this.request<TrashStats>('/admin/trash/stats');
+  }
+
+  /**
+   * Restore an item from trash (admin only).
+   */
+  async restoreTrashItem(trashId: number): Promise<void> {
+    await this.request<void>(`/admin/trash/${trashId}/restore`, {
+      method: 'POST',
+    });
+  }
+
+  /**
+   * Soft delete user (admin only). Returns soft delete response with undo info.
+   */
+  async softDeleteUser(userId: number, reason?: string): Promise<{ success: boolean; data: SoftDeleteResponse; message: string }> {
+    const params = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+    return this.request<{ success: boolean; data: SoftDeleteResponse; message: string }>(`/admin/users/${userId}${params}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Soft delete device (admin only). Returns soft delete response with undo info.
+   */
+  async softDeleteDevice(deviceId: string, reason?: string): Promise<{ success: boolean; data: SoftDeleteResponse; message: string }> {
+    const params = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+    return this.request<{ success: boolean; data: SoftDeleteResponse; message: string }>(`/admin/devices/${deviceId}${params}`, {
+      method: 'DELETE',
+    });
+  }
+
+  /**
+   * Soft delete organization (admin only). Returns soft delete response with undo info.
+   */
+  async softDeleteOrganization(organizationId: number, reason?: string): Promise<{ success: boolean; data: SoftDeleteResponse; message: string }> {
+    const params = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+    return this.request<{ success: boolean; data: SoftDeleteResponse; message: string }>(`/admin/organizations/${organizationId}${params}`, {
+      method: 'DELETE',
+    });
+  }
+}
+
+// Admin Device Types
+export interface AdminDevice {
+  id: string;
+  externalId: string;
+  name: string;
+  description?: string;
+  active: boolean;
+  location?: string;
+  sensorType?: string;
+  firmwareVersion?: string;
+  status: string;
+  lastSeenAt?: string;
+  healthScore?: number;
+  lastHealthCheckAt?: string;
+  organizationId?: number;
+  organizationName?: string;
+  hasApiToken: boolean;
+  tokenCreatedAt?: string;
+  tokenLastUsedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AdminDeviceStats {
+  totalDevices: number;
+  activeDevices: number;
+  inactiveDevices: number;
+  onlineDevices: number;
+  offlineDevices: number;
+}
+
+// Trash/Soft Delete Types
+export interface TrashItem {
+  id: number;
+  entityType: 'USER' | 'DEVICE' | 'ORGANIZATION';
+  entityId: string;
+  entityName: string;
+  entitySnapshot: Record<string, unknown>;
+  deletedAt: string;
+  deletedBy: string;
+  deletionReason?: string;
+  expiresAt: string;
+  daysRemaining: number;
+  organizationId?: number;
+  organizationName?: string;
+}
+
+export interface TrashStats {
+  totalItems: number;
+  users: number;
+  devices: number;
+  organizations: number;
+}
+
+export interface SoftDeleteResponse {
+  trashId: number;
+  entityType: string;
+  entityName: string;
+  expiresAt: string;
+  daysRemaining: number;
 }
 
 export const apiService = new ApiService();

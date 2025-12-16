@@ -20,7 +20,7 @@ import lombok.Setter;
 @Builder(toBuilder = true)
 @Entity
 @Table(name = "devices")
-public class Device extends AuditableEntity {
+public class Device extends AuditableEntity implements SoftDeletable {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
@@ -115,10 +115,36 @@ public class Device extends AuditableEntity {
     @Builder.Default
     private Set<DeviceProperty> properties = new HashSet<>();
 
+    // Soft delete fields
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by")
+    private String deletedBy;
+
+    @Column(name = "deletion_reason", length = 500)
+    private String deletionReason;
+
     @PrePersist
     void ensureId() {
         if (this.id == null) {
             this.id = UUID.randomUUID();
         }
+    }
+
+    // SoftDeletable implementation
+    @Override
+    public String getEntityId() {
+        return id != null ? id.toString() : null;
+    }
+
+    @Override
+    public String getEntityName() {
+        return name != null ? name : externalId;
+    }
+
+    @Override
+    public String getEntityType() {
+        return "DEVICE";
     }
 }

@@ -97,13 +97,39 @@ export const AdminUsers = () => {
   };
 
   const handleDeleteUser = async (userId: number, username: string) => {
-    if (!window.confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+    if (!window.confirm(`Are you sure you want to move user "${username}" to trash? You can restore it within 30 days.`)) {
       return;
     }
 
     try {
-      await apiService.deleteUser(userId);
-      toast.success('User deleted successfully');
+      const response = await apiService.softDeleteUser(userId);
+      const trashId = response.data.trashId;
+      const daysRemaining = response.data.daysRemaining;
+
+      // Show toast with undo button
+      toast(
+        (t) => (
+          <div className="flex items-center gap-3">
+            <span>User moved to trash ({daysRemaining} days to restore)</span>
+            <button
+              onClick={async () => {
+                try {
+                  await apiService.restoreTrashItem(trashId);
+                  toast.dismiss(t.id);
+                  toast.success('User restored successfully');
+                  await fetchUsers();
+                } catch (err) {
+                  toast.error('Failed to restore user');
+                }
+              }}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700"
+            >
+              Undo
+            </button>
+          </div>
+        ),
+        { duration: 10000 }
+      );
       await fetchUsers();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete user');
