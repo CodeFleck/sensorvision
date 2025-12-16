@@ -17,7 +17,6 @@ import {
   Wifi,
   WifiOff,
   Heart,
-  AlertTriangle,
 } from 'lucide-react';
 import { apiService, AdminDevice, AdminDeviceStats } from '../services/api';
 import toast from 'react-hot-toast';
