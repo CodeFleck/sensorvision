@@ -45,7 +45,7 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
             @Param("groupId") Long groupId);
 
     // Soft delete support
-    @Query("SELECT d FROM Device d WHERE d.deletedAt IS NULL")
+    @Query("SELECT d FROM Device d LEFT JOIN FETCH d.organization WHERE d.deletedAt IS NULL")
     List<Device> findAllActive();
 
     @Query("SELECT d FROM Device d WHERE d.organization = :organization AND d.deletedAt IS NULL")
