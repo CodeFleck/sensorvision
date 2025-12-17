@@ -56,4 +56,7 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
 
     @Query("SELECT d FROM Device d WHERE d.externalId = :externalId AND d.deletedAt IS NULL")
     Optional<Device> findActiveByExternalId(@Param("externalId") String externalId);
+
+    @Query("SELECT d FROM Device d LEFT JOIN FETCH d.organization WHERE d.id = :id")
+    Optional<Device> findByIdWithOrganization(@Param("id") UUID id);
 }

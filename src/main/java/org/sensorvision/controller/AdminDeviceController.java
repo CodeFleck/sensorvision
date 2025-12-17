@@ -50,21 +50,21 @@ public class AdminDeviceController {
 
     @GetMapping("/{deviceId}")
     public ResponseEntity<AdminDeviceDto> getDevice(@PathVariable UUID deviceId) {
-        Device device = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findByIdWithOrganization(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found with id: " + deviceId));
         return ResponseEntity.ok(convertToDto(device));
     }
 
     @GetMapping("/external/{externalId}")
     public ResponseEntity<AdminDeviceDto> getDeviceByExternalId(@PathVariable String externalId) {
-        Device device = deviceRepository.findByExternalId(externalId)
+        Device device = deviceRepository.findByExternalIdWithOrganization(externalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found: " + externalId));
         return ResponseEntity.ok(convertToDto(device));
     }
 
     @PutMapping("/{deviceId}/enable")
     public ResponseEntity<ApiResponse<AdminDeviceDto>> enableDevice(@PathVariable UUID deviceId) {
-        Device device = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findByIdWithOrganization(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found with id: " + deviceId));
 
         device.setActive(true);
@@ -83,7 +83,7 @@ public class AdminDeviceController {
 
     @PutMapping("/{deviceId}/disable")
     public ResponseEntity<ApiResponse<AdminDeviceDto>> disableDevice(@PathVariable UUID deviceId) {
-        Device device = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findByIdWithOrganization(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found with id: " + deviceId));
 
         device.setActive(false);
@@ -104,7 +104,7 @@ public class AdminDeviceController {
     public ResponseEntity<ApiResponse<AdminDeviceDto>> updateDevice(
             @PathVariable UUID deviceId,
             @RequestBody DeviceUpdateRequest request) {
-        Device device = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findByIdWithOrganization(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found with id: " + deviceId));
 
         if (request.getName() != null) {
@@ -139,7 +139,7 @@ public class AdminDeviceController {
     public ResponseEntity<ApiResponse<SoftDeleteResponse>> deleteDevice(
             @PathVariable UUID deviceId,
             @RequestParam(required = false) String reason) {
-        Device device = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findByIdWithOrganization(deviceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Device not found with id: " + deviceId));
 
         // Don't allow deleting already deleted devices
