@@ -31,7 +31,7 @@ Ensure these are configured in `application.properties` or environment:
 
 ```properties
 # Database (must support JSONB for plugin config schemas)
-spring.datasource.url=jdbc:postgresql://localhost:5432/sensorvision
+spring.datasource.url=jdbc:postgresql://localhost:5432/indcloud
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
 
@@ -85,7 +85,7 @@ Seeds marketplace with 6 official plugins:
 
 ```bash
 # Connect to PostgreSQL
-psql -h localhost -U sensorvision_user -d sensorvision
+psql -h localhost -U indcloud_user -d indcloud
 
 # Check migrations applied
 SELECT version, description, success
@@ -132,30 +132,30 @@ FROM plugin_registry;
 
 ```bash
 # Copy JAR to deployment directory
-cp build/libs/sensorvision-*.jar /opt/sensorvision/
+cp build/libs/indcloud-*.jar /opt/indcloud/
 
 # Set permissions
-chmod 755 /opt/sensorvision/sensorvision-*.jar
+chmod 755 /opt/indcloud/indcloud-*.jar
 
 # Create symlink for easy updates
-ln -sf /opt/sensorvision/sensorvision-*.jar /opt/sensorvision/current.jar
+ln -sf /opt/indcloud/indcloud-*.jar /opt/indcloud/current.jar
 ```
 
 ### Step 3: Restart Application
 
 ```bash
 # Using systemd
-sudo systemctl restart sensorvision
+sudo systemctl restart indcloud
 
 # Check status
-sudo systemctl status sensorvision
+sudo systemctl status indcloud
 
 # Check logs for migration success
-sudo journalctl -u sensorvision -f
+sudo journalctl -u indcloud -f
 
 # Look for:
 # "Flyway: Successfully applied 2 migrations"
-# "Started SensorvisionApplication in X seconds"
+# "Started IndcloudApplication in X seconds"
 ```
 
 ### Step 4: Verify Backend API
@@ -208,23 +208,23 @@ npm run build
 
 ```bash
 # Copy build to web server
-cp -r dist/* /var/www/sensorvision/
+cp -r dist/* /var/www/indcloud/
 
 # Set permissions
-chown -R www-data:www-data /var/www/sensorvision
-chmod -R 755 /var/www/sensorvision
+chown -R www-data:www-data /var/www/indcloud
+chmod -R 755 /var/www/indcloud
 ```
 
 ### Step 3: Configure Nginx (if applicable)
 
 ```nginx
-# /etc/nginx/sites-available/sensorvision
+# /etc/nginx/sites-available/indcloud
 
 server {
     listen 80;
-    server_name sensorvision.example.com;
+    server_name indcloud.example.com;
 
-    root /var/www/sensorvision;
+    root /var/www/indcloud;
     index index.html;
 
     # Frontend routes
@@ -263,7 +263,7 @@ sudo systemctl reload nginx
 
 **1. Database Tables**
 ```bash
-psql -h localhost -U sensorvision_user -d sensorvision -c "
+psql -h localhost -U indcloud_user -d indcloud -c "
   SELECT
     (SELECT COUNT(*) FROM plugin_registry) as plugins_count,
     (SELECT COUNT(*) FROM installed_plugins) as installations_count,
@@ -327,7 +327,7 @@ curl -X DELETE http://localhost:8080/api/v1/plugins/slack-notifications/uninstal
 ### Frontend Verification
 
 **1. Navigation**
-- [ ] Navigate to http://sensorvision.example.com
+- [ ] Navigate to http://indcloud.example.com
 - [ ] Click "Plugin Marketplace" in sidebar
 - [ ] Verify marketplace page loads
 
@@ -379,7 +379,7 @@ curl -X DELETE http://localhost:8080/api/v1/plugins/slack-notifications/uninstal
 
 ```bash
 # Rollback Flyway migrations
-psql -h localhost -U sensorvision_user -d sensorvision
+psql -h localhost -U indcloud_user -d indcloud
 
 # Check current version
 SELECT MAX(version) FROM flyway_schema_history;
@@ -393,17 +393,17 @@ DROP TABLE IF EXISTS plugin_registry CASCADE;
 DELETE FROM flyway_schema_history WHERE version IN ('50', '51');
 
 # Restart application (will not apply migrations)
-sudo systemctl restart sensorvision
+sudo systemctl restart indcloud
 ```
 
 ### If Backend Deployment Fails
 
 ```bash
 # Restore previous JAR
-cp /opt/sensorvision/backup/sensorvision-previous.jar /opt/sensorvision/current.jar
+cp /opt/indcloud/backup/indcloud-previous.jar /opt/indcloud/current.jar
 
 # Restart application
-sudo systemctl restart sensorvision
+sudo systemctl restart indcloud
 
 # Verify application running
 curl http://localhost:8080/actuator/health
@@ -413,13 +413,13 @@ curl http://localhost:8080/actuator/health
 
 ```bash
 # Restore previous build
-cp -r /var/www/sensorvision-backup/* /var/www/sensorvision/
+cp -r /var/www/indcloud-backup/* /var/www/indcloud/
 
 # Reload nginx
 sudo systemctl reload nginx
 
 # Verify frontend accessible
-curl http://sensorvision.example.com
+curl http://indcloud.example.com
 ```
 
 ---
@@ -440,7 +440,7 @@ curl http://localhost:8080/actuator/health
 **Database Health**
 ```bash
 # Check plugin registry
-psql -h localhost -U sensorvision_user -d sensorvision \
+psql -h localhost -U indcloud_user -d indcloud \
   -c "SELECT COUNT(*) FROM plugin_registry;"
 
 # Should return 6
@@ -476,10 +476,10 @@ ORDER BY pr.rating_average DESC;
 **3. Error Monitoring**
 ```bash
 # Check application logs for errors
-sudo journalctl -u sensorvision --since "10 minutes ago" | grep ERROR
+sudo journalctl -u indcloud --since "10 minutes ago" | grep ERROR
 
 # Check for plugin installation failures
-sudo journalctl -u sensorvision --since "10 minutes ago" | grep "PluginInstallationException"
+sudo journalctl -u indcloud --since "10 minutes ago" | grep "PluginInstallationException"
 ```
 
 ### Prometheus Metrics (if enabled)
@@ -583,7 +583,7 @@ sudo tail -f /var/log/nginx/error.log
 - Monitor plugin execution for anomalies
 
 ### 4. Plugin Verification
-- Official plugins reviewed and verified by SensorVision team
+- Official plugins reviewed and verified by Industrial Cloud team
 - Community plugins clearly marked as unverified
 - Plugin submission requires code review
 
@@ -592,12 +592,12 @@ sudo tail -f /var/log/nginx/error.log
 ## Support
 
 ### Resources
-- **Documentation**: https://github.com/CodeFleck/sensorvision/tree/main/docs
-- **Issues**: https://github.com/CodeFleck/sensorvision/issues
-- **Discussions**: https://github.com/CodeFleck/sensorvision/discussions
+- **Documentation**: https://github.com/CodeFleck/indcloud/tree/main/docs
+- **Issues**: https://github.com/CodeFleck/indcloud/issues
+- **Discussions**: https://github.com/CodeFleck/indcloud/discussions
 
 ### Contact
-- **Email**: support@sensorvision.io
+- **Email**: support@indcloud.io
 - **Slack**: #plugin-marketplace channel
 
 ---

@@ -263,7 +263,7 @@ export const LayoutV1 = ({ children }: LayoutProps) => {
             <div className="p-6">
               <div className="flex items-center space-x-2">
                 <Activity className="h-8 w-8 text-link" />
-                <h1 className="text-xl font-bold text-primary">SensorVision</h1>
+                <h1 className="text-xl font-bold text-primary">Industrial Cloud</h1>
               </div>
             </div>
           </div>

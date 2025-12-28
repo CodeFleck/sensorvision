@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-west-2
-  ECR_REPOSITORY: sensorvision-backend
+  ECR_REPOSITORY: indcloud-backend
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
@@ -106,7 +106,7 @@ jobs:
             docker-compose.production.yml \
             deploy.sh \
             nginx.conf \
-            $EC2_USER@$EC2_HOST:/home/$EC2_USER/sensorvision/
+            $EC2_USER@$EC2_HOST:/home/$EC2_USER/indcloud/
 
       - name: Create .env.production file
         run: |
@@ -152,8 +152,8 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          scp -i ~/.ssh/deploy_key .env.production $EC2_USER@$EC2_HOST:/home/$EC2_USER/sensorvision/
-          ssh -i ~/.ssh/deploy_key $EC2_USER@$EC2_HOST "chmod 600 /home/$EC2_USER/sensorvision/.env.production"
+          scp -i ~/.ssh/deploy_key .env.production $EC2_USER@$EC2_HOST:/home/$EC2_USER/indcloud/
+          ssh -i ~/.ssh/deploy_key $EC2_USER@$EC2_HOST "chmod 600 /home/$EC2_USER/indcloud/.env.production"
 
       - name: Cleanup disk space on EC2
         env:
@@ -174,7 +174,7 @@ jobs:
 
             echo ""
             echo "Cleaning up old backups (keeping last 3)..."
-            BACKUP_DIR="$HOME/sensorvision/backups"
+            BACKUP_DIR="$HOME/indcloud/backups"
             if [ -d "$BACKUP_DIR" ]; then
               cd "$BACKUP_DIR"
               BACKUP_COUNT=$(ls -d backup_* 2>/dev/null | wc -l)

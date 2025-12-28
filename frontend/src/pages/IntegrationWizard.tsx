@@ -494,9 +494,9 @@ export const IntegrationWizard: React.FC = () => {
       case 'arduino':
         code = `/*
  * ==============================================================================
- * SensorVision - ESP32/Arduino Data Sender
+ * Industrial Cloud - ESP32/Arduino Data Sender
  * ==============================================================================
- * This sketch sends sensor data to SensorVision via MQTT.
+ * This sketch sends sensor data to Industrial Cloud via MQTT.
  *
  * HOW TO USE:
  * 1. Install the PubSubClient library:
@@ -509,7 +509,7 @@ export const IntegrationWizard: React.FC = () => {
  *
  * 4. Open Serial Monitor (115200 baud) to see the output
  *
- * 5. Check your data in the SensorVision dashboard!
+ * 5. Check your data in the Industrial Cloud dashboard!
  *
  * DYNAMIC VARIABLES: You can send ANY variable name - they are auto-created!
  * Just add new variables in the sendData() function.
@@ -529,7 +529,7 @@ export const IntegrationWizard: React.FC = () => {
 const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
-// SensorVision configuration (pre-filled with your device credentials)
+// Industrial Cloud configuration (pre-filled with your device credentials)
 // ⚠️  SECURITY WARNING: Never commit this file with your real token!
 //     For production, load the token from SPIFFS/EEPROM or use a config file.
 const char* mqttServer = "${mqttServer}";
@@ -551,7 +551,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("");
   Serial.println("==================================================");
-  Serial.println("SensorVision ESP32 Data Sender");
+  Serial.println("Industrial Cloud ESP32 Data Sender");
   Serial.println("==================================================");
 
   // Connect to WiFi
@@ -597,7 +597,7 @@ void loop() {
   float temperature = 23.5 + (random(-20, 20) / 10.0);  // Simulated value
   float humidity = 65.2 + (random(-50, 50) / 10.0);     // Simulated value
 
-  // Send the data to SensorVision
+  // Send the data to Industrial Cloud
   sendData(temperature, humidity);
 
   // Wait before sending again (60 seconds = 60000 milliseconds)
@@ -689,15 +689,15 @@ String getISOTimestamp() {
       case 'raspberry-pi':
         code = `"""
 ==============================================================================
-SensorVision - Python Data Sender
+Industrial Cloud - Python Data Sender
 ==============================================================================
-This script sends sensor data to SensorVision from your Python application,
+This script sends sensor data to Industrial Cloud from your Python application,
 Raspberry Pi, or any device running Python.
 
 HOW TO USE:
 1. Install the requests library: pip install requests
 2. Run this script: python your_script_name.py
-3. Check your data in the SensorVision dashboard!
+3. Check your data in the Industrial Cloud dashboard!
 
 DYNAMIC VARIABLES: You can send ANY variable name - they are auto-created!
 Just add new variables to send_data() and they appear automatically.
@@ -719,11 +719,11 @@ API_KEY = "${token}"
 DEVICE_ID = "${devId}"
 
 # ==============================================================================
-# MAIN FUNCTION - Send data to SensorVision
+# MAIN FUNCTION - Send data to Industrial Cloud
 # ==============================================================================
 def send_data(**variables):
     """
-    Send sensor data to SensorVision.
+    Send sensor data to Industrial Cloud.
 
     Usage examples:
         send_data(temperature=23.5)
@@ -769,7 +769,7 @@ def send_data(**variables):
 
 if __name__ == "__main__":
     print("=" * 50)
-    print("SensorVision Data Sender")
+    print("Industrial Cloud Data Sender")
     print("=" * 50)
     print(f"Device: {DEVICE_ID}")
     print(f"Server: {API_URL}")
@@ -801,14 +801,14 @@ if __name__ == "__main__":
       case 'nodejs':
         code = `/**
  * ==============================================================================
- * SensorVision - Node.js Data Sender
+ * Industrial Cloud - Node.js Data Sender
  * ==============================================================================
- * This script sends sensor data to SensorVision from your Node.js application.
+ * This script sends sensor data to Industrial Cloud from your Node.js application.
  *
  * HOW TO USE:
  * 1. Install axios: npm install axios
  * 2. Run this script: node your_script_name.js
- * 3. Check your data in the SensorVision dashboard!
+ * 3. Check your data in the Industrial Cloud dashboard!
  *
  * DYNAMIC VARIABLES: You can send ANY variable name - they are auto-created!
  * Just add new properties to the sendData() object and they appear automatically.
@@ -828,10 +828,10 @@ const API_KEY = '${token}';
 const DEVICE_ID = '${devId}';
 
 // ==============================================================================
-// MAIN FUNCTION - Send data to SensorVision
+// MAIN FUNCTION - Send data to Industrial Cloud
 // ==============================================================================
 /**
- * Send sensor data to SensorVision.
+ * Send sensor data to Industrial Cloud.
  *
  * Usage examples:
  *   sendData({ temperature: 23.5 })
@@ -881,7 +881,7 @@ async function sendData(variables) {
 
 async function main() {
   console.log('==================================================');
-  console.log('SensorVision Data Sender');
+  console.log('Industrial Cloud Data Sender');
   console.log('==================================================');
   console.log('Device:', DEVICE_ID);
   console.log('Server:', API_URL);
@@ -920,9 +920,9 @@ main();`;
       case 'curl':
         code = `#!/bin/bash
 # ==============================================================================
-# SensorVision - Telemetry Data Sender
+# Industrial Cloud - Telemetry Data Sender
 # ==============================================================================
-# This script sends sensor data to SensorVision using the REST API.
+# This script sends sensor data to Industrial Cloud using the REST API.
 #
 # DYNAMIC VARIABLES: You can send ANY variable name - they are auto-provisioned!
 # Just add new fields to the JSON payload and they'll be automatically created.
@@ -944,7 +944,7 @@ DEVICE_ID="${devId}"
 # Use this to test your connection and send a single data point.
 # Run this script once to verify everything works.
 
-echo "Sending test data to SensorVision..."
+echo "Sending test data to Industrial Cloud..."
 
 curl -X POST "$API_URL/api/v1/ingest/$DEVICE_ID" \\
   -H "X-API-Key: $API_KEY" \\
@@ -1086,7 +1086,7 @@ echo "Done! Check your dashboard at ${apiUrl}"
         if (typeof value !== 'number' && typeof value !== 'string') {
           throw new Error(
             `Invalid data type for field '${key}': ${typeof value}. ` +
-            `SensorVision only accepts numeric values (numbers or numeric strings), not booleans, objects, or arrays.`
+            `Industrial Cloud only accepts numeric values (numbers or numeric strings), not booleans, objects, or arrays.`
           );
         }
         if (typeof value === 'string' && isNaN(Number(value))) {
@@ -1117,7 +1117,7 @@ echo "Done! Check your dashboard at ${apiUrl}"
           if (errorData.message && errorData.message.includes('Unsupported data type')) {
             setConnectionError(
               `${errorData.message}\n\n` +
-              `💡 Tip: SensorVision only accepts numeric values. ` +
+              `💡 Tip: Industrial Cloud only accepts numeric values. ` +
               `Ensure all telemetry fields are numbers, not booleans, strings, objects, or arrays.`
             );
           } else {
@@ -1501,7 +1501,7 @@ echo "Done! Check your dashboard at ${apiUrl}"
               <p className="text-gray-600">
                 {isMqttPlatform(selectedPlatform)
                   ? 'Verify MQTT broker connectivity and test your setup'
-                  : 'Verify that your device can send data to SensorVision'}
+                  : 'Verify that your device can send data to Industrial Cloud'}
               </p>
             </div>
 
@@ -1632,7 +1632,7 @@ echo "Done! Check your dashboard at ${apiUrl}"
                 You&apos;re All Set!
               </h2>
               <p className="text-gray-600">
-                Your device is ready to send data to SensorVision
+                Your device is ready to send data to Industrial Cloud
               </p>
             </div>
 
@@ -1662,7 +1662,7 @@ echo "Done! Check your dashboard at ${apiUrl}"
                 <div>
                   <h3 className="font-semibold text-gray-900">Connection Tested</h3>
                   <p className="text-sm text-gray-600">
-                    Successfully verified connection to SensorVision
+                    Successfully verified connection to Industrial Cloud
                   </p>
                 </div>
               </div>

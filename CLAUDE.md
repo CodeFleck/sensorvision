@@ -47,7 +47,7 @@ cd frontend && npm run dev               # Terminal 2: Frontend
 ### Testing MQTT Integration
 ```bash
 # Publish test telemetry message
-mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/test-001/telemetry" -m '{
+mosquitto_pub -h localhost -p 1883 -t "indcloud/devices/test-001/telemetry" -m '{
   "deviceId": "test-001",
   "timestamp": "2024-01-01T12:00:00Z",
   "variables": {
@@ -60,7 +60,7 @@ mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/test-001/telemetry" 
 
 ## Architecture Overview
 
-SensorVision is a comprehensive IoT monitoring platform built as a Spring Boot backend with React frontend, featuring real-time data processing, alerting, and analytics.
+Industrial Cloud is a comprehensive IoT monitoring platform built as a Spring Boot backend with React frontend, featuring real-time data processing, alerting, and analytics.
 
 ### Core Data Flow
 ```
@@ -106,9 +106,9 @@ The frontend connects via:
 
 ### MQTT Topics Structure
 ```
-sensorvision/devices/{deviceId}/telemetry    # Telemetry data ingestion
-sensorvision/devices/{deviceId}/status       # Device status updates (reserved)
-sensorvision/devices/{deviceId}/commands     # Command channel (reserved)
+indcloud/devices/{deviceId}/telemetry    # Telemetry data ingestion
+indcloud/devices/{deviceId}/status       # Device status updates (reserved)
+indcloud/devices/{deviceId}/commands     # Command channel (reserved)
 ```
 
 ### Key Application Properties
@@ -223,7 +223,7 @@ The application uses rate limiting to protect against abuse:
 - Integration tests using `@SpringBootTest` with H2 database
 - MQTT integration tests should use test profile to avoid Docker dependency
 - Frontend testing via npm test (Jest/React Testing Library)
-- This project is already deployed to PROD. Project urls: https://github.com/CodeFleck/sensorvision, http://35.88.65.186.nip.io:8080/
+- This project is already deployed to PROD. Project urls: https://github.com/CodeFleck/indcloud, http://35.88.65.186.nip.io:8080/
 
 ## Production Operations
 
@@ -232,35 +232,35 @@ The application uses rate limiting to protect against abuse:
 **Backend Application Logs:**
 ```bash
 # View backend logs
-docker logs sensorvision-backend
+docker logs indcloud-backend
 
 # Follow logs in real-time
-docker logs -f sensorvision-backend
+docker logs -f indcloud-backend
 
 # View last 100 lines
-docker logs --tail 100 sensorvision-backend
+docker logs --tail 100 indcloud-backend
 
 # View logs with timestamps
-docker logs -t sensorvision-backend
+docker logs -t indcloud-backend
 
 # Search for errors
-docker logs --tail 200 sensorvision-backend | grep -i "error\|exception"
+docker logs --tail 200 indcloud-backend | grep -i "error\|exception"
 
 # Search for telemetry ingestion
-docker logs --tail 200 sensorvision-backend | grep -i "telemetry\|ingestion"
+docker logs --tail 200 indcloud-backend | grep -i "telemetry\|ingestion"
 
 # View logs from mounted volume (if available)
-cat ./logs/sensorvision.log
-tail -f ./logs/sensorvision.log
+cat ./logs/indcloud.log
+tail -f ./logs/indcloud.log
 ```
 
 **MQTT Broker Logs:**
 ```bash
 # View MQTT broker logs
-docker logs sensorvision-mosquitto
+docker logs indcloud-mosquitto
 
 # Follow MQTT logs in real-time
-docker logs -f sensorvision-mosquitto
+docker logs -f indcloud-mosquitto
 
 # Monitor MQTT messages (requires mosquitto-clients)
 mosquitto_sub -h 35.88.65.186 -p 1883 -t "#" -v
@@ -269,10 +269,10 @@ mosquitto_sub -h 35.88.65.186 -p 1883 -t "#" -v
 **Database Logs:**
 ```bash
 # View PostgreSQL logs
-docker logs sensorvision-postgres
+docker logs indcloud-postgres
 
 # Follow database logs
-docker logs -f sensorvision-postgres
+docker logs -f indcloud-postgres
 ```
 
 ### Production Troubleshooting
@@ -299,7 +299,7 @@ mosquitto_sub -h 35.88.65.186 -p 1883 -t "#" -v
 
 # Publish test message
 mosquitto_pub -h 35.88.65.186 -p 1883 \
-  -t "sensorvision/devices/test-001/telemetry" \
+  -t "indcloud/devices/test-001/telemetry" \
   -m '{"deviceId":"test-001","timestamp":"2024-01-01T12:00:00Z","variables":{"temperature":23.5}}'
 ```
 
@@ -333,7 +333,7 @@ mosquitto_pub -h 35.88.65.186 -p 1883 \
 - [ ] MQTT broker is accessible from external network
 - [ ] Test connectivity: `telnet <server-ip> 1883`
 - [ ] MQTT authentication configured (if `MQTT_DEVICE_AUTH_REQUIRED=true`)
-- [ ] MQTT topics configured: `sensorvision/devices/+/telemetry`
+- [ ] MQTT topics configured: `indcloud/devices/+/telemetry`
 
 **Environment Variables:**
 - [ ] `JWT_SECRET` set to secure random value
@@ -345,7 +345,7 @@ mosquitto_pub -h 35.88.65.186 -p 1883 \
 **Monitoring:**
 - [ ] Prometheus metrics endpoint accessible: `/actuator/metrics`
 - [ ] Health check endpoint working: `/actuator/health`
-- [ ] Log rotation configured for `./logs/sensorvision.log`
+- [ ] Log rotation configured for `./logs/indcloud.log`
 - [ ] Disk space monitoring for PostgreSQL volume
 
 **Integration Wizard:**
@@ -356,21 +356,21 @@ mosquitto_pub -h 35.88.65.186 -p 1883 \
 
 ## Official SDKs and Integration Tools
 
-### Python SDK (`sensorvision-sdk/`)
+### Python SDK (`indcloud-sdk/`)
 Located in the repository root, provides a production-ready Python client:
 
 ```bash
 # Development and testing
-cd sensorvision-sdk
+cd indcloud-sdk
 pip install -e .                    # Install in editable mode
 pytest                              # Run tests
-pytest --cov=sensorvision          # Run with coverage
+pytest --cov=indcloud          # Run with coverage
 python -m pytest -v                 # Verbose output
 ```
 
 **Key Files:**
-- `sensorvision/client.py` - Main client implementation with retry logic
-- `sensorvision/errors.py` - Custom exception classes
+- `indcloud/client.py` - Main client implementation with retry logic
+- `indcloud/errors.py` - Custom exception classes
 - `examples/` - Usage examples (basic, advanced, error handling)
 - `tests/` - Comprehensive test suite
 
@@ -379,12 +379,12 @@ python -m pytest -v                 # Verbose output
 - `_send_data_with_retry()` method honors `self.config.retry_attempts` and `self.config.retry_delay`
 - Selective retry: doesn't retry auth/validation errors, only network/timeout errors
 
-### JavaScript/TypeScript SDK (`sensorvision-sdk-js/`)
+### JavaScript/TypeScript SDK (`indcloud-sdk-js/`)
 Cross-platform SDK supporting Node.js and browsers:
 
 ```bash
 # Development and building
-cd sensorvision-sdk-js
+cd indcloud-sdk-js
 npm install                         # Install dependencies
 npm run build                       # Build all formats (CJS, ESM, UMD)
 npm test                            # Run tests
@@ -434,7 +434,7 @@ Interactive 5-step wizard for device onboarding:
 ## Development Patterns for SDKs
 
 ### Adding New Features to Python SDK
-1. Update `sensorvision/client.py` with new method
+1. Update `indcloud/client.py` with new method
 2. Add type hints and docstrings
 3. Add error handling
 4. Create example in `examples/`

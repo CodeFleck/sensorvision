@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X, Cpu, Zap, Bell, BarChart3, ArrowRight, Rocket } from 'lucide-react';
 
-const WELCOME_MODAL_KEY = 'sensorvision_welcome_shown';
+const WELCOME_MODAL_KEY = 'indcloud_welcome_shown';
 
 interface WelcomeModalProps {
   forceShow?: boolean;
@@ -105,7 +105,7 @@ export const WelcomeModal = ({ forceShow = false }: WelcomeModalProps) => {
               <Rocket className="h-8 w-8 text-white" />
             </div>
             <h2 id="welcome-modal-title" className="text-2xl font-bold text-white mb-2">
-              Welcome to SensorVision!
+              Welcome to Industrial Cloud!
             </h2>
             <p className="text-blue-100">
               Your complete IoT monitoring and analytics platform

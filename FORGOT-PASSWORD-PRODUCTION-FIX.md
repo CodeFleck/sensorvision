@@ -50,9 +50,9 @@ ssh -i your-key.pem ec2-user@35.88.65.186
 ### Step 2: Navigate to Application Directory
 
 ```bash
-cd /path/to/sensorvision  # Adjust to your actual path
+cd /path/to/indcloud  # Adjust to your actual path
 # or
-cd ~/sensorvision
+cd ~/indcloud
 ```
 
 ### Step 3: Create/Edit Production Environment File
@@ -74,7 +74,7 @@ nano .env.production
 Add to `.env.production`:
 ```env
 EMAIL_ENABLED=true
-EMAIL_FROM=noreply@sensorvision.com
+EMAIL_FROM=noreply@indcloud.com
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-actual-email@gmail.com
@@ -100,7 +100,7 @@ SMTP_PASSWORD=your-app-password-here
 Add to `.env.production`:
 ```env
 EMAIL_ENABLED=true
-EMAIL_FROM=noreply@sensorvision.com
+EMAIL_FROM=noreply@indcloud.com
 SMTP_HOST=email-smtp.us-west-2.amazonaws.com
 SMTP_PORT=587
 SMTP_USERNAME=<your-ses-smtp-username>
@@ -117,7 +117,7 @@ SMTP_PASSWORD=<your-ses-smtp-password>
    ```
    SES Console → Verified identities → Create identity
    - Choose: Email address
-   - Enter: noreply@sensorvision.com (or your domain email)
+   - Enter: noreply@indcloud.com (or your domain email)
    - Click: Create identity
    - Check your email for verification link
    ```
@@ -158,7 +158,7 @@ SMTP_PASSWORD=<your-ses-smtp-password>
 
 ```env
 EMAIL_ENABLED=true
-EMAIL_FROM=noreply@sensorvision.com
+EMAIL_FROM=noreply@indcloud.com
 SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USERNAME=apikey
@@ -197,8 +197,8 @@ docker-compose -f docker-compose.production.yml up -d
 
 Check if email is enabled in logs:
 ```bash
-docker logs sensorvision-backend | grep -i "email"
-docker logs sensorvision-backend | grep -i "notification"
+docker logs indcloud-backend | grep -i "email"
+docker logs indcloud-backend | grep -i "notification"
 ```
 
 Expected output:
@@ -239,7 +239,7 @@ This link expires in 24 hours.
 
 ```bash
 # Monitor logs in real-time
-docker logs -f sensorvision-backend
+docker logs -f indcloud-backend
 
 # In another terminal, trigger forgot password
 # You should see email sending logs
@@ -253,13 +253,13 @@ docker logs -f sensorvision-backend
 
 **Check 1**: Verify EMAIL_ENABLED is true
 ```bash
-docker exec sensorvision-backend env | grep EMAIL
+docker exec indcloud-backend env | grep EMAIL
 ```
 
 **Check 2**: Check for errors in logs
 ```bash
-docker logs sensorvision-backend 2>&1 | grep -i error
-docker logs sensorvision-backend 2>&1 | grep -i mail
+docker logs indcloud-backend 2>&1 | grep -i error
+docker logs indcloud-backend 2>&1 | grep -i mail
 ```
 
 **Check 3**: Test SMTP connection from server
@@ -357,19 +357,19 @@ aws ec2 authorize-security-group-egress \
 ssh ec2-user@35.88.65.186
 
 # Edit config
-nano /path/to/sensorvision/.env.production
+nano /path/to/indcloud/.env.production
 
 # Restart backend
 docker-compose -f docker-compose.production.yml restart backend
 
 # Check logs
-docker logs -f sensorvision-backend
+docker logs -f indcloud-backend
 
 # Test SMTP
 telnet smtp.gmail.com 587
 
 # Check environment
-docker exec sensorvision-backend env | grep EMAIL
+docker exec indcloud-backend env | grep EMAIL
 ```
 
 ---

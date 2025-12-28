@@ -1,6 +1,6 @@
 # SMS Alert Notifications - Testing Guide
 
-Complete guide for testing the SMS alert notification system in SensorVision.
+Complete guide for testing the SMS alert notification system in Industrial Cloud.
 
 ---
 
@@ -236,7 +236,7 @@ curl -X POST http://localhost:8080/api/v1/rules \
 #### 3. Trigger Alert via MQTT
 ```bash
 mosquitto_pub -h localhost -p 1883 \
-  -t "sensorvision/devices/test-device/telemetry" \
+  -t "indcloud/devices/test-device/telemetry" \
   -m '{
     "deviceId": "test-device",
     "timestamp": "2025-11-11T12:00:00Z",
@@ -288,7 +288,7 @@ curl -X PUT http://localhost:8080/api/v1/sms-settings \
 # Trigger 4 alerts (4th should fail)
 for i in {1..4}; do
   mosquitto_pub -h localhost -p 1883 \
-    -t "sensorvision/devices/test-device/telemetry" \
+    -t "indcloud/devices/test-device/telemetry" \
     -m "{\"deviceId\": \"test-device\", \"timestamp\": \"2025-11-11T12:0$i:00Z\", \"variables\": {\"temperature\": 85.5}}"
   sleep 2
 done
@@ -318,7 +318,7 @@ curl -X PUT http://localhost:8080/api/v1/sms-settings \
 # Trigger 3 alerts (3rd should fail, 0.0075 * 3 = 0.0225 > 0.02)
 for i in {1..3}; do
   mosquitto_pub -h localhost -p 1883 \
-    -t "sensorvision/devices/test-device/telemetry" \
+    -t "indcloud/devices/test-device/telemetry" \
     -m "{\"deviceId\": \"test-device\", \"timestamp\": \"2025-11-11T12:1$i:00Z\", \"variables\": {\"temperature\": 85.5}}"
   sleep 2
 done
@@ -344,7 +344,7 @@ curl -X PUT http://localhost:8080/api/v1/sms-settings \
 # Trigger 11 alerts (80% of $0.10 = $0.08, at 11 SMS = $0.0825)
 for i in {1..11}; do
   mosquitto_pub -h localhost -p 1883 \
-    -t "sensorvision/devices/test-device/telemetry" \
+    -t "indcloud/devices/test-device/telemetry" \
     -m "{\"deviceId\": \"test-device\", \"timestamp\": \"2025-11-11T12:2$i:00Z\", \"variables\": {\"temperature\": 85.5}}"
   sleep 2
 done
@@ -548,7 +548,7 @@ GROUP BY o.name;
 # Trigger 100 alerts simultaneously
 for i in {1..100}; do
   (mosquitto_pub -h localhost -p 1883 \
-    -t "sensorvision/devices/test-device-$i/telemetry" \
+    -t "indcloud/devices/test-device-$i/telemetry" \
     -m "{\"deviceId\": \"test-device-$i\", \"timestamp\": \"2025-11-11T12:30:00Z\", \"variables\": {\"temperature\": 85.5}}" &)
 done
 

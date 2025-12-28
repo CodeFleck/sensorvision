@@ -1,12 +1,12 @@
 # LoRaWAN The Things Network (TTN) Integration Guide
 
-Complete guide for integrating SensorVision with The Things Network (TTN) v3 for LoRaWAN device management.
+Complete guide for integrating Industrial Cloud with The Things Network (TTN) v3 for LoRaWAN device management.
 
 ---
 
 ## Overview
 
-This integration enables SensorVision to receive telemetry data from LoRaWAN devices connected to The Things Network via HTTP webhooks.
+This integration enables Industrial Cloud to receive telemetry data from LoRaWAN devices connected to The Things Network via HTTP webhooks.
 
 **Features:**
 - ✅ Automatic device creation on first uplink
@@ -22,7 +22,7 @@ This integration enables SensorVision to receive telemetry data from LoRaWAN dev
 1. **The Things Network Account** - [Sign up at console.thethingsnetwork.org](https://console.thethingsnetwork.org/)
 2. **LoRaWAN Devices** - Registered in your TTN application
 3. **Payload Decoder** - Configured in TTN to decode binary payloads to JSON
-4. **SensorVision Account** - Admin access to create plugins
+4. **Industrial Cloud Account** - Admin access to create plugins
 
 ---
 
@@ -60,9 +60,9 @@ function decodeUplink(input) {
 
 **Important:** The decoded values must be in the `data` object and will appear in `uplink_message.decoded_payload` in the webhook.
 
-### 2. Create LoRaWAN Plugin in SensorVision
+### 2. Create LoRaWAN Plugin in Industrial Cloud
 
-1. Log in to SensorVision as an admin
+1. Log in to Industrial Cloud as an admin
 2. Navigate to **Data Plugins** in the sidebar
 3. Click **New Plugin**
 4. Fill in the form:
@@ -86,12 +86,12 @@ Configuration (JSON):
 
 **Your webhook URL will be:**
 ```
-https://your-sensorvision-domain.com/api/v1/webhooks/{organizationId}/my-lorawan-ttn
+https://your-indcloud-domain.com/api/v1/webhooks/{organizationId}/my-lorawan-ttn
 ```
 
 **Example:**
 ```
-https://sensorvision.example.com/api/v1/webhooks/1/my-lorawan-ttn
+https://indcloud.example.com/api/v1/webhooks/1/my-lorawan-ttn
 ```
 
 **Note:** Save this URL - you'll need it for TTN configuration.
@@ -109,9 +109,9 @@ In The Things Network Console:
 
 | Field | Value |
 |-------|-------|
-| **Webhook ID** | `sensorvision` (or any unique identifier) |
+| **Webhook ID** | `indcloud` (or any unique identifier) |
 | **Webhook format** | `JSON` |
-| **Base URL** | `https://your-sensorvision-domain.com/api/v1/webhooks/{orgId}/{pluginName}` |
+| **Base URL** | `https://your-indcloud-domain.com/api/v1/webhooks/{orgId}/{pluginName}` |
 | **Downlink API key** | (leave empty - not needed for uplinks) |
 | **Enabled** | ✓ Checked |
 
@@ -143,9 +143,9 @@ Trigger an uplink from your LoRaWAN device or use TTN's test feature:
 2. Scroll to **Live data** section
 3. Wait for a real uplink OR use simulator
 
-#### Verify in SensorVision
+#### Verify in Industrial Cloud
 
-1. Go to **Data Plugins** in SensorVision
+1. Go to **Data Plugins** in Industrial Cloud
 2. Find your `my-lorawan-ttn` plugin
 3. Click the **History** (clock) icon
 4. Verify execution shows:
@@ -213,7 +213,7 @@ TTN sends uplink webhooks in this format:
 }
 ```
 
-### What SensorVision Extracts
+### What Industrial Cloud Extracts
 
 #### Device ID
 ```
@@ -246,7 +246,7 @@ uplink_message.decoded_payload → {
 }
 ```
 
-Each numeric field becomes a telemetry variable in SensorVision.
+Each numeric field becomes a telemetry variable in Industrial Cloud.
 
 #### LoRaWAN Metadata
 
@@ -266,7 +266,7 @@ Extracted from first gateway in `rx_metadata`:
 
 ### Device ID Mapping
 
-Control how TTN device IDs map to SensorVision device IDs.
+Control how TTN device IDs map to Industrial Cloud device IDs.
 
 #### Default (No Prefix/Suffix)
 
@@ -277,7 +277,7 @@ Control how TTN device IDs map to SensorVision device IDs.
 }
 ```
 
-TTN Device ID: `sensor-001` → SensorVision Device ID: `sensor-001`
+TTN Device ID: `sensor-001` → Industrial Cloud Device ID: `sensor-001`
 
 #### With Prefix
 
@@ -287,7 +287,7 @@ TTN Device ID: `sensor-001` → SensorVision Device ID: `sensor-001`
 }
 ```
 
-TTN Device ID: `sensor-001` → SensorVision Device ID: `ttn-sensor-001`
+TTN Device ID: `sensor-001` → Industrial Cloud Device ID: `ttn-sensor-001`
 
 **Use Case:** Distinguish between different data sources (TTN vs Sigfox vs direct MQTT).
 
@@ -299,7 +299,7 @@ TTN Device ID: `sensor-001` → SensorVision Device ID: `ttn-sensor-001`
 }
 ```
 
-TTN Device ID: `sensor-001` → SensorVision Device ID: `sensor-001-warehouse`
+TTN Device ID: `sensor-001` → Industrial Cloud Device ID: `sensor-001-warehouse`
 
 **Use Case:** Identify device location or group.
 
@@ -312,7 +312,7 @@ TTN Device ID: `sensor-001` → SensorVision Device ID: `sensor-001-warehouse`
 }
 ```
 
-TTN Device ID: `temp-01` → SensorVision Device ID: `lora-temp-01-building-a`
+TTN Device ID: `temp-01` → Industrial Cloud Device ID: `lora-temp-01-building-a`
 
 ---
 
@@ -356,7 +356,7 @@ If your TTN application uses complex payload formats, ensure the decoder outputs
 }
 ```
 
-SensorVision extracts all numeric fields from the top level of `decoded_payload`.
+Industrial Cloud extracts all numeric fields from the top level of `decoded_payload`.
 
 ### Handling String Values
 
@@ -403,7 +403,7 @@ decoded.status_code = (status === "OK") ? 1 : 0;
 404 Not Found
 ```
 
-**Cause:** Plugin name in URL doesn't match SensorVision plugin name
+**Cause:** Plugin name in URL doesn't match Industrial Cloud plugin name
 
 **Solution:**
 - Verify plugin name exactly matches (case-sensitive)
@@ -442,7 +442,7 @@ No telemetry data found in TTN payload. Please ensure your TTN application inclu
 #### Issue: Device created but no telemetry data
 
 **Symptoms:**
-- Device appears in SensorVision
+- Device appears in Industrial Cloud
 - Telemetry dashboard shows "No data"
 - Execution history shows SUCCESS
 
@@ -468,7 +468,7 @@ decoded.temperature = 23.5;
 **Solution:**
 - TTN v3 uses ISO 8601 format (correct)
 - Verify timezone is UTC
-- SensorVision uses `received_at`, not `transmitted_at`
+- Industrial Cloud uses `received_at`, not `transmitted_at`
 
 ### Debug Webhooks in TTN
 
@@ -504,13 +504,13 @@ decoded.temperature = 23.5;
 
 Add to `application.properties`:
 ```properties
-logging.level.org.sensorvision.plugin.impl.LoRaWanTtnPlugin=DEBUG
-logging.level.org.sensorvision.service.DataPluginService=DEBUG
+logging.level.org.indcloud.plugin.impl.LoRaWanTtnPlugin=DEBUG
+logging.level.org.indcloud.service.DataPluginService=DEBUG
 ```
 
 View logs:
 ```bash
-docker logs sensorvision-backend 2>&1 | grep -i lorawan
+docker logs indcloud-backend 2>&1 | grep -i lorawan
 ```
 
 ---
@@ -521,8 +521,8 @@ docker logs sensorvision-backend 2>&1 | grep -i lorawan
 
 Always use HTTPS for webhook URLs in production:
 ```
-✗ http://sensorvision.example.com/api/v1/webhooks/...
-✓ https://sensorvision.example.com/api/v1/webhooks/...
+✗ http://indcloud.example.com/api/v1/webhooks/...
+✓ https://indcloud.example.com/api/v1/webhooks/...
 ```
 
 TTN requires HTTPS for production webhooks.
@@ -608,7 +608,7 @@ If processing >10,000 uplinks/hour:
 - Data sent every 10 minutes
 - TTN application: `smart-building-prod`
 
-**SensorVision Configuration:**
+**Industrial Cloud Configuration:**
 
 ```json
 {
@@ -645,7 +645,7 @@ function decodeUplink(input) {
 ```
 
 **Result:**
-- 50 devices in SensorVision with IDs: `building-sensor-001`, `building-sensor-002`, ...
+- 50 devices in Industrial Cloud with IDs: `building-sensor-001`, `building-sensor-002`, ...
 - 3 variables per device: `temperature`, `humidity`, `battery_voltage`
 - ~300 telemetry records per hour (50 devices × 6 uplinks/hour)
 
@@ -657,7 +657,7 @@ function decodeUplink(input) {
 
 1. **No Custom Decoders**
    - Must use TTN payload formatters
-   - Cannot define custom decoder in SensorVision
+   - Cannot define custom decoder in Industrial Cloud
    - **Workaround:** Implement all logic in TTN decoder
 
 2. **Numeric Values Only**
@@ -696,7 +696,7 @@ POST https://industrial.api.ubidots.com/api/webhooks/ttn/
 X-Auth-Token: YOUR-UBIDOTS-TOKEN
 ```
 
-**SensorVision equivalent:**
+**Industrial Cloud equivalent:**
 ```
 POST https://your-domain.com/api/v1/webhooks/{orgId}/{pluginName}
 (No authentication required - public webhook)
@@ -704,15 +704,15 @@ POST https://your-domain.com/api/v1/webhooks/{orgId}/{pluginName}
 
 **Key Differences:**
 - No API key required (organization ID + plugin name provides isolation)
-- Plugin configuration stored in SensorVision (not in webhook headers)
+- Plugin configuration stored in Industrial Cloud (not in webhook headers)
 - Execution history tracked automatically
 
 ### Migrating from TagoIO
 
-TagoIO uses action scripts for TTN. In SensorVision:
+TagoIO uses action scripts for TTN. In Industrial Cloud:
 - Create a plugin with provider `LORAWAN_TTN`
-- Configure TTN webhook to point to SensorVision
-- SensorVision handles all transformation automatically
+- Configure TTN webhook to point to Industrial Cloud
+- Industrial Cloud handles all transformation automatically
 
 ---
 
@@ -729,8 +729,8 @@ TagoIO uses action scripts for TTN. In SensorVision:
 - [TTN Community Forum](https://www.thethingsnetwork.org/forum/)
 
 ### Troubleshooting
-- [GitHub Issues](https://github.com/CodeFleck/sensorvision/issues)
-- [GitHub Discussions](https://github.com/CodeFleck/sensorvision/discussions)
+- [GitHub Issues](https://github.com/CodeFleck/indcloud/issues)
+- [GitHub Discussions](https://github.com/CodeFleck/indcloud/discussions)
 
 ---
 

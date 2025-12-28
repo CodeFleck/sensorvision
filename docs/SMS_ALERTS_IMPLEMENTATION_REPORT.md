@@ -20,7 +20,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 
 #### 1. SMS Notification Channel in Alert System
 - ✅ **Status**: Complete
-- **Location**: `src/main/java/org/sensorvision/service/NotificationService.java`
+- **Location**: `src/main/java/org/indcloud/service/NotificationService.java`
 - **Details**:
   - Rule-based SMS routing implemented in `sendRuleBasedSmsNotifications()`
   - Integration with alert workflow
@@ -29,7 +29,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 
 #### 2. Twilio API Integration
 - ✅ **Status**: Complete
-- **Location**: `src/main/java/org/sensorvision/service/SmsNotificationService.java`
+- **Location**: `src/main/java/org/indcloud/service/SmsNotificationService.java`
 - **Details**:
   - Twilio SDK v10.5.1 dependency added to `build.gradle.kts`
   - Auto-initialization on application startup with credential validation
@@ -41,7 +41,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 - ✅ **Status**: Complete
 - **Location**:
   - Database: `V46__Add_sms_notifications.sql` (rules.send_sms column)
-  - Entity: `src/main/java/org/sensorvision/model/Rule.java`
+  - Entity: `src/main/java/org/indcloud/model/Rule.java`
 - **Details**:
   - `sendSms` boolean field on Rule entity
   - `smsRecipients` TEXT[] field for recipient phone numbers
@@ -51,9 +51,9 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 #### 4. Phone Number Configuration per User
 - ✅ **Status**: Complete
 - **Location**:
-  - Entity: `src/main/java/org/sensorvision/model/UserPhoneNumber.java`
-  - Service: `src/main/java/org/sensorvision/service/PhoneNumberVerificationService.java`
-  - Controller: `src/main/java/org/sensorvision/controller/PhoneNumberController.java`
+  - Entity: `src/main/java/org/indcloud/model/UserPhoneNumber.java`
+  - Service: `src/main/java/org/indcloud/service/PhoneNumberVerificationService.java`
+  - Controller: `src/main/java/org/indcloud/controller/PhoneNumberController.java`
 - **Details**:
   - E.164 phone number format validation
   - Country code support
@@ -64,8 +64,8 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 #### 5. SMS Delivery Status Tracking
 - ✅ **Status**: Complete
 - **Location**:
-  - Entity: `src/main/java/org/sensorvision/model/SmsDeliveryLog.java`
-  - Repository: `src/main/java/org/sensorvision/repository/SmsDeliveryLogRepository.java`
+  - Entity: `src/main/java/org/indcloud/model/SmsDeliveryLog.java`
+  - Repository: `src/main/java/org/indcloud/repository/SmsDeliveryLogRepository.java`
   - Database: `V46__Add_sms_notifications.sql` (sms_delivery_log table)
 - **Details**:
   - Twilio SID tracking
@@ -77,7 +77,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 
 #### 6. Rate Limiting to Prevent SMS Spam
 - ✅ **Status**: Complete (Organization-level)
-- **Location**: `src/main/java/org/sensorvision/service/SmsNotificationService.java`
+- **Location**: `src/main/java/org/indcloud/service/SmsNotificationService.java`
 - **Details**:
   - **Daily Limit**: Configurable max SMS per day (default: 100)
   - **Monthly Budget**: Dollar limit enforcement (default: $50.00)
@@ -88,7 +88,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 
 #### 7. Fallback to Email if SMS Fails
 - ⚠️ **Status**: Partially Implemented
-- **Location**: `src/main/java/org/sensorvision/service/NotificationService.java`
+- **Location**: `src/main/java/org/indcloud/service/NotificationService.java`
 - **Details**:
   - SMS failures are logged but no automatic email fallback implemented
   - Email notifications run independently through user preferences
@@ -100,7 +100,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 
 ### 8. Phone Number Verification (OTP)
 - ✅ **Status**: Complete
-- **Location**: `src/main/java/org/sensorvision/service/PhoneNumberVerificationService.java`
+- **Location**: `src/main/java/org/indcloud/service/PhoneNumberVerificationService.java`
 - **Details**:
   - 6-digit OTP code generation (SecureRandom)
   - 10-minute expiration window
@@ -111,9 +111,9 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 ### 9. Organization SMS Settings & Budget Controls
 - ✅ **Status**: Complete
 - **Location**:
-  - Entity: `src/main/java/org/sensorvision/model/OrganizationSmsSettings.java`
-  - Controller: `src/main/java/org/sensorvision/controller/SmsSettingsController.java`
-  - Repository: `src/main/java/org/sensorvision/repository/OrganizationSmsSettingsRepository.java`
+  - Entity: `src/main/java/org/indcloud/model/OrganizationSmsSettings.java`
+  - Controller: `src/main/java/org/indcloud/controller/SmsSettingsController.java`
+  - Repository: `src/main/java/org/indcloud/repository/OrganizationSmsSettingsRepository.java`
 - **Details**:
   - Enable/disable SMS per organization
   - Daily limit configuration
@@ -128,7 +128,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 
 ### 10. Prometheus Metrics for SMS Monitoring
 - ✅ **Status**: Complete
-- **Location**: `src/main/java/org/sensorvision/service/SmsNotificationService.java`
+- **Location**: `src/main/java/org/indcloud/service/SmsNotificationService.java`
 - **Details**:
   - Global counters: `sms_sent_total`, `sms_failed_total`
   - Per-organization gauges:
@@ -140,7 +140,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 
 ### 11. Budget Threshold Email Alerts
 - ✅ **Status**: Complete
-- **Location**: `src/main/java/org/sensorvision/service/EmailNotificationService.java`
+- **Location**: `src/main/java/org/indcloud/service/EmailNotificationService.java`
 - **Details**:
   - HTML email template with usage statistics
   - Progress bar visualization
@@ -260,7 +260,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
 - **Issue**: `Rule.smsRecipients` String[] field had no Hibernate type mapping
 - **Error**: "Could not determine type for: java.lang.String[], for columns: [org.hibernate.mapping.Column(sms_recipients)]"
 - **Fix**: Added `@JdbcTypeCode(SqlTypes.ARRAY)` annotation
-- **Location**: `src/main/java/org/sensorvision/model/Rule.java:59-61`
+- **Location**: `src/main/java/org/indcloud/model/Rule.java:59-61`
 
 ### Bug #2: Daily vs Monthly Counter Confusion (Fixed in acc524c2)
 - **Issue**: Daily limit check was using `currentMonthCount` instead of `currentDayCount`
@@ -270,7 +270,7 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
   - Created migration `V47__Add_daily_sms_counter.sql`
   - Implemented `resetDailyCounterIfNeeded()` method (24-hour reset)
   - Updated daily limit check to use `currentDayCount`
-- **Location**: `src/main/java/org/sensorvision/service/SmsNotificationService.java:96-103, 219-230`
+- **Location**: `src/main/java/org/indcloud/service/SmsNotificationService.java:96-103, 219-230`
 
 ### Bug #3: Toggle Endpoint Not Persisting (Fixed in acc524c2)
 - **Issue**: `PhoneNumberController.toggle()` modified entity but never called `repository.save()`
@@ -280,8 +280,8 @@ The SMS alert notification system has been **FULLY IMPLEMENTED** in the backend 
   - Added `@Transactional` and proper `save()` call
   - Controller now delegates to service method
 - **Location**:
-  - Controller: `src/main/java/org/sensorvision/controller/PhoneNumberController.java:176-191`
-  - Service: `src/main/java/org/sensorvision/service/PhoneNumberVerificationService.java:219-237`
+  - Controller: `src/main/java/org/indcloud/controller/PhoneNumberController.java:176-191`
+  - Service: `src/main/java/org/indcloud/service/PhoneNumberVerificationService.java:219-237`
 - **Test Coverage**: Added 3 regression tests
 
 ---
@@ -296,7 +296,7 @@ notification.sms.from=${SMS_FROM_NUMBER:}
 notification.sms.twilio.account-sid=${TWILIO_ACCOUNT_SID:}
 notification.sms.twilio.auth-token=${TWILIO_AUTH_TOKEN:}
 notification.sms.cost-per-message=${SMS_COST_PER_MESSAGE:0.0075}
-notification.admin.email=${ADMIN_EMAIL:admin@sensorvision.com}
+notification.admin.email=${ADMIN_EMAIL:admin@indcloud.com}
 ```
 
 ### Environment Variables (.env.production.template)
@@ -754,8 +754,8 @@ The SMS alert notification system is **production-ready from a backend perspecti
 ## Contact & Support
 
 **Implementation Team**: Claude AI + Codefleck
-**Documentation**: C:\sensorvision\docs\SMS_ALERTS_ARCHITECTURE.md
-**AWS SES Setup**: C:\sensorvision\docs\AWS_SES_SETUP.md
+**Documentation**: C:\indcloud\docs\SMS_ALERTS_ARCHITECTURE.md
+**AWS SES Setup**: C:\indcloud\docs\AWS_SES_SETUP.md
 **Latest Commit**: acc524c2 (2025-11-06)
 **Related Issues**: #88 (SMS Alerts), #66 (AWS SES Email Fix)
 

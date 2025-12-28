@@ -1,6 +1,6 @@
 # Modbus TCP Plugin
 
-The Modbus TCP Plugin enables SensorVision to poll industrial devices using the Modbus TCP protocol. This is essential for integrating with PLCs, SCADA systems, and other industrial equipment.
+The Modbus TCP Plugin enables Industrial Cloud to poll industrial devices using the Modbus TCP protocol. This is essential for integrating with PLCs, SCADA systems, and other industrial equipment.
 
 ## Overview
 
@@ -76,7 +76,7 @@ The plugin automatically detects and converts Modicon-style addresses:
 - **timeout** (optional): Connection timeout in milliseconds (default: 3000)
 
 #### Device Mapping
-- **deviceId** (required): SensorVision device ID for this Modbus device
+- **deviceId** (required): Industrial Cloud device ID for this Modbus device
 
 #### Polling Settings
 - **pollingIntervalSeconds** (optional): How often to poll (default: 60, range: 1-86400)
@@ -86,7 +86,7 @@ The plugin automatically detects and converts Modicon-style addresses:
   - **type** (required): "HOLDING" or "INPUT"
   - **address** (required): Modbus register address (0-65535)
   - **count** (required): Number of consecutive registers (1-125)
-  - **variableName** (required): SensorVision variable name
+  - **variableName** (required): Industrial Cloud variable name
   - **scale** (optional): Scale factor (default: 1.0)
   - **offset** (optional): Offset value (default: 0.0)
   - **dataType** (optional): "INT16", "UINT16", "INT32", "UINT32", "FLOAT32" (default: "INT16")
@@ -96,7 +96,7 @@ The plugin automatically detects and converts Modicon-style addresses:
 ### Backend Components
 
 #### 1. ModbusTcpPlugin.java
-**Location**: `src/main/java/org/sensorvision/plugin/impl/ModbusTcpPlugin.java`
+**Location**: `src/main/java/org/indcloud/plugin/impl/ModbusTcpPlugin.java`
 
 Core plugin implementation that:
 - Connects to Modbus TCP devices using j2mod library
@@ -112,7 +112,7 @@ Core plugin implementation that:
 - `parseRegisters()` - Parse register data based on data type
 
 #### 2. BasePollingPlugin.java
-**Location**: `src/main/java/org/sensorvision/plugin/BasePollingPlugin.java`
+**Location**: `src/main/java/org/indcloud/plugin/BasePollingPlugin.java`
 
 Abstract base class for all polling plugins:
 - Implements DataPluginProcessor interface
@@ -121,14 +121,14 @@ Abstract base class for all polling plugins:
 - Distinguishes polling plugins from webhook plugins
 
 #### 3. PluginPollingSchedulerService.java
-**Location**: `src/main/java/org/sensorvision/service/PluginPollingSchedulerService.java`
+**Location**: `src/main/java/org/indcloud/service/PluginPollingSchedulerService.java`
 
 Manages polling schedules:
 - Discovers enabled polling plugins on startup
 - Creates scheduled tasks with configurable intervals
 - Executes poll() method periodically
 - Converts PollingResult to TelemetryPayload
-- Ingests data into SensorVision telemetry system
+- Ingests data into Industrial Cloud telemetry system
 - Supports manual triggering for testing
 
 **Key Features**:
@@ -417,7 +417,7 @@ StartTcpServer(context, address=("localhost", 502))
 **Problem**: Plugin polls but no telemetry appears
 **Solutions**:
 - Check plugin is enabled
-- Verify `deviceId` exists in SensorVision
+- Verify `deviceId` exists in Industrial Cloud
 - Check execution history for errors
 - Review backend logs
 
@@ -427,8 +427,8 @@ Enable debug logging for detailed Modbus activity:
 
 ```properties
 # application.properties
-logging.level.org.sensorvision.plugin.impl.ModbusTcpPlugin=DEBUG
-logging.level.org.sensorvision.service.PluginPollingSchedulerService=DEBUG
+logging.level.org.indcloud.plugin.impl.ModbusTcpPlugin=DEBUG
+logging.level.org.indcloud.service.PluginPollingSchedulerService=DEBUG
 ```
 
 ## Performance Considerations

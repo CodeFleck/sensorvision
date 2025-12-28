@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# SensorVision Production Deployment Script
+# Industrial Cloud Production Deployment Script
 # =============================================================================
 # This script handles deployment to EC2 instance
 # Can be run manually or triggered by GitHub Actions
@@ -12,7 +12,7 @@ set -u  # Exit on undefined variable
 # =============================================================================
 # Configuration
 # =============================================================================
-APP_NAME="sensorvision"
+APP_NAME="indcloud"
 COMPOSE_FILE="docker-compose.production.yml"
 ENV_FILE=".env.production"
 BACKUP_DIR="./backups"
@@ -179,7 +179,7 @@ check_database() {
     docker run --rm -e PGPASSWORD="$DB_PASSWORD" postgres:15-alpine \
         psql -h "$(echo $DB_URL | sed -n 's/.*\/\/\([^:]*\).*/\1/p')" \
         -U "$DB_USERNAME" \
-        -d sensorvision \
+        -d indcloud \
         -c "SELECT 1;" &> /dev/null
 
     if [ $? -eq 0 ]; then
@@ -303,7 +303,7 @@ display_info() {
 # =============================================================================
 main() {
     log "======================================"
-    log "SensorVision Deployment Started"
+    log "Industrial Cloud Deployment Started"
     log "======================================"
 
     # Run pre-deployment checks

@@ -45,7 +45,7 @@
 
 - [ ] **Production database backup created**
   ```bash
-  pg_dump -h <prod-host> -U <user> -d sensorvision > backup_$(date +%Y%m%d_%H%M%S).sql
+  pg_dump -h <prod-host> -U <user> -d indcloud > backup_$(date +%Y%m%d_%H%M%S).sql
   ```
   - Backup file: _______________
   - Size: _______________
@@ -128,23 +128,23 @@
 
 - [ ] **Copy JAR to production server**
   ```bash
-  scp build/libs/sensorvision-1.6.0.jar user@prod-server:/opt/sensorvision/
+  scp build/libs/indcloud-1.6.0.jar user@prod-server:/opt/indcloud/
   ```
 
 - [ ] **Backup current JAR**
   ```bash
   ssh user@prod-server
-  cp /opt/sensorvision/current.jar /opt/sensorvision/backup_$(date +%Y%m%d).jar
+  cp /opt/indcloud/current.jar /opt/indcloud/backup_$(date +%Y%m%d).jar
   ```
 
 - [ ] **Update symlink**
   ```bash
-  ln -sf /opt/sensorvision/sensorvision-1.6.0.jar /opt/sensorvision/current.jar
+  ln -sf /opt/indcloud/indcloud-1.6.0.jar /opt/indcloud/current.jar
   ```
 
 - [ ] **Stop application**
   ```bash
-  sudo systemctl stop sensorvision
+  sudo systemctl stop indcloud
   ```
   - Stopped at: _______________
 
@@ -157,17 +157,17 @@
 
 - [ ] **Start application**
   ```bash
-  sudo systemctl start sensorvision
+  sudo systemctl start indcloud
   ```
   - Started at: _______________
 
 - [ ] **Monitor startup logs**
   ```bash
-  sudo journalctl -u sensorvision -f
+  sudo journalctl -u indcloud -f
   ```
   - Look for:
     - ✅ "Flyway: Successfully applied 2 migrations" ☐
-    - ✅ "Started SensorvisionApplication in X seconds" ☐
+    - ✅ "Started IndcloudApplication in X seconds" ☐
     - ❌ No ERROR logs ☐
 
 ### 3. Database Verification
@@ -211,19 +211,19 @@
 - [ ] **Backup current frontend**
   ```bash
   ssh user@prod-server
-  cp -r /var/www/sensorvision /var/www/sensorvision_backup_$(date +%Y%m%d)
+  cp -r /var/www/indcloud /var/www/indcloud_backup_$(date +%Y%m%d)
   ```
 
 - [ ] **Deploy frontend**
   ```bash
-  scp -r dist/* user@prod-server:/var/www/sensorvision/
+  scp -r dist/* user@prod-server:/var/www/indcloud/
   ```
 
 - [ ] **Set permissions**
   ```bash
   ssh user@prod-server
-  chown -R www-data:www-data /var/www/sensorvision
-  chmod -R 755 /var/www/sensorvision
+  chown -R www-data:www-data /var/www/indcloud
+  chmod -R 755 /var/www/indcloud
   ```
 
 - [ ] **Reload nginx**
@@ -298,14 +298,14 @@
 - [ ] **Application health**
   ```bash
   # Monitor for 15 minutes
-  sudo journalctl -u sensorvision -f
+  sudo journalctl -u indcloud -f
   ```
   - No errors: ☐
   - Normal log patterns: ☐
 
 - [ ] **Database connections**
   ```sql
-  SELECT count(*) FROM pg_stat_activity WHERE datname = 'sensorvision';
+  SELECT count(*) FROM pg_stat_activity WHERE datname = 'indcloud';
   ```
   - Connection count normal: ☐
   - No connection leaks: ☐
@@ -372,12 +372,12 @@ If deployment fails or critical issues found:
 
 - [ ] **Stop application**
   ```bash
-  sudo systemctl stop sensorvision
+  sudo systemctl stop indcloud
   ```
 
 - [ ] **Restore previous JAR**
   ```bash
-  ln -sf /opt/sensorvision/backup_<date>.jar /opt/sensorvision/current.jar
+  ln -sf /opt/indcloud/backup_<date>.jar /opt/indcloud/current.jar
   ```
 
 - [ ] **Rollback database migrations**
@@ -389,18 +389,18 @@ If deployment fails or critical issues found:
   DELETE FROM flyway_schema_history WHERE version IN ('50', '51');
 
   -- Restore from backup
-  psql -h <host> -U <user> -d sensorvision < backup_<timestamp>.sql
+  psql -h <host> -U <user> -d indcloud < backup_<timestamp>.sql
   ```
 
 - [ ] **Restore frontend**
   ```bash
-  rm -rf /var/www/sensorvision/*
-  cp -r /var/www/sensorvision_backup_<date>/* /var/www/sensorvision/
+  rm -rf /var/www/indcloud/*
+  cp -r /var/www/indcloud_backup_<date>/* /var/www/indcloud/
   ```
 
 - [ ] **Restart application**
   ```bash
-  sudo systemctl start sensorvision
+  sudo systemctl start indcloud
   sudo systemctl reload nginx
   ```
 

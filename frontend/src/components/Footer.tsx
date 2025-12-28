@@ -11,7 +11,7 @@ export const Footer = ({ onReportIssue }: FooterProps) => {
       <div className="px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="text-sm text-primary/60">
-            <p>© {new Date().getFullYear()} SensorVision. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Industrial Cloud. All rights reserved.</p>
           </div>
 
           <div className="flex items-center space-x-4">

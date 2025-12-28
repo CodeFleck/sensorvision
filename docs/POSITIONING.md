@@ -1,4 +1,4 @@
-# SensorVision Positioning Strategy
+# Industrial Cloud Positioning Strategy
 
 ## Primary Positioning
 
@@ -10,7 +10,7 @@
 
 ## Core Value Proposition
 
-SensorVision combines enterprise-grade infrastructure with developer-friendly tools, giving you the power to start small and grow without limits—or platform lock-in.
+Industrial Cloud combines enterprise-grade infrastructure with developer-friendly tools, giving you the power to start small and grow without limits—or platform lock-in.
 
 **Core Philosophy**: Modern architecture, extensible by design, intelligent by default.
 
@@ -99,7 +99,7 @@ Features you didn't know you needed until you tried them.
 - Limited extensibility
 - Vendor lock-in
 
-**SensorVision difference:**
+**Industrial Cloud difference:**
 - Modern architecture (built 2024+)
 - Predictable pricing (no per-device fees)
 - Extensible by design (plugins + serverless)
@@ -112,7 +112,7 @@ Features you didn't know you needed until you tried them.
 - Cloud-only deployment
 - Steep learning curve
 
-**SensorVision difference:**
+**Industrial Cloud difference:**
 - 5-minute setup
 - Transparent pricing
 - Deploy anywhere (cloud, self-hosted, hybrid)
@@ -125,7 +125,7 @@ Features you didn't know you needed until you tried them.
 - DIY maintenance
 - No plugin ecosystem
 
-**SensorVision difference:**
+**Industrial Cloud difference:**
 - Enterprise features included
 - Professional UI/UX
 - Managed hosting option (coming soon)
@@ -157,10 +157,10 @@ Features you didn't know you needed until you tried them.
 ## Elevator Pitches
 
 ### 30-Second Version
-"SensorVision is the IoT platform that scales with you. We combine enterprise features with developer-friendly tools, so you can start small and grow to thousands of devices without changing platforms. Built on modern architecture with serverless extensibility and a plugin marketplace."
+"Industrial Cloud is the IoT platform that scales with you. We combine enterprise features with developer-friendly tools, so you can start small and grow to thousands of devices without changing platforms. Built on modern architecture with serverless extensibility and a plugin marketplace."
 
 ### 1-Minute Version
-"Most IoT platforms force you to choose: either simple but limited, or powerful but complex. SensorVision gives you both. We built an enterprise-grade platform with a 5-minute integration time. From real-time dashboards to predictive maintenance, from 10 devices to 10,000—same platform, same simplicity. Deploy anywhere: cloud, self-hosted, or hybrid. Extend with plugins and serverless functions. No per-device pricing, no vendor lock-in, no compromise."
+"Most IoT platforms force you to choose: either simple but limited, or powerful but complex. Industrial Cloud gives you both. We built an enterprise-grade platform with a 5-minute integration time. From real-time dashboards to predictive maintenance, from 10 devices to 10,000—same platform, same simplicity. Deploy anywhere: cloud, self-hosted, or hybrid. Extend with plugins and serverless functions. No per-device pricing, no vendor lock-in, no compromise."
 
 ### Email Signature Version
 "The IoT platform that scales with you—from first device to fleet monitoring in minutes."
@@ -197,7 +197,7 @@ Features you didn't know you needed until you tried them.
                     Enterprise Features
                            ▲
                            │
-            SensorVision ■ │
+            Industrial Cloud ■ │
                            │
                            │
 Complexity ◄───────────────┼──────────────► Simplicity
@@ -209,7 +209,7 @@ Complexity ◄───────────────┼──────
                            ▼
 ```
 
-**SensorVision**: High enterprise features, high simplicity (top-right quadrant)
+**Industrial Cloud**: High enterprise features, high simplicity (top-right quadrant)
 
 ---
 
@@ -219,12 +219,12 @@ Complexity ◄───────────────┼──────
 **Headline:** "The IoT platform that scales with you"
 **Tagline:** "Enterprise monitoring. Developer experience. Zero lock-in."
 **First Comment:**
-"After building SensorVision to solve our own scaling problems, we realized every growing company faces the same choice: simple platforms that can't scale, or enterprise platforms with enterprise complexity. We built a third option—enterprise features with 5-minute integration. From first device to fleet monitoring, same platform, same simplicity."
+"After building Industrial Cloud to solve our own scaling problems, we realized every growing company faces the same choice: simple platforms that can't scale, or enterprise platforms with enterprise complexity. We built a third option—enterprise features with 5-minute integration. From first device to fleet monitoring, same platform, same simplicity."
 
 ### HackerNews Launch
-**Title:** "Show HN: SensorVision – IoT platform with 5-min integration and enterprise features"
+**Title:** "Show HN: Industrial Cloud – IoT platform with 5-min integration and enterprise features"
 **Post:**
-"Hi HN, I built SensorVision because existing IoT platforms made us choose between simplicity and scale. We have real-time WebSocket streaming, serverless functions (Python & Node.js), plugin marketplace, and ML pipeline coming Q2. Built on Spring Boot 3 + React 18. 5-minute integration with visual wizard. No per-device pricing. Deploy anywhere. MIT licensed core, commercial managed hosting coming soon. Would love feedback from anyone building IoT products or internal monitoring systems."
+"Hi HN, I built Industrial Cloud because existing IoT platforms made us choose between simplicity and scale. We have real-time WebSocket streaming, serverless functions (Python & Node.js), plugin marketplace, and ML pipeline coming Q2. Built on Spring Boot 3 + React 18. 5-minute integration with visual wizard. No per-device pricing. Deploy anywhere. MIT licensed core, commercial managed hosting coming soon. Would love feedback from anyone building IoT products or internal monitoring systems."
 
 ### Reddit r/programming
 **Title:** "Built an IoT monitoring platform with Monaco code editor for serverless functions"
@@ -244,11 +244,11 @@ Complexity ◄───────────────┼──────
 ## Content Marketing Themes
 
 ### Blog Post Series: "Building the Platform That Scales"
-1. **"Why We Built SensorVision"** - Origin story, design decisions
+1. **"Why We Built Industrial Cloud"** - Origin story, design decisions
 2. **"5-Minute IoT Integration: How We Did It"** - Technical deep dive
 3. **"Modern Architecture for IoT at Scale"** - Spring Boot 3, WebSocket, PostgreSQL
 4. **"Plugin Marketplace: Extensibility Without Compromise"** - Architecture decisions
-5. **"From 10 to 10,000 Devices: Scaling SensorVision"** - Performance case study
+5. **"From 10 to 10,000 Devices: Scaling Industrial Cloud"** - Performance case study
 
 ### Technical Content
 - "Building a Real-Time IoT Dashboard with WebSocket Streaming"
@@ -257,7 +257,7 @@ Complexity ◄───────────────┼──────
 - "Fleet Monitoring: Aggregating Insights Across Devices"
 
 ### Use Case Studies
-- "Predictive Maintenance in Manufacturing: A SensorVision Case Study"
+- "Predictive Maintenance in Manufacturing: A Industrial Cloud Case Study"
 - "Energy Management: Complex Calculations Made Simple"
 - "Building Automation: 500 Sensors, One Dashboard"
 
@@ -271,7 +271,7 @@ Complexity ◄───────────────┼──────
 → "We focus on three things others don't combine well: (1) 5-minute integration that actually works, (2) serverless extensibility so you can customize without forking, and (3) flexible deployment—cloud, self-hosted, or hybrid. Most platforms force you to choose between simple and powerful. We give you both."
 
 **"Why not just use AWS IoT?"**
-→ "AWS IoT is incredibly powerful but takes days to set up and deeply ties you to AWS infrastructure. We get you from zero to insights in 5 minutes, work anywhere, and use standard protocols. If you need AWS-specific features, you can run SensorVision on AWS and integrate with their services—best of both worlds."
+→ "AWS IoT is incredibly powerful but takes days to set up and deeply ties you to AWS infrastructure. We get you from zero to insights in 5 minutes, work anywhere, and use standard protocols. If you need AWS-specific features, you can run Industrial Cloud on AWS and integrate with their services—best of both worlds."
 
 **"What about support and SLAs?"**
 → "Commercial support and SLAs are available for managed hosting (coming Q2). For self-hosted deployments, we offer enterprise support packages. Our architecture is battle-tested Spring Boot + PostgreSQL, so your team likely already has the expertise to maintain it."

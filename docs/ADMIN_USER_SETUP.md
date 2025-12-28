@@ -1,6 +1,6 @@
 # Admin User Initialization
 
-This document explains how to create the initial admin user for SensorVision.
+This document explains how to create the initial admin user for Industrial Cloud.
 
 ## Overview
 
@@ -97,12 +97,12 @@ After the admin is created, remove these from the task definition and force a ne
 1. Store credentials in Parameter Store (encrypted):
    ```bash
    aws ssm put-parameter \
-     --name "/sensorvision/admin/email" \
+     --name "/indcloud/admin/email" \
      --value "admin@yourcompany.com" \
      --type "String"
 
    aws ssm put-parameter \
-     --name "/sensorvision/admin/password" \
+     --name "/indcloud/admin/password" \
      --value "YourSecurePassword123!" \
      --type "SecureString"
    ```
@@ -113,11 +113,11 @@ After the admin is created, remove these from the task definition and force a ne
      "secrets": [
        {
          "name": "ADMIN_EMAIL",
-         "valueFrom": "/sensorvision/admin/email"
+         "valueFrom": "/indcloud/admin/email"
        },
        {
          "name": "ADMIN_PASSWORD",
-         "valueFrom": "/sensorvision/admin/password"
+         "valueFrom": "/indcloud/admin/password"
        }
      ]
    }
@@ -125,8 +125,8 @@ After the admin is created, remove these from the task definition and force a ne
 
 3. After admin creation, delete the parameters:
    ```bash
-   aws ssm delete-parameter --name "/sensorvision/admin/email"
-   aws ssm delete-parameter --name "/sensorvision/admin/password"
+   aws ssm delete-parameter --name "/indcloud/admin/email"
+   aws ssm delete-parameter --name "/indcloud/admin/password"
    ```
 
 ## Troubleshooting

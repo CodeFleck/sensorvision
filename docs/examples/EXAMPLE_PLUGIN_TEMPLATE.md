@@ -1,6 +1,6 @@
 # Example Plugin Template
 
-**Purpose**: Copy-paste template for creating custom SensorVision plugins
+**Purpose**: Copy-paste template for creating custom Industrial Cloud plugins
 **Last Updated**: 2025-11-14
 
 ---
@@ -43,12 +43,12 @@ Use the templates below as starting points for your plugin.
 
 ### File Structure
 ```
-src/main/java/org/sensorvision/plugins/community/
+src/main/java/org/indcloud/plugins/community/
 └── myplugin/
     ├── MyNotificationPlugin.java
     └── MyNotificationClient.java
 
-src/test/java/org/sensorvision/plugins/community/
+src/test/java/org/indcloud/plugins/community/
 └── myplugin/
     └── MyNotificationPluginTest.java
 
@@ -58,17 +58,17 @@ src/main/resources/db/migration/
 
 ### 1. Plugin Implementation
 
-**File**: `src/main/java/org/sensorvision/plugins/community/myplugin/MyNotificationPlugin.java`
+**File**: `src/main/java/org/indcloud/plugins/community/myplugin/MyNotificationPlugin.java`
 
 ```java
-package org.sensorvision.plugins.community.myplugin;
+package org.indcloud.plugins.community.myplugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.sensorvision.model.Alert;
-import org.sensorvision.service.NotificationService;
+import org.indcloud.model.Alert;
+import org.indcloud.service.NotificationService;
 
 /**
  * My Custom Notification Plugin
@@ -163,10 +163,10 @@ public class MyNotificationPlugin {
 
 ### 2. HTTP Client
 
-**File**: `src/main/java/org/sensorvision/plugins/community/myplugin/MyNotificationClient.java`
+**File**: `src/main/java/org/indcloud/plugins/community/myplugin/MyNotificationClient.java`
 
 ```java
-package org.sensorvision.plugins.community.myplugin;
+package org.indcloud.plugins.community.myplugin;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -208,7 +208,7 @@ public class MyNotificationClient {
             // Send a test ping
             NotificationPayload testPayload = new NotificationPayload();
             testPayload.setTitle("Connection Test");
-            testPayload.setMessage("SensorVision plugin connection test");
+            testPayload.setMessage("Industrial Cloud plugin connection test");
 
             sendNotification(webhookUrl, testPayload);
             return true;
@@ -222,10 +222,10 @@ public class MyNotificationClient {
 
 ### 3. Payload Model
 
-**File**: `src/main/java/org/sensorvision/plugins/community/myplugin/NotificationPayload.java`
+**File**: `src/main/java/org/indcloud/plugins/community/myplugin/NotificationPayload.java`
 
 ```java
-package org.sensorvision.plugins.community.myplugin;
+package org.indcloud.plugins.community.myplugin;
 
 import lombok.Data;
 import java.time.Instant;
@@ -248,10 +248,10 @@ public class NotificationPayload {
 
 ### 4. Unit Tests
 
-**File**: `src/test/java/org/sensorvision/plugins/community/myplugin/MyNotificationPluginTest.java`
+**File**: `src/test/java/org/indcloud/plugins/community/myplugin/MyNotificationPluginTest.java`
 
 ```java
-package org.sensorvision.plugins.community.myplugin;
+package org.indcloud.plugins.community.myplugin;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -263,7 +263,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.sensorvision.model.*;
+import org.indcloud.model.*;
 
 import java.time.Instant;
 
@@ -404,7 +404,7 @@ class MyNotificationPluginTest {
 INSERT INTO plugin_registry (
     plugin_key, name, description, category, version, author, author_url,
     icon_url, repository_url, documentation_url,
-    min_sensorvision_version, max_sensorvision_version,
+    min_indcloud_version, max_indcloud_version,
     is_official, is_verified, installation_count, rating_average, rating_count,
     plugin_provider, plugin_type, config_schema, tags, screenshots, changelog,
     published_at, created_at, updated_at
@@ -417,8 +417,8 @@ INSERT INTO plugin_registry (
     'Your Name',
     'https://github.com/yourusername',
     'https://example.com/icon.png',
-    'https://github.com/yourusername/sensorvision',
-    'https://github.com/yourusername/sensorvision/blob/main/docs/MY_PLUGIN.md',
+    'https://github.com/yourusername/indcloud',
+    'https://github.com/yourusername/indcloud/blob/main/docs/MY_PLUGIN.md',
     '1.0.0',
     null,
     false,  -- Not official (community plugin)
@@ -475,7 +475,7 @@ INSERT INTO plugin_registry (
 
 ### File Structure
 ```
-src/main/java/org/sensorvision/plugins/community/
+src/main/java/org/indcloud/plugins/community/
 └── myprotocol/
     ├── MyProtocolParser.java
     └── MyProtocolDecoder.java
@@ -483,10 +483,10 @@ src/main/java/org/sensorvision/plugins/community/
 
 ### 1. Parser Implementation
 
-**File**: `src/main/java/org/sensorvision/plugins/community/myprotocol/MyProtocolParser.java`
+**File**: `src/main/java/org/indcloud/plugins/community/myprotocol/MyProtocolParser.java`
 
 ```java
-package org.sensorvision.plugins.community.myprotocol;
+package org.indcloud.plugins.community.myprotocol;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
@@ -591,10 +591,10 @@ public class MyProtocolParser {
 
 ### 2. Decoder Implementation
 
-**File**: `src/main/java/org/sensorvision/plugins/community/myprotocol/MyProtocolDecoder.java`
+**File**: `src/main/java/org/indcloud/plugins/community/myprotocol/MyProtocolDecoder.java`
 
 ```java
-package org.sensorvision.plugins.community.myprotocol;
+package org.indcloud.plugins.community.myprotocol;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -800,20 +800,20 @@ class MyProtocolParserTest {
 
 ### HTTP Webhook Integration
 
-**File**: `src/main/java/org/sensorvision/plugins/community/myintegration/MyWebhookIntegration.java`
+**File**: `src/main/java/org/indcloud/plugins/community/myintegration/MyWebhookIntegration.java`
 
 ```java
-package org.sensorvision.plugins.community.myintegration;
+package org.indcloud.plugins.community.myintegration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.sensorvision.model.Device;
-import org.sensorvision.model.TelemetryRecord;
-import org.sensorvision.service.DeviceService;
-import org.sensorvision.service.TelemetryIngestionService;
+import org.indcloud.model.Device;
+import org.indcloud.model.TelemetryRecord;
+import org.indcloud.service.DeviceService;
+import org.indcloud.service.TelemetryIngestionService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -1032,7 +1032,7 @@ INSERT INTO plugin_registry (
     icon_url,
     screenshots,
     changelog,
-    min_sensorvision_version,
+    min_indcloud_version,
 
     -- System fields
     is_official,
@@ -1073,8 +1073,8 @@ INSERT INTO plugin_registry (
 
     -- Recommended
     'https://github.com/yourusername',
-    'https://github.com/yourusername/sensorvision',
-    'https://github.com/yourusername/sensorvision/blob/main/docs/MY_PLUGIN.md',
+    'https://github.com/yourusername/indcloud',
+    'https://github.com/yourusername/indcloud/blob/main/docs/MY_PLUGIN.md',
     ARRAY['webhook', 'integration', 'custom'],
 
     -- Optional
@@ -1101,7 +1101,7 @@ INSERT INTO plugin_registry (
 
 Before submitting your plugin:
 
-- [ ] Plugin code follows SensorVision coding standards
+- [ ] Plugin code follows Industrial Cloud coding standards
 - [ ] All tests pass (unit + integration)
 - [ ] Test coverage >80%
 - [ ] No hardcoded credentials or secrets
@@ -1122,15 +1122,15 @@ Before submitting your plugin:
 - **Plugin Development Guide**: [PLUGIN_DEVELOPMENT_GUIDE.md](../PLUGIN_DEVELOPMENT_GUIDE.md)
 - **API Documentation**: [PLUGIN_MARKETPLACE_API.md](../api/PLUGIN_MARKETPLACE_API.md)
 - **JSON Schema Reference**: https://json-schema.org/
-- **SensorVision Repository**: https://github.com/CodeFleck/sensorvision
+- **Industrial Cloud Repository**: https://github.com/CodeFleck/indcloud
 
 ---
 
 ## Getting Help
 
-- **GitHub Issues**: https://github.com/CodeFleck/sensorvision/issues
-- **Discussions**: https://github.com/CodeFleck/sensorvision/discussions
-- **Email**: plugin-dev@sensorvision.io
+- **GitHub Issues**: https://github.com/CodeFleck/indcloud/issues
+- **Discussions**: https://github.com/CodeFleck/indcloud/discussions
+- **Email**: plugin-dev@indcloud.io
 
 ---
 

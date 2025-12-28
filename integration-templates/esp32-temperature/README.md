@@ -1,6 +1,6 @@
 # ESP32 Temperature Sensor Integration
 
-Send temperature and humidity data from an ESP32 with DHT22 sensor to SensorVision.
+Send temperature and humidity data from an ESP32 with DHT22 sensor to Industrial Cloud.
 
 ## Hardware Required
 
@@ -54,15 +54,15 @@ Open `esp32-temperature.ino` and update these values:
 const char* WIFI_SSID = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// SensorVision API configuration
+// Industrial Cloud API configuration
 const char* API_URL = "http://192.168.1.100:8080/api/v1/ingest";  // Your server IP
 const char* DEVICE_ID = "esp32-temp-001";  // Unique device ID
-const char* API_KEY = "550e8400-e29b-41d4-a716-446655440000";  // From SensorVision dashboard
+const char* API_KEY = "550e8400-e29b-41d4-a716-446655440000";  // From Industrial Cloud dashboard
 ```
 
 ### 5. Get Your API Key
 
-1. Register at your SensorVision instance: http://your-server:3001/register
+1. Register at your Industrial Cloud instance: http://your-server:3001/register
 2. Login to the dashboard
 3. Create a device (or use existing)
 4. Click the **Key icon (🔑)** next to your device
@@ -79,7 +79,7 @@ const char* API_KEY = "550e8400-e29b-41d4-a716-446655440000";  // From SensorVis
 ## Expected Output
 
 ```
-SensorVision ESP32 Temperature Sensor
+Industrial Cloud ESP32 Temperature Sensor
 =====================================
 ✓ DHT22 sensor initialized
 Connecting to WiFi: MyNetwork
@@ -113,13 +113,13 @@ Response: {"success":true,"message":"Data received successfully"}
 
 ### HTTP Error 500 (Server Error)
 - Check API_URL is correct (IP address and port)
-- Ensure SensorVision backend is running
+- Ensure Industrial Cloud backend is running
 - Check server logs for errors
 
 ### Device Not Appearing in Dashboard
 - First data send auto-creates the device
 - Refresh browser after first successful send
-- Check backend logs: `docker-compose logs sensorvision-app`
+- Check backend logs: `docker-compose logs indcloud-app`
 
 ## Customization
 
@@ -165,6 +165,6 @@ const unsigned long SEND_INTERVAL = 30000;  // Send every 30 seconds
 
 ## Support
 
-- [SensorVision Documentation](https://github.com/CodeFleck/sensorvision)
+- [Industrial Cloud Documentation](https://github.com/CodeFleck/indcloud)
 - [ESP32 Arduino Core Docs](https://docs.espressif.com/projects/arduino-esp32/)
 - [DHT22 Datasheet](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf)

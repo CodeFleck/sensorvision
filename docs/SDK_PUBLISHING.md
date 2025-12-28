@@ -1,13 +1,13 @@
 # SDK Publishing Guide
 
-This guide explains how to publish SensorVision SDKs to PyPI (Python) and npm (JavaScript/TypeScript).
+This guide explains how to publish Industrial Cloud SDKs to PyPI (Python) and npm (JavaScript/TypeScript).
 
 ---
 
 ## Current Status
 
-✅ **Python SDK v0.1.1 Published to PyPI** - https://pypi.org/project/sensorvision-sdk/
-✅ **JavaScript SDK v0.1.1 Published to npm** - https://www.npmjs.com/package/sensorvision-sdk
+✅ **Python SDK v0.1.1 Published to PyPI** - https://pypi.org/project/indcloud-sdk/
+✅ **JavaScript SDK v0.1.1 Published to npm** - https://www.npmjs.com/package/indcloud-sdk
 🔄 **Java SDK v0.1.0 Ready for Maven Central** - Configuration complete, awaiting deployment
 
 All three official SDKs are ready for production use!
@@ -32,7 +32,7 @@ python3 -m pip install build twine
 
 ### Publishing Steps
 
-1. **Update Version** (in `sensorvision-sdk/setup.py`):
+1. **Update Version** (in `indcloud-sdk/setup.py`):
    ```python
    version="0.1.0",  # Update this
    ```
@@ -41,19 +41,19 @@ python3 -m pip install build twine
 
    **Windows:**
    ```bash
-   cd sensorvision-sdk
+   cd indcloud-sdk
    py -m build
    ```
 
    **Linux/macOS:**
    ```bash
-   cd sensorvision-sdk
+   cd indcloud-sdk
    python3 -m build
    ```
 
    This creates:
-   - `dist/sensorvision_sdk-0.1.0.tar.gz` (source distribution)
-   - `dist/sensorvision_sdk-0.1.0-py3-none-any.whl` (wheel)
+   - `dist/indcloud_sdk-0.1.0.tar.gz` (source distribution)
+   - `dist/indcloud_sdk-0.1.0-py3-none-any.whl` (wheel)
 
 3. **Test Upload to TestPyPI** (Recommended First):
 
@@ -69,7 +69,7 @@ python3 -m pip install build twine
 
    Test installation:
    ```bash
-   pip install --index-url https://test.pypi.org/simple/ sensorvision-sdk
+   pip install --index-url https://test.pypi.org/simple/ indcloud-sdk
    ```
 
 4. **Upload to PyPI** (Production):
@@ -88,7 +88,7 @@ python3 -m pip install build twine
 
 5. **Verify Installation**:
    ```bash
-   pip install sensorvision-sdk
+   pip install indcloud-sdk
    ```
 
 ### PyPI Account Setup
@@ -134,7 +134,7 @@ jobs:
 
       - name: Build package
         run: |
-          cd sensorvision-sdk
+          cd indcloud-sdk
           python -m build
 
       - name: Publish to PyPI
@@ -142,7 +142,7 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-          cd sensorvision-sdk
+          cd indcloud-sdk
           python -m twine upload dist/*
 ```
 
@@ -166,7 +166,7 @@ npm login  # Login to npm
 
 ### Publishing Steps
 
-1. **Update Version** (in `sensorvision-sdk-js/package.json`):
+1. **Update Version** (in `indcloud-sdk-js/package.json`):
    ```json
    {
      "version": "0.1.0"  // Update this
@@ -175,7 +175,7 @@ npm login  # Login to npm
 
 2. **Build Package**:
    ```bash
-   cd sensorvision-sdk-js
+   cd indcloud-sdk-js
    npm install
    npm run build
    npm test  # Ensure tests pass
@@ -184,22 +184,22 @@ npm login  # Login to npm
 3. **Test Locally**:
    ```bash
    npm pack
-   # This creates sensorvision-sdk-0.1.0.tgz
+   # This creates indcloud-sdk-0.1.0.tgz
 
    # Test in another project
    cd /tmp/test-project
-   npm install /path/to/sensorvision-sdk-0.1.0.tgz
+   npm install /path/to/indcloud-sdk-0.1.0.tgz
    ```
 
 4. **Publish to npm**:
    ```bash
-   cd sensorvision-sdk-js
+   cd indcloud-sdk-js
    npm publish
    ```
 
 5. **Verify Installation**:
    ```bash
-   npm install sensorvision-sdk
+   npm install indcloud-sdk
    ```
 
 ### npm Account Setup
@@ -238,24 +238,24 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd sensorvision-sdk-js
+          cd indcloud-sdk-js
           npm install
 
       - name: Build package
         run: |
-          cd sensorvision-sdk-js
+          cd indcloud-sdk-js
           npm run build
 
       - name: Run tests
         run: |
-          cd sensorvision-sdk-js
+          cd indcloud-sdk-js
           npm test
 
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          cd sensorvision-sdk-js
+          cd indcloud-sdk-js
           npm publish
 ```
 
@@ -324,7 +324,7 @@ gpg --keyserver keys.openpgp.org --send-keys YOUR_KEY_ID
 
 2. **Run Tests**:
    ```bash
-   cd sensorvision-sdk-java
+   cd indcloud-sdk-java
    mvn clean test
    ```
 
@@ -335,7 +335,7 @@ gpg --keyserver keys.openpgp.org --send-keys YOUR_KEY_ID
 
 4. **Verify Deployment**:
    - Central Portal: https://central.sonatype.com/publishing/deployments
-   - Maven Central (synced within ~30 minutes): https://central.sonatype.com/artifact/io.sensorvision/sensorvision-sdk
+   - Maven Central (synced within ~30 minutes): https://central.sonatype.com/artifact/io.indcloud/indcloud-sdk
 
 ### Automated Publishing with GitHub Actions
 
@@ -371,7 +371,7 @@ jobs:
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          cd sensorvision-sdk-java
+          cd indcloud-sdk-java
           mvn clean deploy -P release -Dgpg.passphrase=$GPG_PASSPHRASE
 ```
 
@@ -383,7 +383,7 @@ git tag java-sdk-v0.1.0
 git push origin java-sdk-v0.1.0
 ```
 
-📚 **Full Publishing Guide**: [sensorvision-sdk-java/PUBLISHING.md](../sensorvision-sdk-java/PUBLISHING.md)
+📚 **Full Publishing Guide**: [indcloud-sdk-java/PUBLISHING.md](../indcloud-sdk-java/PUBLISHING.md)
 
 ---
 
@@ -429,24 +429,24 @@ Before publishing a new version:
 ## Package Naming & Organization
 
 ### PyPI Package Name
-- **Package**: `sensorvision-sdk`
-- **Import**: `from sensorvision import SensorVisionClient`
-- **URL**: https://pypi.org/project/sensorvision-sdk/
+- **Package**: `indcloud-sdk`
+- **Import**: `from indcloud import IndCloudClient`
+- **URL**: https://pypi.org/project/indcloud-sdk/
 
 ### npm Package Name
-- **Package**: `sensorvision-sdk`
-- **Import**: `import { SensorVisionClient } from 'sensorvision-sdk'`
-- **URL**: https://www.npmjs.com/package/sensorvision-sdk
+- **Package**: `indcloud-sdk`
+- **Import**: `import { IndCloudClient } from 'indcloud-sdk'`
+- **URL**: https://www.npmjs.com/package/indcloud-sdk
 
 ### Scoped Packages (Alternative)
 
 If unscoped names are taken, use organization scope:
 
 **PyPI** (no scopes, use prefix):
-- `sensorvision-sdk` → `sv-sdk` or `sensorvision-client`
+- `indcloud-sdk` → `sv-sdk` or `indcloud-client`
 
 **npm** (with @scope):
-- `sensorvision-sdk` → `@sensorvision/sdk` or `@sensorvision/client`
+- `indcloud-sdk` → `@indcloud/sdk` or `@indcloud/client`
 
 ---
 
@@ -456,24 +456,24 @@ If unscoped names are taken, use organization scope:
 
 **Install from GitHub**:
 ```bash
-pip install git+https://github.com/CodeFleck/sensorvision.git#subdirectory=sensorvision-sdk
+pip install git+https://github.com/CodeFleck/indcloud.git#subdirectory=indcloud-sdk
 ```
 
 **After PyPI publish**:
 ```bash
-pip install sensorvision-sdk
+pip install indcloud-sdk
 ```
 
 ### JavaScript/TypeScript SDK
 
 **Install from GitHub**:
 ```bash
-npm install CodeFleck/sensorvision#main:sensorvision-sdk-js
+npm install CodeFleck/indcloud#main:indcloud-sdk-js
 ```
 
 **After npm publish**:
 ```bash
-npm install sensorvision-sdk
+npm install indcloud-sdk
 ```
 
 ---
@@ -485,7 +485,7 @@ npm install sensorvision-sdk
 1. Fix bug in SDK
 2. Increment patch version: `0.1.0` → `0.1.1`
 3. Rebuild and publish
-4. Users update: `pip install --upgrade sensorvision-sdk`
+4. Users update: `pip install --upgrade indcloud-sdk`
 
 ### Deprecation Policy
 
@@ -516,8 +516,8 @@ After first publish to PyPI/npm:
    ```markdown
    ### Official SDKs
 
-   - [Python SDK](https://pypi.org/project/sensorvision-sdk/) - `pip install sensorvision-sdk`
-   - [JavaScript/TypeScript SDK](https://www.npmjs.com/package/sensorvision-sdk) - `npm install sensorvision-sdk`
+   - [Python SDK](https://pypi.org/project/indcloud-sdk/) - `pip install indcloud-sdk`
+   - [JavaScript/TypeScript SDK](https://www.npmjs.com/package/indcloud-sdk) - `npm install indcloud-sdk`
    ```
 
 2. **Update Integration Wizard** (frontend):
@@ -542,12 +542,12 @@ After first publish to PyPI/npm:
 ### "Package name already taken"
 
 **PyPI**:
-- Try: `sensorvision-client`, `sv-sdk`, `sensorvision-iot`
+- Try: `indcloud-client`, `sv-sdk`, `indcloud-iot`
 - Check availability: https://pypi.org/project/YOUR-NAME/
 
 **npm**:
-- Try scoped: `@sensorvision/sdk`, `@sensorvision/client`
-- Try unscoped: `sv-sdk`, `sensorvision-client`, `sensorvision-iot`
+- Try scoped: `@indcloud/sdk`, `@indcloud/client`
+- Try unscoped: `sv-sdk`, `indcloud-client`, `indcloud-iot`
 - Check availability: https://www.npmjs.com/package/YOUR-NAME
 
 ### "Authentication failed"

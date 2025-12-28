@@ -352,7 +352,7 @@ const ApiPlayground: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">API Request Playground</h1>
               <p className="text-gray-600 mt-1">
-                Test and explore SensorVision API endpoints interactively
+                Test and explore Industrial Cloud API endpoints interactively
               </p>
             </div>
             <div className="flex items-center space-x-2">
@@ -365,7 +365,7 @@ const ApiPlayground: React.FC = () => {
                 {showHelp ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
               <a
-                href="https://github.com/CodeFleck/sensorvision"
+                href="https://github.com/indcloud/indcloud"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
@@ -385,7 +385,7 @@ const ApiPlayground: React.FC = () => {
                 <div>
                   <h3 className="font-semibold mb-2">What is the API Playground?</h3>
                   <p>
-                    The API Playground is an interactive tool for testing and exploring SensorVision&apos;s REST API
+                    The API Playground is an interactive tool for testing and exploring Industrial Cloud&apos;s REST API
                     endpoints. It allows you to make HTTP requests directly from the browser without writing code,
                     making it perfect for debugging, learning the API, or building integration prototypes.
                   </p>

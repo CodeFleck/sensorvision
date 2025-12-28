@@ -170,7 +170,7 @@ const navigation: NavigationItem[] = [
   },
 ];
 
-const SIDEBAR_COLLAPSED_KEY = 'sensorvision_sidebar_collapsed';
+const SIDEBAR_COLLAPSED_KEY = 'indcloud_sidebar_collapsed';
 
 export const LayoutV3 = ({ children }: LayoutProps) => {
   const location = useLocation();
@@ -261,7 +261,7 @@ export const LayoutV3 = ({ children }: LayoutProps) => {
               {!isCollapsed && (
                 <div className="flex items-center space-x-2">
                   <Activity className="h-7 w-7 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400" style={{ filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))' }} />
-                  <h1 className="text-lg font-bold text-white tracking-tight">SensorVision</h1>
+                  <h1 className="text-lg font-bold text-white tracking-tight">Industrial Cloud</h1>
                 </div>
               )}
               <button

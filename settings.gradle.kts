@@ -1,1 +1,1 @@
-rootProject.name = "sensorvision"
+rootProject.name = "indcloud"

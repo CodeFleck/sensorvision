@@ -4,16 +4,16 @@ services:
   # PostgreSQL Database - Use RDS in AWS, this is for standalone deployment
   postgres:
     image: postgres:15-alpine
-    container_name: sensorvision-postgres
+    container_name: indcloud-postgres
     environment:
-      POSTGRES_DB: sensorvision
+      POSTGRES_DB: indcloud
       POSTGRES_USER: ${DB_USERNAME:-sensoradmin}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - sensorvision-network
+      - indcloud-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sensoradmin}"]
@@ -27,7 +27,7 @@ services:
   # MQTT Broker
   mosquitto:
     image: eclipse-mosquitto:2.0
-    container_name: sensorvision-mosquitto
+    container_name: indcloud-mosquitto
     ports:
       - "1883:1883"    # MQTT
       - "9001:9001"    # MQTT over WebSocket
@@ -36,7 +36,7 @@ services:
       - mosquitto-data:/mosquitto/data
       - mosquitto-logs:/mosquitto/log
     networks:
-      - sensorvision-network
+      - indcloud-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
@@ -51,19 +51,19 @@ services:
       dockerfile: Dockerfile.prod
       args:
         - JAR_FILE=build/libs/*.jar
-    container_name: sensorvision-app
+    container_name: indcloud-app
     environment:
       # Spring Profile
       - SPRING_PROFILES_ACTIVE=prod
 
       # Database Configuration
-      - SPRING_DATASOURCE_URL=${DB_URL:-jdbc:postgresql://postgres:5432/sensorvision}
+      - SPRING_DATASOURCE_URL=${DB_URL:-jdbc:postgresql://postgres:5432/indcloud}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME:-sensoradmin}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-changeme}
 
       # MQTT Configuration
       - MQTT_BROKER_URL=${MQTT_URL:-tcp://mosquitto:1883}
-      - MQTT_CLIENT_ID=${MQTT_CLIENT_ID:-sensorvision-prod}
+      - MQTT_CLIENT_ID=${MQTT_CLIENT_ID:-indcloud-prod}
 
       # Application Configuration
       - SERVER_PORT=8080
@@ -71,7 +71,7 @@ services:
 
       # Logging
       - LOGGING_LEVEL_ROOT=INFO
-      - LOGGING_LEVEL_ORG_SENSORVISION=INFO
+      - LOGGING_LEVEL_ORG_INDCLOUD=INFO
 
       # JVM Options
       - JAVA_OPTS=-Xmx512m -Xms256m -XX:+UseG1GC
@@ -83,7 +83,7 @@ services:
       mosquitto:
         condition: service_healthy
     networks:
-      - sensorvision-network
+      - indcloud-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
@@ -100,7 +100,7 @@ services:
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: sensorvision-nginx
+    container_name: indcloud-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -112,7 +112,7 @@ services:
     depends_on:
       - app
     networks:
-      - sensorvision-network
+      - indcloud-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
@@ -128,7 +128,7 @@ services:
   # Prometheus (Optional - for metrics)
   prometheus:
     image: prom/prometheus:latest
-    container_name: sensorvision-prometheus
+    container_name: indcloud-prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -139,7 +139,7 @@ services:
     ports:
       - "9090:9090"
     networks:
-      - sensorvision-network
+      - indcloud-network
     restart: unless-stopped
     profiles:
       - monitoring
@@ -147,7 +147,7 @@ services:
   # Grafana (Optional - for visualization)
   grafana:
     image: grafana/grafana:latest
-    container_name: sensorvision-grafana
+    container_name: indcloud-grafana
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
@@ -158,13 +158,13 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - sensorvision-network
+      - indcloud-network
     restart: unless-stopped
     profiles:
       - monitoring
 
 networks:
-  sensorvision-network:
+  indcloud-network:
     driver: bridge
 
 volumes:

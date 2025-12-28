@@ -84,7 +84,7 @@ docker-compose up -d
 ./gradlew bootRun
 
 # 3. Verify migrations
-psql -h localhost -U sensorvision_user -d sensorvision \
+psql -h localhost -U indcloud_user -d indcloud \
   -c "SELECT COUNT(*) FROM plugin_registry;"
 # Expected: 6
 
@@ -226,7 +226,7 @@ curl -X POST http://localhost:8080/api/v1/plugins/slack-notifications/install \
   -d '{
     "webhookUrl": "https://hooks.slack.com/services/TEST/TEST/TEST",
     "channel": "#alerts",
-    "username": "SensorVision"
+    "username": "Industrial Cloud"
   }'
 # Expected: 200, status: "INACTIVE"
 
@@ -291,7 +291,7 @@ curl -X PUT http://localhost:8080/api/v1/plugins/slack-notifications/configurati
   -d '{
     "webhookUrl": "https://hooks.slack.com/services/NEW/WEBHOOK/URL",
     "channel": "#critical-alerts",
-    "username": "SensorVision Bot"
+    "username": "Industrial Cloud Bot"
   }'
 # Expected: 200, configuration updated
 ```

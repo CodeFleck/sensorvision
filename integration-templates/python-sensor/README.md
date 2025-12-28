@@ -1,6 +1,6 @@
 # Python Sensor Client Integration
 
-Send sensor data from Python to SensorVision. Works on Raspberry Pi, Linux, macOS, and Windows.
+Send sensor data from Python to Industrial Cloud. Works on Raspberry Pi, Linux, macOS, and Windows.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ pip install -r requirements.txt
 
 ### 2. Get Your API Key
 
-1. Register at your SensorVision instance: http://your-server:3001/register
+1. Register at your Industrial Cloud instance: http://your-server:3001/register
 2. Login to the dashboard
 3. Create a device (or use existing)
 4. Click the **Key icon (🔑)** next to your device
@@ -33,7 +33,7 @@ pip install -r requirements.txt
 Edit `sensor_client.py` and update these values:
 
 ```python
-# SensorVision API configuration
+# Industrial Cloud API configuration
 API_URL = "http://192.168.1.100:8080/api/v1/ingest"  # Your server IP
 DEVICE_ID = "python-sensor-001"  # Your device ID
 API_KEY = "550e8400-e29b-41d4-a716-446655440000"  # From dashboard
@@ -54,7 +54,7 @@ python sensor_client.py
 ## Expected Output
 
 ```
-SensorVision Python Client
+Industrial Cloud Python Client
 ==================================================
 Device ID: python-sensor-001
 API URL: http://localhost:8080/api/v1/ingest
@@ -147,21 +147,21 @@ Next send in 60 seconds...
 ### 1. Create systemd service file
 
 ```bash
-sudo nano /etc/systemd/system/sensorvision-client.service
+sudo nano /etc/systemd/system/indcloud-client.service
 ```
 
 ### 2. Add this content:
 
 ```ini
 [Unit]
-Description=SensorVision Python Client
+Description=Industrial Cloud Python Client
 After=network.target
 
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/sensorvision-client
-ExecStart=/usr/bin/python3 /home/pi/sensorvision-client/sensor_client.py
+WorkingDirectory=/home/pi/indcloud-client
+ExecStart=/usr/bin/python3 /home/pi/indcloud-client/sensor_client.py
 Restart=always
 RestartSec=10
 
@@ -173,14 +173,14 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable sensorvision-client
-sudo systemctl start sensorvision-client
+sudo systemctl enable indcloud-client
+sudo systemctl start indcloud-client
 
 # Check status
-sudo systemctl status sensorvision-client
+sudo systemctl status indcloud-client
 
 # View logs
-sudo journalctl -u sensorvision-client -f
+sudo journalctl -u indcloud-client -f
 ```
 
 ## Running on Startup (Windows)
@@ -199,7 +199,7 @@ sudo journalctl -u sensorvision-client -f
 1. Create batch file `start_sensor.bat`:
    ```bat
    @echo off
-   cd C:\path\to\sensorvision-client
+   cd C:\path\to\indcloud-client
    python sensor_client.py
    ```
 2. Place in: `C:\Users\YourUser\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup`
@@ -262,7 +262,7 @@ def send_offline_data(client):
 ## Troubleshooting
 
 ### Connection Refused
-- Ensure SensorVision backend is running
+- Ensure Industrial Cloud backend is running
 - Check API_URL is correct (IP and port)
 - Verify network connectivity: `ping your-server-ip`
 
@@ -289,6 +289,6 @@ def send_offline_data(client):
 
 ## Support
 
-- [SensorVision Documentation](https://github.com/CodeFleck/sensorvision)
+- [Industrial Cloud Documentation](https://github.com/CodeFleck/indcloud)
 - [Requests Library Docs](https://requests.readthedocs.io/)
 - [Raspberry Pi GPIO](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html)

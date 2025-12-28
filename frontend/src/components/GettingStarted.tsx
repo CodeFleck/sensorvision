@@ -96,7 +96,7 @@ export const GettingStarted = ({ variant = 'full' }: GettingStartedProps) => {
           <Rocket className="h-8 w-8 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">
-          Welcome to SensorVision
+          Welcome to Industrial Cloud
         </h2>
         <p className="text-blue-100 max-w-xl mx-auto">
           Your IoT monitoring platform is ready. Connect your first device and start

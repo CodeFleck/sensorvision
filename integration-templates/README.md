@@ -1,6 +1,6 @@
-# SensorVision Integration Templates
+# Industrial Cloud Integration Templates
 
-Ready-to-use code templates for integrating sensors and devices with SensorVision.
+Ready-to-use code templates for integrating sensors and devices with Industrial Cloud.
 
 ## Available Templates
 
@@ -22,7 +22,7 @@ Select the template that matches your hardware:
 
 ### 2. Get Your API Key
 
-1. Register at your SensorVision instance
+1. Register at your Industrial Cloud instance
 2. Login to the dashboard
 3. Create a device
 4. Click the **Key icon (🔑)** to get your token
@@ -38,7 +38,7 @@ Each template directory contains:
 ### 4. Deploy and Monitor
 
 - Upload code to your device
-- Watch live data in the SensorVision dashboard
+- Watch live data in the Industrial Cloud dashboard
 - Set up alerts and custom visualizations
 
 ## Template Details
@@ -104,8 +104,8 @@ Each template directory contains:
 
 ```bash
 # Clone entire repository
-git clone https://github.com/CodeFleck/sensorvision.git
-cd sensorvision/integration-templates
+git clone https://github.com/CodeFleck/indcloud.git
+cd indcloud/integration-templates
 
 # Or download specific template
 # Click "Download ZIP" for the template you need
@@ -170,7 +170,7 @@ def read_custom_sensor():
     value = read_from_hardware()
     return {"my_variable": value}
 
-# Send to SensorVision
+# Send to Industrial Cloud
 client.send(read_custom_sensor())
 ```
 
@@ -215,10 +215,10 @@ curl -H "X-API-Key: YOUR_KEY" \
 
 ## Support & Resources
 
-- **Documentation:** [SensorVision GitHub](https://github.com/CodeFleck/sensorvision)
+- **Documentation:** [Industrial Cloud GitHub](https://github.com/CodeFleck/indcloud)
 - **API Reference:** http://your-server:8080/swagger-ui.html
-- **Issues:** [GitHub Issues](https://github.com/CodeFleck/sensorvision/issues)
-- **Community:** [Discussions](https://github.com/CodeFleck/sensorvision/discussions)
+- **Issues:** [GitHub Issues](https://github.com/CodeFleck/indcloud/issues)
+- **Community:** [Discussions](https://github.com/CodeFleck/indcloud/discussions)
 
 ## Contributing
 
@@ -239,4 +239,4 @@ These templates are provided under the MIT License. Use them freely in your proj
 
 ---
 
-**Need help?** Open an issue on GitHub or check the main SensorVision documentation.
+**Need help?** Open an issue on GitHub or check the main Industrial Cloud documentation.

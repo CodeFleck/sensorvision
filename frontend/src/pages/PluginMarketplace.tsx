@@ -187,7 +187,7 @@ const PluginMarketplace: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Plugin Marketplace</h1>
             <p className="text-gray-600 mt-1">
-              Extend SensorVision with powerful plugins for data ingestion, notifications, and
+              Extend Industrial Cloud with powerful plugins for data ingestion, notifications, and
               integrations
             </p>
           </div>
@@ -210,7 +210,7 @@ const PluginMarketplace: React.FC = () => {
             <div className="bg-white/60 backdrop-blur-sm rounded-lg p-6 mb-6">
               <p className="text-gray-600 leading-relaxed">
                 We&apos;re working hard to bring you an extensive collection of plugins to extend
-                SensorVision&apos;s capabilities. Soon you&apos;ll be able to browse, install, and manage
+                Industrial Cloud&apos;s capabilities. Soon you&apos;ll be able to browse, install, and manage
                 plugins for data ingestion, notifications, analytics, integrations, and more.
               </p>
             </div>

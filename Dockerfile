@@ -27,6 +27,6 @@ RUN ./gradlew bootJar --no-daemon -x test
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /workspace/build/libs/sensorvision-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /workspace/build/libs/indcloud-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app/app.jar"]

@@ -1,6 +1,6 @@
 # Raspberry Pi GPIO Sensors Integration
 
-Send sensor data from Raspberry Pi GPIO pins to SensorVision.
+Send sensor data from Raspberry Pi GPIO pins to Industrial Cloud.
 
 ## Supported Sensors
 
@@ -72,7 +72,7 @@ pip3 install RPi.GPIO
 
 ### 4. Get Your API Key
 
-1. Register at your SensorVision instance: http://your-server:3001/register
+1. Register at your Industrial Cloud instance: http://your-server:3001/register
 2. Login to the dashboard
 3. Create a device (or use existing)
 4. Click the **Key icon (🔑)** next to your device
@@ -83,7 +83,7 @@ pip3 install RPi.GPIO
 Edit `gpio_sensor.py` and update these values:
 
 ```python
-# SensorVision API configuration
+# Industrial Cloud API configuration
 API_URL = "http://192.168.1.100:8080/api/v1/ingest"
 DEVICE_ID = "raspi-gpio-001"
 API_KEY = "550e8400-e29b-41d4-a716-446655440000"  # From dashboard
@@ -108,7 +108,7 @@ python3 gpio_sensor.py
 ## Expected Output
 
 ```
-SensorVision Raspberry Pi GPIO Client
+Industrial Cloud Raspberry Pi GPIO Client
 ==================================================
 Device ID: raspi-gpio-001
 API URL: http://localhost:8080/api/v1/ingest
@@ -136,21 +136,21 @@ Create a systemd service to run automatically on boot.
 ### 1. Create service file
 
 ```bash
-sudo nano /etc/systemd/system/sensorvision-gpio.service
+sudo nano /etc/systemd/system/indcloud-gpio.service
 ```
 
 ### 2. Add this content:
 
 ```ini
 [Unit]
-Description=SensorVision GPIO Sensor Client
+Description=Industrial Cloud GPIO Sensor Client
 After=network.target
 
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/sensorvision-gpio
-ExecStart=/usr/bin/python3 /home/pi/sensorvision-gpio/gpio_sensor.py
+WorkingDirectory=/home/pi/indcloud-gpio
+ExecStart=/usr/bin/python3 /home/pi/indcloud-gpio/gpio_sensor.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -167,19 +167,19 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 
 # Enable service (start on boot)
-sudo systemctl enable sensorvision-gpio
+sudo systemctl enable indcloud-gpio
 
 # Start service now
-sudo systemctl start sensorvision-gpio
+sudo systemctl start indcloud-gpio
 
 # Check status
-sudo systemctl status sensorvision-gpio
+sudo systemctl status indcloud-gpio
 
 # View live logs
-sudo journalctl -u sensorvision-gpio -f
+sudo journalctl -u indcloud-gpio -f
 
 # Stop service
-sudo systemctl stop sensorvision-gpio
+sudo systemctl stop indcloud-gpio
 ```
 
 ## Adding More Sensors
@@ -302,7 +302,7 @@ sudo usermod -a -G gpio $USER
 - Verify 5V power supply
 
 ### Connection Refused
-- Ensure SensorVision backend is running
+- Ensure Industrial Cloud backend is running
 - Check API_URL and port
 - Verify network connectivity: `ping your-server-ip`
 
@@ -366,5 +366,5 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 - [Raspberry Pi GPIO Pinout](https://pinout.xyz/)
 - [DHT22 Datasheet](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf)
-- [SensorVision Documentation](https://github.com/CodeFleck/sensorvision)
+- [Industrial Cloud Documentation](https://github.com/CodeFleck/indcloud)
 - [RPi.GPIO Documentation](https://sourceforge.net/p/raspberry-gpio-python/wiki/Home/)

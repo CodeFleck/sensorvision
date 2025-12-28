@@ -1,6 +1,6 @@
 # Plugin Development Guide
 
-Complete guide for developing plugins for the SensorVision Plugin Marketplace.
+Complete guide for developing plugins for the Industrial Cloud Plugin Marketplace.
 
 ---
 
@@ -19,7 +19,7 @@ Complete guide for developing plugins for the SensorVision Plugin Marketplace.
 
 ## Overview
 
-The SensorVision Plugin Marketplace allows developers to extend the platform with:
+The Industrial Cloud Plugin Marketplace allows developers to extend the platform with:
 - **Protocol Parsers** - Decode data from IoT protocols (LoRaWAN, Modbus, Sigfox, etc.)
 - **Notification Channels** - Send alerts to external services (Slack, Discord, PagerDuty, etc.)
 - **Data Sources** - Ingest data from external systems (MQTT brokers, REST APIs, databases)
@@ -105,8 +105,8 @@ CREATE TABLE plugin_registry (
     icon_url VARCHAR(500),
     repository_url VARCHAR(500),
     documentation_url VARCHAR(500),
-    min_sensorvision_version VARCHAR(20),
-    max_sensorvision_version VARCHAR(20),
+    min_indcloud_version VARCHAR(20),
+    max_indcloud_version VARCHAR(20),
     is_official BOOLEAN DEFAULT false,
     is_verified BOOLEAN DEFAULT false,
     installation_count INTEGER DEFAULT 0,
@@ -127,7 +127,7 @@ CREATE TABLE plugin_registry (
 ### Java Interface
 
 ```java
-public interface SensorVisionPlugin {
+public interface Industrial CloudPlugin {
     /**
      * Plugin metadata
      */
@@ -287,8 +287,8 @@ INSERT INTO plugin_registry (
     'INTEGRATION',  -- or NOTIFICATION, PROTOCOL_PARSER, etc.
     '1.0.0',
     'Your Name',
-    false,  -- Official plugins only by SensorVision team
-    false,  -- Verified by SensorVision team
+    false,  -- Official plugins only by Industrial Cloud team
+    false,  -- Verified by Industrial Cloud team
     'CUSTOM_PARSER',
     'INTEGRATION',
     '{
@@ -473,14 +473,14 @@ class MyPluginIntegrationTest {
 
 1. **Fork the Repository**
    ```bash
-   git clone https://github.com/CodeFleck/sensorvision.git
-   cd sensorvision
+   git clone https://github.com/CodeFleck/indcloud.git
+   cd indcloud
    git checkout -b plugin/my-custom-plugin
    ```
 
 2. **Add Plugin Code**
-   - Place plugin code in `src/main/java/org/sensorvision/plugins/community/`
-   - Add tests in `src/test/java/org/sensorvision/plugins/community/`
+   - Place plugin code in `src/main/java/org/indcloud/plugins/community/`
+   - Add tests in `src/test/java/org/indcloud/plugins/community/`
 
 3. **Create Migration**
    ```sql
@@ -502,7 +502,7 @@ class MyPluginIntegrationTest {
    git push origin plugin/my-custom-plugin
    ```
 
-   Then open a PR at: https://github.com/CodeFleck/sensorvision/pulls
+   Then open a PR at: https://github.com/CodeFleck/indcloud/pulls
 
 ### Official Plugin Criteria
 
@@ -592,8 +592,8 @@ Each plugin should include:
 ## Example: Complete Slack Plugin
 
 See the full implementation in the repository:
-- Code: `src/main/java/org/sensorvision/plugins/slack/`
-- Tests: `src/test/java/org/sensorvision/plugins/slack/`
+- Code: `src/main/java/org/indcloud/plugins/slack/`
+- Tests: `src/test/java/org/indcloud/plugins/slack/`
 - Docs: `docs/plugins/SLACK.md`
 
 Key files:
@@ -607,16 +607,16 @@ Key files:
 
 ## Support
 
-- **Documentation**: https://github.com/CodeFleck/sensorvision/tree/main/docs
-- **Issues**: https://github.com/CodeFleck/sensorvision/issues
-- **Discussions**: https://github.com/CodeFleck/sensorvision/discussions
-- **Email**: support@sensorvision.io
+- **Documentation**: https://github.com/CodeFleck/indcloud/tree/main/docs
+- **Issues**: https://github.com/CodeFleck/indcloud/issues
+- **Discussions**: https://github.com/CodeFleck/indcloud/discussions
+- **Email**: support@indcloud.io
 
 ---
 
 ## License
 
-Plugins inherit the SensorVision license. Community plugins may use compatible open-source licenses.
+Plugins inherit the Industrial Cloud license. Community plugins may use compatible open-source licenses.
 
 ---
 

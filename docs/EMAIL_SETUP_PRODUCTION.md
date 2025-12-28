@@ -22,14 +22,14 @@ Forgot password emails work on localhost but fail in production due to:
 ### 1.1 Verify Sender Email Address
 
 ```bash
-# Verify the sender email address (noreply@sensorvision.com or your domain)
+# Verify the sender email address (noreply@indcloud.com or your domain)
 aws ses verify-email-identity \
-  --email-address noreply@sensorvision.com \
+  --email-address noreply@indcloud.com \
   --region us-west-2
 
 # Check verification status
 aws ses get-identity-verification-attributes \
-  --identities noreply@sensorvision.com \
+  --identities noreply@indcloud.com \
   --region us-west-2
 ```
 
@@ -37,12 +37,12 @@ aws ses get-identity-verification-attributes \
 
 ### 1.2 (Optional) Verify Domain for Better Deliverability
 
-If you own a domain (e.g., sensorvision.com):
+If you own a domain (e.g., indcloud.com):
 
 ```bash
 # Verify entire domain
 aws ses verify-domain-identity \
-  --domain sensorvision.com \
+  --domain indcloud.com \
   --region us-west-2
 
 # This will return DNS TXT records you need to add to your domain
@@ -50,7 +50,7 @@ aws ses verify-domain-identity \
 
 Add the TXT record to your DNS:
 ```
-Name: _amazonses.sensorvision.com
+Name: _amazonses.indcloud.com
 Type: TXT
 Value: <verification-token-from-aws>
 ```
@@ -130,14 +130,14 @@ On your production EC2 instance, create/update `.env.production`:
 ```bash
 # Email Configuration (AWS SES)
 EMAIL_ENABLED=true
-EMAIL_FROM=noreply@sensorvision.com
+EMAIL_FROM=noreply@indcloud.com
 SMTP_HOST=email-smtp.us-west-2.amazonaws.com
 SMTP_PORT=587
 SMTP_USERNAME=<YOUR_SMTP_USERNAME>  # AccessKeyId from Step 1.4
 SMTP_PASSWORD=<YOUR_SMTP_PASSWORD>   # SMTP password from Step 1.5
 
 # Support Email
-SUPPORT_ISSUE_EMAIL=support@sensorvision.com
+SUPPORT_ISSUE_EMAIL=support@indcloud.com
 
 # Application Base URL (for email links)
 APP_BASE_URL=http://35.88.65.186.nip.io:8080
@@ -184,14 +184,14 @@ openssl s_client -connect email-smtp.us-west-2.amazonaws.com:587 -starttls smtp
 
 ```bash
 # Check backend logs
-docker logs sensorvision-backend -f
+docker logs indcloud-backend -f
 
 # Trigger password reset from UI
 # Visit: http://35.88.65.186.nip.io:8080/forgot-password
 # Enter a test email address
 
 # Check logs for email sending confirmation
-docker logs sensorvision-backend | grep -i "email\|smtp"
+docker logs indcloud-backend | grep -i "email\|smtp"
 ```
 
 ### 3.3 Verify Email Delivery
@@ -231,7 +231,7 @@ aws ec2 describe-security-groups \
 
 1. Go to Google Account → Security → 2-Step Verification
 2. Scroll to "App passwords" → Generate new password
-3. Select "Mail" and "Other (Custom)" → Name it "SensorVision Prod"
+3. Select "Mail" and "Other (Custom)" → Name it "Industrial Cloud Prod"
 4. Copy the 16-character password
 
 ### 4.3 Update Environment Variables
@@ -258,7 +258,7 @@ SMTP_PASSWORD=<16-char-app-password>
 aws ses get-send-statistics --region us-west-2
 
 # Application logs
-docker logs sensorvision-backend | grep -A 5 "Sending email"
+docker logs indcloud-backend | grep -A 5 "Sending email"
 ```
 
 ### Common Issues
@@ -299,7 +299,7 @@ aws sns create-topic --name ses-bounces --region us-west-2
 
 # Configure SES to publish bounces
 aws ses set-identity-notification-topic \
-  --identity noreply@sensorvision.com \
+  --identity noreply@indcloud.com \
   --notification-type Bounce \
   --sns-topic arn:aws:sns:us-west-2:ACCOUNT_ID:ses-bounces \
   --region us-west-2
@@ -335,7 +335,7 @@ notification.email.ratelimit.max-per-second=5
 
 ```bash
 # 1. Verify email
-aws ses verify-email-identity --email-address noreply@sensorvision.com --region us-west-2
+aws ses verify-email-identity --email-address noreply@indcloud.com --region us-west-2
 
 # 2. Create SMTP user
 aws iam create-user --user-name ses-smtp-user

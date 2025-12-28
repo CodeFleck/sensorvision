@@ -193,7 +193,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 <Activity className="relative h-8 w-8 text-blue-400" />
               </div>
               <span className="text-xl font-bold text-white tracking-tight font-display">
-                SensorVision
+                Industrial Cloud
               </span>
             </div>
           </div>

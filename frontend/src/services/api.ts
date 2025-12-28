@@ -147,7 +147,7 @@ class ApiService {
   }
 
   async getUserIssues(): Promise<IssueSubmission[]> {
-    return this.request<IssueSubmission[]>('/support/issues/my-issues');
+    return this.request<IssueSubmission[]>('/support/issues');
   }
 
   async getIssueById(issueId: number): Promise<IssueSubmission> {

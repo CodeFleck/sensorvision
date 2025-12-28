@@ -1,6 +1,6 @@
 # Data Plugins Guide
 
-Data Plugins enable SensorVision to ingest telemetry data from various external sources and protocols beyond the standard MQTT/HTTP ingestion endpoints.
+Data Plugins enable Industrial Cloud to ingest telemetry data from various external sources and protocols beyond the standard MQTT/HTTP ingestion endpoints.
 
 ## Overview
 
@@ -14,11 +14,11 @@ The plugin system provides a flexible, extensible architecture for integrating w
 
 ### Components
 
-1. **Plugin Processors** (`org.sensorvision.plugin.*`)
+1. **Plugin Processors** (`org.indcloud.plugin.*`)
    - Base classes for different plugin types
    - Provider-specific implementations (LoRaWAN TTN, HTTP Webhook, CSV Import)
 
-2. **Database Models** (`org.sensorvision.model.DataPlugin`)
+2. **Database Models** (`org.indcloud.model.DataPlugin`)
    - Plugin configuration storage
    - Execution history tracking
    - Multi-tenant isolation
@@ -50,7 +50,7 @@ External Source → Webhook Endpoint → Plugin Processor → Telemetry Ingestio
 
 ### 1. Webhook Plugins
 
-Receive HTTP POST webhooks from external systems and transform them into SensorVision telemetry data.
+Receive HTTP POST webhooks from external systems and transform them into Industrial Cloud telemetry data.
 
 **Supported Providers:**
 - **LoRaWAN (The Things Network)** - Parse TTN uplink messages
@@ -153,7 +153,7 @@ https://your-domain.com/api/v1/webhooks/{organizationId}/{pluginName}
 **Example:**
 - Organization ID: `1`
 - Plugin name: `my-lorawan-integration`
-- URL: `https://sensorvision.example.com/api/v1/webhooks/1/my-lorawan-integration`
+- URL: `https://indcloud.example.com/api/v1/webhooks/1/my-lorawan-integration`
 
 ### Viewing Execution History
 
@@ -385,14 +385,14 @@ Enable debug logging for plugin execution:
 
 ```properties
 # application.properties
-logging.level.org.sensorvision.plugin=DEBUG
-logging.level.org.sensorvision.service.DataPluginService=DEBUG
+logging.level.org.indcloud.plugin=DEBUG
+logging.level.org.indcloud.service.DataPluginService=DEBUG
 ```
 
 View logs:
 
 ```bash
-docker logs sensorvision-backend 2>&1 | grep -i plugin
+docker logs indcloud-backend 2>&1 | grep -i plugin
 ```
 
 ## Performance
@@ -512,6 +512,6 @@ Content-Type: application/json
 
 ## Support
 
-- **Documentation**: [GitHub Wiki](https://github.com/CodeFleck/sensorvision/wiki)
-- **Issues**: [GitHub Issues](https://github.com/CodeFleck/sensorvision/issues)
+- **Documentation**: [GitHub Wiki](https://github.com/CodeFleck/indcloud/wiki)
+- **Issues**: [GitHub Issues](https://github.com/CodeFleck/indcloud/issues)
 - **Examples**: See `docs/LORAWAN_TTN_INTEGRATION.md` for detailed integration guide

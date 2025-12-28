@@ -1,6 +1,6 @@
 # Advanced Synthetic Variables
 
-Comprehensive guide to using advanced mathematical expressions, conditional logic, and statistical functions in SensorVision synthetic variables.
+Comprehensive guide to using advanced mathematical expressions, conditional logic, and statistical functions in Industrial Cloud synthetic variables.
 
 ## Table of Contents
 1. [Overview](#overview)

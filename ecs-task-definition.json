@@ -1,5 +1,5 @@
 {
-  "family": "sensorvision",
+  "family": "indcloud",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "1024",
@@ -8,8 +8,8 @@
   "taskRoleArn": "arn:aws:iam::YOUR_ACCOUNT_ID:role/ecsTaskRole",
   "containerDefinitions": [
     {
-      "name": "sensorvision-backend",
-      "image": "YOUR_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com/sensorvision:latest",
+      "name": "indcloud-backend",
+      "image": "YOUR_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com/indcloud:latest",
       "essential": true,
       "portMappings": [
         {
@@ -30,21 +30,21 @@
       "secrets": [
         {
           "name": "SPRING_DATASOURCE_URL",
-          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT_ID:secret:sensorvision/db/url"
+          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT_ID:secret:indcloud/db/url"
         },
         {
           "name": "SPRING_DATASOURCE_USERNAME",
-          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT_ID:secret:sensorvision/db/username"
+          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT_ID:secret:indcloud/db/username"
         },
         {
           "name": "SPRING_DATASOURCE_PASSWORD",
-          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT_ID:secret:sensorvision/db/password"
+          "valueFrom": "arn:aws:secretsmanager:YOUR_REGION:YOUR_ACCOUNT_ID:secret:indcloud/db/password"
         }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/sensorvision",
+          "awslogs-group": "/ecs/indcloud",
           "awslogs-region": "YOUR_REGION",
           "awslogs-stream-prefix": "backend"
         }
@@ -70,7 +70,7 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/sensorvision",
+          "awslogs-group": "/ecs/indcloud",
           "awslogs-region": "YOUR_REGION",
           "awslogs-stream-prefix": "mosquitto"
         }

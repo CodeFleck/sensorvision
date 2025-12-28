@@ -88,3 +88,4 @@ __pycache__/
 *.pid
 /frontend/test-artifacts/
 /frontend/test-results/
+indcloud-sdk-js/node_modules/
