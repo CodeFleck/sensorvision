@@ -165,7 +165,13 @@ public class SecurityConfig {
                 "http://35.88.65.186.nip.io:8080",
                 "http://35.88.65.186:8080",
                 "http://35.88.65.186:3000",
-                "http://35.88.65.186"
+                "http://35.88.65.186",
+                "http://indcloud.io",
+                "https://indcloud.io",
+                "http://www.indcloud.io",
+                "https://www.indcloud.io",
+                "http://api.indcloud.io",
+                "https://api.indcloud.io"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
