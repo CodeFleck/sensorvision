@@ -8,10 +8,21 @@
 
 set -e
 
-DOMAIN="indcloud.io"
-EMAIL="admin@indcloud.io"  # Change to your email for certificate notifications
+DOMAIN="${SSL_DOMAIN:-indcloud.io}"
+EMAIL="${SSL_ADMIN_EMAIL:-admin@indcloud.io}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Validate domain format to prevent injection
+if [[ ! "$DOMAIN" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]+[a-zA-Z0-9]$ ]]; then
+    echo "Error: Invalid domain format: $DOMAIN"
+    exit 1
+fi
+
+# Validate email format
+if [[ ! "$EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+    echo "Warning: Email format may be invalid: $EMAIL"
+fi
 
 echo "=============================================="
 echo "SSL Setup for $DOMAIN"
