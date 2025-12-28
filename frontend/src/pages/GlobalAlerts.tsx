@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle, Clock, Filter, Users, FileText, X } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { AlertTriangle, CheckCircle, Clock, Filter, Users, FileText, X, Loader2 } from 'lucide-react';
 import { apiService } from '../services/api';
 import { clsx } from 'clsx';
 import toast from 'react-hot-toast';
@@ -44,12 +44,10 @@ export const GlobalAlerts = () => {
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
   const [resolutionNote, setResolutionNote] = useState('');
   const [expandedDevices, setExpandedDevices] = useState<Set<string>>(new Set());
+  const [processingAlertId, setProcessingAlertId] = useState<string | null>(null);
+  const [resolving, setResolving] = useState(false);
 
-  useEffect(() => {
-    fetchAlerts();
-  }, [page, filter]);
-
-  const fetchAlerts = async () => {
+  const fetchAlerts = useCallback(async () => {
     try {
       setLoading(true);
       const params: { page?: number; size?: number; unacknowledgedOnly?: boolean } = {
@@ -76,9 +74,25 @@ export const GlobalAlerts = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, filter]);
+
+  useEffect(() => {
+    fetchAlerts();
+  }, [fetchAlerts]);
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && resolveModalOpen) {
+        setResolveModalOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [resolveModalOpen]);
 
   const handleAcknowledge = async (id: string) => {
+    setProcessingAlertId(id);
     try {
       await apiService.acknowledgeGlobalAlert(id);
       toast.success('Alert acknowledged');
@@ -90,6 +104,8 @@ export const GlobalAlerts = () => {
     } catch (error) {
       console.error('Failed to acknowledge alert:', error);
       toast.error('Failed to acknowledge alert');
+    } finally {
+      setProcessingAlertId(null);
     }
   };
 
@@ -101,6 +117,7 @@ export const GlobalAlerts = () => {
 
   const handleResolve = async () => {
     if (!selectedAlertId) return;
+    setResolving(true);
     try {
       await apiService.resolveGlobalAlert(selectedAlertId, resolutionNote || undefined);
       toast.success('Alert resolved');
@@ -117,6 +134,8 @@ export const GlobalAlerts = () => {
     } catch (error) {
       console.error('Failed to resolve alert:', error);
       toast.error('Failed to resolve alert');
+    } finally {
+      setResolving(false);
     }
   };
 
@@ -223,8 +242,11 @@ export const GlobalAlerts = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Severity:</span>
+            <label htmlFor="severity-filter" className="text-sm text-gray-600">
+              Severity:
+            </label>
             <select
+              id="severity-filter"
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
               className="text-xs border border-gray-300 rounded px-2 py-1"
@@ -310,8 +332,8 @@ export const GlobalAlerts = () => {
                   {expandedDevices.has(alert.id) && alert.affectedDevices && (
                     <div className="bg-gray-50 rounded p-2 mb-2 max-h-32 overflow-y-auto">
                       <div className="text-xs text-gray-600 grid grid-cols-2 gap-1">
-                        {alert.affectedDevices.map((deviceId, idx) => (
-                          <span key={idx} className="font-mono truncate">{deviceId}</span>
+                        {alert.affectedDevices.map((deviceId) => (
+                          <span key={deviceId} className="font-mono truncate">{deviceId}</span>
                         ))}
                       </div>
                     </div>
@@ -345,10 +367,20 @@ export const GlobalAlerts = () => {
                 {!alert.acknowledged && (
                   <button
                     onClick={() => handleAcknowledge(alert.id)}
-                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-xs font-medium whitespace-nowrap"
+                    disabled={processingAlertId === alert.id}
+                    className={clsx(
+                      'flex items-center space-x-1 text-xs font-medium whitespace-nowrap',
+                      processingAlertId === alert.id
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-blue-600 hover:text-blue-800'
+                    )}
                   >
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Acknowledge</span>
+                    {processingAlertId === alert.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4" />
+                    )}
+                    <span>{processingAlertId === alert.id ? 'Processing...' : 'Acknowledge'}</span>
                   </button>
                 )}
                 {!alert.resolved && (
@@ -413,22 +445,34 @@ export const GlobalAlerts = () => {
 
       {/* Resolve Modal */}
       {resolveModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="resolve-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setResolveModalOpen(false);
+          }}
+        >
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Resolve Alert</h3>
+              <h3 id="resolve-modal-title" className="text-lg font-semibold text-gray-900">
+                Resolve Alert
+              </h3>
               <button
                 onClick={() => setResolveModalOpen(false)}
                 className="text-gray-400 hover:text-gray-600"
+                aria-label="Close modal"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="resolution-note" className="block text-sm font-medium text-gray-700 mb-2">
                 Resolution Note (optional)
               </label>
               <textarea
+                id="resolution-note"
                 value={resolutionNote}
                 onChange={(e) => setResolutionNote(e.target.value)}
                 placeholder="Describe how this alert was resolved..."
@@ -440,14 +484,22 @@ export const GlobalAlerts = () => {
               <button
                 onClick={() => setResolveModalOpen(false)}
                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                disabled={resolving}
               >
                 Cancel
               </button>
               <button
                 onClick={handleResolve}
-                className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700"
+                disabled={resolving}
+                className={clsx(
+                  'px-4 py-2 text-sm text-white rounded-lg flex items-center space-x-2',
+                  resolving
+                    ? 'bg-green-400 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700'
+                )}
               >
-                Mark as Resolved
+                {resolving && <Loader2 className="h-4 w-4 animate-spin" />}
+                <span>{resolving ? 'Resolving...' : 'Mark as Resolved'}</span>
               </button>
             </div>
           </div>
