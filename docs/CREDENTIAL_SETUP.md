@@ -1,7 +1,7 @@
-# Credential Setup Guide for SensorVision
+# Credential Setup Guide for Industrial Cloud
 
 > [!NOTE]
-> This guide explains how to configure **Twilio** (SMS) and **AWS SES** (email) credentials for the SensorVision application. All values should be provided via environment variables or `application.properties`.
+> This guide explains how to configure **Twilio** (SMS) and **AWS SES** (email) credentials for the Industrial Cloud application. All values should be provided via environment variables or `application.properties`.
 
 ## 1. Twilio (SMS) Configuration
 

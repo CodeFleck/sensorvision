@@ -1,6 +1,6 @@
 # SDK Known Issues & Improvements
 
-## Python SDK (sensorvision-sdk)
+## Python SDK (indcloud-sdk)
 
 ### 🐛 Issue #1: Exception Type Inconsistency (Validation)
 
@@ -10,12 +10,12 @@
 
 **Description:**
 
-The `SensorVisionClient.send_data()` method documents that it raises `ValidationError` for invalid inputs (see `sensorvision/client.py:95`), but the underlying validation functions in `sensorvision/utils.py` actually raise plain `ValueError` instead.
+The `Industrial CloudClient.send_data()` method documents that it raises `ValidationError` for invalid inputs (see `indcloud/client.py:95`), but the underlying validation functions in `indcloud/utils.py` actually raise plain `ValueError` instead.
 
 **Evidence:**
 
 ```python
-# Documented in sensorvision/client.py:95
+# Documented in indcloud/client.py:95
 def send_data(self, device_id: str, data: Dict[str, float]) -> IngestionResponse:
     """
     ...
@@ -27,7 +27,7 @@ def send_data(self, device_id: str, data: Dict[str, float]) -> IngestionResponse
 ```
 
 ```python
-# Actual implementation in sensorvision/utils.py:95-123
+# Actual implementation in indcloud/utils.py:95-123
 def validate_device_id(device_id: str) -> None:
     if not device_id or not isinstance(device_id, str):
         raise ValueError("Device ID must be a non-empty string")  # ← Raises ValueError
@@ -38,10 +38,10 @@ def validate_device_id(device_id: str) -> None:
 Consumers catching the documented `ValidationError` will miss validation failures:
 
 ```python
-from sensorvision import SensorVisionClient
-from sensorvision.exceptions import ValidationError
+from indcloud import Industrial CloudClient
+from indcloud.exceptions import ValidationError
 
-client = SensorVisionClient(api_url="...", api_key="...")
+client = Industrial CloudClient(api_url="...", api_key="...")
 
 try:
     client.send_data("", {"temp": 23.5})  # Invalid empty device ID
@@ -53,7 +53,7 @@ except ValueError as e:
 
 **Test Coverage:**
 
-A regression test suite (`tests/test_sensorvision_sdk.py`) exercises:
+A regression test suite (`tests/test_indcloud_sdk.py`) exercises:
 - ✅ Happy path (sync and async clients)
 - ✅ Rate limiting scenarios
 - ✅ Server error retries
@@ -68,8 +68,8 @@ All tests pass with current behavior (catching `ValueError`).
 **Option 1: Change validators to raise ValidationError (Recommended)**
 
 ```python
-# sensorvision/utils.py
-from sensorvision.exceptions import ValidationError
+# indcloud/utils.py
+from indcloud.exceptions import ValidationError
 
 def validate_device_id(device_id: str) -> None:
     if not device_id or not isinstance(device_id, str):
@@ -88,7 +88,7 @@ def validate_device_id(device_id: str) -> None:
 **Option 2: Update documentation to reflect ValueError**
 
 ```python
-# sensorvision/client.py
+# indcloud/client.py
 def send_data(self, device_id: str, data: Dict[str, float]) -> IngestionResponse:
     """
     ...
@@ -112,7 +112,7 @@ def send_data(self, device_id: str, data: Dict[str, float]) -> IngestionResponse
 
 Implement **Option 1** and release as v0.1.1 patch:
 
-1. Update `sensorvision/utils.py` validators to raise `ValidationError`
+1. Update `indcloud/utils.py` validators to raise `ValidationError`
 2. Update tests to catch `ValidationError`
 3. Add migration note in CHANGELOG
 4. Publish v0.1.1 to PyPI
@@ -135,7 +135,7 @@ except ValidationError as e:  # Now catches ValidationError as documented
 
 ---
 
-## JavaScript/TypeScript SDK (sensorvision-sdk-js)
+## JavaScript/TypeScript SDK (indcloud-sdk-js)
 
 ### Status: No known issues
 

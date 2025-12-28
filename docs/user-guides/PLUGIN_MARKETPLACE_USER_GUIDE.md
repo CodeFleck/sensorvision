@@ -23,7 +23,7 @@
 
 ## Overview
 
-The **Plugin Marketplace** extends SensorVision's capabilities with pre-built integrations and tools. Discover, install, and manage plugins to connect your devices, send notifications, parse protocols, and integrate with third-party platforms.
+The **Plugin Marketplace** extends Industrial Cloud's capabilities with pre-built integrations and tools. Discover, install, and manage plugins to connect your devices, send notifications, parse protocols, and integrate with third-party platforms.
 
 ### Key Features
 
@@ -48,7 +48,7 @@ The **Plugin Marketplace** extends SensorVision's capabilities with pre-built in
 
 ### Accessing the Plugin Marketplace
 
-1. **Login** to SensorVision with your credentials
+1. **Login** to Industrial Cloud with your credentials
 2. **Navigate** to the Plugin Marketplace:
    - Click the **Store** icon (🏪) in the left sidebar
    - Or go directly to: `https://your-instance.com/plugin-marketplace`
@@ -114,7 +114,7 @@ View and manage your installed plugins.
   - Author and website
   - Installation count
   - Average rating
-  - Compatible SensorVision versions
+  - Compatible Industrial Cloud versions
 - **External Links**:
   - Documentation
   - Source code repository
@@ -126,7 +126,7 @@ Plugins display badges to indicate quality and trust:
 
 | Badge | Meaning |
 |-------|---------|
-| **Official** (Blue) | Built and maintained by SensorVision team |
+| **Official** (Blue) | Built and maintained by Industrial Cloud team |
 | **Verified** (Green ✓) | Code reviewed, tested, and approved |
 | **Popular** | High installation count |
 | **Top Rated** | 4+ star average rating |
@@ -153,7 +153,7 @@ Plugins display badges to indicate quality and trust:
   ```
   Webhook URL*: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
   Channel: #alerts
-  Username: SensorVision
+  Username: Industrial Cloud
   Icon Emoji: :robot_face:
   Mention @channel: ☐ (checkbox)
   Include Metadata: ☑ (checkbox)
@@ -203,7 +203,7 @@ Let's walk through installing the LoRaWAN TTN Integration plugin:
 
 **5. Test Integration**
 - Send a test message from a TTN device
-- Check device telemetry in SensorVision dashboard
+- Check device telemetry in Industrial Cloud dashboard
 - Verify data is being parsed correctly
 
 ---
@@ -272,7 +272,7 @@ Fix errors and save again.
 5. Plugin starts functioning immediately
 
 **What Happens:**
-- Plugin registers with SensorVision engine
+- Plugin registers with Industrial Cloud engine
 - Starts receiving events (telemetry, alerts, etc.)
 - Begins executing configured actions
 
@@ -288,7 +288,7 @@ Fix errors and save again.
 5. Plugin stops processing immediately
 
 **What Happens:**
-- Plugin unregisters from SensorVision engine
+- Plugin unregisters from Industrial Cloud engine
 - Stops receiving events
 - Configuration is preserved
 - Can be reactivated anytime
@@ -324,7 +324,7 @@ Fix errors and save again.
 
 ### Protocol Parser Plugins
 
-**Purpose**: Decode proprietary IoT protocol data into SensorVision telemetry format
+**Purpose**: Decode proprietary IoT protocol data into Industrial Cloud telemetry format
 
 **Available Plugins:**
 
@@ -332,7 +332,7 @@ Fix errors and save again.
 - **What it does**: Connects to The Things Network v3, parses LoRaWAN uplink messages
 - **Use case**: LoRaWAN sensor networks (temperature, humidity, GPS trackers)
 - **Configuration**: TTN Application ID, API Key, Region
-- **Documentation**: [TTN Integration Guide](https://github.com/CodeFleck/sensorvision/blob/main/docs/LORAWAN_TTN_INTEGRATION.md)
+- **Documentation**: [TTN Integration Guide](https://github.com/CodeFleck/indcloud/blob/main/docs/LORAWAN_TTN_INTEGRATION.md)
 
 #### 2. Modbus TCP Integration
 - **What it does**: Polls Modbus TCP devices, reads holding/input registers
@@ -374,7 +374,7 @@ Fix errors and save again.
 
 ### Integration Plugins
 
-**Purpose**: Connect SensorVision to external platforms and services
+**Purpose**: Connect Industrial Cloud to external platforms and services
 
 **Available Plugins:**
 
@@ -395,7 +395,7 @@ Fix errors and save again.
 ### Official Plugins (Blue Badge)
 
 **Characteristics:**
-- Built and maintained by SensorVision team
+- Built and maintained by Industrial Cloud team
 - Comprehensive documentation
 - Extensive testing (>80% code coverage)
 - Security audited
@@ -429,7 +429,7 @@ Fix errors and save again.
 - Template repository
 
 **How to Contribute:**
-- See [Plugin Development Guide](https://github.com/CodeFleck/sensorvision/blob/main/docs/PLUGIN_DEVELOPMENT_GUIDE.md)
+- See [Plugin Development Guide](https://github.com/CodeFleck/indcloud/blob/main/docs/PLUGIN_DEVELOPMENT_GUIDE.md)
 - Submit pull request with plugin code
 - Pass code review and testing
 - Get published to marketplace
@@ -613,15 +613,15 @@ Highly recommended for anyone using The Things Network!
 ### Getting Help
 
 **Resources:**
-- **Documentation**: [Plugin Development Guide](https://github.com/CodeFleck/sensorvision/blob/main/docs/PLUGIN_DEVELOPMENT_GUIDE.md)
-- **GitHub Issues**: https://github.com/CodeFleck/sensorvision/issues
-- **GitHub Discussions**: https://github.com/CodeFleck/sensorvision/discussions
-- **Email Support**: support@sensorvision.io
+- **Documentation**: [Plugin Development Guide](https://github.com/CodeFleck/indcloud/blob/main/docs/PLUGIN_DEVELOPMENT_GUIDE.md)
+- **GitHub Issues**: https://github.com/CodeFleck/indcloud/issues
+- **GitHub Discussions**: https://github.com/CodeFleck/indcloud/discussions
+- **Email Support**: support@indcloud.io
 
 **When Reporting Issues:**
 Include:
 - Plugin name and version
-- Your SensorVision version
+- Your Industrial Cloud version
 - Configuration (sanitize secrets!)
 - Error messages
 - Steps to reproduce
@@ -684,7 +684,7 @@ A: No. One installation per organization. Use configuration to manage multiple i
 A: Plugin stops immediately. Data in transit may be lost. Deactivate first, verify no data loss, then uninstall.
 
 **Q: Can I develop my own plugins?**
-A: Yes! See the [Plugin Development Guide](https://github.com/CodeFleck/sensorvision/blob/main/docs/PLUGIN_DEVELOPMENT_GUIDE.md) to get started.
+A: Yes! See the [Plugin Development Guide](https://github.com/CodeFleck/indcloud/blob/main/docs/PLUGIN_DEVELOPMENT_GUIDE.md) to get started.
 
 **Q: Are plugin configurations encrypted?**
 A: Yes. Sensitive fields (passwords, API keys) are encrypted in the database.
@@ -692,9 +692,9 @@ A: Yes. Sensitive fields (passwords, API keys) are encrypted in the database.
 **Q: Can I export/import plugin configurations?**
 A: Not yet. This feature is planned for a future release.
 
-**Q: What happens during SensorVision updates?**
+**Q: What happens during Industrial Cloud updates?**
 A: Plugins remain installed. May need reconfiguration if plugin schema changes (rare).
 
 ---
 
-**Need more help?** Contact support@sensorvision.io or visit our [GitHub Discussions](https://github.com/CodeFleck/sensorvision/discussions).
+**Need more help?** Contact support@indcloud.io or visit our [GitHub Discussions](https://github.com/CodeFleck/indcloud/discussions).

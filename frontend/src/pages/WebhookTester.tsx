@@ -136,7 +136,7 @@ const WebhookTester: React.FC = () => {
                 <h3 className="font-semibold mb-2">What is a Webhook?</h3>
                 <p>
                   A webhook is an HTTP callback that allows one system to send real-time data to another.
-                  In SensorVision, webhooks can be used to receive telemetry data from external devices
+                  In Industrial Cloud, webhooks can be used to receive telemetry data from external devices
                   or IoT platforms (like LoRaWAN, Sigfox, etc.).
                 </p>
               </div>

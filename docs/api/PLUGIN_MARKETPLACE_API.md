@@ -89,11 +89,11 @@ GET /api/v1/plugins
     "description": "Connect your LoRaWAN devices from The Things Network (TTN) v3...",
     "category": "PROTOCOL_PARSER",
     "version": "1.0.0",
-    "author": "SensorVision Team",
-    "authorUrl": "https://github.com/CodeFleck/sensorvision",
+    "author": "Industrial Cloud Team",
+    "authorUrl": "https://github.com/CodeFleck/indcloud",
     "iconUrl": "https://www.thethingsnetwork.org/docs/lorawan/icon.svg",
-    "repositoryUrl": "https://github.com/CodeFleck/sensorvision",
-    "documentationUrl": "https://github.com/CodeFleck/sensorvision/blob/main/docs/LORAWAN_TTN_INTEGRATION.md",
+    "repositoryUrl": "https://github.com/CodeFleck/indcloud",
+    "documentationUrl": "https://github.com/CodeFleck/indcloud/blob/main/docs/LORAWAN_TTN_INTEGRATION.md",
     "minSensorvisionVersion": "1.0.0",
     "maxSensorvisionVersion": null,
     "isOfficial": true,
@@ -178,7 +178,7 @@ GET /api/v1/plugins/{pluginKey}
   "description": "Connect your LoRaWAN devices from The Things Network (TTN) v3...",
   "category": "PROTOCOL_PARSER",
   "version": "1.0.0",
-  "author": "SensorVision Team",
+  "author": "Industrial Cloud Team",
   "isOfficial": true,
   "isVerified": true,
   "installationCount": 25,
@@ -819,7 +819,7 @@ curl -X GET http://localhost:8080/api/v1/plugins/lorawan-ttn/ratings \
   documentationUrl?: string;   // Documentation link
   minSensorvisionVersion?: string;  // Minimum required version
   maxSensorvisionVersion?: string;  // Maximum compatible version
-  isOfficial: boolean;         // Official SensorVision plugin
+  isOfficial: boolean;         // Official Industrial Cloud plugin
   isVerified: boolean;         // Verified by team
   installationCount: number;   // Total installations
   ratingAverage: number;       // Average rating (0-5)
@@ -940,7 +940,7 @@ curl -X POST http://localhost:8080/api/v1/plugins/slack-notifications/install \
   -d '{
     "webhookUrl": "https://hooks.slack.com/services/XXX",
     "channel": "#alerts",
-    "username": "SensorVision",
+    "username": "Industrial Cloud",
     "iconEmoji": ":robot_face:",
     "mentionChannel": false,
     "includeMetadata": true
@@ -1037,9 +1037,9 @@ curl -X POST http://localhost:8080/api/v1/plugins/lorawan-ttn/activate \
 ## Support
 
 For API issues or questions:
-- **Documentation**: https://github.com/CodeFleck/sensorvision/tree/main/docs
-- **GitHub Issues**: https://github.com/CodeFleck/sensorvision/issues
-- **Email**: api-support@sensorvision.io
+- **Documentation**: https://github.com/CodeFleck/indcloud/tree/main/docs
+- **GitHub Issues**: https://github.com/CodeFleck/indcloud/issues
+- **Email**: api-support@indcloud.io
 
 ---
 

@@ -5,7 +5,7 @@ plugins {
     id("jacoco")
 }
 
-group = "org.sensorvision"
+group = "io.indcloud"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_17
 
@@ -80,7 +80,7 @@ tasks.withType<Test> {
 }
 
 springBoot {
-    mainClass.set("org.sensorvision.SensorVisionApplication")
+    mainClass.set("io.indcloud.IndCloudApplication")
 }
 
 // Load .env file for bootRun task

@@ -17,7 +17,7 @@ test.describe('Authentication System', () => {
   });
 
   test('should display login page', async ({ page }) => {
-    await expect(page).toHaveTitle(/SensorVision/);
+    await expect(page).toHaveTitle(/Industrial Cloud/);
 
     // Visual regression: Login page
     await expect(page).toHaveScreenshot('login-page.png', {

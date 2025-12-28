@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS } from 'react-joyride';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const TOUR_STORAGE_KEY = 'sensorvision_welcome_tour_completed';
+const TOUR_STORAGE_KEY = 'indcloud_welcome_tour_completed';
 
 interface WelcomeTourProps {
   isNewUser?: boolean;
@@ -16,7 +16,7 @@ const tourSteps: (Step & { navigateTo?: string })[] = [
     target: 'body',
     content: (
       <div className="text-center">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Welcome to SensorVision!</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Welcome to Industrial Cloud!</h2>
         <p className="text-gray-600">
           Let us show you around the platform. This quick tour will help you get started
           with monitoring your IoT devices.

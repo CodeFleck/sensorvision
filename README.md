@@ -1,8 +1,8 @@
-# SensorVision
+# Industrial Cloud
 
 **The IoT Platform That Scales With You**
 
-Build once, deploy anywhere, scale infinitely. SensorVision is an enterprise-grade IoT monitoring platform built on modern architecture with developer-friendly tools. Get from zero to insights in minutes with real-time data visualization, intelligent alerting, and extensible plugin ecosystem.
+Build once, deploy anywhere, scale infinitely. Industrial Cloud is an enterprise-grade IoT monitoring platform built on modern architecture with developer-friendly tools. Get from zero to insights in minutes with real-time data visualization, intelligent alerting, and extensible plugin ecosystem.
 
 ## 🚀 Features
 
@@ -91,24 +91,24 @@ Build once, deploy anywhere, scale infinitely. SensorVision is an enterprise-gra
 
 ### 🎯 Official SDKs & Integration Tools
 
-#### Python SDK (`sensorvision-sdk`)
+#### Python SDK (`indcloud-sdk`)
 Production-ready Python client library for seamless IoT device integration:
 - Simple, intuitive API for sending telemetry data
 - Configurable retry logic with exponential backoff
 - Comprehensive error handling (authentication, validation, rate limiting)
 - Type hints and full documentation
-- **✅ Available on PyPI**: https://pypi.org/project/sensorvision-sdk/
+- **✅ Available on PyPI**: https://pypi.org/project/indcloud-sdk/
 
 **Installation:**
 ```bash
-pip install sensorvision-sdk
+pip install indcloud-sdk
 ```
 
 **Quick Start:**
 ```python
-from sensorvision import SensorVisionClient
+from indcloud import Industrial CloudClient
 
-client = SensorVisionClient(
+client = Industrial CloudClient(
     api_url="http://your-server:8080",
     api_key="your-device-token"
 )
@@ -120,28 +120,28 @@ client.send_data("my-device-001", {
 })
 ```
 
-📚 [Full Python SDK Documentation](sensorvision-sdk/README.md)
+📚 [Full Python SDK Documentation](indcloud-sdk/README.md)
 
-#### JavaScript/TypeScript SDK (`sensorvision-sdk-js`)
+#### JavaScript/TypeScript SDK (`indcloud-sdk-js`)
 Cross-platform SDK for Node.js and browsers with WebSocket support:
 - REST client for telemetry ingestion
 - Real-time WebSocket subscriptions for live data
 - Works in Node.js and browsers (UMD, CommonJS, ES Modules)
 - TypeScript definitions included
 - Automatic reconnection and retry logic
-- **✅ Available on npm**: https://www.npmjs.com/package/sensorvision-sdk
+- **✅ Available on npm**: https://www.npmjs.com/package/indcloud-sdk
 
 **Installation:**
 ```bash
-npm install sensorvision-sdk
+npm install indcloud-sdk
 ```
 
 **Quick Start:**
 ```typescript
-import { SensorVisionClient, WebSocketClient } from 'sensorvision-sdk';
+import { Industrial CloudClient, WebSocketClient } from 'indcloud-sdk';
 
 // Send data via REST
-const client = new SensorVisionClient({
+const client = new Industrial CloudClient({
     apiUrl: 'http://your-server:8080',
     apiKey: 'your-device-token'
 });
@@ -164,9 +164,9 @@ wsClient.subscribe('my-device-001', (data) => {
 wsClient.connect();
 ```
 
-📚 [Full JavaScript SDK Documentation](sensorvision-sdk-js/README.md)
+📚 [Full JavaScript SDK Documentation](indcloud-sdk-js/README.md)
 
-#### Java SDK (`sensorvision-sdk-java`)
+#### Java SDK (`indcloud-sdk-java`)
 Enterprise-ready Java SDK for industrial IoT and Android devices:
 - Type-safe Java API with builder pattern
 - Automatic retry logic with exponential backoff
@@ -178,18 +178,18 @@ Enterprise-ready Java SDK for industrial IoT and Android devices:
 **Installation (Maven):**
 ```xml
 <dependency>
-    <groupId>io.sensorvision</groupId>
-    <artifactId>sensorvision-sdk</artifactId>
+    <groupId>io.indcloud</groupId>
+    <artifactId>indcloud-sdk</artifactId>
     <version>0.1.0</version>
 </dependency>
 ```
 
 **Quick Start:**
 ```java
-import io.sensorvision.sdk.SensorVisionClient;
+import io.indcloud.sdk.Industrial CloudClient;
 import java.util.Map;
 
-SensorVisionClient client = new SensorVisionClient.Builder()
+Industrial CloudClient client = new Industrial CloudClient.Builder()
     .apiUrl("http://your-server:8080")
     .apiKey("your-device-token")
     .build();
@@ -202,7 +202,7 @@ Map<String, Object> data = Map.of(
 client.sendData("my-device-001", data);
 ```
 
-📚 [Full Java SDK Documentation](sensorvision-sdk-java/README.md)
+📚 [Full Java SDK Documentation](indcloud-sdk-java/README.md)
 
 #### Frontend Integration Wizard
 Interactive 5-step wizard for zero-config device onboarding:
@@ -213,13 +213,13 @@ Interactive 5-step wizard for zero-config device onboarding:
 - 📋 Copy-to-clipboard for all code snippets
 - ✅ Works with both new and existing devices
 
-**Try it now:** Navigate to `/integration-wizard` in the SensorVision dashboard!
+**Try it now:** Navigate to `/integration-wizard` in the Industrial Cloud dashboard!
 
 📚 [Integration Wizard User Guide](INTEGRATION_WIZARD_GUIDE.md)
 
 ## ⚡ 5-Minute Quick Start for IoT Devices
 
-**NEW**: SensorVision now supports ultra-simple device integration! No complex authentication, no manual device registration required.
+**NEW**: Industrial Cloud now supports ultra-simple device integration! No complex authentication, no manual device registration required.
 
 ### For IoT Developers (ESP32, Arduino, Python, etc.)
 
@@ -305,7 +305,7 @@ Open http://localhost:3001/dashboard and watch your data appear in real-time! �
 
 ```bash
 git clone <your-repo-url>
-cd sensorvision
+cd indcloud
 ```
 
 ### 2. Start Infrastructure Services
@@ -339,13 +339,13 @@ npm run dev
 ### 5. Access the Services
 
 **Local Development:**
-- **🌟 SensorVision Dashboard**: http://localhost:3001 (React Web UI)
+- **🌟 Industrial Cloud Dashboard**: http://localhost:3001 (React Web UI)
 - **📚 Swagger API Documentation**: http://localhost:8080/swagger-ui.html
 - **Backend API**: http://localhost:8080/api/v1/*
 - **MQTT Broker**: localhost:1883
 
 **Production Deployment (AWS):**
-- **🌟 SensorVision Application**: http://35.88.65.186.nip.io:8080
+- **🌟 Industrial Cloud Application**: http://35.88.65.186.nip.io:8080
 - **📊 Grafana Monitoring**: http://35.88.65.186.nip.io:3000 (admin/admin)
 - **📈 Prometheus Metrics**: http://35.88.65.186.nip.io:9090
 - **Backend API**: http://35.88.65.186.nip.io:8080/api/v1/*
@@ -655,9 +655,9 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 
 ## MQTT Topics
 
-- `sensorvision/devices/{deviceId}/telemetry` � Telemetry messages
-- `sensorvision/devices/{deviceId}/status` � Device status updates (reserved)
-- `sensorvision/devices/{deviceId}/commands` � Command channel to devices
+- `indcloud/devices/{deviceId}/telemetry` � Telemetry messages
+- `indcloud/devices/{deviceId}/status` � Device status updates (reserved)
+- `indcloud/devices/{deviceId}/commands` � Command channel to devices
 
 ### Sample Telemetry Message
 
@@ -688,8 +688,8 @@ Key configuration options live in `src/main/resources/application.yml`:
 mqtt:
   broker:
     url: tcp://localhost:1883
-    username: sensorvision
-    password: sensorvision123
+    username: indcloud
+    password: indcloud123
 
 simulator:
   enabled: true
@@ -698,9 +698,9 @@ simulator:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/sensorvision
-    username: sensorvision
-    password: sensorvision123
+    url: jdbc:postgresql://localhost:5432/indcloud
+    username: indcloud
+    password: indcloud123
 ```
 
 Override any property with environment variables (e.g., `SPRING_DATASOURCE_URL`).
@@ -816,7 +816,7 @@ sequenceDiagram
 ### Project Structure
 
 ```
-├── src/main/java/org/sensorvision/
+├── src/main/java/org/indcloud/
 │   ├── controller/          # REST API controllers
 │   │   ├── AuthController.java
 │   │   ├── DeviceController.java
@@ -962,7 +962,7 @@ npm test
 ./gradlew build
 
 # Build Docker image
-docker build -t sensorvision-app .
+docker build -t indcloud-app .
 
 # Start all services
 docker-compose up --build
@@ -1007,13 +1007,13 @@ cd frontend && npm run build
 
 ```bash
 # Database Configuration
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/sensorvision
-SPRING_DATASOURCE_USERNAME=sensorvision
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/indcloud
+SPRING_DATASOURCE_USERNAME=indcloud
 SPRING_DATASOURCE_PASSWORD=your_secure_password
 
 # MQTT Configuration
 MQTT_BROKER_URL=tcp://localhost:1883
-MQTT_BROKER_USERNAME=sensorvision
+MQTT_BROKER_USERNAME=indcloud
 MQTT_BROKER_PASSWORD=your_mqtt_password
 
 # Simulator Configuration
@@ -1069,13 +1069,13 @@ docker-compose logs -f postgres
 docker-compose logs -f mosquitto
 
 # Backend debug logging
-./gradlew bootRun --args='--logging.level.org.sensorvision=DEBUG'
+./gradlew bootRun --args='--logging.level.org.indcloud=DEBUG'
 
 # Check database connectivity
-docker exec -it sensorvision-postgres psql -U sensorvision -d sensorvision
+docker exec -it indcloud-postgres psql -U indcloud -d indcloud
 
 # Test MQTT connectivity
-mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/test-001/telemetry" -m '{"deviceId":"test-001","timestamp":"2024-01-01T12:00:00Z","variables":{"kw_consumption":50.5}}'
+mosquitto_pub -h localhost -p 1883 -t "indcloud/devices/test-001/telemetry" -m '{"deviceId":"test-001","timestamp":"2024-01-01T12:00:00Z","variables":{"kw_consumption":50.5}}'
 
 # Frontend debug mode
 cd frontend && npm run dev -- --debug
@@ -1130,8 +1130,8 @@ We welcome contributions! Here's how to get started:
 
 1. **Fork and Clone**
    ```bash
-   git clone https://github.com/your-username/sensorvision.git
-   cd sensorvision
+   git clone https://github.com/your-username/indcloud.git
+   cd indcloud
    ```
 
 2. **Backend Setup**
@@ -1169,7 +1169,7 @@ Refer to [Repository Guidelines](AGENTS.md) for detailed development guidelines.
 
 ## 📊 Current vs Ubidots Feature Comparison
 
-| Feature | SensorVision | Ubidots | Status |
+| Feature | Industrial Cloud | Ubidots | Status |
 |---------|-------------|---------|---------|
 | Device Management | ✅ | ✅ | Complete |
 | Real-time Dashboard | ✅ | ✅ | Complete |
@@ -1342,7 +1342,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <h3>🌟 SensorVision - Bringing Intelligence to IoT Monitoring 🌟</h3>
+  <h3>🌟 Industrial Cloud - Bringing Intelligence to IoT Monitoring 🌟</h3>
   <p><i>A modern, open-source alternative to commercial IoT platforms</i></p>
 
   **[🚀 Get Started](#quick-start) | [📖 Documentation](#architecture-overview) | [🤝 Contribute](#contributing) | [💬 Discussions](https://github.com/your-repo/discussions)**

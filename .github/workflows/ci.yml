@@ -23,7 +23,7 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_DB: sensorvision_test
+          POSTGRES_DB: indcloud_test
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
         ports:
@@ -51,7 +51,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build --no-daemon --stacktrace
         env:
-          DB_URL: jdbc:postgresql://localhost:5432/sensorvision_test
+          DB_URL: jdbc:postgresql://localhost:5432/indcloud_test
           DB_USERNAME: test_user
           DB_PASSWORD: test_password
           JWT_SECRET: test-secret-key-for-ci-only-do-not-use-in-production-12345678
@@ -60,7 +60,7 @@ jobs:
       - name: Run tests
         run: ./gradlew test --no-daemon --stacktrace
         env:
-          DB_URL: jdbc:postgresql://localhost:5432/sensorvision_test
+          DB_URL: jdbc:postgresql://localhost:5432/indcloud_test
           DB_USERNAME: test_user
           DB_PASSWORD: test_password
           JWT_SECRET: test-secret-key-for-ci-only-do-not-use-in-production-12345678
@@ -232,13 +232,13 @@ jobs:
           context: .
           push: false
           load: true
-          tags: sensorvision-backend:test
+          tags: indcloud-backend:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Test Docker image
         run: |
-          docker images | grep sensorvision-backend
+          docker images | grep indcloud-backend
 
   # =============================================================================
   # Security Scanning

@@ -1,6 +1,6 @@
-# Migration Guide: Upgrading to SensorVision v1.6.0
+# Migration Guide: Upgrading to Industrial Cloud v1.6.0
 
-**Target Audience**: Existing SensorVision users upgrading from v1.5.0 or earlier
+**Target Audience**: Existing Industrial Cloud users upgrading from v1.5.0 or earlier
 **Release Date**: November 14, 2025
 **Estimated Migration Time**: 15-30 minutes
 
@@ -23,7 +23,7 @@
 
 ### What's Changing
 
-SensorVision v1.6.0 introduces two major features:
+Industrial Cloud v1.6.0 introduces two major features:
 1. **Plugin Marketplace** - Extensible plugin system with 6 official plugins
 2. **Statistical Time-Series Functions** - 10 new functions for advanced analytics
 
@@ -80,12 +80,12 @@ Verify your system meets requirements:
 **PostgreSQL Backup** (REQUIRED):
 ```bash
 # Full database backup
-pg_dump -h localhost -U sensorvision_user -d sensorvision \
+pg_dump -h localhost -U indcloud_user -d indcloud \
   --no-owner --no-acl \
-  > sensorvision_backup_$(date +%Y%m%d_%H%M%S).sql
+  > indcloud_backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Verify backup file created
-ls -lh sensorvision_backup_*.sql
+ls -lh indcloud_backup_*.sql
 ```
 
 **Expected output**: Backup file should be several MB to GB depending on data volume.
@@ -95,35 +95,35 @@ ls -lh sensorvision_backup_*.sql
 **Backend JAR**:
 ```bash
 # Copy current JAR
-cp /opt/sensorvision/current.jar \
-   /opt/sensorvision/backup/sensorvision_v1.5.0_$(date +%Y%m%d).jar
+cp /opt/indcloud/current.jar \
+   /opt/indcloud/backup/indcloud_v1.5.0_$(date +%Y%m%d).jar
 ```
 
 **Frontend Static Files** (if deployed separately):
 ```bash
 # Backup frontend
-cp -r /var/www/sensorvision \
-      /var/www/sensorvision_backup_$(date +%Y%m%d)
+cp -r /var/www/indcloud \
+      /var/www/indcloud_backup_$(date +%Y%m%d)
 ```
 
 ### 3. Configuration Backup
 
 ```bash
 # Backup application.yml (if customized)
-cp /opt/sensorvision/config/application.yml \
-   /opt/sensorvision/backup/application.yml.backup
+cp /opt/indcloud/config/application.yml \
+   /opt/indcloud/backup/application.yml.backup
 ```
 
 ### 4. Verify Backups
 
 ```bash
 # Check backup file integrity
-psql -h localhost -U sensorvision_user -d sensorvision_test \
-  < sensorvision_backup_*.sql
+psql -h localhost -U indcloud_user -d indcloud_test \
+  < indcloud_backup_*.sql
 
 # If successful, you have a valid backup
 # Clean up test database
-dropdb -h localhost -U sensorvision_user sensorvision_test
+dropdb -h localhost -U indcloud_user indcloud_test
 ```
 
 ---
@@ -137,7 +137,7 @@ dropdb -h localhost -U sensorvision_user sensorvision_test
 
 ```bash
 # Using systemd
-sudo systemctl stop sensorvision
+sudo systemctl stop indcloud
 
 # Using Docker
 docker-compose down
@@ -151,7 +151,7 @@ curl http://localhost:8080/actuator/health
 
 **From Git Repository**:
 ```bash
-cd /path/to/sensorvision
+cd /path/to/indcloud
 git checkout main
 git pull origin main
 git checkout v1.6.0  # Or specific commit/tag
@@ -160,9 +160,9 @@ git checkout v1.6.0  # Or specific commit/tag
 **From Release Archive**:
 ```bash
 # Download v1.6.0 from GitHub releases
-wget https://github.com/CodeFleck/sensorvision/releases/download/v1.6.0/sensorvision-1.6.0.tar.gz
-tar -xzf sensorvision-1.6.0.tar.gz
-cd sensorvision-1.6.0
+wget https://github.com/CodeFleck/indcloud/releases/download/v1.6.0/indcloud-1.6.0.tar.gz
+tar -xzf indcloud-1.6.0.tar.gz
+cd indcloud-1.6.0
 ```
 
 ### Step 3: Build Application
@@ -173,7 +173,7 @@ cd sensorvision-1.6.0
 ./gradlew clean build
 
 # Expected output: BUILD SUCCESSFUL
-# JAR location: build/libs/sensorvision-1.6.0.jar
+# JAR location: build/libs/indcloud-1.6.0.jar
 ```
 
 **Frontend**:
@@ -191,11 +191,11 @@ npm run build  # Production build
 **Copy New JAR**:
 ```bash
 # Copy to deployment directory
-cp build/libs/sensorvision-1.6.0.jar /opt/sensorvision/
+cp build/libs/indcloud-1.6.0.jar /opt/indcloud/
 
 # Update symlink
-ln -sf /opt/sensorvision/sensorvision-1.6.0.jar \
-       /opt/sensorvision/current.jar
+ln -sf /opt/indcloud/indcloud-1.6.0.jar \
+       /opt/indcloud/current.jar
 ```
 
 ### Step 5: Start Application
@@ -203,22 +203,22 @@ ln -sf /opt/sensorvision/sensorvision-1.6.0.jar \
 **Start Backend**:
 ```bash
 # Using systemd
-sudo systemctl start sensorvision
+sudo systemctl start indcloud
 
 # Using Docker
 docker-compose up -d
 
 # Using manual start
-java -jar /opt/sensorvision/current.jar
+java -jar /opt/indcloud/current.jar
 ```
 
 **Monitor Startup**:
 ```bash
 # Watch logs
-sudo journalctl -u sensorvision -f
+sudo journalctl -u indcloud -f
 
 # Or with Docker
-docker-compose logs -f sensorvision
+docker-compose logs -f indcloud
 
 # Look for these key messages:
 # ✅ "Flyway: Successfully applied 2 migrations"
@@ -239,11 +239,11 @@ Flyway: Successfully applied 2 migrations to schema "public"
 ```bash
 # Backup current frontend (already done in pre-migration)
 # Copy new frontend
-cp -r frontend/dist/* /var/www/sensorvision/
+cp -r frontend/dist/* /var/www/indcloud/
 
 # Set permissions
-chown -R www-data:www-data /var/www/sensorvision
-chmod -R 755 /var/www/sensorvision
+chown -R www-data:www-data /var/www/indcloud
+chmod -R 755 /var/www/indcloud
 ```
 
 **Reload Web Server**:
@@ -266,7 +266,7 @@ sudo systemctl reload apache2
 **Check Migrations**:
 ```sql
 -- Connect to database
-psql -h localhost -U sensorvision_user -d sensorvision
+psql -h localhost -U indcloud_user -d indcloud
 
 -- Verify migrations applied
 SELECT version, description, success
@@ -394,7 +394,7 @@ curl http://localhost:8080/api/v1/plugins \
    - Fill in configuration:
      - Webhook URL: `https://hooks.slack.com/services/YOUR/WEBHOOK/URL`
      - Channel: `#alerts`
-     - Username: `SensorVision`
+     - Username: `Industrial Cloud`
      - Icon Emoji: `:robot_face:`
    - Click "Save"
 
@@ -470,14 +470,14 @@ Symptoms: Application starts but plugins not available
 Solution:
 ```bash
 # Check Flyway status
-psql -h localhost -U sensorvision_user -d sensorvision \
+psql -h localhost -U indcloud_user -d indcloud \
   -c "SELECT * FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 5;"
 
 # If V50/V51 missing, manually apply:
-psql -h localhost -U sensorvision_user -d sensorvision \
+psql -h localhost -U indcloud_user -d indcloud \
   < src/main/resources/db/migration/V50__Create_plugin_marketplace_schema.sql
 
-psql -h localhost -U sensorvision_user -d sensorvision \
+psql -h localhost -U indcloud_user -d indcloud \
   < src/main/resources/db/migration/V51__Seed_plugin_marketplace.sql
 ```
 
@@ -519,8 +519,8 @@ Solution:
 -- If tables exist but Flyway didn't record migration:
 INSERT INTO flyway_schema_history (installed_rank, version, description, type, script, checksum, installed_by, installed_on, execution_time, success)
 VALUES
-  (50, '50', 'Create plugin marketplace schema', 'SQL', 'V50__Create_plugin_marketplace_schema.sql', 0, 'sensorvision_user', NOW(), 1000, true),
-  (51, '51', 'Seed plugin marketplace', 'SQL', 'V51__Seed_plugin_marketplace.sql', 0, 'sensorvision_user', NOW(), 500, true);
+  (50, '50', 'Create plugin marketplace schema', 'SQL', 'V50__Create_plugin_marketplace_schema.sql', 0, 'indcloud_user', NOW(), 1000, true),
+  (51, '51', 'Seed plugin marketplace', 'SQL', 'V51__Seed_plugin_marketplace.sql', 0, 'indcloud_user', NOW(), 500, true);
 ```
 
 ---
@@ -557,18 +557,18 @@ If issues persist:
 1. **Check Logs**:
    ```bash
    # Backend logs
-   sudo journalctl -u sensorvision -n 100
+   sudo journalctl -u indcloud -n 100
 
    # Database logs
    sudo tail -f /var/log/postgresql/postgresql-*.log
    ```
 
 2. **Check GitHub Issues**:
-   - https://github.com/CodeFleck/sensorvision/issues
+   - https://github.com/CodeFleck/indcloud/issues
    - Search for similar problems
 
 3. **Create Issue**:
-   - Include SensorVision version (1.6.0)
+   - Include Industrial Cloud version (1.6.0)
    - Attach relevant log snippets
    - Describe steps to reproduce
    - Note migration step where issue occurred
@@ -582,25 +582,25 @@ If you need to rollback to v1.5.0:
 ### 1. Stop Application
 
 ```bash
-sudo systemctl stop sensorvision
+sudo systemctl stop indcloud
 ```
 
 ### 2. Restore Database
 
 ```bash
 # Drop new tables (ONLY if needed)
-psql -h localhost -U sensorvision_user -d sensorvision <<EOF
+psql -h localhost -U indcloud_user -d indcloud <<EOF
 DROP TABLE IF EXISTS plugin_ratings CASCADE;
 DROP TABLE IF EXISTS installed_plugins CASCADE;
 DROP TABLE IF EXISTS plugin_registry CASCADE;
 EOF
 
 # Restore from backup
-psql -h localhost -U sensorvision_user -d sensorvision \
-  < sensorvision_backup_YYYYMMDD_HHMMSS.sql
+psql -h localhost -U indcloud_user -d indcloud \
+  < indcloud_backup_YYYYMMDD_HHMMSS.sql
 
 # Remove migration records
-psql -h localhost -U sensorvision_user -d sensorvision <<EOF
+psql -h localhost -U indcloud_user -d indcloud <<EOF
 DELETE FROM flyway_schema_history WHERE version IN ('50', '51');
 EOF
 ```
@@ -609,18 +609,18 @@ EOF
 
 ```bash
 # Restore previous JAR
-ln -sf /opt/sensorvision/backup/sensorvision_v1.5.0_YYYYMMDD.jar \
-       /opt/sensorvision/current.jar
+ln -sf /opt/indcloud/backup/indcloud_v1.5.0_YYYYMMDD.jar \
+       /opt/indcloud/current.jar
 
 # Restore previous frontend
-rm -rf /var/www/sensorvision/*
-cp -r /var/www/sensorvision_backup_YYYYMMDD/* /var/www/sensorvision/
+rm -rf /var/www/indcloud/*
+cp -r /var/www/indcloud_backup_YYYYMMDD/* /var/www/indcloud/
 ```
 
 ### 4. Start Application
 
 ```bash
-sudo systemctl start sensorvision
+sudo systemctl start indcloud
 sudo systemctl reload nginx
 ```
 
@@ -725,11 +725,11 @@ A: Minimal. Plugin Marketplace adds new tables but doesn't affect existing queri
 **Need Help?**
 
 - **Documentation**: [docs/](../docs/)
-- **GitHub Issues**: https://github.com/CodeFleck/sensorvision/issues
-- **Discussions**: https://github.com/CodeFleck/sensorvision/discussions
+- **GitHub Issues**: https://github.com/CodeFleck/indcloud/issues
+- **Discussions**: https://github.com/CodeFleck/indcloud/discussions
 
 ---
 
 **Migration Guide Version**: 1.0
 **Last Updated**: November 14, 2025
-**Target Version**: SensorVision v1.6.0
+**Target Version**: Industrial Cloud v1.6.0

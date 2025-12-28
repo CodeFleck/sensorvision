@@ -288,7 +288,7 @@ RuleModal.tsx (Updated)
 ## UI/UX Features
 
 ### Design Consistency
-- Matches existing SensorVision design system
+- Matches existing Industrial Cloud design system
 - Uses Tailwind CSS utility classes
 - Consistent color scheme (blue-600 primary, gray backgrounds)
 - Lucide React icons throughout

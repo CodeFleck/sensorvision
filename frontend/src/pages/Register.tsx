@@ -201,7 +201,7 @@ export const Register: React.FC = () => {
                 <Activity className="h-6 w-6 text-[#0969da]" />
               </div>
             </div>
-            <span className="text-xl font-semibold text-[#1f2328] tracking-tight">SensorVision</span>
+            <span className="text-xl font-semibold text-[#1f2328] tracking-tight">Industrial Cloud</span>
           </div>
 
           {/* Hero Content */}
@@ -277,7 +277,7 @@ export const Register: React.FC = () => {
               <div className="p-2 rounded-xl bg-gradient-to-br from-[#0969da]/10 to-[#14b8a6]/10 border border-[#0969da]/15">
                 <Activity className="h-6 w-6 text-[#0969da]" />
               </div>
-              <span className="text-xl font-semibold text-[#1f2328]">SensorVision</span>
+              <span className="text-xl font-semibold text-[#1f2328]">Industrial Cloud</span>
             </div>
 
             {/* Form Card */}

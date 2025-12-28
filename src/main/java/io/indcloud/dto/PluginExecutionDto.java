@@ -1,0 +1,17 @@
+package io.indcloud.dto;
+
+import io.indcloud.model.PluginExecutionStatus;
+
+import java.time.Instant;
+
+public record PluginExecutionDto(
+        Long id,
+        Long pluginId,
+        String pluginName,
+        Instant executedAt,
+        PluginExecutionStatus status,
+        Integer recordsProcessed,
+        String errorMessage,
+        Long durationMs
+) {
+}

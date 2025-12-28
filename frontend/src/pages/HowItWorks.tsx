@@ -228,7 +228,7 @@ const HowItWorks = () => {
           {/* Hero Section */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              How SensorVision Works
+              How Industrial Cloud Works
             </h1>
             <p className="text-xl text-gray-600 mb-8">
               Connect any device, collect telemetry data, and monitor in real-time in under 5 minutes
@@ -489,7 +489,7 @@ const HowItWorks = () => {
                 </p>
                 <CodeBlock
                   language="bash"
-                  code="pip install sensorvision-sdk"
+                  code="pip install indcloud-sdk"
                 />
 
                 <p className="text-sm text-gray-700 mb-3 mt-4">
@@ -497,7 +497,7 @@ const HowItWorks = () => {
                 </p>
                 <CodeBlock
                   language="python"
-                  code={`from sensorvision import SensorVisionClient, ClientConfig
+                  code={`from sensorvision import Industrial CloudClient, ClientConfig
 
 # Configure with retry logic
 config = ClientConfig(
@@ -508,7 +508,7 @@ config = ClientConfig(
     retry_delay=1.0
 )
 
-client = SensorVisionClient(config)
+client = Industrial CloudClient(config)
 
 # Send data
 data = {"temperature": 25.3, "humidity": 58}
@@ -518,7 +518,7 @@ print(f"Success: {response}")`}
 
                 <Callout type="info" title="Advanced Features">
                   <p>Configurable retry with exponential backoff, custom error handling, timestamp and context support</p>
-                  <a href="https://github.com/CodeFleck/sensorvision/tree/main/sensorvision-sdk" target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1 mt-2">
+                  <a href="https://github.com/CodeFleck/sensorvision/tree/main/indcloud-sdk" target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1 mt-2">
                     Full Python SDK Documentation <ExternalLink className="w-3 h-3" />
                   </a>
                 </Callout>
@@ -532,7 +532,7 @@ print(f"Success: {response}")`}
                 </p>
                 <CodeBlock
                   language="bash"
-                  code="npm install sensorvision-sdk-js"
+                  code="npm install indcloud-sdk-js"
                 />
 
                 <p className="text-sm text-gray-700 mb-3 mt-4">
@@ -540,9 +540,9 @@ print(f"Success: {response}")`}
                 </p>
                 <CodeBlock
                   language="javascript"
-                  code={`const { SensorVisionClient } = require('sensorvision-sdk-js');
+                  code={`const { Industrial CloudClient } = require('indcloud-sdk-js');
 
-const client = new SensorVisionClient({
+const client = new Industrial CloudClient({
   baseUrl: 'http://35.88.65.186:8080',
   deviceId: 'sensor-42',
   apiKey: 'abc123token'
@@ -560,9 +560,9 @@ await client.sendTelemetry({
                 </p>
                 <CodeBlock
                   language="html"
-                  code={`<script src="https://unpkg.com/sensorvision-sdk-js/dist/umd/sensorvision-sdk.min.js"></script>
+                  code={`<script src="https://unpkg.com/indcloud-sdk-js/dist/umd/indcloud-sdk.min.js"></script>
 <script>
-  const client = new SensorVisionSDK.SensorVisionClient({
+  const client = new Industrial CloudSDK.Industrial CloudClient({
     baseUrl: 'http://35.88.65.186:8080',
     deviceId: 'sensor-42',
     apiKey: 'abc123token'
@@ -573,7 +573,7 @@ await client.sendTelemetry({
                 />
 
                 <Callout type="info" title="Full Documentation">
-                  <a href="https://github.com/CodeFleck/sensorvision/tree/main/sensorvision-sdk-js" target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1">
+                  <a href="https://github.com/CodeFleck/sensorvision/tree/main/indcloud-sdk-js" target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1">
                     Full JavaScript SDK Documentation <ExternalLink className="w-3 h-3" />
                   </a>
                 </Callout>
@@ -667,7 +667,7 @@ void loop() {
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">JavaScript WebSocket Client</h4>
                 <CodeBlock
                   language="javascript"
-                  code={`const client = new SensorVisionClient({
+                  code={`const client = new Industrial CloudClient({
   baseUrl: 'http://35.88.65.186:8080',
   deviceId: 'sensor-42',
   apiKey: 'abc123token'
@@ -898,7 +898,7 @@ await client.disconnect();`}
             <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-cyan-500 pb-2">Platform Features</h2>
 
             <p className="text-gray-700 mb-6">
-              SensorVision is more than just data ingestion. Discover our comprehensive suite of enterprise-grade features designed to help you build, manage, and scale your IoT solution.
+              Industrial Cloud is more than just data ingestion. Discover our comprehensive suite of enterprise-grade features designed to help you build, manage, and scale your IoT solution.
             </p>
 
             {/* Device Management */}
@@ -968,7 +968,7 @@ await client.disconnect();`}
                     Serverless Functions
                   </h4>
                   <p className="text-gray-700 mb-4">
-                    Extend SensorVision with custom JavaScript code that runs in response to platform events. Write functions that process telemetry data, respond to alerts, run on schedules, or handle webhooks—without managing any infrastructure.
+                    Extend Industrial Cloud with custom JavaScript code that runs in response to platform events. Write functions that process telemetry data, respond to alerts, run on schedules, or handle webhooks—without managing any infrastructure.
                   </p>
 
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -1297,7 +1297,7 @@ export async function onAlert(event) {
 
             <div className="grid md:grid-cols-2 gap-4 mb-6">
               <a
-                href="https://github.com/CodeFleck/sensorvision/tree/main/sensorvision-sdk"
+                href="https://github.com/CodeFleck/sensorvision/tree/main/indcloud-sdk"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white border border-gray-200 rounded-lg p-4 hover:border-cyan-400 hover:shadow-md transition-all group"
@@ -1310,7 +1310,7 @@ export async function onAlert(event) {
               </a>
 
               <a
-                href="https://github.com/CodeFleck/sensorvision/tree/main/sensorvision-sdk-js"
+                href="https://github.com/CodeFleck/sensorvision/tree/main/indcloud-sdk-js"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white border border-gray-200 rounded-lg p-4 hover:border-cyan-400 hover:shadow-md transition-all group"

@@ -27,7 +27,7 @@ docker-compose ps
 
 ```bash
 # Publish test telemetry to create devices
-mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-001/telemetry" -m '{
+mosquitto_pub -h localhost -p 1883 -t "indcloud/devices/fleet-test-001/telemetry" -m '{
   "deviceId": "fleet-test-001",
   "timestamp": "2025-01-11T20:00:00Z",
   "variables": {
@@ -37,7 +37,7 @@ mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-001/telem
   }
 }'
 
-mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-002/telemetry" -m '{
+mosquitto_pub -h localhost -p 1883 -t "indcloud/devices/fleet-test-002/telemetry" -m '{
   "deviceId": "fleet-test-002",
   "timestamp": "2025-01-11T20:00:00Z",
   "variables": {
@@ -47,7 +47,7 @@ mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-002/telem
   }
 }'
 
-mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-003/telemetry" -m '{
+mosquitto_pub -h localhost -p 1883 -t "indcloud/devices/fleet-test-003/telemetry" -m '{
   "deviceId": "fleet-test-003",
   "timestamp": "2025-01-11T20:00:00Z",
   "variables": {
@@ -133,7 +133,7 @@ mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-003/telem
 **How to Trigger:**
 ```bash
 # Publish high consumption values to trigger the alert
-mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-001/telemetry" -m '{
+mosquitto_pub -h localhost -p 1883 -t "indcloud/devices/fleet-test-001/telemetry" -m '{
   "deviceId": "fleet-test-001",
   "timestamp": "2025-01-11T20:05:00Z",
   "variables": {
@@ -143,7 +143,7 @@ mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-001/telem
   }
 }'
 
-mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-002/telemetry" -m '{
+mosquitto_pub -h localhost -p 1883 -t "indcloud/devices/fleet-test-002/telemetry" -m '{
   "deviceId": "fleet-test-002",
   "timestamp": "2025-01-11T20:05:00Z",
   "variables": {
@@ -153,7 +153,7 @@ mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-002/telem
   }
 }'
 
-mosquitto_pub -h localhost -p 1883 -t "sensorvision/devices/fleet-test-003/telemetry" -m '{
+mosquitto_pub -h localhost -p 1883 -t "indcloud/devices/fleet-test-003/telemetry" -m '{
   "deviceId": "fleet-test-003",
   "timestamp": "2025-01-11T20:05:00Z",
   "variables": {

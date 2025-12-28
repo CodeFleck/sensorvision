@@ -244,7 +244,7 @@ export const LayoutV2 = ({ children }: LayoutProps) => {
               {/* Logo */}
               <div className="flex items-center space-x-2">
                 <Activity className="h-7 w-7 text-blue-600" />
-                <h1 className="text-lg font-bold text-gray-900">SensorVision</h1>
+                <h1 className="text-lg font-bold text-gray-900">Industrial Cloud</h1>
               </div>
 
               {/* Navigation Menu */}

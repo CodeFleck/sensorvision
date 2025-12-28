@@ -146,7 +146,7 @@ export const Settings = () => {
 
         <div className="space-y-4">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Choose how SensorVision looks to you. Select a theme that works best for your environment.
+            Choose how Industrial Cloud looks to you. Select a theme that works best for your environment.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -201,7 +201,7 @@ export const Settings = () => {
 
         <div className="space-y-4">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Configure how you want to receive notifications from SensorVision.
+            Configure how you want to receive notifications from Industrial Cloud.
           </p>
 
           <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700">

@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Industrial Cloud - The IoT Platform That Scales With You. Real-time monitoring, alerting, and analytics for industrial applications.">
+  <title>Industrial Cloud | IoT Platform for Industrial Monitoring</title>
+
+  <!-- Fonts: Clash Display + Satoshi -->
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       CSS CUSTOM PROPERTIES — INDUSTRIAL DARK THEME
+    ═══════════════════════════════════════════════════════════════ */
+    :root {
+      /* Core palette */
+      --bg-void: #000000;
+      --bg-surface: #0a0a0f;
+      --bg-elevated: #12121a;
+      --bg-card: #161620;
+
+      /* Accent spectrum */
+      --accent-primary: #00d4ff;
+      --accent-secondary: #6366f1;
+      --accent-glow: rgba(0, 212, 255, 0.15);
+      --accent-gradient: linear-gradient(135deg, #00d4ff 0%, #6366f1 50%, #8b5cf6 100%);
+
+      /* Text hierarchy */
+      --text-primary: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+
+      /* Effects */
+      --glow-strong: 0 0 60px rgba(0, 212, 255, 0.3);
+      --glow-subtle: 0 0 30px rgba(0, 212, 255, 0.15);
+      --border-subtle: rgba(255, 255, 255, 0.06);
+
+      /* Typography scale */
+      --font-display: 'Clash Display', sans-serif;
+      --font-body: 'Satoshi', sans-serif;
+
+      /* Spacing */
+      --section-padding: clamp(4rem, 10vw, 8rem);
+      --container-max: 1280px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-void);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ANIMATED MESH GRADIENT BACKGROUND
+    ═══════════════════════════════════════════════════════════════ */
+    .mesh-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 60% at 60% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+        var(--bg-void);
+      animation: meshPulse 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes meshPulse {
+      0% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+
+    /* Grain texture overlay */
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LAYOUT UTILITIES
+    ═══════════════════════════════════════════════════════════════ */
+    .container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 clamp(1.5rem, 5vw, 3rem);
+    }
+
+    section {
+      padding: var(--section-padding) 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NAVIGATION
+    ═══════════════════════════════════════════════════════════════ */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1.25rem 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: all 0.3s ease;
+    }
+
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav__logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+    }
+
+    .nav__logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-gradient);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--glow-subtle);
+    }
+
+    .nav__logo-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--bg-void);
+    }
+
+    .nav__logo-text {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .nav__links {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav__link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .nav__link:hover {
+      color: var(--text-primary);
+    }
+
+    .nav__cta {
+      padding: 0.625rem 1.25rem;
+      background: var(--accent-gradient);
+      color: var(--bg-void);
+      font-weight: 600;
+      font-size: 0.875rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .nav__cta:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glow-strong);
+    }
+
+    /* Mobile nav toggle */
+    .nav__toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .nav__toggle span {
+      width: 24px;
+      height: 2px;
+      background: var(--text-primary);
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) {
+      .nav__toggle {
+        display: flex;
+      }
+
+      .nav__links {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(20px);
+        padding: 2rem;
+        gap: 1.5rem;
+        transform: translateY(-100%);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s ease;
+      }
+
+      .nav__links.active {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: all;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HERO SECTION
+    ═══════════════════════════════════════════════════════════════ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: 6rem;
+      position: relative;
+    }
+
+    .hero__content {
+      max-width: 800px;
+    }
+
+    .hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .hero__badge-dot {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .hero__title {
+      font-family: var(--font-display);
+      font-size: clamp(2.75rem, 8vw, 5rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.8s ease 0.1s forwards;
+      opacity: 0;
+    }
+
+    .hero__title-gradient {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero__subtitle {
+      font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin-bottom: 2.5rem;
+      animation: fadeInUp 0.8s ease 0.2s forwards;
+      opacity: 0;
+    }
+
+    .hero__actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.8s ease 0.3s forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 2rem;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn--primary {
+      background: var(--accent-gradient);
+      color: var(--bg-void);
+      box-shadow: var(--glow-subtle);
+    }
+
+    .btn--primary:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--glow-strong);
+    }
+
+    .btn--secondary {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn--secondary:hover {
+      background: var(--bg-card);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Hero visual */
+    .hero__visual {
+      position: absolute;
+      right: -10%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 55%;
+      max-width: 700px;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    @media (max-width: 1024px) {
+      .hero__visual {
+        display: none;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FEATURES SECTION
+    ═══════════════════════════════════════════════════════════════ */
+    .features {
+      background: var(--bg-surface);
+      position: relative;
+    }
+
+    .features::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+    }
+
+    .section__header {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto 4rem;
+    }
+
+    .section__label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent-primary);
+      margin-bottom: 1rem;
+    }
+
+    .section__title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    .section__desc {
+      color: var(--text-secondary);
+      font-size: 1.125rem;
+    }
+
+    .features__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent-gradient);
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(0, 212, 255, 0.2);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .feature-card__icon {
+      width: 56px;
+      height: 56px;
+      background: var(--accent-glow);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-card__icon svg {
+      width: 28px;
+      height: 28px;
+      stroke: var(--accent-primary);
+      fill: none;
+      stroke-width: 1.5;
+    }
+
+    .feature-card__title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-card__desc {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CODE SECTION
+    ═══════════════════════════════════════════════════════════════ */
+    .code-section {
+      position: relative;
+    }
+
+    .code__layout {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    @media (max-width: 968px) {
+      .code__layout {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+      }
+    }
+
+    .code__content {
+      max-width: 500px;
+    }
+
+    .code__tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .code__tab {
+      padding: 0.625rem 1.25rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .code__tab.active {
+      background: var(--accent-glow);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .code__block {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .code__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .code__dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .code__dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .code__dot--red { background: #ff5f57; }
+    .code__dot--yellow { background: #febc2e; }
+    .code__dot--green { background: #28c840; }
+
+    .code__filename {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .code__copy {
+      padding: 0.375rem 0.75rem;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .code__copy:hover {
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    .code__pre {
+      padding: 1.5rem;
+      overflow-x: auto;
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+
+    .code__pre code {
+      display: none;
+    }
+
+    .code__pre code.active {
+      display: block;
+    }
+
+    /* Syntax highlighting */
+    .code__pre .keyword { color: #c792ea; }
+    .code__pre .string { color: #c3e88d; }
+    .code__pre .comment { color: #546e7a; }
+    .code__pre .function { color: #82aaff; }
+    .code__pre .variable { color: #f78c6c; }
+    .code__pre .class { color: #ffcb6b; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CTA SECTION
+    ═══════════════════════════════════════════════════════════════ */
+    .cta {
+      text-align: center;
+      position: relative;
+    }
+
+    .cta__box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+      padding: clamp(3rem, 8vw, 5rem);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta__box::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 50%);
+      animation: rotateBg 20s linear infinite;
+    }
+
+    @keyframes rotateBg {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .cta__content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta__title {
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .cta__desc {
+      color: var(--text-secondary);
+      font-size: 1.125rem;
+      margin-bottom: 2rem;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta__actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════════════════════════ */
+    .footer {
+      padding: 3rem 0;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .footer__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .footer__brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .footer__logo {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-gradient);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer__logo svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--bg-void);
+    }
+
+    .footer__name {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .footer__links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .footer__link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s ease;
+    }
+
+    .footer__link:hover {
+      color: var(--text-primary);
+    }
+
+    .footer__social {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .footer__social-link {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+
+    .footer__social-link:hover {
+      background: var(--accent-glow);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .footer__social-link svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .footer__copy {
+      width: 100%;
+      text-align: center;
+      padding-top: 2rem;
+      margin-top: 2rem;
+      border-top: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       REDUCED MOTION
+    ═══════════════════════════════════════════════════════════════ */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      html {
+        scroll-behavior: auto;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FOCUS STYLES (Accessibility)
+    ═══════════════════════════════════════════════════════════════ */
+    :focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 3px;
+    }
+
+    button:focus:not(:focus-visible),
+    a:focus:not(:focus-visible) {
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Grain texture overlay -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Mesh gradient background -->
+  <div class="mesh-bg" aria-hidden="true"></div>
+
+  <!-- Navigation -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="container nav__inner">
+      <a href="#" class="nav__logo" aria-label="Industrial Cloud Home">
+        <div class="nav__logo-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l6.9 3.45L12 11.09 5.1 7.63 12 4.18zM4 8.82l7 3.5v6.86l-7-3.5V8.82zm9 10.36v-6.86l7-3.5v6.86l-7 3.5z"/>
+          </svg>
+        </div>
+        <span class="nav__logo-text">Industrial Cloud</span>
+      </a>
+
+      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nav__links">
+        <li><a href="#features" class="nav__link">Features</a></li>
+        <li><a href="#quickstart" class="nav__link">Quick Start</a></li>
+        <li><a href="https://github.com/indcloud/indcloud" class="nav__link">GitHub</a></li>
+        <li><a href="#" class="nav__link">Docs</a></li>
+        <li><a href="#" class="nav__cta">Get Started</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero__content">
+        <div class="hero__badge">
+          <span class="hero__badge-dot" aria-hidden="true"></span>
+          Now in public beta
+        </div>
+
+        <h1 class="hero__title">
+          The IoT Platform<br>
+          <span class="hero__title-gradient">That Scales With You</span>
+        </h1>
+
+        <p class="hero__subtitle">
+          Real-time monitoring, intelligent alerting, and powerful analytics for industrial applications. Connect devices in minutes with our Python and JavaScript SDKs.
+        </p>
+
+        <div class="hero__actions">
+          <a href="#" class="btn btn--primary">
+            Get Started Free
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a href="#" class="btn btn--secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M9 12h6M12 9v6M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            View Documentation
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Abstract hero visual -->
+    <svg class="hero__visual" viewBox="0 0 600 500" aria-hidden="true">
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.3" />
+          <stop offset="100%" style="stop-color:#6366f1;stop-opacity:0.1" />
+        </linearGradient>
+      </defs>
+      <circle cx="300" cy="250" r="200" fill="none" stroke="url(#grad1)" stroke-width="0.5"/>
+      <circle cx="300" cy="250" r="150" fill="none" stroke="url(#grad1)" stroke-width="0.5"/>
+      <circle cx="300" cy="250" r="100" fill="none" stroke="url(#grad1)" stroke-width="0.5"/>
+      <circle cx="300" cy="250" r="8" fill="#00d4ff"/>
+      <circle cx="450" cy="200" r="4" fill="#6366f1"/>
+      <circle cx="200" cy="350" r="4" fill="#8b5cf6"/>
+      <circle cx="400" cy="350" r="4" fill="#00d4ff"/>
+      <line x1="300" y1="250" x2="450" y2="200" stroke="url(#grad1)" stroke-width="0.5"/>
+      <line x1="300" y1="250" x2="200" y2="350" stroke="url(#grad1)" stroke-width="0.5"/>
+      <line x1="300" y1="250" x2="400" y2="350" stroke="url(#grad1)" stroke-width="0.5"/>
+    </svg>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="container">
+      <header class="section__header">
+        <p class="section__label">Capabilities</p>
+        <h2 class="section__title">Everything you need to monitor at scale</h2>
+        <p class="section__desc">From sensor data ingestion to intelligent alerts, Industrial Cloud provides the complete toolkit for industrial IoT applications.</p>
+      </header>
+
+      <div class="features__grid">
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title">Real-time Monitoring</h3>
+          <p class="feature-card__desc">Stream telemetry data with sub-second latency. WebSocket connections deliver live updates directly to your dashboards.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title">Rules & Alerting</h3>
+          <p class="feature-card__desc">Define threshold-based rules with intelligent cooldown. Get notified via email, webhook, or custom integrations.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title">Analytics Dashboard</h3>
+          <p class="feature-card__desc">Aggregate data with MIN, MAX, AVG, and SUM operations. Visualize trends with customizable time intervals.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-card__icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M16 18l2-2v-3M8 6L6 8v3M17 6l2 2v3M7 18l-2-2v-3M12 3v3M12 18v3M3 12h3M18 12h3"/>
+              <circle cx="12" cy="12" r="4"/>
+            </svg>
+          </div>
+          <h3 class="feature-card__title">SDK Integrations</h3>
+          <p class="feature-card__desc">Production-ready Python and JavaScript SDKs with automatic retry, batch ingestion, and comprehensive error handling.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Code Section -->
+  <section class="code-section" id="quickstart">
+    <div class="container">
+      <div class="code__layout">
+        <div class="code__content">
+          <p class="section__label">Quick Start</p>
+          <h2 class="section__title">Connect your first device in minutes</h2>
+          <p class="section__desc" style="margin-bottom: 2rem;">
+            Our SDKs handle authentication, retries, and connection management so you can focus on your application logic.
+          </p>
+
+          <div class="code__tabs">
+            <button class="code__tab active" data-lang="python">Python</button>
+            <button class="code__tab" data-lang="javascript">JavaScript</button>
+          </div>
+        </div>
+
+        <div class="code__block">
+          <div class="code__header">
+            <div class="code__dots">
+              <span class="code__dot code__dot--red"></span>
+              <span class="code__dot code__dot--yellow"></span>
+              <span class="code__dot code__dot--green"></span>
+            </div>
+            <span class="code__filename">quickstart.py</span>
+            <button class="code__copy" aria-label="Copy code">Copy</button>
+          </div>
+          <pre class="code__pre"><code class="active" data-lang="python"><span class="comment"># Install: pip install indcloud-sdk</span>
+<span class="keyword">from</span> indcloud <span class="keyword">import</span> <span class="class">IndCloudClient</span>
+
+<span class="comment"># Initialize client with your API key</span>
+client = <span class="class">IndCloudClient</span>(
+    base_url=<span class="string">"https://api.indcloud.io"</span>,
+    api_key=<span class="string">"your-api-key"</span>
+)
+
+<span class="comment"># Send telemetry data</span>
+client.<span class="function">send_telemetry</span>(
+    device_id=<span class="string">"sensor-001"</span>,
+    variables={
+        <span class="string">"temperature"</span>: <span class="variable">23.5</span>,
+        <span class="string">"humidity"</span>: <span class="variable">65.0</span>,
+        <span class="string">"pressure"</span>: <span class="variable">1013.25</span>
+    }
+)</code><code data-lang="javascript"><span class="comment">// Install: npm install indcloud-sdk</span>
+<span class="keyword">import</span> { <span class="class">IndCloudClient</span> } <span class="keyword">from</span> <span class="string">'indcloud-sdk'</span>;
+
+<span class="comment">// Initialize client with your API key</span>
+<span class="keyword">const</span> client = <span class="keyword">new</span> <span class="class">IndCloudClient</span>({
+  baseUrl: <span class="string">'https://api.indcloud.io'</span>,
+  apiKey: <span class="string">'your-api-key'</span>
+});
+
+<span class="comment">// Send telemetry data</span>
+<span class="keyword">await</span> client.<span class="function">sendTelemetry</span>({
+  deviceId: <span class="string">'sensor-001'</span>,
+  variables: {
+    temperature: <span class="variable">23.5</span>,
+    humidity: <span class="variable">65.0</span>,
+    pressure: <span class="variable">1013.25</span>
+  }
+});</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <div class="container">
+      <div class="cta__box">
+        <div class="cta__content">
+          <h2 class="cta__title">Ready to scale your IoT infrastructure?</h2>
+          <p class="cta__desc">Join hundreds of developers building industrial applications with Industrial Cloud.</p>
+          <div class="cta__actions">
+            <a href="#" class="btn btn--primary">Start Building Free</a>
+            <a href="mailto:support@indcloud.io" class="btn btn--secondary">Contact Sales</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <div class="footer__logo">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.18l6.9 3.45L12 11.09 5.1 7.63 12 4.18zM4 8.82l7 3.5v6.86l-7-3.5V8.82zm9 10.36v-6.86l7-3.5v6.86l-7 3.5z"/>
+            </svg>
+          </div>
+          <span class="footer__name">Industrial Cloud</span>
+        </div>
+
+        <ul class="footer__links">
+          <li><a href="#" class="footer__link">Documentation</a></li>
+          <li><a href="#" class="footer__link">API Reference</a></li>
+          <li><a href="mailto:support@indcloud.io" class="footer__link">Support</a></li>
+          <li><a href="#" class="footer__link">Status</a></li>
+        </ul>
+
+        <div class="footer__social">
+          <a href="https://github.com/indcloud" class="footer__social-link" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+          </a>
+          <a href="https://twitter.com/indcloud" class="footer__social-link" aria-label="Twitter">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <p class="footer__copy">
+        &copy; 2025 Industrial Cloud. All rights reserved.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile navigation toggle
+    const navToggle = document.querySelector('.nav__toggle');
+    const navLinks = document.querySelector('.nav__links');
+
+    navToggle?.addEventListener('click', () => {
+      const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
+      navToggle.setAttribute('aria-expanded', !isExpanded);
+      navLinks.classList.toggle('active');
+    });
+
+    // Code tabs switching
+    const codeTabs = document.querySelectorAll('.code__tab');
+    const codeBlocks = document.querySelectorAll('.code__pre code');
+    const filenameEl = document.querySelector('.code__filename');
+
+    codeTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const lang = tab.dataset.lang;
+
+        // Update active tab
+        codeTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Update visible code
+        codeBlocks.forEach(block => {
+          block.classList.toggle('active', block.dataset.lang === lang);
+        });
+
+        // Update filename
+        filenameEl.textContent = lang === 'python' ? 'quickstart.py' : 'quickstart.js';
+      });
+    });
+
+    // Copy code functionality
+    const copyBtn = document.querySelector('.code__copy');
+    copyBtn?.addEventListener('click', async () => {
+      const activeCode = document.querySelector('.code__pre code.active');
+      const text = activeCode.textContent;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Close mobile nav if open
+          navLinks.classList.remove('active');
+          navToggle?.setAttribute('aria-expanded', 'false');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

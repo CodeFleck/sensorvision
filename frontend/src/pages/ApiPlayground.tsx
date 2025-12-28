@@ -352,7 +352,7 @@ const ApiPlayground: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">API Request Playground</h1>
               <p className="text-gray-600 mt-1">
-                Test and explore SensorVision API endpoints interactively
+                Test and explore Industrial Cloud API endpoints interactively
               </p>
             </div>
             <div className="flex items-center space-x-2">
@@ -385,7 +385,7 @@ const ApiPlayground: React.FC = () => {
                 <div>
                   <h3 className="font-semibold mb-2">What is the API Playground?</h3>
                   <p>
-                    The API Playground is an interactive tool for testing and exploring SensorVision&apos;s REST API
+                    The API Playground is an interactive tool for testing and exploring Industrial Cloud&apos;s REST API
                     endpoints. It allows you to make HTTP requests directly from the browser without writing code,
                     making it perfect for debugging, learning the API, or building integration prototypes.
                   </p>

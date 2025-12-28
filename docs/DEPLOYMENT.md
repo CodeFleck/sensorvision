@@ -1,7 +1,7 @@
 # Production Deployment Guide
 
 ## Overview
-This guide covers deploying SensorVision to production with feature flags for SMS and email notifications.
+This guide covers deploying Industrial Cloud to production with feature flags for SMS and email notifications.
 
 ## Pre-Deployment Checklist
 
@@ -35,13 +35,13 @@ SMS_ENABLED=true
 
 ### 2. Build Docker Image
 ```bash
-docker build -t sensorvision:latest .
+docker build -t indcloud:latest .
 ```
 
 ### 3. Push to Registry
 ```bash
-docker tag sensorvision:latest your-registry/sensorvision:latest
-docker push your-registry/sensorvision:latest
+docker tag indcloud:latest your-registry/indcloud:latest
+docker push your-registry/indcloud:latest
 ```
 
 ### 4. Deploy to Production
@@ -101,7 +101,7 @@ docker-compose restart app
 ```bash
 # Revert to previous version
 docker-compose down
-docker-compose -f docker-compose.prod.yml up -d your-registry/sensorvision:previous-tag
+docker-compose -f docker-compose.prod.yml up -d your-registry/indcloud:previous-tag
 ```
 
 ## Monitoring
@@ -114,10 +114,10 @@ docker-compose -f docker-compose.prod.yml up -d your-registry/sensorvision:previ
 ### Log Monitoring
 ```bash
 # Watch for feature flag messages
-docker logs -f sensorvision | grep "feature flag"
+docker logs -f indcloud | grep "feature flag"
 
 # Watch for notification errors
-docker logs -f sensorvision | grep "notification.*ERROR"
+docker logs -f indcloud | grep "notification.*ERROR"
 ```
 
 ## Troubleshooting

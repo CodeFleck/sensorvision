@@ -64,16 +64,16 @@ There are untracked WIP files from Issues #81 and #82 that prevent compilation:
 ```bash
 # Create WIP branch for Global Rules/Plugins work
 git checkout -b feature/global-rules-wip
-git add src/main/java/org/sensorvision/controller/Global*
-git add src/main/java/org/sensorvision/controller/PluginMarketplace*
-git add src/main/java/org/sensorvision/service/Global*
-git add src/main/java/org/sensorvision/service/FleetAggregator*
-git add src/main/java/org/sensorvision/model/Global*
-git add src/main/java/org/sensorvision/model/*Plugin*
-git add src/main/java/org/sensorvision/dto/Global*
-git add src/main/java/org/sensorvision/dto/*Plugin*
-git add src/main/java/org/sensorvision/repository/Global*
-git add src/main/java/org/sensorvision/repository/*Plugin*
+git add src/main/java/org/indcloud/controller/Global*
+git add src/main/java/org/indcloud/controller/PluginMarketplace*
+git add src/main/java/org/indcloud/service/Global*
+git add src/main/java/org/indcloud/service/FleetAggregator*
+git add src/main/java/org/indcloud/model/Global*
+git add src/main/java/org/indcloud/model/*Plugin*
+git add src/main/java/org/indcloud/dto/Global*
+git add src/main/java/org/indcloud/dto/*Plugin*
+git add src/main/java/org/indcloud/repository/Global*
+git add src/main/java/org/indcloud/repository/*Plugin*
 git commit -m "WIP: Global Rules and Plugin Marketplace (incomplete)"
 
 # Return to SMS branch
@@ -122,7 +122,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
-EMAIL_FROM=noreply@sensorvision.com
+EMAIL_FROM=noreply@indcloud.com
 ```
 
 **Note**: For Gmail, use an [App Password](https://support.google.com/accounts/answer/185833), not your regular password.
@@ -281,8 +281,8 @@ SMTP_PASSWORD=your_ses_smtp_password
 EMAIL_FROM=noreply@yourcompany.com
 
 # Database
-DATABASE_URL=jdbc:postgresql://prod-db:5432/sensorvision
-DATABASE_USERNAME=sensorvision_user
+DATABASE_URL=jdbc:postgresql://prod-db:5432/indcloud
+DATABASE_USERNAME=indcloud_user
 DATABASE_PASSWORD=secure_password
 ```
 
@@ -295,13 +295,13 @@ DATABASE_PASSWORD=secure_password
 cd frontend && npm run build
 
 # Deploy backend JAR
-scp build/libs/sensorvision-*.jar staging-server:/opt/sensorvision/
+scp build/libs/indcloud-*.jar staging-server:/opt/indcloud/
 
 # Deploy frontend build
-rsync -avz frontend/dist/ staging-server:/var/www/sensorvision/
+rsync -avz frontend/dist/ staging-server:/var/www/indcloud/
 
 # Restart services
-ssh staging-server "systemctl restart sensorvision"
+ssh staging-server "systemctl restart indcloud"
 ```
 
 #### 6.2 Staging Tests
@@ -328,7 +328,7 @@ ssh staging-server "systemctl restart sensorvision"
 #### 7.2 Deployment Steps
 ```bash
 # 1. Create database backup
-pg_dump -h prod-db sensorvision > backup_$(date +%Y%m%d).sql
+pg_dump -h prod-db indcloud > backup_$(date +%Y%m%d).sql
 
 # 2. Apply migrations
 ./gradlew flywayMigrate -Dspring.profiles.active=production
@@ -537,8 +537,8 @@ WHERE organization_id = 1;
 - AWS SES Docs: https://docs.aws.amazon.com/ses/
 
 ### Contact
-- GitHub Issues: https://github.com/CodeFleck/sensorvision/issues/88
-- Email: admin@sensorvision.com
+- GitHub Issues: https://github.com/CodeFleck/indcloud/issues/88
+- Email: admin@indcloud.com
 
 ---
 
