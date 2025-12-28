@@ -1,4 +1,4 @@
-# SensorVision Deployment History
+# Industrial Cloud Deployment History
 
 Complete history of all production deployments, procedures, and operational guidelines.
 
@@ -21,7 +21,7 @@ Complete history of all production deployments, procedures, and operational guid
 
 ### 2025-10-28 - Canned Responses System for Admin Efficiency
 
-**PR**: [#26](https://github.com/CodeFleck/sensorvision/pull/26)
+**PR**: [#26](https://github.com/CodeFleck/indcloud/pull/26)
 **Commit**: dc9d0469
 **Deployed**: 2025-10-28 20:04 UTC
 **Status**: ✅ SUCCESS
@@ -60,7 +60,7 @@ Complete history of all production deployments, procedures, and operational guid
 
 ### 2025-10-28 - Comprehensive Support Ticket System
 
-**PR**: [#25](https://github.com/CodeFleck/sensorvision/pull/25)
+**PR**: [#25](https://github.com/CodeFleck/indcloud/pull/25)
 **Commit**: 8d9e3653
 **Deployed**: 2025-10-28 05:01 UTC
 **Status**: ✅ SUCCESS
@@ -104,7 +104,7 @@ Complete history of all production deployments, procedures, and operational guid
 
 ### 2025-10-26 - WebSocket & API Improvements
 
-**PR**: [#18](https://github.com/CodeFleck/sensorvision/pull/18)
+**PR**: [#18](https://github.com/CodeFleck/indcloud/pull/18)
 **Commit**: 34d57798
 **Deployed**: 2025-10-26 22:50 UTC
 **Status**: ✅ SUCCESS
@@ -163,7 +163,7 @@ If automated deployment fails:
 ssh -i ~/.ssh/deploy_key ec2-user@35.88.65.186
 
 # 2. Navigate to application directory
-cd /home/ec2-user/sensorvision
+cd /home/ec2-user/indcloud
 
 # 3. Pull latest changes
 git pull origin main
@@ -199,7 +199,7 @@ If deployment causes issues:
 ssh -i ~/.ssh/deploy_key ec2-user@35.88.65.186
 
 # 2. Navigate to application directory
-cd /home/ec2-user/sensorvision
+cd /home/ec2-user/indcloud
 
 # 3. Checkout previous stable commit
 git checkout <previous-commit-hash>
@@ -248,7 +248,7 @@ icacls "C:\path\to\key.pem" /grant:r "$($env:USERNAME):(R)"
 ```bash
 # SSH into server and check logs
 ssh -i "C:\path\to\key.pem" ec2-user@35.88.65.186
-cd /home/ec2-user/sensorvision
+cd /home/ec2-user/indcloud
 docker-compose -f docker-compose.production.yml logs backend --tail=100
 
 # Restart backend if needed

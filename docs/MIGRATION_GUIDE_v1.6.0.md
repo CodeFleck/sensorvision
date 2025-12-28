@@ -222,7 +222,7 @@ docker-compose logs -f indcloud
 
 # Look for these key messages:
 # ✅ "Flyway: Successfully applied 2 migrations"
-# ✅ "Started SensorvisionApplication in X seconds"
+# ✅ "Started IndcloudApplication in X seconds"
 # ❌ No ERROR logs
 ```
 

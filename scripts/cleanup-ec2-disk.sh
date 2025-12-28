@@ -1,11 +1,11 @@
 #!/bin/bash
-# EC2 Disk Cleanup Script for SensorVision
+# EC2 Disk Cleanup Script for Industrial Cloud
 # Run this script on the EC2 instance to free up disk space before deployment
 
 set -e
 
 echo "======================================"
-echo "SensorVision EC2 Disk Cleanup"
+echo "Industrial Cloud EC2 Disk Cleanup"
 echo "======================================"
 
 # Show current disk usage
@@ -43,7 +43,7 @@ echo "Docker build cache cleaned!"
 # 5. Remove old backups (keep only last 3)
 echo ""
 echo "[5/6] Cleaning up old backups..."
-BACKUP_DIR="$HOME/sensorvision/backups"
+BACKUP_DIR="$HOME/indcloud/backups"
 if [ -d "$BACKUP_DIR" ]; then
     cd "$BACKUP_DIR"
     # List backups sorted by date, keep last 3

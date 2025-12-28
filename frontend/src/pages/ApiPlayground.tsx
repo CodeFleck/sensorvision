@@ -365,7 +365,7 @@ const ApiPlayground: React.FC = () => {
                 {showHelp ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
               <a
-                href="https://github.com/CodeFleck/sensorvision"
+                href="https://github.com/indcloud/indcloud"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"

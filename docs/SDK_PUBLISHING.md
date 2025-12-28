@@ -430,12 +430,12 @@ Before publishing a new version:
 
 ### PyPI Package Name
 - **Package**: `indcloud-sdk`
-- **Import**: `from indcloud import Industrial CloudClient`
+- **Import**: `from indcloud import IndCloudClient`
 - **URL**: https://pypi.org/project/indcloud-sdk/
 
 ### npm Package Name
 - **Package**: `indcloud-sdk`
-- **Import**: `import { Industrial CloudClient } from 'indcloud-sdk'`
+- **Import**: `import { IndCloudClient } from 'indcloud-sdk'`
 - **URL**: https://www.npmjs.com/package/indcloud-sdk
 
 ### Scoped Packages (Alternative)

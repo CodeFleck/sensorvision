@@ -94,8 +94,8 @@ GET /api/v1/plugins
     "iconUrl": "https://www.thethingsnetwork.org/docs/lorawan/icon.svg",
     "repositoryUrl": "https://github.com/CodeFleck/indcloud",
     "documentationUrl": "https://github.com/CodeFleck/indcloud/blob/main/docs/LORAWAN_TTN_INTEGRATION.md",
-    "minSensorvisionVersion": "1.0.0",
-    "maxSensorvisionVersion": null,
+    "minIndcloudVersion": "1.0.0",
+    "maxIndcloudVersion": null,
     "isOfficial": true,
     "isVerified": true,
     "installationCount": 25,
@@ -817,8 +817,8 @@ curl -X GET http://localhost:8080/api/v1/plugins/lorawan-ttn/ratings \
   iconUrl?: string;            // Plugin icon
   repositoryUrl?: string;      // Source code repository
   documentationUrl?: string;   // Documentation link
-  minSensorvisionVersion?: string;  // Minimum required version
-  maxSensorvisionVersion?: string;  // Maximum compatible version
+  minIndcloudVersion?: string;  // Minimum required version
+  maxIndcloudVersion?: string;  // Maximum compatible version
   isOfficial: boolean;         // Official Industrial Cloud plugin
   isVerified: boolean;         // Verified by team
   installationCount: number;   // Total installations

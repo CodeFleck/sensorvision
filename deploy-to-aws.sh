@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #########################################################
-# SensorVision AWS Deployment Script
+# Industrial Cloud AWS Deployment Script
 # This script automates the deployment to AWS EC2
 #########################################################
 
@@ -15,13 +15,13 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-APP_NAME="sensorvision"
+APP_NAME="indcloud"
 AWS_REGION="us-east-1"
 INSTANCE_TYPE="t3.medium"
-KEY_NAME="sensorvision-key"
+KEY_NAME="indcloud-key"
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}SensorVision AWS Deployment Script${NC}"
+echo -e "${BLUE}Industrial Cloud AWS Deployment Script${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 

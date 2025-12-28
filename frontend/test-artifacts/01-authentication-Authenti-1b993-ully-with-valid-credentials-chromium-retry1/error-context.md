@@ -1,192 +1,71 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e4]:
-  - generic [ref=e5]:
-    - generic [ref=e8]:
-      - img [ref=e9]
-      - heading "SensorVision" [level=1] [ref=e11]
-    - navigation [ref=e12]:
-      - generic [ref=e13]:
-        - button "CORE" [ref=e14] [cursor=pointer]:
-          - img [ref=e15]
-          - generic [ref=e18]: CORE
-          - img [ref=e19]
-        - generic [ref=e22]:
-          - link "Dashboard" [ref=e23] [cursor=pointer]:
-            - /url: /
-            - img [ref=e24]
-            - generic [ref=e27]: Dashboard
-          - link "Widget Dashboards" [ref=e28] [cursor=pointer]:
-            - /url: /dashboards
-            - img [ref=e29]
-            - generic [ref=e34]: Widget Dashboards
-          - link "Analytics" [ref=e35] [cursor=pointer]:
-            - /url: /analytics
-            - img [ref=e36]
-            - generic [ref=e38]: Analytics
-      - generic [ref=e40]:
-        - button "DEVICES & DATA" [ref=e41] [cursor=pointer]:
-          - img [ref=e42]
-          - generic [ref=e45]: DEVICES & DATA
-          - img [ref=e46]
-        - generic [ref=e49]:
-          - link "Devices" [ref=e50] [cursor=pointer]:
-            - /url: /devices
-            - img [ref=e51]
-            - generic [ref=e54]: Devices
-          - link "Device Groups" [ref=e55] [cursor=pointer]:
-            - /url: /device-groups
-            - img [ref=e56]
-            - generic [ref=e61]: Device Groups
-          - link "Device Tags" [ref=e62] [cursor=pointer]:
-            - /url: /device-tags
-            - img [ref=e63]
-            - generic [ref=e65]: Device Tags
-          - link "Integration Wizard" [ref=e66] [cursor=pointer]:
-            - /url: /integration-wizard
-            - img [ref=e67]
-            - generic [ref=e69]: Integration Wizard
-          - link "Serverless Functions" [ref=e70] [cursor=pointer]:
-            - /url: /serverless-functions
-            - img [ref=e71]
-            - generic [ref=e74]: Serverless Functions
-          - link "Data Plugins" [ref=e75] [cursor=pointer]:
-            - /url: /data-plugins
-            - img [ref=e76]
-            - generic [ref=e78]: Data Plugins
-          - link "Plugin Marketplace" [ref=e79] [cursor=pointer]:
-            - /url: /plugin-marketplace
-            - img [ref=e80]
-            - generic [ref=e85]: Plugin Marketplace
-      - generic [ref=e87]:
-        - button "MONITORING" [ref=e88] [cursor=pointer]:
-          - img [ref=e89]
-          - generic [ref=e91]: MONITORING
-          - img [ref=e92]
-        - generic [ref=e95]:
-          - link "Rules" [ref=e96] [cursor=pointer]:
-            - /url: /rules
-            - img [ref=e97]
-            - generic [ref=e100]: Rules
-          - link "Global Rules" [ref=e101] [cursor=pointer]:
-            - /url: /global-rules
-            - img [ref=e102]
-            - generic [ref=e107]: Global Rules
-          - link "Alerts" [ref=e108] [cursor=pointer]:
-            - /url: /alerts
-            - img [ref=e109]
-            - generic [ref=e111]: Alerts
-          - link "Notifications" [ref=e112] [cursor=pointer]:
-            - /url: /notifications
-            - img [ref=e113]
-            - generic [ref=e116]: Notifications
-          - link "Plugin Marketplace" [ref=e117] [cursor=pointer]:
-            - /url: /plugins
-            - img [ref=e118]
-            - generic [ref=e122]: Plugin Marketplace
-          - link "Phone Numbers" [ref=e123] [cursor=pointer]:
-            - /url: /phone-numbers
-            - img [ref=e124]
-            - generic [ref=e126]: Phone Numbers
-          - link "SMS Settings" [ref=e127] [cursor=pointer]:
-            - /url: /sms-settings
-            - img [ref=e128]
-            - generic [ref=e130]: SMS Settings
-          - link "Events" [ref=e131] [cursor=pointer]:
-            - /url: /events
-            - img [ref=e132]
-            - generic [ref=e135]: Events
-      - generic [ref=e137]:
-        - button "DATA MANAGEMENT" [ref=e138] [cursor=pointer]:
-          - img [ref=e139]
-          - generic [ref=e143]: DATA MANAGEMENT
-          - img [ref=e144]
-        - generic [ref=e147]:
-          - link "Data Ingestion" [ref=e148] [cursor=pointer]:
-            - /url: /data-ingestion
-            - img [ref=e149]
-            - generic [ref=e152]: Data Ingestion
-          - link "Data Import" [ref=e153] [cursor=pointer]:
-            - /url: /data-import
-            - img [ref=e154]
-            - generic [ref=e158]: Data Import
-          - link "Data Export" [ref=e159] [cursor=pointer]:
-            - /url: /data-export
-            - img [ref=e160]
-            - generic [ref=e163]: Data Export
-          - link "Variables" [ref=e164] [cursor=pointer]:
-            - /url: /variables
-            - img [ref=e165]
-            - generic [ref=e169]: Variables
-          - link "Data Retention" [ref=e170] [cursor=pointer]:
-            - /url: /data-retention
-            - img [ref=e171]
-            - generic [ref=e174]: Data Retention
-          - link "Webhook Tester" [ref=e175] [cursor=pointer]:
-            - /url: /webhook-tester
-            - img [ref=e176]
-            - generic [ref=e180]: Webhook Tester
-          - link "API Playground" [ref=e181] [cursor=pointer]:
-            - /url: /api-playground
-            - img [ref=e182]
-            - generic [ref=e184]: API Playground
-      - generic [ref=e186]:
-        - button "ADMINISTRATION" [ref=e187] [cursor=pointer]:
-          - img [ref=e188]
-          - generic [ref=e190]: ADMINISTRATION
-          - img [ref=e191]
-        - generic [ref=e194]:
-          - link "User Management" [ref=e195] [cursor=pointer]:
-            - /url: /admin/users
-            - img [ref=e196]
-            - generic [ref=e199]: User Management
-          - link "Organizations" [ref=e200] [cursor=pointer]:
-            - /url: /admin/organizations
-            - img [ref=e201]
-            - generic [ref=e205]: Organizations
-      - generic [ref=e207]:
-        - button "HELP & SUPPORT" [ref=e208] [cursor=pointer]:
-          - img [ref=e209]
-          - generic [ref=e211]: HELP & SUPPORT
-          - img [ref=e212]
-        - generic [ref=e215]:
-          - link "Support Tickets" [ref=e216] [cursor=pointer]:
-            - /url: /admin/support-tickets
-            - img [ref=e217]
-            - generic [ref=e219]: Support Tickets
-          - link "Canned Responses" [ref=e220] [cursor=pointer]:
-            - /url: /admin/canned-responses
-            - img [ref=e221]
-            - generic [ref=e223]: Canned Responses
-          - link "Email Templates" [ref=e224] [cursor=pointer]:
-            - /url: /email-templates
-            - img [ref=e225]
-            - generic [ref=e228]: Email Templates
-  - generic [ref=e229]:
-    - banner [ref=e230]:
-      - generic [ref=e232]:
-        - link "Documentation" [ref=e233] [cursor=pointer]:
-          - /url: /how-it-works
-          - img [ref=e234]
-          - generic [ref=e237]: Documentation
-        - button "AD admin Admin" [ref=e239] [cursor=pointer]:
-          - generic [ref=e241]: AD
-          - generic [ref=e243]:
-            - generic [ref=e244]: admin
-            - generic [ref=e245]:
-              - img [ref=e246]
-              - generic [ref=e248]: Admin
-          - img [ref=e249]
-    - main [ref=e251]:
-      - generic [ref=e253]:
-        - strong [ref=e254]: "Error:"
-        - text: Maximum 10 plugin operations per minute. Please try again later.
-        - button "Retry" [ref=e255] [cursor=pointer]
-    - contentinfo [ref=e256]:
-      - generic [ref=e258]:
-        - paragraph [ref=e260]: © 2025 SensorVision. All rights reserved.
-        - button "Report Issue" [ref=e262] [cursor=pointer]:
-          - img [ref=e263]
-          - text: Report Issue
+- generic [ref=e9]:
+  - generic [ref=e10]:
+    - generic [ref=e11] [cursor=pointer]:
+      - img [ref=e15]
+      - generic [ref=e17]: Industrial Cloud
+    - generic [ref=e18]:
+      - generic [ref=e21]: IoT Platform
+      - heading "Industrial-grade device intelligence" [level=1] [ref=e22]:
+        - text: Industrial-grade
+        - text: device intelligence
+      - paragraph [ref=e23]: Monitor, analyze, and optimize your entire device fleet with real-time telemetry and predictive insights.
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - img [ref=e27]
+          - generic [ref=e29]: Real-time
+          - generic [ref=e30]: Live streaming
+        - generic [ref=e31]:
+          - img [ref=e33]
+          - generic [ref=e35]: Secure
+          - generic [ref=e36]: Enterprise-grade
+        - generic [ref=e37]:
+          - img [ref=e39]
+          - generic [ref=e41]: Analytics
+          - generic [ref=e42]: Deep insights
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]: 99.9%
+        - generic [ref=e46]: Uptime SLA
+      - generic [ref=e47]:
+        - generic [ref=e48]: <100ms
+        - generic [ref=e49]: Latency
+      - generic [ref=e50]:
+        - generic [ref=e51]: 1M+
+        - generic [ref=e52]: Daily events
+  - generic [ref=e54]:
+    - generic [ref=e55]:
+      - generic [ref=e56]:
+        - heading "Welcome back" [level=2] [ref=e57]
+        - paragraph [ref=e58]: Sign in to your dashboard
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic: Username
+          - textbox "Username" [ref=e61]
+        - generic [ref=e62]:
+          - generic: Password
+          - textbox "Password" [ref=e63]
+          - button "Show password" [ref=e64] [cursor=pointer]:
+            - img [ref=e65]
+        - link "Forgot password?" [ref=e69] [cursor=pointer]:
+          - /url: /forgot-password
+        - button "Sign in" [ref=e70] [cursor=pointer]:
+          - generic [ref=e74]:
+            - text: Sign in
+            - img [ref=e75]
+      - generic [ref=e81]: or continue with
+      - button "Continue with Google" [ref=e82] [cursor=pointer]:
+        - img [ref=e83]
+        - generic [ref=e88]: Continue with Google
+      - paragraph [ref=e89]:
+        - text: Don't have an account?
+        - link "Create one" [ref=e90] [cursor=pointer]:
+          - /url: /register
+    - generic [ref=e91]:
+      - generic [ref=e92]:
+        - img [ref=e93]
+        - generic [ref=e95]: 256-bit SSL
+      - generic [ref=e98]: SOC 2 Compliant
 ```

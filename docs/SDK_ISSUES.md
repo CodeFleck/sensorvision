@@ -10,7 +10,7 @@
 
 **Description:**
 
-The `Industrial CloudClient.send_data()` method documents that it raises `ValidationError` for invalid inputs (see `indcloud/client.py:95`), but the underlying validation functions in `indcloud/utils.py` actually raise plain `ValueError` instead.
+The `IndCloudClient.send_data()` method documents that it raises `ValidationError` for invalid inputs (see `indcloud/client.py:95`), but the underlying validation functions in `indcloud/utils.py` actually raise plain `ValueError` instead.
 
 **Evidence:**
 
@@ -38,10 +38,10 @@ def validate_device_id(device_id: str) -> None:
 Consumers catching the documented `ValidationError` will miss validation failures:
 
 ```python
-from indcloud import Industrial CloudClient
+from indcloud import IndCloudClient
 from indcloud.exceptions import ValidationError
 
-client = Industrial CloudClient(api_url="...", api_key="...")
+client = IndCloudClient(api_url="...", api_key="...")
 
 try:
     client.send_data("", {"temp": 23.5})  # Invalid empty device ID

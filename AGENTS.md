@@ -1,9 +1,9 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Spring Boot services live under src/main/java/org/sensorvision, grouped by feature (controller, service, mqtt, simulator, model, epository). Example: src/main/java/org/sensorvision/controller/DashboardController.java.
+- Spring Boot services live under src/main/java/org/indcloud, grouped by feature (controller, service, mqtt, simulator, model, epository). Example: src/main/java/org/indcloud/controller/DashboardController.java.
 - Config, Flyway migrations, and static assets sit in src/main/resources (migrations in db/migration).
-- Tests mirror production packages at src/test/java/org/sensorvision; shared fixtures live in src/test/resources.
+- Tests mirror production packages at src/test/java/org/indcloud; shared fixtures live in src/test/resources.
 - Operational tooling is in ops/, and Mosquitto broker config/data/logs are under mosquitto/.
 
 ## Build, Test, and Development Commands
@@ -14,8 +14,8 @@
 
 ## Coding Style & Naming Conventions
 - Target Java 17, four-space indentation, no wildcard imports, and prefer Lombok on entities and DTO builders.
-- Classes use PascalCase, methods and fields camelCase, DTO records stay immutable; align new packages under org.sensorvision.
-- Keep configuration keys kebab-case in pplication.yml; MQTT topics follow sensorvision/<domain>/<resource>.
+- Classes use PascalCase, methods and fields camelCase, DTO records stay immutable; align new packages under org.indcloud.
+- Keep configuration keys kebab-case in pplication.yml; MQTT topics follow indcloud/<domain>/<resource>.
 
 ## Testing Guidelines
 - Use focused unit tests or Spring slice tests (@DataJpaTest, @SpringBootTest) instead of full-stack startups.

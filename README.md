@@ -106,9 +106,9 @@ pip install indcloud-sdk
 
 **Quick Start:**
 ```python
-from indcloud import Industrial CloudClient
+from indcloud import IndCloudClient
 
-client = Industrial CloudClient(
+client = IndCloudClient(
     api_url="http://your-server:8080",
     api_key="your-device-token"
 )
@@ -138,10 +138,10 @@ npm install indcloud-sdk
 
 **Quick Start:**
 ```typescript
-import { Industrial CloudClient, WebSocketClient } from 'indcloud-sdk';
+import { IndCloudClient, WebSocketClient } from 'indcloud-sdk';
 
 // Send data via REST
-const client = new Industrial CloudClient({
+const client = new IndCloudClient({
     apiUrl: 'http://your-server:8080',
     apiKey: 'your-device-token'
 });
@@ -186,10 +186,10 @@ Enterprise-ready Java SDK for industrial IoT and Android devices:
 
 **Quick Start:**
 ```java
-import io.indcloud.sdk.Industrial CloudClient;
+import io.indcloud.sdk.IndCloudClient;
 import java.util.Map;
 
-Industrial CloudClient client = new Industrial CloudClient.Builder()
+IndCloudClient client = new IndCloudClient.Builder()
     .apiUrl("http://your-server:8080")
     .apiKey("your-device-token")
     .build();

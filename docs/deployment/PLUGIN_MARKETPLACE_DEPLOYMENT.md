@@ -155,7 +155,7 @@ sudo journalctl -u indcloud -f
 
 # Look for:
 # "Flyway: Successfully applied 2 migrations"
-# "Started SensorvisionApplication in X seconds"
+# "Started IndcloudApplication in X seconds"
 ```
 
 ### Step 4: Verify Backend API

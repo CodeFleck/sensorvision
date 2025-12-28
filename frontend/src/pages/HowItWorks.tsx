@@ -497,7 +497,7 @@ const HowItWorks = () => {
                 </p>
                 <CodeBlock
                   language="python"
-                  code={`from sensorvision import Industrial CloudClient, ClientConfig
+                  code={`from indcloud import IndCloudClient, ClientConfig
 
 # Configure with retry logic
 config = ClientConfig(
@@ -508,7 +508,7 @@ config = ClientConfig(
     retry_delay=1.0
 )
 
-client = Industrial CloudClient(config)
+client = IndCloudClient(config)
 
 # Send data
 data = {"temperature": 25.3, "humidity": 58}
@@ -518,7 +518,7 @@ print(f"Success: {response}")`}
 
                 <Callout type="info" title="Advanced Features">
                   <p>Configurable retry with exponential backoff, custom error handling, timestamp and context support</p>
-                  <a href="https://github.com/CodeFleck/sensorvision/tree/main/indcloud-sdk" target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1 mt-2">
+                  <a href="https://github.com/indcloud/indcloud/tree/main/indcloud-sdk" target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1 mt-2">
                     Full Python SDK Documentation <ExternalLink className="w-3 h-3" />
                   </a>
                 </Callout>
@@ -540,9 +540,9 @@ print(f"Success: {response}")`}
                 </p>
                 <CodeBlock
                   language="javascript"
-                  code={`const { Industrial CloudClient } = require('indcloud-sdk-js');
+                  code={`const { IndCloudClient } = require('indcloud-sdk-js');
 
-const client = new Industrial CloudClient({
+const client = new IndCloudClient({
   baseUrl: 'http://35.88.65.186:8080',
   deviceId: 'sensor-42',
   apiKey: 'abc123token'
@@ -562,7 +562,7 @@ await client.sendTelemetry({
                   language="html"
                   code={`<script src="https://unpkg.com/indcloud-sdk-js/dist/umd/indcloud-sdk.min.js"></script>
 <script>
-  const client = new Industrial CloudSDK.Industrial CloudClient({
+  const client = new Industrial CloudSDK.IndCloudClient({
     baseUrl: 'http://35.88.65.186:8080',
     deviceId: 'sensor-42',
     apiKey: 'abc123token'
@@ -573,7 +573,7 @@ await client.sendTelemetry({
                 />
 
                 <Callout type="info" title="Full Documentation">
-                  <a href="https://github.com/CodeFleck/sensorvision/tree/main/indcloud-sdk-js" target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1">
+                  <a href="https://github.com/indcloud/indcloud/tree/main/indcloud-sdk-js" target="_blank" rel="noopener noreferrer" className="text-cyan-600 hover:text-cyan-800 font-medium inline-flex items-center gap-1">
                     Full JavaScript SDK Documentation <ExternalLink className="w-3 h-3" />
                   </a>
                 </Callout>
@@ -590,7 +590,7 @@ await client.sendTelemetry({
               <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <h4 className="font-semibold text-gray-900 mb-2">Topic Structure</h4>
                 <code className="text-sm bg-white px-3 py-1 rounded border border-gray-200 text-cyan-600">
-                  sensorvision/devices/&#123;deviceId&#125;/telemetry
+                  indcloud/devices/&#123;deviceId&#125;/telemetry
                 </code>
               </div>
 
@@ -616,7 +616,7 @@ data = {
 }
 
 client.publish(
-    "sensorvision/devices/sensor-42/telemetry",
+    "indcloud/devices/sensor-42/telemetry",
     json.dumps(data)
 )`}
                 />
@@ -640,7 +640,7 @@ void setup() {
 
 void loop() {
   String payload = "{\\"temperature\\":25.3,\\"humidity\\":58}";
-  client.publish("sensorvision/devices/sensor-42/telemetry",
+  client.publish("indcloud/devices/sensor-42/telemetry",
                  payload.c_str());
   delay(60000); // Send every minute
 }`}
@@ -667,7 +667,7 @@ void loop() {
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">JavaScript WebSocket Client</h4>
                 <CodeBlock
                   language="javascript"
-                  code={`const client = new Industrial CloudClient({
+                  code={`const client = new IndCloudClient({
   baseUrl: 'http://35.88.65.186:8080',
   deviceId: 'sensor-42',
   apiKey: 'abc123token'
@@ -1297,7 +1297,7 @@ export async function onAlert(event) {
 
             <div className="grid md:grid-cols-2 gap-4 mb-6">
               <a
-                href="https://github.com/CodeFleck/sensorvision/tree/main/indcloud-sdk"
+                href="https://github.com/indcloud/indcloud/tree/main/indcloud-sdk"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white border border-gray-200 rounded-lg p-4 hover:border-cyan-400 hover:shadow-md transition-all group"
@@ -1310,7 +1310,7 @@ export async function onAlert(event) {
               </a>
 
               <a
-                href="https://github.com/CodeFleck/sensorvision/tree/main/indcloud-sdk-js"
+                href="https://github.com/indcloud/indcloud/tree/main/indcloud-sdk-js"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white border border-gray-200 rounded-lg p-4 hover:border-cyan-400 hover:shadow-md transition-all group"
@@ -1334,7 +1334,7 @@ export async function onAlert(event) {
               </Link>
 
               <a
-                href="https://github.com/CodeFleck/sensorvision"
+                href="https://github.com/indcloud/indcloud"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white border border-gray-200 rounded-lg p-4 hover:border-cyan-400 hover:shadow-md transition-all group"
