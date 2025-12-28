@@ -74,7 +74,7 @@ public class User extends AuditableEntity implements SoftDeletable {
 
     @Column(name = "theme_preference", length = 20)
     @Builder.Default
-    private String themePreference = "system";
+    private String themePreference = "light-luxury";
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

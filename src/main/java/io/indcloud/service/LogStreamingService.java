@@ -40,13 +40,13 @@ public class LogStreamingService {
 
     private final LogSanitizationService sanitizationService;
 
-    @Value("${log-viewer.backend-log-path:logs/sensorvision.log}")
+    @Value("${log-viewer.backend-log-path:logs/indcloud.log}")
     private String backendLogPath;
 
-    @Value("${log-viewer.mosquitto-container:sensorvision-mosquitto}")
+    @Value("${log-viewer.mosquitto-container:indcloud-mosquitto}")
     private String mosquittoContainer;
 
-    @Value("${log-viewer.postgres-container:sensorvision-postgres}")
+    @Value("${log-viewer.postgres-container:indcloud-postgres}")
     private String postgresContainer;
 
     @Value("${log-viewer.tail-interval-ms:500}")

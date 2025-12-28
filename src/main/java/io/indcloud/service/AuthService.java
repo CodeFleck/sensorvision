@@ -358,8 +358,8 @@ public class AuthService {
         // Update theme preference if provided
         if (request.themePreference() != null) {
             // Validate theme preference
-            if (!request.themePreference().matches("^(light|dark|dark-dimmed|dark-high-contrast|system)$")) {
-                throw new BadRequestException("Invalid theme preference. Must be 'light', 'dark', 'dark-dimmed', 'dark-high-contrast', or 'system'");
+            if (!request.themePreference().matches("^(light|dark|dark-dimmed|dark-high-contrast|light-luxury|dark-luxury|system)$")) {
+                throw new BadRequestException("Invalid theme preference. Must be 'light', 'dark', 'dark-dimmed', 'dark-high-contrast', 'light-luxury', 'dark-luxury', or 'system'");
             }
             user.setThemePreference(request.themePreference());
         }
