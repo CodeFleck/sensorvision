@@ -49,6 +49,7 @@ import AdminOrganizations from './pages/AdminOrganizations';
 import AdminDevices from './pages/AdminDevices';
 import { AdminTrash } from './pages/AdminTrash';
 import { GlobalRules } from './pages/GlobalRules';
+import { GlobalAlerts } from './pages/GlobalAlerts';
 import LogViewer from './pages/LogViewer';
 import Settings from './pages/Settings';
 
@@ -117,6 +118,7 @@ function App() {
                       {/* Monitoring routes (user-accessible) */}
                       <Route path="/rules" element={<Rules />} />
                       <Route path="/global-rules" element={<GlobalRules />} />
+                      <Route path="/global-alerts" element={<GlobalAlerts />} />
                       <Route path="/alerts" element={<Alerts />} />
                       <Route path="/notifications" element={<Notifications />} />
                       <Route path="/phone-numbers" element={<PhoneNumbers />} />
