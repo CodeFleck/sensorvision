@@ -56,13 +56,14 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     );
 
     // Complex query with multiple filters
+    // Note: Using CAST for timestamp parameters to fix PostgreSQL null parameter type inference issue
     @Query("SELECT e FROM Event e WHERE e.organization = :organization " +
            "AND (:eventType IS NULL OR e.eventType = :eventType) " +
            "AND (:severity IS NULL OR e.severity = :severity) " +
            "AND (:deviceId IS NULL OR e.deviceId = :deviceId) " +
            "AND (:entityType IS NULL OR e.entityType = :entityType) " +
-           "AND (:startTime IS NULL OR e.createdAt >= :startTime) " +
-           "AND (:endTime IS NULL OR e.createdAt <= :endTime) " +
+           "AND (CAST(:startTime AS timestamp) IS NULL OR e.createdAt >= :startTime) " +
+           "AND (CAST(:endTime AS timestamp) IS NULL OR e.createdAt <= :endTime) " +
            "ORDER BY e.createdAt DESC")
     Page<Event> findByFilters(
             @Param("organization") Organization organization,
