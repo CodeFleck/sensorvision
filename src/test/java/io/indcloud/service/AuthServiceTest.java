@@ -401,7 +401,91 @@ class AuthServiceTest {
                 .hasMessageContaining("Invalid password reset token");
     }
 
+
     // ===== EMAIL VERIFICATION TESTS =====
+
+    @Test
+    void resetPassword_shouldSucceed_whenTokenIsJustBeforeExpiry() {
+        // Given - Token expires in 1 second (still valid)
+        String resetToken = "almost-expired-token";
+        testUser.setPasswordResetToken(resetToken);
+        testUser.setPasswordResetTokenExpiry(LocalDateTime.now().plusSeconds(1));
+
+        when(userRepository.findByPasswordResetToken(resetToken)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$newencoded");
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        authService.resetPassword(resetToken, "newPassword123");
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(savedUser.getPasswordResetToken()).isNull();
+        assertThat(savedUser.getPasswordResetTokenExpiry()).isNull();
+    }
+
+    @Test
+    void resetPassword_shouldFail_whenTokenJustExpired() {
+        // Given - Token expired 1 nanosecond ago (boundary case)
+        String resetToken = "just-expired-token";
+        testUser.setPasswordResetToken(resetToken);
+        testUser.setPasswordResetTokenExpiry(LocalDateTime.now().minusNanos(1));
+
+        when(userRepository.findByPasswordResetToken(resetToken)).thenReturn(Optional.of(testUser));
+
+        // When/Then
+        assertThatThrownBy(() -> authService.resetPassword(resetToken, "newPassword"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Password reset token has expired");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void resetPassword_shouldThrowException_whenTokenExpiryIsNull() {
+        // Given - Token exists but expiry is null (invalid state)
+        String resetToken = "null-expiry-token";
+        testUser.setPasswordResetToken(resetToken);
+        testUser.setPasswordResetTokenExpiry(null);
+
+        when(userRepository.findByPasswordResetToken(resetToken)).thenReturn(Optional.of(testUser));
+
+        // When/Then
+        assertThatThrownBy(() -> authService.resetPassword(resetToken, "newPassword"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Password reset token has expired");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void forgotPassword_shouldSetExpiryToOneHourFromNow() {
+        // Given
+        String email = "test@example.com";
+        LocalDateTime beforeCall = LocalDateTime.now();
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        authService.forgotPassword(email);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        LocalDateTime afterCall = LocalDateTime.now();
+        LocalDateTime expectedMinExpiry = beforeCall.plusHours(1);
+        LocalDateTime expectedMaxExpiry = afterCall.plusHours(1);
+
+        assertThat(savedUser.getPasswordResetTokenExpiry())
+                .isNotNull()
+                .isAfterOrEqualTo(expectedMinExpiry.minusSeconds(1))
+                .isBeforeOrEqualTo(expectedMaxExpiry.plusSeconds(1));
+    }
+
 
     @Test
     void verifyEmail_shouldMarkEmailAsVerified_whenTokenIsValid() {
