@@ -204,9 +204,17 @@ check_database() {
 deploy() {
     log "Starting deployment..."
 
-    # Stop and remove old containers
+    # Stop and remove old containers - use multiple approaches for reliability
     log "Stopping existing containers..."
-    docker-compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down
+    docker-compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down --remove-orphans 2>/dev/null || true
+
+    # Force remove any lingering indcloud containers
+    log "Cleaning up orphaned containers..."
+    docker ps -a --filter "name=indcloud" -q | xargs -r docker rm -f 2>/dev/null || true
+    docker ps -a --filter "name=sensorvision" -q | xargs -r docker rm -f 2>/dev/null || true
+
+    # Remove old networks
+    docker network prune -f 2>/dev/null || true
 
     # Remove old images to free up space (keep last 2 versions)
     log "Cleaning up old images..."
