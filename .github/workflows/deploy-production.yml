@@ -195,7 +195,7 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
           ssh -i ~/.ssh/deploy_key $EC2_USER@$EC2_HOST << EOF
-            cd /home/$EC2_USER/sensorvision
+            cd /home/$EC2_USER/indcloud
 
             # Make deploy script executable
             chmod +x deploy.sh
@@ -210,7 +210,7 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
           ssh -i ~/.ssh/deploy_key $EC2_USER@$EC2_HOST << EOF
-            cd /home/$EC2_USER/sensorvision
+            cd /home/$EC2_USER/indcloud
 
             # Check if containers are running
             echo "Container status:"
