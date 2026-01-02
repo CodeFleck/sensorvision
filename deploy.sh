@@ -168,25 +168,33 @@ check_database() {
     log "Checking database connectivity..."
 
     # The backend container will run Flyway migrations automatically on startup
-    # This is just a connectivity check
+    # This is just a connectivity check - make it non-fatal since backend will fail
+    # gracefully with proper error messages if DB is unreachable
 
     # Extract database credentials from .env file without sourcing
-    DB_URL=$(grep "^DB_URL=" "$ENV_FILE" | cut -d '=' -f2)
-    DB_USERNAME=$(grep "^DB_USERNAME=" "$ENV_FILE" | cut -d '=' -f2)
-    DB_PASSWORD=$(grep "^DB_PASSWORD=" "$ENV_FILE" | cut -d '=' -f2)
+    # Use sed to handle URLs with multiple '=' characters
+    DB_URL=$(grep "^DB_URL=" "$ENV_FILE" | sed 's/^DB_URL=//')
+    DB_USERNAME=$(grep "^DB_USERNAME=" "$ENV_FILE" | sed 's/^DB_USERNAME=//')
+    DB_PASSWORD=$(grep "^DB_PASSWORD=" "$ENV_FILE" | sed 's/^DB_PASSWORD=//')
+
+    # Extract hostname from JDBC URL - handle jdbc:postgresql://hostname:port/db format
+    DB_HOST=$(echo "$DB_URL" | sed -n 's|.*://\([^:/]*\).*|\1|p')
+
+    if [ -z "$DB_HOST" ]; then
+        warn "Could not parse database hostname from DB_URL, skipping connectivity check"
+        return 0
+    fi
 
     # Simple postgres connection test using docker
-    docker run --rm -e PGPASSWORD="$DB_PASSWORD" postgres:15-alpine \
-        psql -h "$(echo $DB_URL | sed -n 's/.*\/\/\([^:]*\).*/\1/p')" \
+    if docker run --rm -e PGPASSWORD="$DB_PASSWORD" postgres:15-alpine \
+        psql -h "$DB_HOST" \
         -U "$DB_USERNAME" \
         -d indcloud \
-        -c "SELECT 1;" &> /dev/null
-
-    if [ $? -eq 0 ]; then
+        -c "SELECT 1;" &> /dev/null; then
         log "Database connection successful!"
     else
-        error "Database connection failed! Check RDS endpoint and credentials."
-        exit 1
+        warn "Database connectivity check failed - backend will retry on startup"
+        # Don't exit, let the backend handle it with proper error reporting
     fi
 }
 
