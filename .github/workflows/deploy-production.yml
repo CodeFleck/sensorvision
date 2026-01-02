@@ -101,10 +101,11 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          # Create mosquitto config directory and fix ownership (may have been created by docker/root)
+          # Clean up any files owned by docker/root and prepare directories
           ssh -i ~/.ssh/deploy_key $EC2_USER@$EC2_HOST "
-            sudo rm -rf /home/$EC2_USER/indcloud/mosquitto 2>/dev/null || true
-            mkdir -p /home/$EC2_USER/indcloud/mosquitto/config
+            cd /home/$EC2_USER/indcloud
+            sudo rm -rf mosquitto prometheus.yml 2>/dev/null || true
+            mkdir -p mosquitto/config
           "
 
           # Copy necessary files
