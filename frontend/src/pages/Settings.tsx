@@ -12,10 +12,11 @@ import {
   Loader2,
   Mail,
   ScrollText,
+  Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-type ThemeOption = 'light' | 'dark' | 'dark-dimmed' | 'dark-high-contrast' | 'system';
+type ThemeOption = 'light' | 'dark' | 'dark-dimmed' | 'dark-high-contrast' | 'light-luxury' | 'dark-luxury' | 'system';
 
 interface ThemeChoice {
   value: ThemeOption;
@@ -38,10 +39,22 @@ const themeOptions: ThemeChoice[] = [
     icon: <Sun className="h-5 w-5" />,
   },
   {
+    value: 'light-luxury',
+    label: 'Light Luxury',
+    description: 'Premium light with teal accents',
+    icon: <Sparkles className="h-5 w-5 text-teal-500" />,
+  },
+  {
     value: 'dark',
     label: 'Dark',
     description: 'Dark background with light text',
     icon: <Moon className="h-5 w-5" />,
+  },
+  {
+    value: 'dark-luxury',
+    label: 'Dark Luxury',
+    description: 'Premium OLED dark with teal',
+    icon: <Sparkles className="h-5 w-5 text-teal-400" />,
   },
   {
     value: 'dark-dimmed',
