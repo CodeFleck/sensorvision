@@ -112,9 +112,13 @@ jobs:
           scp -i ~/.ssh/deploy_key \
             docker-compose.production.yml \
             deploy.sh \
-            nginx.conf \
             prometheus.yml \
             $EC2_USER@$EC2_HOST:/home/$EC2_USER/indcloud/
+
+          # Copy SSL nginx config as nginx.conf
+          scp -i ~/.ssh/deploy_key \
+            nginx-ssl.conf \
+            $EC2_USER@$EC2_HOST:/home/$EC2_USER/indcloud/nginx.conf
 
           # Copy mosquitto config
           scp -i ~/.ssh/deploy_key \
