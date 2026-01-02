@@ -74,13 +74,13 @@ services:
       # Simulator (DISABLED in production)
       SIMULATOR_ENABLED: false
 
-      # Notification Services
-      EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
-      EMAIL_FROM: ${EMAIL_FROM:-noreply@indcloud.com}
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USERNAME: ${SMTP_USERNAME:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      # Notification Services (Spring property: notification.email.enabled)
+      NOTIFICATION_EMAIL_ENABLED: ${EMAIL_ENABLED:-false}
+      NOTIFICATION_EMAIL_FROM: ${EMAIL_FROM:-noreply@indcloud.io}
+      SPRING_MAIL_HOST: ${SMTP_HOST:-}
+      SPRING_MAIL_PORT: ${SMTP_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SMTP_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD:-}
 
       SMS_ENABLED: ${SMS_ENABLED:-false}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
