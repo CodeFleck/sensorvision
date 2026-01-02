@@ -638,4 +638,193 @@ class AuthServiceTest {
 
         verify(userRepository, never()).save(any(User.class));
     }
+
+    // ===== THEME PREFERENCE VALIDATION TESTS =====
+
+    @Test
+    void updateUserPreferences_shouldAcceptLightTheme() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest("light", null);
+        setupUserPrincipalAuthentication();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        UserResponse response = authService.updateUserPreferences(request);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getThemePreference()).isEqualTo("light");
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    void updateUserPreferences_shouldAcceptDarkTheme() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest("dark", null);
+        setupUserPrincipalAuthentication();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        UserResponse response = authService.updateUserPreferences(request);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getThemePreference()).isEqualTo("dark");
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    void updateUserPreferences_shouldAcceptLightLuxuryTheme() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest("light-luxury", null);
+        setupUserPrincipalAuthentication();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        UserResponse response = authService.updateUserPreferences(request);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getThemePreference()).isEqualTo("light-luxury");
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    void updateUserPreferences_shouldAcceptDarkLuxuryTheme() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest("dark-luxury", null);
+        setupUserPrincipalAuthentication();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        UserResponse response = authService.updateUserPreferences(request);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getThemePreference()).isEqualTo("dark-luxury");
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    void updateUserPreferences_shouldAcceptDarkDimmedTheme() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest("dark-dimmed", null);
+        setupUserPrincipalAuthentication();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        UserResponse response = authService.updateUserPreferences(request);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getThemePreference()).isEqualTo("dark-dimmed");
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    void updateUserPreferences_shouldAcceptDarkHighContrastTheme() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest("dark-high-contrast", null);
+        setupUserPrincipalAuthentication();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        UserResponse response = authService.updateUserPreferences(request);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getThemePreference()).isEqualTo("dark-high-contrast");
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    void updateUserPreferences_shouldAcceptSystemTheme() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest("system", null);
+        setupUserPrincipalAuthentication();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByIdWithOrganizationAndRoles(testUser.getId())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // When
+        UserResponse response = authService.updateUserPreferences(request);
+
+        // Then
+        verify(userRepository).save(userCaptor.capture());
+        assertThat(userCaptor.getValue().getThemePreference()).isEqualTo("system");
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    void updateUserPreferences_shouldRejectInvalidTheme() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest("invalid-theme", null);
+        setupUserPrincipalAuthentication();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+
+        // When/Then
+        assertThatThrownBy(() -> authService.updateUserPreferences(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Invalid theme preference");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateUserPreferences_shouldRejectEmptyTheme() {
+        // Given
+        UpdateUserPreferencesRequest request = new UpdateUserPreferencesRequest("", null);
+        setupUserPrincipalAuthentication();
+
+        when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+
+        // When/Then
+        assertThatThrownBy(() -> authService.updateUserPreferences(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Invalid theme preference");
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    /**
+     * Helper method to setup UserPrincipal authentication for tests
+     */
+    private void setupUserPrincipalAuthentication() {
+        UserPrincipal userPrincipal = new UserPrincipal(
+            testUser.getId(),
+            testUser.getUsername(),
+            testUser.getEmail(),
+            testUser.getPasswordHash(),
+            testUser.getOrganization().getId(),
+            true,
+            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+
+        Authentication auth = mock(Authentication.class);
+        when(auth.getPrincipal()).thenReturn(userPrincipal);
+
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        SecurityContextHolder.setContext(securityContext);
+    }
 }

@@ -7,7 +7,8 @@ import jakarta.validation.constraints.Pattern;
  * Supports theme preference and email notification settings
  */
 public record UpdateUserPreferencesRequest(
-    @Pattern(regexp = "^(light|dark|system)$", message = "Theme preference must be 'light', 'dark', or 'system'")
+    @Pattern(regexp = "^(light|dark|dark-dimmed|dark-high-contrast|light-luxury|dark-luxury|system)$",
+             message = "Theme preference must be 'light', 'dark', 'dark-dimmed', 'dark-high-contrast', 'light-luxury', 'dark-luxury', or 'system'")
     String themePreference,
 
     Boolean emailNotificationsEnabled
