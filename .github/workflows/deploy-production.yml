@@ -139,7 +139,7 @@ jobs:
           MQTT_DEVICE_AUTH_REQUIRED=true
           DOMAIN=${{ secrets.PRODUCTION_DOMAIN }}
           APP_URL=https://${{ secrets.PRODUCTION_DOMAIN }}
-          APP_BASE_URL=http://35.88.65.186.nip.io:8080
+          APP_BASE_URL=https://indcloud.io
           EMAIL_ENABLED=${{ secrets.EMAIL_ENABLED }}
           EMAIL_FROM=${{ secrets.EMAIL_FROM }}
           SMTP_HOST=${{ secrets.SMTP_HOST }}
