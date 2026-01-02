@@ -251,7 +251,7 @@ public class EmailTemplateService {
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Alert - SensorVision</title>
+                    <title>Alert - Industrial Cloud</title>
                 </head>
                 <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000;">
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #000000;">
@@ -266,7 +266,7 @@ public class EmailTemplateService {
                                                     <td style="text-align: center;">
                                                         <!-- Logo -->
                                                         <div style="display: inline-block; background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.1)); border-radius: 12px; padding: 12px 20px; margin-bottom: 20px;">
-                                                            <span style="font-size: 24px; font-weight: 700; color: #14b8a6; letter-spacing: -0.5px;">SensorVision</span>
+                                                            <span style="font-size: 24px; font-weight: 700; color: #14b8a6; letter-spacing: -0.5px;">Industrial Cloud</span>
                                                         </div>
                                                         <h1 style="margin: 0 0 8px; font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">Alert Triggered</h1>
                                                         <p style="margin: 0; font-size: 14px; color: #6b7280;">Real-time IoT Monitoring</p>
@@ -335,8 +335,8 @@ public class EmailTemplateService {
                                     <!-- Footer -->
                                     <tr>
                                         <td style="background: linear-gradient(135deg, #050505 0%%, #0a0a0a 100%%); border: 1px solid rgba(20, 184, 166, 0.1); border-top: none; border-radius: 0 0 16px 16px; padding: 30px 40px; text-align: center;">
-                                            <p style="margin: 0 0 8px; font-size: 14px; color: #6b7280;">This is an automated alert from SensorVision.</p>
-                                            <p style="margin: 0; font-size: 12px; color: #4b5563;">© 2025 SensorVision. All rights reserved.</p>
+                                            <p style="margin: 0 0 8px; font-size: 14px; color: #6b7280;">This is an automated alert from Industrial Cloud.</p>
+                                            <p style="margin: 0; font-size: 12px; color: #4b5563;">© 2025 Industrial Cloud. All rights reserved.</p>
                                         </td>
                                     </tr>
                                 </table>
@@ -357,7 +357,7 @@ public class EmailTemplateService {
             "Unknown Device",
             "An alert has been triggered in your system.",
             "MEDIUM",
-            "http://35.88.65.186.nip.io:8080/dashboard"
+            "https://indcloud.io/dashboard"
         );
     }
 
@@ -374,7 +374,7 @@ public class EmailTemplateService {
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Reset Your Password - SensorVision</title>
+                    <title>Reset Your Password - Industrial Cloud</title>
                 </head>
                 <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000;">
                     <!-- Wrapper table for dark background -->
@@ -392,7 +392,7 @@ public class EmailTemplateService {
                                                     <td style="text-align: center;">
                                                         <!-- Logo with glow effect -->
                                                         <div style="display: inline-block; background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.1)); border-radius: 12px; padding: 12px 24px; margin-bottom: 24px;">
-                                                            <span style="font-size: 28px; font-weight: 700; color: #14b8a6; letter-spacing: -0.5px;">SensorVision</span>
+                                                            <span style="font-size: 28px; font-weight: 700; color: #14b8a6; letter-spacing: -0.5px;">Industrial Cloud</span>
                                                         </div>
                                                         <h1 style="margin: 0 0 8px; font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">Reset Your Password</h1>
                                                         <p style="margin: 0; font-size: 15px; color: #6b7280;">Secure access to your IoT dashboard</p>
@@ -409,7 +409,7 @@ public class EmailTemplateService {
                                                 <tr>
                                                     <td>
                                                         <p style="margin: 0 0 24px; font-size: 16px; color: #d1d5db; line-height: 1.7;">
-                                                            We received a request to reset the password for your SensorVision account. Click the button below to create a new password.
+                                                            We received a request to reset the password for your Industrial Cloud account. Click the button below to create a new password.
                                                         </p>
                                                     </td>
                                                 </tr>
@@ -475,19 +475,19 @@ public class EmailTemplateService {
                                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
                                                 <tr>
                                                     <td style="padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                                        <p style="margin: 0; font-size: 18px; font-weight: 600; color: #14b8a6;">SensorVision</p>
+                                                        <p style="margin: 0; font-size: 18px; font-weight: 600; color: #14b8a6;">Industrial Cloud</p>
                                                         <p style="margin: 4px 0 0; font-size: 13px; color: #6b7280;">Real-time IoT Monitoring & Analytics</p>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td style="padding-top: 16px;">
                                                         <p style="margin: 0; font-size: 12px; color: #4b5563;">This is an automated security message.</p>
-                                                        <p style="margin: 8px 0 0; font-size: 12px; color: #374151;">© 2025 SensorVision. All rights reserved.</p>
+                                                        <p style="margin: 8px 0 0; font-size: 12px; color: #374151;">© 2025 Industrial Cloud. All rights reserved.</p>
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td style="padding-top: 20px;">
-                                                        <a href="https://github.com/CodeFleck/sensorvision" style="color: #6b7280; text-decoration: none; font-size: 12px; margin: 0 12px;">GitHub</a>
+                                                        <a href="https://github.com/CodeFleck/indcloud" style="color: #6b7280; text-decoration: none; font-size: 12px; margin: 0 12px;">GitHub</a>
                                                         <a href="#" style="color: #6b7280; text-decoration: none; font-size: 12px; margin: 0 12px;">Documentation</a>
                                                         <a href="#" style="color: #6b7280; text-decoration: none; font-size: 12px; margin: 0 12px;">Privacy</a>
                                                     </td>
@@ -518,7 +518,7 @@ public class EmailTemplateService {
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Welcome to SensorVision</title>
+                    <title>Welcome to Industrial Cloud</title>
                 </head>
                 <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000;">
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #000000;">
@@ -530,7 +530,7 @@ public class EmailTemplateService {
                                     <tr>
                                         <td style="background: linear-gradient(135deg, #0a0a0a 0%%, #111111 100%%); border: 1px solid rgba(20, 184, 166, 0.2); border-bottom: none; border-radius: 16px 16px 0 0; padding: 48px 40px 32px; text-align: center;">
                                             <div style="display: inline-block; background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.1)); border-radius: 12px; padding: 12px 24px; margin-bottom: 24px;">
-                                                <span style="font-size: 28px; font-weight: 700; color: #14b8a6; letter-spacing: -0.5px;">SensorVision</span>
+                                                <span style="font-size: 28px; font-weight: 700; color: #14b8a6; letter-spacing: -0.5px;">Industrial Cloud</span>
                                             </div>
                                             <h1 style="margin: 0 0 8px; font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">Welcome, %s!</h1>
                                             <p style="margin: 0; font-size: 15px; color: #6b7280;">Your IoT monitoring journey begins now</p>
@@ -541,7 +541,7 @@ public class EmailTemplateService {
                                     <tr>
                                         <td style="background: #0a0a0a; border-left: 1px solid rgba(20, 184, 166, 0.2); border-right: 1px solid rgba(20, 184, 166, 0.2); padding: 32px 40px;">
                                             <p style="margin: 0 0 24px; font-size: 16px; color: #d1d5db; line-height: 1.7;">
-                                                Thank you for joining SensorVision. You now have access to powerful real-time IoT monitoring and analytics.
+                                                Thank you for joining Industrial Cloud. You now have access to powerful real-time IoT monitoring and analytics.
                                             </p>
 
                                             <!-- Features Grid -->
@@ -584,9 +584,9 @@ public class EmailTemplateService {
                                     <!-- Footer -->
                                     <tr>
                                         <td style="background: linear-gradient(135deg, #050505 0%%, #0a0a0a 100%%); border: 1px solid rgba(20, 184, 166, 0.1); border-top: none; border-radius: 0 0 16px 16px; padding: 32px 40px; text-align: center;">
-                                            <p style="margin: 0; font-size: 18px; font-weight: 600; color: #14b8a6;">SensorVision</p>
+                                            <p style="margin: 0; font-size: 18px; font-weight: 600; color: #14b8a6;">Industrial Cloud</p>
                                             <p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">Real-time IoT Monitoring & Analytics</p>
-                                            <p style="margin: 0; font-size: 12px; color: #374151;">© 2025 SensorVision. All rights reserved.</p>
+                                            <p style="margin: 0; font-size: 12px; color: #374151;">© 2025 Industrial Cloud. All rights reserved.</p>
                                         </td>
                                     </tr>
 
