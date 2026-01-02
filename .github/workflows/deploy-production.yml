@@ -101,8 +101,11 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          # Create mosquitto config directory on server
-          ssh -i ~/.ssh/deploy_key $EC2_USER@$EC2_HOST "mkdir -p /home/$EC2_USER/indcloud/mosquitto/config"
+          # Create mosquitto config directory and fix ownership (may have been created by docker/root)
+          ssh -i ~/.ssh/deploy_key $EC2_USER@$EC2_HOST "
+            sudo rm -rf /home/$EC2_USER/indcloud/mosquitto 2>/dev/null || true
+            mkdir -p /home/$EC2_USER/indcloud/mosquitto/config
+          "
 
           # Copy necessary files
           scp -i ~/.ssh/deploy_key \
