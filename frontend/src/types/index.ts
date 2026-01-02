@@ -199,7 +199,7 @@ export interface User {
   lastLoginAt?: string;
   avatarUrl?: string;
   avatarVersion?: number;
-  themePreference?: 'light' | 'dark' | 'dark-dimmed' | 'dark-high-contrast' | 'system';
+  themePreference?: 'light' | 'dark' | 'dark-dimmed' | 'dark-high-contrast' | 'light-luxury' | 'dark-luxury' | 'system';
   createdAt?: string;
   updatedAt?: string;
 }
