@@ -24,13 +24,13 @@ public class EmailNotificationService {
     @Value("${notification.email.enabled:false}")
     private boolean emailEnabled;
 
-    @Value("${notification.email.from:noreply@sensorvision.com}")
+    @Value("${notification.email.from:noreply@indcloud.io}")
     private String fromEmail;
 
     @Value("${app.base-url:http://localhost:3001}")
     private String appBaseUrl;
 
-    @Value("${notification.admin.email:admin@sensorvision.com}")
+    @Value("${notification.admin.email:admin@indcloud.io}")
     private String adminEmail;
 
     public EmailNotificationService(JavaMailSender mailSender, EmailTemplateService templateService) {
