@@ -112,6 +112,7 @@ jobs:
             docker-compose.production.yml \
             deploy.sh \
             nginx.conf \
+            prometheus.yml \
             $EC2_USER@$EC2_HOST:/home/$EC2_USER/indcloud/
 
           # Copy mosquitto config
