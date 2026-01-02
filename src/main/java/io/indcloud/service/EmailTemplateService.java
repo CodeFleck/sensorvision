@@ -227,11 +227,9 @@ public class EmailTemplateService {
     }
 
     /**
-     * Generate alert notification email body with Dark OLED Luxury design
-     * Matches the premium UI aesthetic with teal accents and glassmorphism
+     * Generate alert notification email with clean, professional design
      */
     public String generateAlertNotificationEmail(String alertType, String deviceName, String message, String severity, String dashboardLink) {
-        // Sanitize all user-provided content to prevent XSS
         String safeAlertType = escapeHtml(alertType);
         String safeDeviceName = escapeHtml(deviceName);
         String safeMessage = escapeHtml(message);
@@ -239,10 +237,10 @@ public class EmailTemplateService {
         String safeDashboardLink = sanitizeUrl(dashboardLink);
 
         String severityColor = switch (severity != null ? severity.toUpperCase() : "") {
-            case "CRITICAL" -> "#ef4444";
-            case "HIGH" -> "#f97316";
-            case "MEDIUM" -> "#eab308";
-            default -> "#14b8a6";
+            case "CRITICAL" -> "#dc2626";
+            case "HIGH" -> "#ea580c";
+            case "MEDIUM" -> "#ca8a04";
+            default -> "#0f766e";
         };
 
         return String.format("""
@@ -251,92 +249,39 @@ public class EmailTemplateService {
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Alert - Industrial Cloud</title>
+                    <title>Alert</title>
                 </head>
-                <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000;">
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #000000;">
+                <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #f5f5f5;">
                         <tr>
                             <td style="padding: 40px 20px;">
-                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; max-width: 600px;">
-                                    <!-- Header with gradient -->
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="480" style="margin: 0 auto; max-width: 480px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                     <tr>
-                                        <td style="background: linear-gradient(135deg, #0a0a0a 0%%, #111111 100%%); border: 1px solid rgba(20, 184, 166, 0.2); border-bottom: none; border-radius: 16px 16px 0 0; padding: 40px 40px 30px;">
+                                        <td style="padding: 40px;">
                                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
                                                 <tr>
-                                                    <td style="text-align: center;">
-                                                        <!-- Logo -->
-                                                        <div style="display: inline-block; background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.1)); border-radius: 12px; padding: 12px 20px; margin-bottom: 20px;">
-                                                            <span style="font-size: 24px; font-weight: 700; color: #14b8a6; letter-spacing: -0.5px;">Industrial Cloud</span>
-                                                        </div>
-                                                        <h1 style="margin: 0 0 8px; font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">Alert Triggered</h1>
-                                                        <p style="margin: 0; font-size: 14px; color: #6b7280;">Real-time IoT Monitoring</p>
+                                                    <td>
+                                                        <span style="display: inline-block; background-color: %s; color: #ffffff; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 4px; text-transform: uppercase;">%s</span>
                                                     </td>
                                                 </tr>
                                             </table>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Alert Badge -->
-                                    <tr>
-                                        <td style="background: #0a0a0a; border-left: 1px solid rgba(20, 184, 166, 0.2); border-right: 1px solid rgba(20, 184, 166, 0.2); padding: 0 40px;">
+                                            <p style="margin: 16px 0 8px; font-size: 18px; font-weight: 600; color: #111827;">%s</p>
+                                            <p style="margin: 0 0 20px; font-size: 14px; color: #6b7280;">Device: %s</p>
+                                            <p style="margin: 0 0 24px; font-size: 15px; color: #4b5563; line-height: 1.6;">%s</p>
                                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
                                                 <tr>
-                                                    <td style="text-align: center; padding: 20px 0;">
-                                                        <span style="display: inline-block; background: %s; color: #ffffff; font-size: 12px; font-weight: 600; padding: 6px 16px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">%s</span>
+                                                    <td>
+                                                        <a href="%s" style="display: inline-block; background-color: #0f766e; color: #ffffff; font-size: 14px; font-weight: 500; text-decoration: none; padding: 12px 24px; border-radius: 6px;">View dashboard</a>
                                                     </td>
                                                 </tr>
                                             </table>
                                         </td>
                                     </tr>
-
-                                    <!-- Content Card -->
+                                </table>
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="480" style="margin: 24px auto 0; max-width: 480px;">
                                     <tr>
-                                        <td style="background: #0a0a0a; border-left: 1px solid rgba(20, 184, 166, 0.2); border-right: 1px solid rgba(20, 184, 166, 0.2); padding: 0 40px 30px;">
-                                            <!-- Glass Card -->
-                                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background: rgba(20, 20, 20, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
-                                                <tr>
-                                                    <td style="padding: 24px;">
-                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
-                                                            <!-- Alert Type -->
-                                                            <tr>
-                                                                <td style="padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
-                                                                    <p style="margin: 0 0 4px; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Alert Type</p>
-                                                                    <p style="margin: 0; font-size: 16px; color: #ffffff; font-weight: 600;">%s</p>
-                                                                </td>
-                                                            </tr>
-                                                            <!-- Device -->
-                                                            <tr>
-                                                                <td style="padding: 16px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
-                                                                    <p style="margin: 0 0 4px; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Device</p>
-                                                                    <p style="margin: 0; font-size: 16px; color: #14b8a6; font-weight: 500;">%s</p>
-                                                                </td>
-                                                            </tr>
-                                                            <!-- Message -->
-                                                            <tr>
-                                                                <td style="padding-top: 16px;">
-                                                                    <p style="margin: 0 0 4px; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Message</p>
-                                                                    <p style="margin: 0; font-size: 15px; color: #d1d5db; line-height: 1.6;">%s</p>
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </td>
-                                    </tr>
-
-                                    <!-- CTA Button -->
-                                    <tr>
-                                        <td style="background: #0a0a0a; border-left: 1px solid rgba(20, 184, 166, 0.2); border-right: 1px solid rgba(20, 184, 166, 0.2); padding: 10px 40px 40px; text-align: center;">
-                                            <a href="%s" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%%, #0d9488 100%%); color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 8px; box-shadow: 0 4px 14px rgba(20, 184, 166, 0.3);">View Dashboard</a>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Footer -->
-                                    <tr>
-                                        <td style="background: linear-gradient(135deg, #050505 0%%, #0a0a0a 100%%); border: 1px solid rgba(20, 184, 166, 0.1); border-top: none; border-radius: 0 0 16px 16px; padding: 30px 40px; text-align: center;">
-                                            <p style="margin: 0 0 8px; font-size: 14px; color: #6b7280;">This is an automated alert from Industrial Cloud.</p>
-                                            <p style="margin: 0; font-size: 12px; color: #4b5563;">© 2025 Industrial Cloud. All rights reserved.</p>
+                                        <td style="text-align: center;">
+                                            <p style="margin: 0; font-size: 12px; color: #9ca3af;">Industrial Cloud</p>
                                         </td>
                                     </tr>
                                 </table>
@@ -362,11 +307,9 @@ public class EmailTemplateService {
     }
 
     /**
-     * Generate password reset email with Dark OLED Luxury design
-     * Features true black background, teal accents, and glassmorphism matching UI
+     * Generate password reset email with clean, professional design
      */
     public String generatePasswordResetEmail(String resetLink) {
-        // Sanitize URL to prevent javascript: injection
         String safeResetLink = sanitizeUrl(resetLink);
         return String.format("""
                 <!DOCTYPE html>
@@ -374,128 +317,42 @@ public class EmailTemplateService {
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Reset Your Password - Industrial Cloud</title>
+                    <title>Reset Your Password</title>
                 </head>
-                <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000;">
-                    <!-- Wrapper table for dark background -->
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #000000;">
+                <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #f5f5f5;">
                         <tr>
                             <td style="padding: 40px 20px;">
-                                <!-- Main container -->
-                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; max-width: 600px;">
-
-                                    <!-- Header Section with Gradient Border -->
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="480" style="margin: 0 auto; max-width: 480px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                     <tr>
-                                        <td style="background: linear-gradient(135deg, #0a0a0a 0%%, #111111 100%%); border: 1px solid rgba(20, 184, 166, 0.2); border-bottom: none; border-radius: 16px 16px 0 0; padding: 48px 40px 32px;">
+                                        <td style="padding: 40px;">
+                                            <p style="margin: 0 0 24px; font-size: 20px; font-weight: 600; color: #111827;">Reset your password</p>
+                                            <p style="margin: 0 0 24px; font-size: 15px; color: #4b5563; line-height: 1.6;">
+                                                We received a request to reset your password. Click the button below to choose a new one.
+                                            </p>
                                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
                                                 <tr>
-                                                    <td style="text-align: center;">
-                                                        <!-- Logo with glow effect -->
-                                                        <div style="display: inline-block; background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.1)); border-radius: 12px; padding: 12px 24px; margin-bottom: 24px;">
-                                                            <span style="font-size: 28px; font-weight: 700; color: #14b8a6; letter-spacing: -0.5px;">Industrial Cloud</span>
-                                                        </div>
-                                                        <h1 style="margin: 0 0 8px; font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">Reset Your Password</h1>
-                                                        <p style="margin: 0; font-size: 15px; color: #6b7280;">Secure access to your IoT dashboard</p>
+                                                    <td style="padding: 8px 0 32px;">
+                                                        <a href="%s" style="display: inline-block; background-color: #0f766e; color: #ffffff; font-size: 14px; font-weight: 500; text-decoration: none; padding: 12px 24px; border-radius: 6px;">Reset password</a>
                                                     </td>
                                                 </tr>
                                             </table>
+                                            <p style="margin: 0 0 16px; font-size: 14px; color: #6b7280; line-height: 1.5;">
+                                                This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.
+                                            </p>
+                                            <p style="margin: 0; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">
+                                                Button not working? Copy this link:<br>
+                                                <span style="color: #6b7280; word-break: break-all;">%s</span>
+                                            </p>
                                         </td>
                                     </tr>
-
-                                    <!-- Main Content -->
+                                </table>
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="480" style="margin: 24px auto 0; max-width: 480px;">
                                     <tr>
-                                        <td style="background: #0a0a0a; border-left: 1px solid rgba(20, 184, 166, 0.2); border-right: 1px solid rgba(20, 184, 166, 0.2); padding: 32px 40px;">
-                                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
-                                                <tr>
-                                                    <td>
-                                                        <p style="margin: 0 0 24px; font-size: 16px; color: #d1d5db; line-height: 1.7;">
-                                                            We received a request to reset the password for your Industrial Cloud account. Click the button below to create a new password.
-                                                        </p>
-                                                    </td>
-                                                </tr>
-
-                                                <!-- CTA Button -->
-                                                <tr>
-                                                    <td style="padding: 16px 0 32px; text-align: center;">
-                                                        <a href="%s" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%%, #0d9488 100%%); color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 10px; box-shadow: 0 4px 20px rgba(20, 184, 166, 0.35), 0 0 40px rgba(20, 184, 166, 0.1); letter-spacing: 0.3px;">Reset Password</a>
-                                                    </td>
-                                                </tr>
-
-                                                <!-- Expiry Notice -->
-                                                <tr>
-                                                    <td>
-                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background: rgba(20, 184, 166, 0.08); border: 1px solid rgba(20, 184, 166, 0.2); border-radius: 10px;">
-                                                            <tr>
-                                                                <td style="padding: 16px 20px; text-align: center;">
-                                                                    <p style="margin: 0; font-size: 14px; color: #9ca3af;">
-                                                                        This link expires in <span style="color: #14b8a6; font-weight: 600;">1 hour</span> for security
-                                                                    </p>
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                            </table>
+                                        <td style="text-align: center;">
+                                            <p style="margin: 0; font-size: 12px; color: #9ca3af;">Industrial Cloud</p>
                                         </td>
                                     </tr>
-
-                                    <!-- Security Notice -->
-                                    <tr>
-                                        <td style="background: #0a0a0a; border-left: 1px solid rgba(20, 184, 166, 0.2); border-right: 1px solid rgba(20, 184, 166, 0.2); padding: 0 40px 32px;">
-                                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2); border-radius: 10px;">
-                                                <tr>
-                                                    <td style="padding: 20px;">
-                                                        <p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px;">Security Notice</p>
-                                                        <p style="margin: 0; font-size: 14px; color: #9ca3af; line-height: 1.6;">
-                                                            If you didn't request this password reset, please ignore this email. Your account remains secure.
-                                                        </p>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Alternative Link -->
-                                    <tr>
-                                        <td style="background: #0a0a0a; border-left: 1px solid rgba(20, 184, 166, 0.2); border-right: 1px solid rgba(20, 184, 166, 0.2); padding: 0 40px 32px;">
-                                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px;">
-                                                <tr>
-                                                    <td style="padding: 16px 20px;">
-                                                        <p style="margin: 0 0 8px; font-size: 12px; color: #6b7280;">Button not working? Copy this link:</p>
-                                                        <p style="margin: 0; font-size: 12px; color: #14b8a6; word-break: break-all; font-family: 'Courier New', monospace; background: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 6px; border: 1px solid rgba(20, 184, 166, 0.15);">%s</p>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Footer -->
-                                    <tr>
-                                        <td style="background: linear-gradient(135deg, #050505 0%%, #0a0a0a 100%%); border: 1px solid rgba(20, 184, 166, 0.1); border-top: none; border-radius: 0 0 16px 16px; padding: 32px 40px; text-align: center;">
-                                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
-                                                <tr>
-                                                    <td style="padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                                        <p style="margin: 0; font-size: 18px; font-weight: 600; color: #14b8a6;">Industrial Cloud</p>
-                                                        <p style="margin: 4px 0 0; font-size: 13px; color: #6b7280;">Real-time IoT Monitoring & Analytics</p>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding-top: 16px;">
-                                                        <p style="margin: 0; font-size: 12px; color: #4b5563;">This is an automated security message.</p>
-                                                        <p style="margin: 8px 0 0; font-size: 12px; color: #374151;">© 2025 Industrial Cloud. All rights reserved.</p>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding-top: 20px;">
-                                                        <a href="https://github.com/CodeFleck/indcloud" style="color: #6b7280; text-decoration: none; font-size: 12px; margin: 0 12px;">GitHub</a>
-                                                        <a href="#" style="color: #6b7280; text-decoration: none; font-size: 12px; margin: 0 12px;">Documentation</a>
-                                                        <a href="#" style="color: #6b7280; text-decoration: none; font-size: 12px; margin: 0 12px;">Privacy</a>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                        </td>
-                                    </tr>
-
                                 </table>
                             </td>
                         </tr>
@@ -506,10 +363,9 @@ public class EmailTemplateService {
     }
 
     /**
-     * Generate welcome email for new users with Dark OLED Luxury design
+     * Generate welcome email with clean, professional design
      */
     public String generateWelcomeEmail(String username, String dashboardLink) {
-        // Sanitize user-provided content to prevent XSS
         String safeUsername = escapeHtml(username);
         String safeDashboardLink = sanitizeUrl(dashboardLink);
         return String.format("""
@@ -520,76 +376,39 @@ public class EmailTemplateService {
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Welcome to Industrial Cloud</title>
                 </head>
-                <body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000000;">
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #000000;">
+                <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #f5f5f5;">
                         <tr>
                             <td style="padding: 40px 20px;">
-                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; max-width: 600px;">
-
-                                    <!-- Header -->
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="480" style="margin: 0 auto; max-width: 480px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                                     <tr>
-                                        <td style="background: linear-gradient(135deg, #0a0a0a 0%%, #111111 100%%); border: 1px solid rgba(20, 184, 166, 0.2); border-bottom: none; border-radius: 16px 16px 0 0; padding: 48px 40px 32px; text-align: center;">
-                                            <div style="display: inline-block; background: linear-gradient(135deg, rgba(20, 184, 166, 0.2), rgba(20, 184, 166, 0.1)); border-radius: 12px; padding: 12px 24px; margin-bottom: 24px;">
-                                                <span style="font-size: 28px; font-weight: 700; color: #14b8a6; letter-spacing: -0.5px;">Industrial Cloud</span>
-                                            </div>
-                                            <h1 style="margin: 0 0 8px; font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">Welcome, %s!</h1>
-                                            <p style="margin: 0; font-size: 15px; color: #6b7280;">Your IoT monitoring journey begins now</p>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Content -->
-                                    <tr>
-                                        <td style="background: #0a0a0a; border-left: 1px solid rgba(20, 184, 166, 0.2); border-right: 1px solid rgba(20, 184, 166, 0.2); padding: 32px 40px;">
-                                            <p style="margin: 0 0 24px; font-size: 16px; color: #d1d5db; line-height: 1.7;">
-                                                Thank you for joining Industrial Cloud. You now have access to powerful real-time IoT monitoring and analytics.
+                                        <td style="padding: 40px;">
+                                            <p style="margin: 0 0 24px; font-size: 20px; font-weight: 600; color: #111827;">Welcome, %s</p>
+                                            <p style="margin: 0 0 24px; font-size: 15px; color: #4b5563; line-height: 1.6;">
+                                                Thanks for signing up for Industrial Cloud. Your account is ready to use.
                                             </p>
-
-                                            <!-- Features Grid -->
-                                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="margin-bottom: 24px;">
-                                                <tr>
-                                                    <td style="width: 50%%; padding-right: 8px; vertical-align: top;">
-                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background: rgba(20, 184, 166, 0.08); border: 1px solid rgba(20, 184, 166, 0.15); border-radius: 10px;">
-                                                            <tr>
-                                                                <td style="padding: 20px;">
-                                                                    <p style="margin: 0 0 4px; font-size: 14px; font-weight: 600; color: #14b8a6;">Real-time Data</p>
-                                                                    <p style="margin: 0; font-size: 13px; color: #9ca3af;">Live telemetry streaming</p>
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </td>
-                                                    <td style="width: 50%%; padding-left: 8px; vertical-align: top;">
-                                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.15); border-radius: 10px;">
-                                                            <tr>
-                                                                <td style="padding: 20px;">
-                                                                    <p style="margin: 0 0 4px; font-size: 14px; font-weight: 600; color: #3b82f6;">Smart Alerts</p>
-                                                                    <p style="margin: 0; font-size: 13px; color: #9ca3af;">Configurable notifications</p>
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                            </table>
-
-                                            <!-- CTA -->
+                                            <p style="margin: 0 0 24px; font-size: 15px; color: #4b5563; line-height: 1.6;">
+                                                Get started by connecting your first device or exploring the dashboard.
+                                            </p>
                                             <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
                                                 <tr>
-                                                    <td style="text-align: center; padding: 16px 0;">
-                                                        <a href="%s" style="display: inline-block; background: linear-gradient(135deg, #14b8a6 0%%, #0d9488 100%%); color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; padding: 16px 40px; border-radius: 10px; box-shadow: 0 4px 20px rgba(20, 184, 166, 0.35);">Go to Dashboard</a>
+                                                    <td style="padding: 8px 0 24px;">
+                                                        <a href="%s" style="display: inline-block; background-color: #0f766e; color: #ffffff; font-size: 14px; font-weight: 500; text-decoration: none; padding: 12px 24px; border-radius: 6px;">Go to dashboard</a>
                                                     </td>
                                                 </tr>
                                             </table>
+                                            <p style="margin: 0; font-size: 14px; color: #6b7280;">
+                                                Questions? Just reply to this email.
+                                            </p>
                                         </td>
                                     </tr>
-
-                                    <!-- Footer -->
+                                </table>
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="480" style="margin: 24px auto 0; max-width: 480px;">
                                     <tr>
-                                        <td style="background: linear-gradient(135deg, #050505 0%%, #0a0a0a 100%%); border: 1px solid rgba(20, 184, 166, 0.1); border-top: none; border-radius: 0 0 16px 16px; padding: 32px 40px; text-align: center;">
-                                            <p style="margin: 0; font-size: 18px; font-weight: 600; color: #14b8a6;">Industrial Cloud</p>
-                                            <p style="margin: 4px 0 16px; font-size: 13px; color: #6b7280;">Real-time IoT Monitoring & Analytics</p>
-                                            <p style="margin: 0; font-size: 12px; color: #374151;">© 2025 Industrial Cloud. All rights reserved.</p>
+                                        <td style="text-align: center;">
+                                            <p style="margin: 0; font-size: 12px; color: #9ca3af;">Industrial Cloud</p>
                                         </td>
                                     </tr>
-
                                 </table>
                             </td>
                         </tr>

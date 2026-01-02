@@ -86,7 +86,7 @@ public class EmailNotificationService {
     }
 
     private String generateEmailSubject(Alert alert) {
-        return String.format("[SensorVision] %s Alert: %s",
+        return String.format("[Industrial Cloud] %s Alert: %s",
                 alert.getSeverity(),
                 alert.getRule().getName());
     }
@@ -107,7 +107,7 @@ public class EmailNotificationService {
         }
 
         try {
-            String subject = String.format("[SensorVision] Scheduled Report: %s", reportName);
+            String subject = String.format("[Industrial Cloud] Scheduled Report: %s", reportName);
             String body = generateReportEmailBody(reportName, reportDescription, execution);
 
             log.info("Sending report email to: {}", recipientEmail);
@@ -152,7 +152,7 @@ public class EmailNotificationService {
                     </ul>
                     <p>The report is attached to this email.</p>
                     <hr>
-                    <p><small>This is an automated message from SensorVision IoT Platform</small></p>
+                    <p><small>This is an automated message from Industrial Cloud IoT Platform</small></p>
                 </body>
                 </html>
                 """,
@@ -174,7 +174,7 @@ public class EmailNotificationService {
         }
 
         try {
-            String subject = "[SensorVision] Password Reset Request";
+            String subject = "[Industrial Cloud] Password Reset Request";
             String resetLink = generatePasswordResetLink(resetToken);
             String body = generatePasswordResetEmailBody(resetLink);
 
@@ -195,7 +195,7 @@ public class EmailNotificationService {
                     "This link will expire in 1 hour for security reasons.\n\n" +
                     "If you didn't request a password reset, you can safely ignore this email.\n\n" +
                     "---\n" +
-                    "SensorVision - IoT Monitoring Platform",
+                    "Industrial Cloud - IoT Monitoring Platform",
                     resetLink
                 );
 
@@ -225,7 +225,7 @@ public class EmailNotificationService {
         }
 
         try {
-            String subject = "[SensorVision] Email Verification";
+            String subject = "[Industrial Cloud] Email Verification";
             String verificationLink = generateVerificationLink(verificationToken);
             String body = generateVerificationEmailBody(verificationLink);
 
@@ -278,8 +278,8 @@ public class EmailNotificationService {
         return String.format("""
                 <html>
                 <body>
-                    <h2>Welcome to SensorVision!</h2>
-                    <p>Thank you for registering with SensorVision IoT Platform.</p>
+                    <h2>Welcome to Industrial Cloud!</h2>
+                    <p>Thank you for registering with Industrial Cloud IoT Platform.</p>
                     <p>Please verify your email address by clicking the link below:</p>
                     <p><a href="%s" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a></p>
                     <p>Or copy and paste this link into your browser:</p>
@@ -287,7 +287,7 @@ public class EmailNotificationService {
                     <p><strong>This link will expire in 24 hours.</strong></p>
                     <p>If you didn't create an account, you can safely ignore this email.</p>
                     <hr>
-                    <p><small>This is an automated message from SensorVision IoT Platform</small></p>
+                    <p><small>This is an automated message from Industrial Cloud IoT Platform</small></p>
                 </body>
                 </html>
                 """, verificationLink, verificationLink);
@@ -303,7 +303,7 @@ public class EmailNotificationService {
         }
 
         try {
-            String subject = String.format("[SensorVision] %s Issue: %s",
+            String subject = String.format("[Industrial Cloud] %s Issue: %s",
                 issue.getSeverity().getDisplayName(),
                 issue.getTitle());
 
@@ -411,7 +411,7 @@ public class EmailNotificationService {
         // Footer
         body.append("<hr style='margin: 30px 0; border: none; border-top: 1px solid #ddd;'>");
         body.append("<p style='color: #666; font-size: 12px; text-align: center;'>");
-        body.append("This is an automated issue report from SensorVision IoT Platform<br>");
+        body.append("This is an automated issue report from Industrial Cloud IoT Platform<br>");
         body.append("Issue ID: #").append(issue.getId());
         body.append("</p>");
 
@@ -467,7 +467,7 @@ public class EmailNotificationService {
         log.info("[ASYNC] Sending ticket reply email in background thread: {}", Thread.currentThread().getName());
 
         try {
-            String subject = String.format("[SensorVision] Reply on your support ticket #%d", issue.getId());
+            String subject = String.format("[Industrial Cloud] Reply on your support ticket #%d", issue.getId());
             String body = generateTicketReplyEmailBody(issue, replyMessage);
 
             log.info("Sending ticket reply notification to: {}", recipientEmail);
@@ -545,7 +545,7 @@ public class EmailNotificationService {
         // Footer
         body.append("<div style='background-color: #f8f9fa; padding: 15px; text-align: center; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px;'>");
         body.append("<p style='color: #666; font-size: 12px; margin: 5px 0;'>");
-        body.append("This is an automated notification from SensorVision Support<br>");
+        body.append("This is an automated notification from Industrial Cloud Support<br>");
         body.append("You're receiving this because you submitted ticket #").append(issue.getId());
         body.append("</p>");
         body.append("</div>");
@@ -568,7 +568,7 @@ public class EmailNotificationService {
         }
 
         try {
-            String subject = String.format("[SensorVision] SMS Budget Alert: %s reaching %d%% of budget",
+            String subject = String.format("[Industrial Cloud] SMS Budget Alert: %s reaching %d%% of budget",
                 settings.getOrganization().getName(),
                 settings.getBudgetThresholdPercentage());
 
@@ -672,7 +672,7 @@ public class EmailNotificationService {
         body.append("<div style='background-color: #f8f9fa; padding: 15px; text-align: center; ");
         body.append("border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 5px 5px;'>");
         body.append("<p style='color: #666; font-size: 12px; margin: 5px 0;'>");
-        body.append("This is an automated budget alert from SensorVision IoT Platform<br>");
+        body.append("This is an automated budget alert from Industrial Cloud IoT Platform<br>");
         body.append("You're receiving this because budget alerts are enabled for your organization");
         body.append("</p>");
         body.append("</div>");
