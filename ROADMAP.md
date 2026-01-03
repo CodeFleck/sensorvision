@@ -14,21 +14,21 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ---
 
-## Current Status (2025-11-04)
+## Current Status (2026-01-03)
 
 ✅ **Production-Ready Platform**
-- 224 Java files, 113 TypeScript files, 73 React components
-- 137 REST API endpoints
-- 44 database migrations
-- 58 service classes
+- 230+ Java files, 115+ TypeScript files, 75+ React components
+- 140+ REST API endpoints
+- 63 database migrations
+- 60+ service classes
 - Multi-tenancy architecture
 - Real-time WebSocket streaming
 - Official Python + JavaScript SDKs with Integration Wizard
-- Deployed to AWS production (http://35.88.65.186.nip.io:8080)
+- Deployed to AWS production (https://indcloud.io)
 
-✅ **70% Feature Parity with Ubidots Core**
+✅ **85% Feature Parity with Ubidots Core**
 
-🎯 **Q1 2025 Target: 80% Feature Parity**
+✅ **Q1 2025 Target: 80% Feature Parity - ACHIEVED!**
 
 ---
 
@@ -89,9 +89,9 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 1. ✅ **LoRaWAN TTN Plugin** - Parse The Things Network v3 webhooks (Production Ready)
 2. ✅ **HTTP Webhook Plugin** - Generic webhook receiver with field mapping (Production Ready)
 3. ✅ **CSV Import Plugin** - Bulk import historical data (Partially Complete)
-4. 🚧 **Modbus TCP Plugin** - Poll Modbus devices (Planned Sprint 3)
-5. 🚧 **Sigfox Plugin** - Parse Sigfox callbacks (Planned Sprint 3)
-6. 🚧 **MQTT Bridge Plugin** - Connect to external MQTT brokers (Planned Sprint 3)
+4. ✅ **Modbus TCP Plugin** - Poll Modbus devices (Sprint 3 - COMPLETE)
+5. ✅ **Sigfox Plugin** - Parse Sigfox callbacks (Sprint 3 - COMPLETE)
+6. ✅ **MQTT Bridge Plugin** - Connect to external MQTT brokers (Sprint 3 - COMPLETE)
 
 **Documentation**:
 - Complete plugin system guide: `docs/DATA_PLUGINS.md`
@@ -146,16 +146,16 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ---
 
-#### 2.3 Global Events (Fleet-Wide Rules) ⚠️ HIGH PRIORITY
-**Effort**: 2 weeks (Sprint 5) | **Status**: 🚧 Planned
+#### 2.3 Global Events (Fleet-Wide Rules) ✅ COMPLETE
+**Effort**: 2 weeks (Sprint 5) | **Status**: ✅ Completed (2026-01-02)
 **GitHub Issue**: [#81](https://github.com/CodeFleck/sensorvision/issues/81)
 
-**Features**:
-- Rules that monitor hundreds of devices simultaneously
-- Aggregate conditions: "avg(temperature) across all devices > 75"
-- Device filtering by tags, groups, organization, custom query
-- Fleet aggregation functions: countDevices(), countOnline(), countOffline(), percentOnline()
-- Metric aggregations: sum(), avg(), min(), max(), stddev(), percentile()
+**Features** (All Implemented):
+- ✅ Rules that monitor hundreds of devices simultaneously
+- ✅ Aggregate conditions: "avg(temperature) across all devices > 75"
+- ✅ Device filtering by tags, groups, organization, custom query
+- ✅ Fleet aggregation functions: countDevices(), countOnline(), countOffline(), percentOnline()
+- ✅ Metric aggregations: sum(), avg(), min(), max(), stddev(), percentile()
 
 **Use Cases**:
 - "Alert if more than 10% of devices are offline"
@@ -165,19 +165,19 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ---
 
-#### 2.4 SMS Alert Notifications ⚠️ HIGH PRIORITY
-**Effort**: 1 week | **Status**: 🚧 Planned for Q1 2025
+#### 2.4 SMS Alert Notifications ✅ COMPLETE
+**Effort**: 1 week | **Status**: ✅ Completed (2026-01-02)
 **GitHub Issue**: [#88](https://github.com/CodeFleck/sensorvision/issues/88)
 
-**Features**:
-- SMS notification channel for critical alerts
-- Twilio integration for SMS delivery
-- Per-alert SMS toggle (enable/disable SMS for each alert)
-- Phone number configuration per user
-- SMS delivery status tracking
-- Rate limiting to prevent SMS spam
-- Fallback to email if SMS fails
-- International phone number support
+**Features** (All Implemented):
+- ✅ SMS notification channel for critical alerts
+- ✅ Twilio integration for SMS delivery
+- ✅ Per-alert SMS toggle (enable/disable SMS for each alert)
+- ✅ Phone number configuration per user
+- ✅ SMS delivery status tracking
+- ✅ Rate limiting to prevent SMS spam
+- ✅ Fallback to email if SMS fails
+- ✅ International phone number support
 
 **Use Cases**:
 - Critical equipment failures (immediate notification needed)
@@ -190,37 +190,37 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 - Alert settings: Toggle SMS notification per alert
 - Organization settings: SMS budget limits, rate limits
 
-**Cost Considerations**:
-- Twilio pricing: ~$0.0075 per SMS
-- Provide organization-level budget controls
-- Consider tiered plans (free tier: 100 SMS/month)
+**Production Deployment**:
+- Twilio credentials configured in AWS production
+- Budget controls active ($10/month default limit)
+- Verified in production (2026-01-02)
 
 ---
 
-#### 2.5 Production Email Fix (AWS SES) 🔥 CRITICAL
-**Effort**: 2-3 days | **Status**: 🚧 Planned for Q1 2025
+#### 2.5 Production Email (AWS SES) ✅ COMPLETE
+**Effort**: 2-3 days | **Status**: ✅ Completed (2026-01-02)
 **GitHub Issue**: [#66](https://github.com/CodeFleck/sensorvision/issues/66)
 
-**Problem**: Forgot password emails and alert notifications not working in production due to AWS security groups blocking SMTP ports.
+**Problem Solved**: Forgot password emails and alert notifications now working in production via AWS SES.
 
-**Solution**: Migrate to AWS SES (Simple Email Service)
+**Solution**: AWS SES (Simple Email Service)
 
-**Implementation**:
-1. Set up AWS SES in us-west-2 region
-2. Verify sender email domain (sensorvision.io or nip.io)
-3. Request production access (move out of SES sandbox)
-4. Update Spring Boot configuration to use SES SMTP endpoint
-5. Add SES credentials to production environment variables
-6. Test all email flows: forgot password, alerts, support tickets
+**Implementation** (All Complete):
+1. ✅ Set up AWS SES in us-west-2 region
+2. ✅ Verified sender email domain (indcloud.io)
+3. ✅ Production access granted (moved out of SES sandbox)
+4. ✅ Spring Boot configured to use SES SMTP endpoint
+5. ✅ SES credentials added to production environment
+6. ✅ All email flows tested: forgot password, alerts, support tickets
 
 **Benefits**:
-- No SMTP port blocking issues
-- Better email deliverability (verified sender)
-- Cost-effective ($0.10 per 1,000 emails)
-- Built-in bounce and complaint handling
-- Supports both SMTP and API interfaces
+- ✅ No SMTP port blocking issues
+- ✅ Better email deliverability (verified sender)
+- ✅ Cost-effective ($0.10 per 1,000 emails)
+- ✅ Built-in bounce and complaint handling
+- ✅ Supports both SMTP and API interfaces
 
-**Related**: Issue #88 (SMS Alerts) should use AWS SNS
+**Related**: SMS Alerts (#88) now uses Twilio (also complete)
 
 ---
 
@@ -572,15 +572,17 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ### Q1 2025 Summary
 
-**Feature Parity Progress**: 70% → 80% (Ubidots core)
+**Feature Parity Progress**: 70% → 85% (Ubidots core)
 
 **Major Accomplishments**:
 1. ✅ Serverless Functions fully operational (UI + backend)
-2. ✅ 3+ protocol plugins (LoRaWAN, Modbus, Sigfox)
-3. ✅ Plugin marketplace launched
+2. ✅ 6 protocol plugins (LoRaWAN, Modbus, Sigfox, MQTT Bridge, HTTP Webhook, CSV Import)
+3. ✅ Plugin marketplace launched with 6 pre-built plugins
 4. ✅ Advanced synthetic variables (math, statistics, time windows)
-5. ✅ Fleet-wide rules and monitoring
-6. ✅ 0 production bugs
+5. ✅ Fleet-wide rules and global events monitoring
+6. ✅ SMS Alerts via Twilio (with budget controls)
+7. ✅ Email via AWS SES (production verified)
+8. ✅ 0 production bugs
 
 **Market Position**:
 - ✅ Serverless extensibility with Python & Node.js runtimes
@@ -799,21 +801,24 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ---
 
-**Last Updated**: 2025-11-04
-**Current Phase**: Phase 1 - Sprint 1 (Weeks 1-2)
-**Next Milestone**: Serverless Functions UI Complete + Production Bugs Fixed (Week 2)
-**Status**: Executing Q1 2025 Plan ✅
+**Last Updated**: 2026-01-03
+**Current Phase**: Phase 2 - ML Pipeline (Q2 2025 Planning)
+**Next Milestone**: ML Pipeline Foundation (#87)
+**Status**: Q1 2025 Complete - 85% Feature Parity Achieved ✅
 
-**Recent Progress** (Last 7 Days):
-- ✅ Support System Phase 2 completed (Rich text editor, file attachments, auto-save)
-- ✅ Created GitHub Issues #80, #81, #82 for Q1 2025 roadmap
-- ✅ Updated ROADMAP.md with detailed sprint schedule
-- ✅ Organized work into 6 sprints (12 weeks total)
+**Recent Progress** (2026-01-02 - 2026-01-03):
+- ✅ Sprint 3 plugins completed (Sigfox, MQTT Bridge, Modbus TCP)
+- ✅ V62 migration column name fixes deployed
+- ✅ SMS Alerts via Twilio verified in production
+- ✅ AWS SES email working in production
+- ✅ Security hardening: removed hardcoded credentials, added secret scanning
+- ✅ Password reset token expiry extended to 24 hours
 
-**Previous Accomplishments**:
-- ✅ All Quick Wins completed (10 features)
-- ✅ Dynamic Dashboards implemented (Issue #65)
-- ✅ Production Floor Monitoring with playlists
-- ✅ Serverless Functions backend complete (Python + Node.js)
-- ✅ Dark Mode with multiple theme variants
-- ✅ Integration Wizard for Python/JavaScript SDKs
+**Q1 2025 Complete**:
+- ✅ All 6 sprints completed
+- ✅ 6 protocol plugins operational
+- ✅ Plugin marketplace with 6 pre-built plugins
+- ✅ Global Events / Fleet-wide rules
+- ✅ Advanced synthetic variables (31 functions)
+- ✅ SMS + Email notifications in production
+- ✅ 85% feature parity with Ubidots core
