@@ -67,7 +67,8 @@ export const ResetPassword: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'Failed to reset password');
+        // Spring ProblemDetail format uses 'detail' not 'message'
+        throw new Error(errorData?.detail || errorData?.message || 'Failed to reset password');
       }
 
       setSuccess(true);

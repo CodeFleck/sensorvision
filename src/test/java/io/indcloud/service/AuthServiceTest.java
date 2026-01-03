@@ -354,7 +354,7 @@ class AuthServiceTest {
         String resetToken = "valid-reset-token";
         String newPassword = "newPassword123";
         testUser.setPasswordResetToken(resetToken);
-        testUser.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(1));
+        testUser.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(24));
 
         when(userRepository.findByPasswordResetToken(resetToken)).thenReturn(Optional.of(testUser));
         when(passwordEncoder.encode(newPassword)).thenReturn("$2a$10$newencoded");
@@ -461,7 +461,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void forgotPassword_shouldSetExpiryToOneHourFromNow() {
+    void forgotPassword_shouldSetExpiryTo24HoursFromNow() {
         // Given
         String email = "test@example.com";
         LocalDateTime beforeCall = LocalDateTime.now();
@@ -477,8 +477,8 @@ class AuthServiceTest {
         User savedUser = userCaptor.getValue();
 
         LocalDateTime afterCall = LocalDateTime.now();
-        LocalDateTime expectedMinExpiry = beforeCall.plusHours(1);
-        LocalDateTime expectedMaxExpiry = afterCall.plusHours(1);
+        LocalDateTime expectedMinExpiry = beforeCall.plusHours(24);
+        LocalDateTime expectedMaxExpiry = afterCall.plusHours(24);
 
         assertThat(savedUser.getPasswordResetTokenExpiry())
                 .isNotNull()
