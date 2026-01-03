@@ -72,13 +72,13 @@ public class MLAnomaly {
     private Instant acknowledgedAt;
 
     @Column(name = "acknowledged_by")
-    private UUID acknowledgedBy;
+    private Long acknowledgedBy;
 
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
     @Column(name = "resolved_by")
-    private UUID resolvedBy;
+    private Long resolvedBy;
 
     @Column(name = "resolution_note", columnDefinition = "TEXT")
     private String resolutionNote;

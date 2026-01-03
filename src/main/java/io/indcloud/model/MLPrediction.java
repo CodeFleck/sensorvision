@@ -70,7 +70,7 @@ public class MLPrediction {
     private Instant feedbackAt;
 
     @Column(name = "feedback_by")
-    private UUID feedbackBy;
+    private Long feedbackBy;
 
     @Column(name = "created_at")
     @Builder.Default

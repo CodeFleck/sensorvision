@@ -1,12 +1,13 @@
 package io.indcloud.service.ml;
 
-import io.indcloud.dto.ml.MLModelResponseDto;
+import io.indcloud.dto.ml.MLModelResponse;
 import io.indcloud.model.*;
 import io.indcloud.repository.MLModelRepository;
 import io.indcloud.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,11 +47,15 @@ public class MLModelService {
     }
 
     /**
-     * Get models by type.
+     * Get models by type with pagination.
      */
     @Transactional(readOnly = true)
-    public List<MLModel> getModelsByType(Long organizationId, MLModelType modelType) {
-        return mlModelRepository.findByOrganizationIdAndModelType(organizationId, modelType);
+    public Page<MLModel> getModelsByType(Long organizationId, MLModelType modelType, Pageable pageable) {
+        List<MLModel> models = mlModelRepository.findByOrganizationIdAndModelType(organizationId, modelType);
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), models.size());
+        List<MLModel> pageContent = start > models.size() ? List.of() : models.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, models.size());
     }
 
     /**
@@ -62,19 +67,23 @@ public class MLModelService {
     }
 
     /**
-     * Create a new ML model.
+     * Create a new ML model with all configuration options.
      */
     @Transactional
     public MLModel createModel(Long organizationId, String name, MLModelType modelType,
-                                String algorithm, Map<String, Object> hyperparameters,
-                                List<String> featureColumns, UUID createdBy) {
+                                String algorithm, String version, Map<String, Object> hyperparameters,
+                                List<String> featureColumns, String targetColumn,
+                                String deviceScope, List<UUID> deviceIds, Long deviceGroupId,
+                                String inferenceSchedule, BigDecimal confidenceThreshold,
+                                BigDecimal anomalyThreshold, Long createdBy) {
         Organization org = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Organization not found: " + organizationId));
 
+        String effectiveVersion = version != null ? version : "1.0.0";
+
         // Check for duplicate name/version
-        String version = "1.0.0";
-        if (mlModelRepository.existsByOrganizationIdAndNameAndVersion(organizationId, name, version)) {
-            throw new IllegalArgumentException("Model with name '" + name + "' version '" + version + "' already exists");
+        if (mlModelRepository.existsByOrganizationIdAndNameAndVersion(organizationId, name, effectiveVersion)) {
+            throw new IllegalArgumentException("Model with name '" + name + "' version '" + effectiveVersion + "' already exists");
         }
 
         MLModel model = MLModel.builder()
@@ -82,9 +91,16 @@ public class MLModelService {
                 .name(name)
                 .modelType(modelType)
                 .algorithm(algorithm)
-                .version(version)
+                .version(effectiveVersion)
                 .hyperparameters(hyperparameters)
                 .featureColumns(featureColumns)
+                .targetColumn(targetColumn)
+                .deviceScope(deviceScope != null ? deviceScope : "ALL")
+                .deviceIds(deviceIds)
+                .deviceGroupId(deviceGroupId)
+                .inferenceSchedule(inferenceSchedule)
+                .confidenceThreshold(confidenceThreshold != null ? confidenceThreshold : new BigDecimal("0.8"))
+                .anomalyThreshold(anomalyThreshold != null ? anomalyThreshold : new BigDecimal("0.5"))
                 .status(MLModelStatus.DRAFT)
                 .createdBy(createdBy)
                 .build();
@@ -98,76 +114,89 @@ public class MLModelService {
      * Update model configuration.
      */
     @Transactional
-    public MLModel updateModel(UUID modelId, Long organizationId, String name,
-                                Map<String, Object> hyperparameters, List<String> featureColumns,
-                                String inferenceSchedule, BigDecimal confidenceThreshold,
-                                BigDecimal anomalyThreshold) {
-        MLModel model = mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
-                .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
+    public Optional<MLModel> updateModel(UUID modelId, Long organizationId, String name,
+                                          Map<String, Object> hyperparameters, List<String> featureColumns,
+                                          String targetColumn, String deviceScope, List<UUID> deviceIds,
+                                          Long deviceGroupId, String inferenceSchedule,
+                                          BigDecimal confidenceThreshold, BigDecimal anomalyThreshold) {
+        return mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
+                .map(model -> {
+                    if (model.getStatus() == MLModelStatus.DEPLOYED) {
+                        throw new IllegalStateException("Cannot update deployed model. Archive it first.");
+                    }
 
-        if (model.getStatus() == MLModelStatus.DEPLOYED) {
-            throw new IllegalStateException("Cannot update deployed model. Archive it first.");
-        }
+                    if (name != null) {
+                        model.setName(name);
+                    }
+                    if (hyperparameters != null) {
+                        model.setHyperparameters(hyperparameters);
+                    }
+                    if (featureColumns != null) {
+                        model.setFeatureColumns(featureColumns);
+                    }
+                    if (targetColumn != null) {
+                        model.setTargetColumn(targetColumn);
+                    }
+                    if (deviceScope != null) {
+                        model.setDeviceScope(deviceScope);
+                    }
+                    if (deviceIds != null) {
+                        model.setDeviceIds(deviceIds);
+                    }
+                    if (deviceGroupId != null) {
+                        model.setDeviceGroupId(deviceGroupId);
+                    }
+                    if (inferenceSchedule != null) {
+                        model.setInferenceSchedule(inferenceSchedule);
+                    }
+                    if (confidenceThreshold != null) {
+                        model.setConfidenceThreshold(confidenceThreshold);
+                    }
+                    if (anomalyThreshold != null) {
+                        model.setAnomalyThreshold(anomalyThreshold);
+                    }
 
-        if (name != null) {
-            model.setName(name);
-        }
-        if (hyperparameters != null) {
-            model.setHyperparameters(hyperparameters);
-        }
-        if (featureColumns != null) {
-            model.setFeatureColumns(featureColumns);
-        }
-        if (inferenceSchedule != null) {
-            model.setInferenceSchedule(inferenceSchedule);
-        }
-        if (confidenceThreshold != null) {
-            model.setConfidenceThreshold(confidenceThreshold);
-        }
-        if (anomalyThreshold != null) {
-            model.setAnomalyThreshold(anomalyThreshold);
-        }
-
-        MLModel updated = mlModelRepository.save(model);
-        log.info("Updated ML model: {}", modelId);
-        return updated;
+                    MLModel updated = mlModelRepository.save(model);
+                    log.info("Updated ML model: {}", modelId);
+                    return updated;
+                });
     }
 
     /**
      * Deploy a trained model.
      */
     @Transactional
-    public MLModel deployModel(UUID modelId, Long organizationId) {
-        MLModel model = mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
-                .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
+    public Optional<MLModel> deployModel(UUID modelId, Long organizationId) {
+        return mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
+                .map(model -> {
+                    if (model.getStatus() != MLModelStatus.TRAINED) {
+                        throw new IllegalStateException("Only trained models can be deployed. Current status: " + model.getStatus());
+                    }
 
-        if (model.getStatus() != MLModelStatus.TRAINED) {
-            throw new IllegalStateException("Only trained models can be deployed. Current status: " + model.getStatus());
-        }
+                    model.setStatus(MLModelStatus.DEPLOYED);
+                    model.setDeployedAt(Instant.now());
+                    model.setNextInferenceAt(Instant.now());
 
-        model.setStatus(MLModelStatus.DEPLOYED);
-        model.setDeployedAt(Instant.now());
-        model.setNextInferenceAt(Instant.now()); // Start inference immediately
-
-        MLModel deployed = mlModelRepository.save(model);
-        log.info("Deployed ML model: {}", modelId);
-        return deployed;
+                    MLModel deployed = mlModelRepository.save(model);
+                    log.info("Deployed ML model: {}", modelId);
+                    return deployed;
+                });
     }
 
     /**
      * Archive a model.
      */
     @Transactional
-    public MLModel archiveModel(UUID modelId, Long organizationId) {
-        MLModel model = mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
-                .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
+    public Optional<MLModel> archiveModel(UUID modelId, Long organizationId) {
+        return mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
+                .map(model -> {
+                    model.setStatus(MLModelStatus.ARCHIVED);
+                    model.setNextInferenceAt(null);
 
-        model.setStatus(MLModelStatus.ARCHIVED);
-        model.setNextInferenceAt(null);
-
-        MLModel archived = mlModelRepository.save(model);
-        log.info("Archived ML model: {}", modelId);
-        return archived;
+                    MLModel archived = mlModelRepository.save(model);
+                    log.info("Archived ML model: {}", modelId);
+                    return archived;
+                });
     }
 
     /**
@@ -190,18 +219,18 @@ public class MLModelService {
      * Mark model as training.
      */
     @Transactional
-    public MLModel startTraining(UUID modelId, Long organizationId, UUID trainedBy) {
-        MLModel model = mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
-                .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
+    public Optional<MLModel> startTraining(UUID modelId, Long organizationId, Long trainedBy) {
+        return mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
+                .map(model -> {
+                    if (model.getStatus() == MLModelStatus.TRAINING) {
+                        throw new IllegalStateException("Model is already training");
+                    }
 
-        if (model.getStatus() == MLModelStatus.TRAINING) {
-            throw new IllegalStateException("Model is already training");
-        }
+                    model.setStatus(MLModelStatus.TRAINING);
+                    model.setTrainedBy(trainedBy);
 
-        model.setStatus(MLModelStatus.TRAINING);
-        model.setTrainedBy(trainedBy);
-
-        return mlModelRepository.save(model);
+                    return mlModelRepository.save(model);
+                });
     }
 
     /**
@@ -276,20 +305,20 @@ public class MLModelService {
     }
 
     /**
-     * Convert model entity to DTO.
+     * Convert model entity to response DTO.
      */
-    public MLModelResponseDto toDto(MLModel model) {
-        return MLModelResponseDto.builder()
+    public MLModelResponse toResponse(MLModel model) {
+        return MLModelResponse.builder()
                 .id(model.getId())
-                .organizationId(model.getOrganization().getId())
+                .organizationId(model.getOrganization() != null ? model.getOrganization().getId() : null)
                 .name(model.getName())
-                .modelType(model.getModelType().name())
+                .modelType(model.getModelType())
                 .version(model.getVersion())
                 .algorithm(model.getAlgorithm())
                 .hyperparameters(model.getHyperparameters())
                 .featureColumns(model.getFeatureColumns())
                 .targetColumn(model.getTargetColumn())
-                .status(model.getStatus().name())
+                .status(model.getStatus())
                 .modelPath(model.getModelPath())
                 .modelSizeBytes(model.getModelSizeBytes())
                 .trainingMetrics(model.getTrainingMetrics())

@@ -105,10 +105,10 @@ public class MLModel {
     private BigDecimal anomalyThreshold = new BigDecimal("0.5");
 
     @Column(name = "created_by")
-    private UUID createdBy;
+    private Long createdBy;
 
     @Column(name = "trained_by")
-    private UUID trainedBy;
+    private Long trainedBy;
 
     @Column(name = "trained_at")
     private Instant trainedAt;

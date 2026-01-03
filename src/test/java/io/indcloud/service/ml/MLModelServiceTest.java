@@ -45,7 +45,7 @@ class MLModelServiceTest {
     private MLModel testModel;
     private UUID modelId;
     private Long orgId = 1L;
-    private UUID userId = UUID.randomUUID();
+    private Long userId = 100L;  // Changed to Long
 
     @BeforeEach
     void setUp() {
@@ -99,10 +99,10 @@ class MLModelServiceTest {
             when(mlModelRepository.findByOrganizationIdAndModelType(orgId, MLModelType.ANOMALY_DETECTION))
                     .thenReturn(List.of(testModel));
 
-            List<MLModel> result = mlModelService.getModelsByType(orgId, MLModelType.ANOMALY_DETECTION);
+            Page<MLModel> result = mlModelService.getModelsByType(orgId, MLModelType.ANOMALY_DETECTION, PageRequest.of(0, 10));
 
-            assertThat(result).hasSize(1);
-            assertThat(result.get(0).getModelType()).isEqualTo(MLModelType.ANOMALY_DETECTION);
+            assertThat(result.getTotalElements()).isEqualTo(1);
+            assertThat(result.getContent().get(0).getModelType()).isEqualTo(MLModelType.ANOMALY_DETECTION);
         }
 
         @Test
@@ -137,8 +137,9 @@ class MLModelServiceTest {
 
             MLModel result = mlModelService.createModel(
                     orgId, "New Model", MLModelType.ANOMALY_DETECTION,
-                    "isolation_forest", Map.of("n_estimators", 100),
-                    List.of("temperature", "pressure"), userId);
+                    "isolation_forest", "1.0.0", Map.of("n_estimators", 100),
+                    List.of("temperature", "pressure"), null, "ALL", null, null, null,
+                    new BigDecimal("0.8"), new BigDecimal("0.5"), userId);
 
             assertThat(result.getName()).isEqualTo("New Model");
             assertThat(result.getStatus()).isEqualTo(MLModelStatus.DRAFT);
@@ -157,7 +158,7 @@ class MLModelServiceTest {
 
             assertThatThrownBy(() -> mlModelService.createModel(
                     999L, "Model", MLModelType.ANOMALY_DETECTION,
-                    "algo", null, null, userId))
+                    "algo", "1.0.0", null, null, null, null, null, null, null, null, null, userId))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Organization not found");
         }
@@ -171,7 +172,7 @@ class MLModelServiceTest {
 
             assertThatThrownBy(() -> mlModelService.createModel(
                     orgId, "Duplicate", MLModelType.ANOMALY_DETECTION,
-                    "algo", null, null, userId))
+                    "algo", "1.0.0", null, null, null, null, null, null, null, null, null, userId))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("already exists");
         }
@@ -188,15 +189,17 @@ class MLModelServiceTest {
                     .thenReturn(Optional.of(testModel));
             when(mlModelRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            MLModel result = mlModelService.updateModel(
+            Optional<MLModel> result = mlModelService.updateModel(
                     modelId, orgId, "Updated Name",
                     Map.of("n_estimators", 200),
-                    List.of("temp"), "0 */30 * * * *",
+                    List.of("temp"), null, null, null, null,
+                    "0 */30 * * * *",
                     new BigDecimal("0.9"), new BigDecimal("0.4"));
 
-            assertThat(result.getName()).isEqualTo("Updated Name");
-            assertThat(result.getHyperparameters()).containsEntry("n_estimators", 200);
-            assertThat(result.getInferenceSchedule()).isEqualTo("0 */30 * * * *");
+            assertThat(result).isPresent();
+            assertThat(result.get().getName()).isEqualTo("Updated Name");
+            assertThat(result.get().getHyperparameters()).containsEntry("n_estimators", 200);
+            assertThat(result.get().getInferenceSchedule()).isEqualTo("0 */30 * * * *");
         }
 
         @Test
@@ -207,21 +210,21 @@ class MLModelServiceTest {
                     .thenReturn(Optional.of(testModel));
 
             assertThatThrownBy(() -> mlModelService.updateModel(
-                    modelId, orgId, "New Name", null, null, null, null, null))
+                    modelId, orgId, "New Name", null, null, null, null, null, null, null, null, null))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Cannot update deployed model");
         }
 
         @Test
-        @DisplayName("Should throw when model not found")
-        void shouldThrowWhenModelNotFound() {
+        @DisplayName("Should return empty when model not found")
+        void shouldReturnEmptyWhenModelNotFound() {
             when(mlModelRepository.findByIdAndOrganizationId(any(), any()))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> mlModelService.updateModel(
-                    modelId, orgId, "Name", null, null, null, null, null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Model not found");
+            Optional<MLModel> result = mlModelService.updateModel(
+                    modelId, orgId, "Name", null, null, null, null, null, null, null, null, null);
+
+            assertThat(result).isEmpty();
         }
     }
 
@@ -237,11 +240,12 @@ class MLModelServiceTest {
                     .thenReturn(Optional.of(testModel));
             when(mlModelRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            MLModel result = mlModelService.deployModel(modelId, orgId);
+            Optional<MLModel> result = mlModelService.deployModel(modelId, orgId);
 
-            assertThat(result.getStatus()).isEqualTo(MLModelStatus.DEPLOYED);
-            assertThat(result.getDeployedAt()).isNotNull();
-            assertThat(result.getNextInferenceAt()).isNotNull();
+            assertThat(result).isPresent();
+            assertThat(result.get().getStatus()).isEqualTo(MLModelStatus.DEPLOYED);
+            assertThat(result.get().getDeployedAt()).isNotNull();
+            assertThat(result.get().getNextInferenceAt()).isNotNull();
         }
 
         @Test
@@ -269,10 +273,11 @@ class MLModelServiceTest {
                     .thenReturn(Optional.of(testModel));
             when(mlModelRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            MLModel result = mlModelService.archiveModel(modelId, orgId);
+            Optional<MLModel> result = mlModelService.archiveModel(modelId, orgId);
 
-            assertThat(result.getStatus()).isEqualTo(MLModelStatus.ARCHIVED);
-            assertThat(result.getNextInferenceAt()).isNull();
+            assertThat(result).isPresent();
+            assertThat(result.get().getStatus()).isEqualTo(MLModelStatus.ARCHIVED);
+            assertThat(result.get().getNextInferenceAt()).isNull();
         }
     }
 
@@ -318,10 +323,11 @@ class MLModelServiceTest {
                     .thenReturn(Optional.of(testModel));
             when(mlModelRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            MLModel result = mlModelService.startTraining(modelId, orgId, userId);
+            Optional<MLModel> result = mlModelService.startTraining(modelId, orgId, userId);
 
-            assertThat(result.getStatus()).isEqualTo(MLModelStatus.TRAINING);
-            assertThat(result.getTrainedBy()).isEqualTo(userId);
+            assertThat(result).isPresent();
+            assertThat(result.get().getStatus()).isEqualTo(MLModelStatus.TRAINING);
+            assertThat(result.get().getTrainedBy()).isEqualTo(userId);
         }
 
         @Test
@@ -412,17 +418,17 @@ class MLModelServiceTest {
     }
 
     @Test
-    @DisplayName("Should convert model to DTO")
-    void shouldConvertToDto() {
+    @DisplayName("Should convert model to response")
+    void shouldConvertToResponse() {
         testModel.setTrainingMetrics(Map.of("accuracy", 0.95));
         testModel.setValidationMetrics(Map.of("f1", 0.92));
 
-        var dto = mlModelService.toDto(testModel);
+        var response = mlModelService.toResponse(testModel);
 
-        assertThat(dto.getId()).isEqualTo(modelId);
-        assertThat(dto.getName()).isEqualTo("Test Model");
-        assertThat(dto.getModelType()).isEqualTo("ANOMALY_DETECTION");
-        assertThat(dto.getStatus()).isEqualTo("DRAFT");
-        assertThat(dto.getTrainingMetrics()).containsEntry("accuracy", 0.95);
+        assertThat(response.getId()).isEqualTo(modelId);
+        assertThat(response.getName()).isEqualTo("Test Model");
+        assertThat(response.getModelType()).isEqualTo(MLModelType.ANOMALY_DETECTION);
+        assertThat(response.getStatus()).isEqualTo(MLModelStatus.DRAFT);
+        assertThat(response.getTrainingMetrics()).containsEntry("accuracy", 0.95);
     }
 }

@@ -39,7 +39,7 @@ class MLModelTest {
     @DisplayName("Should create MLModel with all fields")
     void shouldCreateWithAllFields() {
         UUID id = UUID.randomUUID();
-        UUID createdBy = UUID.randomUUID();
+        Long createdBy = 100L;
         Instant now = Instant.now();
         Organization org = new Organization();
         org.setId(1L);

@@ -127,7 +127,7 @@ public class MLAnomalyService {
      * Acknowledge an anomaly.
      */
     @Transactional
-    public MLAnomaly acknowledgeAnomaly(UUID anomalyId, UUID userId) {
+    public MLAnomaly acknowledgeAnomaly(UUID anomalyId, Long userId) {
         MLAnomaly anomaly = mlAnomalyRepository.findById(anomalyId)
                 .orElseThrow(() -> new IllegalArgumentException("Anomaly not found: " + anomalyId));
 
@@ -166,7 +166,7 @@ public class MLAnomalyService {
      * Resolve an anomaly.
      */
     @Transactional
-    public MLAnomaly resolveAnomaly(UUID anomalyId, UUID userId, String resolutionNote) {
+    public MLAnomaly resolveAnomaly(UUID anomalyId, Long userId, String resolutionNote) {
         MLAnomaly anomaly = mlAnomalyRepository.findById(anomalyId)
                 .orElseThrow(() -> new IllegalArgumentException("Anomaly not found: " + anomalyId));
 
@@ -189,7 +189,7 @@ public class MLAnomalyService {
      * Mark anomaly as false positive.
      */
     @Transactional
-    public MLAnomaly markFalsePositive(UUID anomalyId, UUID userId, String note) {
+    public MLAnomaly markFalsePositive(UUID anomalyId, Long userId, String note) {
         MLAnomaly anomaly = mlAnomalyRepository.findById(anomalyId)
                 .orElseThrow(() -> new IllegalArgumentException("Anomaly not found: " + anomalyId));
 

@@ -36,8 +36,8 @@ class MLAnomalyTest {
     @DisplayName("Should create MLAnomaly with all fields")
     void shouldCreateWithAllFields() {
         UUID id = UUID.randomUUID();
-        UUID acknowledgedBy = UUID.randomUUID();
-        UUID resolvedBy = UUID.randomUUID();
+        Long acknowledgedBy = 100L;
+        Long resolvedBy = 101L;
         UUID globalAlertId = UUID.randomUUID();
         Instant now = Instant.now();
 

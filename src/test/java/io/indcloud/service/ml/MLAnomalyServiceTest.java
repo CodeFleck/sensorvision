@@ -48,7 +48,7 @@ class MLAnomalyServiceTest {
     private UUID anomalyId;
     private UUID deviceId;
     private Long orgId = 1L;
-    private UUID userId = UUID.randomUUID();
+    private Long userId = 100L;
 
     @BeforeEach
     void setUp() {

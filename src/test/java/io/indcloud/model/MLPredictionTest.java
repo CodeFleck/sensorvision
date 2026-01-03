@@ -83,7 +83,7 @@ class MLPredictionTest {
     @Test
     @DisplayName("Should support feedback fields")
     void shouldSupportFeedbackFields() {
-        UUID feedbackBy = UUID.randomUUID();
+        Long feedbackBy = 100L;
         Instant feedbackAt = Instant.now();
 
         MLPrediction prediction = MLPrediction.builder()
