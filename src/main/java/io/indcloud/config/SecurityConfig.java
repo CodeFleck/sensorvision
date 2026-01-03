@@ -58,6 +58,7 @@ public class SecurityConfig {
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -118,7 +119,7 @@ public class SecurityConfig {
                                 .userService(customOAuth2UserService)
                         )
                         .successHandler(oauth2AuthenticationSuccessHandler)
-                        .failureUrl("http://35.88.65.186:8080/login?error=oauth2_failed")
+                        .failureUrl("/login?error=oauth2_failed")
                 )
                 .authenticationProvider(authenticationProvider())
                 // Add device token authentication filter first (for device-specific tokens)
