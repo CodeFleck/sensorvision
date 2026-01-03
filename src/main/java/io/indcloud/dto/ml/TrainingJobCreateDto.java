@@ -1,5 +1,6 @@
 package io.indcloud.dto.ml;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,8 +15,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TrainingJobCreateDto {
+
+    @NotNull(message = "Model ID is required")
     private UUID modelId;
+
+    @NotNull(message = "Organization ID is required")
     private Long organizationId;
+
     private String jobType;
     private Map<String, Object> trainingConfig;
     private Instant trainingDataStart;

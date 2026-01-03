@@ -26,8 +26,12 @@ public interface MLModelRepository extends JpaRepository<MLModel, UUID> {
 
     Optional<MLModel> findByIdAndOrganizationId(UUID id, Long organizationId);
 
-    @Query("SELECT m FROM MLModel m WHERE m.status = 'DEPLOYED' AND m.nextInferenceAt <= :now")
-    List<MLModel> findModelsReadyForInference(@Param("now") Instant now);
+    @Query("SELECT m FROM MLModel m WHERE m.status = :status AND m.nextInferenceAt <= :now")
+    List<MLModel> findModelsReadyForInference(@Param("status") MLModelStatus status, @Param("now") Instant now);
+
+    default List<MLModel> findDeployedModelsReadyForInference(Instant now) {
+        return findModelsReadyForInference(MLModelStatus.DEPLOYED, now);
+    }
 
     @Query("SELECT m FROM MLModel m WHERE m.organization.id = :orgId AND m.status = :status AND m.modelType = :type")
     List<MLModel> findByOrganizationStatusAndType(
@@ -36,8 +40,12 @@ public interface MLModelRepository extends JpaRepository<MLModel, UUID> {
             @Param("type") MLModelType modelType
     );
 
-    @Query("SELECT COUNT(m) FROM MLModel m WHERE m.organization.id = :orgId AND m.status = 'DEPLOYED'")
-    long countDeployedModelsByOrganization(@Param("orgId") Long organizationId);
+    @Query("SELECT COUNT(m) FROM MLModel m WHERE m.organization.id = :orgId AND m.status = :status")
+    long countModelsByOrganizationAndStatus(@Param("orgId") Long organizationId, @Param("status") MLModelStatus status);
+
+    default long countDeployedModelsByOrganization(Long organizationId) {
+        return countModelsByOrganizationAndStatus(organizationId, MLModelStatus.DEPLOYED);
+    }
 
     boolean existsByOrganizationIdAndNameAndVersion(Long organizationId, String name, String version);
 }

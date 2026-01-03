@@ -23,6 +23,15 @@ class Settings(BaseSettings):
     BACKEND_URL: str = "http://localhost:8080"
     BACKEND_API_KEY: str = ""
 
+    # API Security
+    API_KEY: str = ""  # API key for authenticating requests to this service
+    API_KEY_REQUIRED: bool = True  # Disable only for development
+
+    @property
+    def is_production(self) -> bool:
+        """Check if running in production environment."""
+        return self.ENVIRONMENT.lower() == "production"
+
     # ML Configuration
     MODEL_STORAGE_PATH: str = "/app/models"
     MAX_BATCH_SIZE: int = 1000

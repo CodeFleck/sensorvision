@@ -78,6 +78,7 @@ services:
       # ML Service
       ML_SERVICE_URL: http://ml-service:8000
       ML_SERVICE_TIMEOUT: ${ML_SERVICE_TIMEOUT:-30}
+      ML_SERVICE_API_KEY: ${ML_SERVICE_API_KEY:-}
     env_file:
       - .env
     healthcheck:
@@ -112,6 +113,8 @@ services:
       MODEL_STORAGE_PATH: /app/models
       MAX_BATCH_SIZE: ${ML_MAX_BATCH_SIZE:-1000}
       INFERENCE_TIMEOUT_SECONDS: ${ML_INFERENCE_TIMEOUT:-300}
+      API_KEY: ${ML_SERVICE_API_KEY:-}
+      API_KEY_REQUIRED: ${ML_API_KEY_REQUIRED:-true}
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 30s

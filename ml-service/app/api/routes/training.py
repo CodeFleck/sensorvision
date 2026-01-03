@@ -5,15 +5,16 @@ import logging
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 
+from app.core.security import verify_api_key
 from app.models.schemas import (
     TrainingJobCreate,
     TrainingJobResponse,
     TrainingJobStatus,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_api_key)])
 logger = logging.getLogger(__name__)
 
 

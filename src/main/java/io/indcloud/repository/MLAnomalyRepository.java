@@ -25,8 +25,12 @@ public interface MLAnomalyRepository extends JpaRepository<MLAnomaly, UUID> {
 
     List<MLAnomaly> findByOrganizationIdAndSeverity(Long organizationId, MLAnomalySeverity severity);
 
-    @Query("SELECT a FROM MLAnomaly a WHERE a.organization.id = :orgId AND a.status = 'NEW' ORDER BY a.detectedAt DESC")
-    List<MLAnomaly> findNewAnomaliesByOrganization(@Param("orgId") Long organizationId);
+    @Query("SELECT a FROM MLAnomaly a WHERE a.organization.id = :orgId AND a.status = :status ORDER BY a.detectedAt DESC")
+    List<MLAnomaly> findByOrganizationAndStatusOrderByDetectedAtDesc(@Param("orgId") Long organizationId, @Param("status") MLAnomalyStatus status);
+
+    default List<MLAnomaly> findNewAnomaliesByOrganization(Long organizationId) {
+        return findByOrganizationAndStatusOrderByDetectedAtDesc(organizationId, MLAnomalyStatus.NEW);
+    }
 
     @Query("SELECT a FROM MLAnomaly a WHERE a.device.id = :deviceId AND a.detectedAt BETWEEN :start AND :end ORDER BY a.detectedAt DESC")
     List<MLAnomaly> findByDeviceAndTimeRange(
@@ -35,14 +39,23 @@ public interface MLAnomalyRepository extends JpaRepository<MLAnomaly, UUID> {
             @Param("end") Instant end
     );
 
-    @Query("SELECT a FROM MLAnomaly a WHERE a.organization.id = :orgId AND a.severity IN :severities AND a.status = 'NEW' ORDER BY a.detectedAt DESC")
-    List<MLAnomaly> findCriticalNewAnomalies(
+    @Query("SELECT a FROM MLAnomaly a WHERE a.organization.id = :orgId AND a.severity IN :severities AND a.status = :status ORDER BY a.detectedAt DESC")
+    List<MLAnomaly> findBySeveritiesAndStatus(
             @Param("orgId") Long organizationId,
-            @Param("severities") List<MLAnomalySeverity> severities
+            @Param("severities") List<MLAnomalySeverity> severities,
+            @Param("status") MLAnomalyStatus status
     );
 
-    @Query("SELECT COUNT(a) FROM MLAnomaly a WHERE a.organization.id = :orgId AND a.status = 'NEW'")
-    long countNewAnomaliesByOrganization(@Param("orgId") Long organizationId);
+    default List<MLAnomaly> findCriticalNewAnomalies(Long organizationId, List<MLAnomalySeverity> severities) {
+        return findBySeveritiesAndStatus(organizationId, severities, MLAnomalyStatus.NEW);
+    }
+
+    @Query("SELECT COUNT(a) FROM MLAnomaly a WHERE a.organization.id = :orgId AND a.status = :status")
+    long countByOrganizationAndStatus(@Param("orgId") Long organizationId, @Param("status") MLAnomalyStatus status);
+
+    default long countNewAnomaliesByOrganization(Long organizationId) {
+        return countByOrganizationAndStatus(organizationId, MLAnomalyStatus.NEW);
+    }
 
     @Query("SELECT COUNT(a) FROM MLAnomaly a WHERE a.device.id = :deviceId AND a.detectedAt >= :since")
     long countAnomaliesSince(@Param("deviceId") UUID deviceId, @Param("since") Instant since);

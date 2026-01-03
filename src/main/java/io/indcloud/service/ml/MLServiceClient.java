@@ -1,7 +1,7 @@
 package io.indcloud.service.ml;
 
 import io.indcloud.dto.ml.*;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -20,21 +20,40 @@ import java.util.UUID;
  */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class MLServiceClient {
 
     private final WebClient.Builder webClientBuilder;
+    private WebClient webClient;
 
     @Value("${ml.service.url:http://localhost:8000}")
     private String mlServiceUrl;
 
+    @Value("${ml.service.api-key:}")
+    private String mlServiceApiKey;
+
     @Value("${ml.service.timeout:30}")
     private int timeoutSeconds;
 
+    public MLServiceClient(WebClient.Builder webClientBuilder) {
+        this.webClientBuilder = webClientBuilder;
+    }
+
+    @PostConstruct
+    private void init() {
+        WebClient.Builder builder = webClientBuilder
+                .baseUrl(mlServiceUrl);
+
+        // Add API key header if configured
+        if (mlServiceApiKey != null && !mlServiceApiKey.isBlank()) {
+            builder.defaultHeader("X-API-Key", mlServiceApiKey);
+        }
+
+        this.webClient = builder.build();
+        log.info("ML Service client initialized with URL: {}", mlServiceUrl);
+    }
+
     private WebClient getWebClient() {
-        return webClientBuilder
-                .baseUrl(mlServiceUrl)
-                .build();
+        return webClient;
     }
 
     /**
