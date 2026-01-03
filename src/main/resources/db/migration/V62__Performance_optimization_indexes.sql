@@ -1,22 +1,14 @@
--- Migration V58: Performance optimization indexes
+-- Migration V62: Performance optimization indexes
 -- Purpose: Optimize database performance for production workloads
 -- Date: 2025-12-08
+-- Updated: 2026-01-03 - Fixed column names to match actual schema
 
 -- ==============================================================================
--- TELEMETRY PERFORMANCE INDEXES
+-- TELEMETRY PERFORMANCE INDEXES (telemetry_records uses measurement_timestamp)
 -- ==============================================================================
 
--- Composite index for telemetry queries by device and time range (most common query pattern)
-CREATE INDEX IF NOT EXISTS idx_telemetry_device_timestamp_desc
-    ON telemetry_records(device_id, timestamp DESC);
-
--- Index for variable-specific queries with time range
-CREATE INDEX IF NOT EXISTS idx_telemetry_variable_time
-    ON telemetry_records(variable_name, timestamp DESC);
-
--- Composite index for analytics queries (aggregations by device and variable)
-CREATE INDEX IF NOT EXISTS idx_telemetry_analytics
-    ON telemetry_records(device_id, variable_name, timestamp, numeric_value);
+-- Note: idx_telemetry_device_time already exists in V1 migration
+-- Skipping duplicate: ON telemetry_records(device_id, measurement_timestamp DESC)
 
 -- ==============================================================================
 -- DEVICE PERFORMANCE INDEXES
@@ -28,19 +20,18 @@ CREATE INDEX IF NOT EXISTS idx_devices_org_active_created
 
 -- Index for device status and last seen (health monitoring)
 CREATE INDEX IF NOT EXISTS idx_devices_status_last_seen
-    ON devices(status, last_seen DESC);
+    ON devices(status, last_seen_at DESC);
 
 -- ==============================================================================
 -- USER AND ORGANIZATION INDEXES
 -- ==============================================================================
 
--- Index for user login queries and session management
-CREATE INDEX IF NOT EXISTS idx_users_org_last_login
-    ON users(organization_id, last_login DESC);
+-- Note: idx_users_org_last_login removed - users table has no last_login column
+-- If last login tracking is needed, add the column first via a separate migration
 
 -- Index for username lookup (authentication)
-CREATE INDEX IF NOT EXISTS idx_users_username_active
-    ON users(username);
+-- Note: idx_users_username already exists in V6 migration
+-- CREATE INDEX IF NOT EXISTS idx_users_username_active ON users(username);
 
 -- ==============================================================================
 -- DASHBOARD AND WIDGET PERFORMANCE
