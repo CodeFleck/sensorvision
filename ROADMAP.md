@@ -118,16 +118,32 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 ### 🔮 Phase 2: Intelligent Features (Weeks 7-12, Q1 2025)
 *Goal: Add predictive capabilities and advanced analytics*
 
-#### 2.1 Machine Learning Pipeline ⚠️ HIGH PRIORITY
-**Effort**: 6-8 weeks | **Status**: 📋 Planned for Q2 2025
+#### 2.1 Machine Learning Pipeline 🚧 IN PROGRESS
+**Effort**: 6-8 weeks | **Status**: Sprint 1 Complete (Foundation)
+**GitHub Issue**: [#87](https://github.com/CodeFleck/sensorvision/issues/87)
 
-**Pre-Built ML Features**:
-1. **Predictive Maintenance** - Detect equipment failure 24-48 hours in advance
-2. **Anomaly Detection** - Identify unusual patterns in telemetry
-3. **Energy Consumption Forecasting** - Predict next 7 days of usage
-4. **Equipment Remaining Useful Life (RUL)** - Estimate days until maintenance
+**Sprint 1 - Foundation (✅ COMPLETE)**:
+- ✅ Python ML Service (`ml-service/`) with FastAPI
+- ✅ BaseMLEngine abstract class for all engines
+- ✅ AnomalyDetectionEngine (Isolation Forest + Z-Score)
+- ✅ Java backend: MLModelService, MLAnomalyService, MLServiceClient
+- ✅ Database entities: MLModel, MLAnomaly, MLPrediction, MLTrainingJob
+- ✅ REST API: MLModelController, MLAnomalyController
+- ✅ Unit tests: 10+ test files for ML components
 
-**Technologies**: scikit-learn, TensorFlow Lite, ONNX
+**Sprint 2 - Pre-Built ML Features (🚧 NEXT)**:
+1. 🚧 **Predictive Maintenance** - Detect equipment failure 24-48 hours in advance
+2. ✅ **Anomaly Detection** - Isolation Forest + Z-Score (COMPLETE)
+3. 🚧 **Energy Consumption Forecasting** - Predict next 7 days of usage
+4. 🚧 **Equipment RUL** - Estimate days until maintenance
+
+**Sprint 3 - Frontend UI (📋 PLANNED)**:
+- ML Models management page
+- Training workflow wizard
+- Anomaly dashboard with visualizations
+- Prediction insights panel
+
+**Technologies**: scikit-learn, TensorFlow Lite, ONNX, FastAPI
 
 ---
 
