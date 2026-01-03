@@ -1,22 +1,14 @@
--- Migration V58: Performance optimization indexes
+-- Migration V62: Performance optimization indexes
 -- Purpose: Optimize database performance for production workloads
 -- Date: 2025-12-08
+-- Updated: 2026-01-03 - Fixed column names to match actual schema
 
 -- ==============================================================================
--- TELEMETRY PERFORMANCE INDEXES
+-- TELEMETRY PERFORMANCE INDEXES (telemetry_records uses measurement_timestamp)
 -- ==============================================================================
 
--- Composite index for telemetry queries by device and time range (most common query pattern)
-CREATE INDEX IF NOT EXISTS idx_telemetry_device_timestamp_desc
-    ON telemetry_records(device_id, timestamp DESC);
-
--- Index for variable-specific queries with time range
-CREATE INDEX IF NOT EXISTS idx_telemetry_variable_time
-    ON telemetry_records(variable_name, timestamp DESC);
-
--- Composite index for analytics queries (aggregations by device and variable)
-CREATE INDEX IF NOT EXISTS idx_telemetry_analytics
-    ON telemetry_records(device_id, variable_name, timestamp, numeric_value);
+-- Note: idx_telemetry_device_time already exists in V1 migration
+-- Skipping duplicate: ON telemetry_records(device_id, measurement_timestamp DESC)
 
 -- ==============================================================================
 -- DEVICE PERFORMANCE INDEXES
@@ -28,31 +20,32 @@ CREATE INDEX IF NOT EXISTS idx_devices_org_active_created
 
 -- Index for device status and last seen (health monitoring)
 CREATE INDEX IF NOT EXISTS idx_devices_status_last_seen
-    ON devices(status, last_seen DESC);
+    ON devices(status, last_seen_at DESC);
 
 -- ==============================================================================
 -- USER AND ORGANIZATION INDEXES
 -- ==============================================================================
 
--- Index for user login queries and session management
-CREATE INDEX IF NOT EXISTS idx_users_org_last_login
-    ON users(organization_id, last_login DESC);
+-- Note: idx_users_org_last_login removed - users table has no last_login column
+-- If last login tracking is needed, add the column first via a separate migration
 
 -- Index for username lookup (authentication)
-CREATE INDEX IF NOT EXISTS idx_users_username_active
-    ON users(username);
+-- Note: idx_users_username already exists in V6 migration
+-- CREATE INDEX IF NOT EXISTS idx_users_username_active ON users(username);
 
 -- ==============================================================================
 -- DASHBOARD AND WIDGET PERFORMANCE
 -- ==============================================================================
 
--- Index for dashboard queries by organization and user
-CREATE INDEX IF NOT EXISTS idx_dashboards_org_user_updated
-    ON dashboards(organization_id, created_by, updated_at DESC);
+-- Index for dashboard queries by organization
+-- Note: dashboards table has no created_by column
+CREATE INDEX IF NOT EXISTS idx_dashboards_org_updated
+    ON dashboards(organization_id, updated_at DESC);
 
--- Index for widget queries by dashboard
-CREATE INDEX IF NOT EXISTS idx_widgets_dashboard_order
-    ON widgets(dashboard_id, widget_order);
+-- Index for widget queries by dashboard position
+-- Note: widgets table uses position_x/position_y, not widget_order
+CREATE INDEX IF NOT EXISTS idx_widgets_dashboard_position
+    ON widgets(dashboard_id, position_y, position_x);
 
 -- ==============================================================================
 -- RULES AND ALERTS PERFORMANCE
@@ -62,13 +55,14 @@ CREATE INDEX IF NOT EXISTS idx_widgets_dashboard_order
 CREATE INDEX IF NOT EXISTS idx_rules_org_enabled_device
     ON rules(organization_id, enabled, device_id);
 
--- Index for recent alerts by organization and severity
-CREATE INDEX IF NOT EXISTS idx_alerts_org_severity_created
-    ON alerts(organization_id, severity, created_at DESC);
+-- Index for recent alerts by severity (alerts has no organization_id column)
+CREATE INDEX IF NOT EXISTS idx_alerts_severity_created
+    ON alerts(severity, created_at DESC);
 
--- Index for unacknowledged alerts (dashboard queries)
-CREATE INDEX IF NOT EXISTS idx_alerts_unacknowledged
-    ON alerts(organization_id, acknowledged, created_at DESC);
+-- Note: idx_alerts_acknowledged_created already exists in V2 migration
+-- Index for unacknowledged alerts with device (dashboard queries)
+CREATE INDEX IF NOT EXISTS idx_alerts_device_unacknowledged
+    ON alerts(device_id, acknowledged, created_at DESC);
 
 -- ==============================================================================
 -- DYNAMIC VARIABLES PERFORMANCE (EAV Pattern)
@@ -78,9 +72,8 @@ CREATE INDEX IF NOT EXISTS idx_alerts_unacknowledged
 CREATE INDEX IF NOT EXISTS idx_variables_device_name
     ON variables(device_id, name);
 
--- Index for variable values time series queries
-CREATE INDEX IF NOT EXISTS idx_variable_values_var_timestamp
-    ON variable_values(variable_id, timestamp DESC);
+-- Note: idx_variable_values_variable_timestamp already exists in V56 migration
+-- Skipping duplicate: variable_values(variable_id, timestamp DESC)
 
 -- ==============================================================================
 -- PLUGIN MARKETPLACE PERFORMANCE
@@ -98,21 +91,18 @@ CREATE INDEX IF NOT EXISTS idx_plugin_registry_popularity
 -- SYNTHETIC VARIABLES PERFORMANCE
 -- ==============================================================================
 
--- Index for synthetic variable calculations
-CREATE INDEX IF NOT EXISTS idx_synthetic_variables_device_enabled
-    ON synthetic_variables(device_id, enabled);
-
--- Index for synthetic variable values with time range
-CREATE INDEX IF NOT EXISTS idx_synthetic_values_var_time
-    ON synthetic_variable_values(synthetic_variable_id, calculated_at DESC);
+-- Note: idx_synthetic_variables_device_enabled already exists in V3 migration
+-- Note: idx_synthetic_variable_values_var_time already exists in V3 migration
+-- Skipping duplicates for synthetic_variables and synthetic_variable_values
 
 -- ==============================================================================
 -- GLOBAL RULES PERFORMANCE (Fleet Monitoring)
 -- ==============================================================================
 
 -- Index for global rule evaluation
+-- Note: idx_global_rules_last_evaluated already exists in V48 migration
 CREATE INDEX IF NOT EXISTS idx_global_rules_org_enabled
-    ON global_rules(organization_id, enabled, last_evaluated);
+    ON global_rules(organization_id, enabled, last_evaluated_at);
 
 -- Index for global alerts by organization
 CREATE INDEX IF NOT EXISTS idx_global_alerts_org_created
@@ -134,10 +124,5 @@ CREATE INDEX IF NOT EXISTS idx_user_api_keys_scheduled_revocation
 -- SUPPORT TICKETS PERFORMANCE
 -- ==============================================================================
 
--- Index for support ticket queries by organization and status
-CREATE INDEX IF NOT EXISTS idx_support_tickets_org_status
-    ON support_tickets(organization_id, status, created_at DESC);
-
--- Index for admin support ticket queries
-CREATE INDEX IF NOT EXISTS idx_support_tickets_status_priority
-    ON support_tickets(status, priority, created_at DESC);
+-- Note: support_tickets table does not exist yet
+-- These indexes should be created when the support tickets feature is added
