@@ -354,7 +354,12 @@ class PredictiveMaintenanceEngine(BaseMLEngine):
 
         # Get predictions and probabilities
         labels = self.model.predict(X_scaled)
-        probabilities = self.model.predict_proba(X_scaled)[:, 1]
+        proba = self.model.predict_proba(X_scaled)
+        # Handle single-class case (when training data had only 0s or only 1s)
+        if proba.shape[1] == 1:
+            probabilities = np.zeros(len(labels)) if self.model.classes_[0] == 0 else np.ones(len(labels))
+        else:
+            probabilities = proba[:, 1]
 
         # Build detailed results
         details = []
