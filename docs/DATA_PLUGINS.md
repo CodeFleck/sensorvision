@@ -55,7 +55,8 @@ Receive HTTP POST webhooks from external systems and transform them into Industr
 **Supported Providers:**
 - **LoRaWAN (The Things Network)** - Parse TTN uplink messages
 - **HTTP Webhook** - Generic webhook receiver with configurable field mapping
-- **Sigfox** - Parse Sigfox callbacks (planned)
+- **Sigfox** - Parse Sigfox callbacks with custom binary decoder
+- **MQTT Bridge** - Subscribe to external MQTT brokers
 - **Particle Cloud** - Parse Particle webhook events (planned)
 
 ### 2. Protocol Parser Plugins
@@ -213,9 +214,200 @@ Generic webhook receiver with configurable field mapping.
 
 ### Modbus TCP
 
-**Status:** 🚧 Planned (Sprint 3)
+**Status:** ✅ Production Ready (Sprint 3)
 
 Poll Modbus TCP devices and parse registers into telemetry variables.
+
+**Configuration Example:**
+```json
+{
+  "host": "192.168.1.100",
+  "port": 502,
+  "unitId": 1,
+  "deviceId": "plc-001",
+  "pollingIntervalSeconds": 60,
+  "timeout": 3000,
+  "registers": [
+    {
+      "type": "HOLDING",
+      "address": 40001,
+      "count": 1,
+      "variableName": "temperature",
+      "dataType": "INT16",
+      "scale": 0.1,
+      "offset": -40.0
+    },
+    {
+      "type": "INPUT",
+      "address": 30001,
+      "count": 2,
+      "variableName": "pressure",
+      "dataType": "FLOAT32"
+    }
+  ]
+}
+```
+
+**Supported Data Types:**
+- `INT16`: 16-bit signed integer (1 register)
+- `UINT16`: 16-bit unsigned integer (1 register)
+- `INT32`: 32-bit signed integer (2 registers, big-endian)
+- `UINT32`: 32-bit unsigned integer (2 registers, big-endian)
+- `FLOAT32`: 32-bit IEEE 754 floating point (2 registers, big-endian)
+
+**Address Conventions:**
+- Supports both Modicon (40001+, 30001+) and 0-based addressing
+- Automatically converts Modicon addresses to 0-based for protocol
+
+**Features:**
+- Configurable polling interval (1-86400 seconds)
+- Scale and offset transformations
+- Support for both holding and input registers
+- Connection timeout configuration
+- Automatic retry on connection failure
+
+### Sigfox
+
+**Status:** ✅ Production Ready (Sprint 3)
+
+Parse Sigfox callback webhooks with custom binary payload decoder.
+
+**Configuration Example:**
+```json
+{
+  "deviceIdPrefix": "sigfox-",
+  "includeMetadata": true,
+  "dataParser": "custom",
+  "customVariables": [
+    {
+      "name": "temperature",
+      "byteOffset": 0,
+      "dataType": "INT16",
+      "scale": 0.1
+    },
+    {
+      "name": "humidity",
+      "byteOffset": 2,
+      "dataType": "UINT8",
+      "scale": 1.0
+    },
+    {
+      "name": "battery",
+      "byteOffset": 3,
+      "dataType": "UINT8",
+      "scale": 0.01
+    }
+  ]
+}
+```
+
+**Sigfox Webhook Format:**
+Sigfox sends callbacks in this format:
+```json
+{
+  "device": "AABBCC",
+  "time": 1609459200,
+  "data": "00FA3C64",
+  "seqNumber": 123,
+  "avgSnr": "15.50",
+  "rssi": "-120.00",
+  "lat": "48.8566",
+  "lng": "2.3522"
+}
+```
+
+**Supported Data Types:**
+- `UINT8`: 8-bit unsigned integer (1 byte)
+- `INT8`: 8-bit signed integer (1 byte)
+- `UINT16`: 16-bit unsigned integer (2 bytes, big-endian)
+- `INT16`: 16-bit signed integer (2 bytes, big-endian)
+- `UINT32`: 32-bit unsigned integer (4 bytes, big-endian)
+- `INT32`: 32-bit signed integer (4 bytes, big-endian)
+- `FLOAT32`: 32-bit IEEE 754 float (4 bytes, big-endian)
+
+**Features:**
+- Custom binary payload parsing with byte offset and data type
+- Scale factors for unit conversion
+- Automatic metadata extraction (RSSI, SNR, location)
+- Device ID prefix/suffix customization
+- Sigfox payload size limit: 12 bytes
+
+**Webhook URL:**
+Configure in Sigfox backend:
+```
+https://your-domain.com/api/v1/webhooks/{organizationId}/{pluginName}
+```
+
+### MQTT Bridge
+
+**Status:** ✅ Production Ready (Sprint 3)
+
+Connect to external MQTT brokers and forward messages to SensorVision.
+
+**Configuration Example:**
+```json
+{
+  "brokerUrl": "tcp://mqtt.example.com:1883",
+  "clientId": "sensorvision-bridge",
+  "username": "mqtt_user",
+  "password": "mqtt_pass",
+  "cleanSession": true,
+  "qos": 1,
+  "connectionTimeoutSeconds": 30,
+  "keepAliveSeconds": 60,
+  "topics": [
+    {
+      "topic": "devices/+/telemetry",
+      "deviceIdExtractor": "payload",
+      "payloadFormat": "json"
+    },
+    {
+      "topic": "warehouse/sensors/#",
+      "deviceIdExtractor": "payload",
+      "payloadFormat": "json"
+    }
+  ],
+  "deviceIdField": "deviceId",
+  "timestampField": "timestamp",
+  "variablesField": "variables"
+}
+```
+
+**Broker URL Formats:**
+- TCP: `tcp://broker.example.com:1883`
+- SSL/TLS: `ssl://broker.example.com:8883`
+
+**Topic Wildcards:**
+- `+` - Single level wildcard (e.g., `devices/+/telemetry`)
+- `#` - Multi-level wildcard (e.g., `warehouse/#`)
+
+**Message Format:**
+Expected JSON payload:
+```json
+{
+  "deviceId": "sensor-001",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "variables": {
+    "temperature": 23.5,
+    "humidity": 65.0
+  }
+}
+```
+
+**Features:**
+- Subscribe to multiple topics simultaneously
+- QoS 0, 1, or 2 support
+- Automatic reconnection on connection loss
+- SSL/TLS support for secure connections
+- Configurable keep-alive and timeouts
+- Message queue buffering
+- Wildcard topic subscriptions
+
+**Use Cases:**
+- Bridge external MQTT infrastructure to SensorVision
+- Integrate with existing IoT deployments
+- Migrate from other MQTT-based platforms
+- Connect to cloud MQTT brokers (AWS IoT, Azure IoT Hub, etc.)
 
 ### CSV Import
 
@@ -429,19 +621,21 @@ No built-in rate limiting currently. Consider:
 - ✅ Frontend UI
 - ✅ Execution History
 
-### Sprint 3 (Weeks 5-6)
-- 🚧 Modbus TCP Plugin
-- 🚧 Plugin Registry System
-- 🚧 Pre-built plugin templates
+### Sprint 3 (Completed)
+- ✅ Modbus TCP Plugin
+- ✅ Sigfox Plugin
+- ✅ MQTT Bridge Plugin
+- ✅ Plugin Registry System
+- ✅ Pre-built plugin templates
 
 ### Sprint 4+ (Future)
-- 📋 Sigfox Plugin
 - 📋 Particle Cloud Plugin
-- 📋 MQTT Bridge Plugin
 - 📋 Custom decoder functions (JavaScript/Python)
 - 📋 Plugin marketplace
 - 📋 Webhook authentication
 - 📋 IP whitelist per plugin
+- 📋 OPC UA Plugin
+- 📋 BACnet Plugin
 
 ## API Reference
 
