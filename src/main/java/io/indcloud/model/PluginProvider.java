@@ -40,9 +40,14 @@ public enum PluginProvider {
     CUSTOM_PARSER("Custom Parser", PluginType.PROTOCOL_PARSER),
 
     /**
-     * Custom MQTT topic with transformation
+     * Custom MQTT topic with transformation (deprecated - use MQTT_BRIDGE)
      */
     MQTT_CUSTOM("MQTT Custom Format", PluginType.PROTOCOL_PARSER),
+
+    /**
+     * MQTT Bridge - Connect to external MQTT brokers
+     */
+    MQTT_BRIDGE("MQTT Bridge", PluginType.WEBHOOK),
 
     /**
      * Slack notification integration
