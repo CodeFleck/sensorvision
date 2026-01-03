@@ -23,6 +23,7 @@ import java.util.UUID;
 /**
  * REST controller for ML anomaly management.
  * Provides endpoints for viewing and managing detected anomalies.
+ * All endpoints are organization-scoped for security.
  */
 @RestController
 @RequestMapping("/api/v1/ml/anomalies")
@@ -46,9 +47,9 @@ public class MLAnomalyController {
         Page<MLAnomaly> anomalies;
 
         if (status != null) {
-            anomalies = toPage(mlAnomalyService.getAnomaliesByStatus(org.getId(), status), pageable);
+            anomalies = mlAnomalyService.getAnomaliesByStatus(org.getId(), status, pageable);
         } else if (severity != null) {
-            anomalies = toPage(mlAnomalyService.getAnomaliesBySeverity(org.getId(), severity), pageable);
+            anomalies = mlAnomalyService.getAnomaliesBySeverity(org.getId(), severity, pageable);
         } else {
             anomalies = mlAnomalyService.getAnomalies(org.getId(), pageable);
         }
@@ -57,23 +58,26 @@ public class MLAnomalyController {
     }
 
     /**
-     * Get anomalies for a specific device.
+     * Get anomalies for a specific device (organization-scoped).
      */
     @GetMapping("/device/{deviceId}")
     public Page<MLAnomalyResponse> getDeviceAnomalies(
             @PathVariable UUID deviceId,
             @PageableDefault(size = 20) Pageable pageable) {
 
-        return mlAnomalyService.getAnomaliesByDevice(deviceId, pageable)
+        Organization org = securityUtils.getCurrentUserOrganization();
+        return mlAnomalyService.getAnomaliesByDevice(deviceId, org.getId(), pageable)
                 .map(this::toResponse);
     }
 
     /**
-     * Get a specific anomaly by ID.
+     * Get a specific anomaly by ID (organization-scoped).
      */
     @GetMapping("/{id}")
     public ResponseEntity<MLAnomalyResponse> getAnomaly(@PathVariable UUID id) {
-        return mlAnomalyService.getAnomaly(id)
+        Organization org = securityUtils.getCurrentUserOrganization();
+
+        return mlAnomalyService.getAnomaly(id, org.getId())
                 .map(this::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -102,41 +106,48 @@ public class MLAnomalyController {
     }
 
     /**
-     * Acknowledge an anomaly.
+     * Acknowledge an anomaly (organization-scoped).
      */
     @PostMapping("/{id}/acknowledge")
     public ResponseEntity<MLAnomalyResponse> acknowledgeAnomaly(@PathVariable UUID id) {
         User user = securityUtils.getCurrentUser();
+        Organization org = user.getOrganization();
 
         try {
-            MLAnomaly anomaly = mlAnomalyService.acknowledgeAnomaly(id, user.getId());
+            MLAnomaly anomaly = mlAnomalyService.acknowledgeAnomaly(id, org.getId(), user.getId());
             log.info("User {} acknowledged anomaly {}", user.getUsername(), id);
             return ResponseEntity.ok(toResponse(anomaly));
         } catch (IllegalArgumentException e) {
+            log.warn("Anomaly {} not found or access denied: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException e) {
+            log.warn("Invalid state transition for anomaly {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
 
     /**
-     * Start investigation on an anomaly.
+     * Start investigation on an anomaly (organization-scoped).
      */
     @PostMapping("/{id}/investigate")
     public ResponseEntity<MLAnomalyResponse> startInvestigation(@PathVariable UUID id) {
+        Organization org = securityUtils.getCurrentUserOrganization();
+
         try {
-            MLAnomaly anomaly = mlAnomalyService.startInvestigation(id);
+            MLAnomaly anomaly = mlAnomalyService.startInvestigation(id, org.getId());
             log.info("Investigation started for anomaly {}", id);
             return ResponseEntity.ok(toResponse(anomaly));
         } catch (IllegalArgumentException e) {
+            log.warn("Anomaly {} not found or access denied: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException e) {
+            log.warn("Invalid state transition for anomaly {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
 
     /**
-     * Resolve an anomaly.
+     * Resolve an anomaly (organization-scoped).
      */
     @PostMapping("/{id}/resolve")
     public ResponseEntity<MLAnomalyResponse> resolveAnomaly(
@@ -144,21 +155,24 @@ public class MLAnomalyController {
             @Valid @RequestBody(required = false) MLAnomalyResolveRequest request) {
 
         User user = securityUtils.getCurrentUser();
+        Organization org = user.getOrganization();
         String note = request != null ? request.getResolutionNote() : null;
 
         try {
-            MLAnomaly anomaly = mlAnomalyService.resolveAnomaly(id, user.getId(), note);
+            MLAnomaly anomaly = mlAnomalyService.resolveAnomaly(id, org.getId(), user.getId(), note);
             log.info("User {} resolved anomaly {}", user.getUsername(), id);
             return ResponseEntity.ok(toResponse(anomaly));
         } catch (IllegalArgumentException e) {
+            log.warn("Anomaly {} not found or access denied: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException e) {
+            log.warn("Invalid state transition for anomaly {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
 
     /**
-     * Mark an anomaly as false positive.
+     * Mark an anomaly as false positive (organization-scoped).
      */
     @PostMapping("/{id}/false-positive")
     public ResponseEntity<MLAnomalyResponse> markFalsePositive(
@@ -166,32 +180,38 @@ public class MLAnomalyController {
             @Valid @RequestBody(required = false) MLAnomalyResolveRequest request) {
 
         User user = securityUtils.getCurrentUser();
+        Organization org = user.getOrganization();
         String note = request != null ? request.getResolutionNote() : null;
 
         try {
-            MLAnomaly anomaly = mlAnomalyService.markFalsePositive(id, user.getId(), note);
+            MLAnomaly anomaly = mlAnomalyService.markFalsePositive(id, org.getId(), user.getId(), note);
             log.info("User {} marked anomaly {} as false positive", user.getUsername(), id);
             return ResponseEntity.ok(toResponse(anomaly));
         } catch (IllegalArgumentException e) {
+            log.warn("Anomaly {} not found or access denied: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         } catch (IllegalStateException e) {
+            log.warn("Invalid state transition for anomaly {}: {}", id, e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
 
     /**
-     * Link anomaly to a global alert.
+     * Link anomaly to a global alert (organization-scoped).
      */
     @PostMapping("/{id}/link-alert/{alertId}")
     public ResponseEntity<MLAnomalyResponse> linkToAlert(
             @PathVariable UUID id,
             @PathVariable UUID alertId) {
 
+        Organization org = securityUtils.getCurrentUserOrganization();
+
         try {
-            MLAnomaly anomaly = mlAnomalyService.linkToAlert(id, alertId);
+            MLAnomaly anomaly = mlAnomalyService.linkToAlert(id, org.getId(), alertId);
             log.info("Linked anomaly {} to alert {}", id, alertId);
             return ResponseEntity.ok(toResponse(anomaly));
         } catch (IllegalArgumentException e) {
+            log.warn("Anomaly {} not found or access denied: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -213,22 +233,14 @@ public class MLAnomalyController {
     }
 
     /**
-     * Convert page of list to proper page.
-     */
-    private Page<MLAnomaly> toPage(List<MLAnomaly> list, Pageable pageable) {
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), list.size());
-        List<MLAnomaly> pageContent = start > list.size() ? List.of() : list.subList(start, end);
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, list.size());
-    }
-
-    /**
      * Convert MLAnomaly entity to response DTO.
      */
     private MLAnomalyResponse toResponse(MLAnomaly anomaly) {
+        MLPrediction prediction = anomaly.getPrediction();
+
         return MLAnomalyResponse.builder()
                 .id(anomaly.getId())
-                .predictionId(anomaly.getPrediction() != null ? anomaly.getPrediction().getId() : null)
+                .predictionId(prediction != null ? prediction.getId() : null)
                 .deviceId(anomaly.getDevice() != null ? anomaly.getDevice().getId() : null)
                 .deviceName(anomaly.getDevice() != null ? anomaly.getDevice().getName() : null)
                 .organizationId(anomaly.getOrganization() != null ? anomaly.getOrganization().getId() : null)
@@ -248,8 +260,8 @@ public class MLAnomalyController {
                 .resolutionNote(anomaly.getResolutionNote())
                 .globalAlertId(anomaly.getGlobalAlertId())
                 .createdAt(anomaly.getCreatedAt())
-                .predictionType(anomaly.getPrediction() != null ? anomaly.getPrediction().getPredictionType() : null)
-                .predictionConfidence(anomaly.getPrediction() != null ? anomaly.getPrediction().getConfidence() : null)
+                .predictionType(prediction != null ? prediction.getPredictionType() : null)
+                .predictionConfidence(prediction != null ? prediction.getConfidence() : null)
                 .build();
     }
 

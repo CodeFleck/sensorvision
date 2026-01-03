@@ -101,9 +101,9 @@ class MLAnomalyServiceTest {
         @DisplayName("Should get anomalies by device")
         void shouldGetByDevice() {
             Page<MLAnomaly> page = new PageImpl<>(List.of(testAnomaly));
-            when(mlAnomalyRepository.findByDeviceId(eq(deviceId), any())).thenReturn(page);
+            when(mlAnomalyRepository.findByDeviceIdAndOrganizationId(eq(deviceId), eq(orgId), any())).thenReturn(page);
 
-            Page<MLAnomaly> result = mlAnomalyService.getAnomaliesByDevice(deviceId, PageRequest.of(0, 10));
+            Page<MLAnomaly> result = mlAnomalyService.getAnomaliesByDevice(deviceId, orgId, PageRequest.of(0, 10));
 
             assertThat(result.getTotalElements()).isEqualTo(1);
         }
@@ -111,9 +111,9 @@ class MLAnomalyServiceTest {
         @Test
         @DisplayName("Should get anomaly by ID")
         void shouldGetById() {
-            when(mlAnomalyRepository.findById(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
 
-            Optional<MLAnomaly> result = mlAnomalyService.getAnomaly(anomalyId);
+            Optional<MLAnomaly> result = mlAnomalyService.getAnomaly(anomalyId, orgId);
 
             assertThat(result).isPresent();
         }
@@ -196,10 +196,10 @@ class MLAnomalyServiceTest {
         @Test
         @DisplayName("Should acknowledge new anomaly")
         void shouldAcknowledgeNewAnomaly() {
-            when(mlAnomalyRepository.findById(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
             when(mlAnomalyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            MLAnomaly result = mlAnomalyService.acknowledgeAnomaly(anomalyId, userId);
+            MLAnomaly result = mlAnomalyService.acknowledgeAnomaly(anomalyId, orgId, userId);
 
             assertThat(result.getStatus()).isEqualTo(MLAnomalyStatus.ACKNOWLEDGED);
             assertThat(result.getAcknowledgedAt()).isNotNull();
@@ -210,9 +210,9 @@ class MLAnomalyServiceTest {
         @DisplayName("Should throw when acknowledging non-new anomaly")
         void shouldThrowWhenNotNew() {
             testAnomaly.setStatus(MLAnomalyStatus.RESOLVED);
-            when(mlAnomalyRepository.findById(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
 
-            assertThatThrownBy(() -> mlAnomalyService.acknowledgeAnomaly(anomalyId, userId))
+            assertThatThrownBy(() -> mlAnomalyService.acknowledgeAnomaly(anomalyId, orgId, userId))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("only acknowledge NEW");
         }
@@ -220,9 +220,9 @@ class MLAnomalyServiceTest {
         @Test
         @DisplayName("Should throw when anomaly not found")
         void shouldThrowWhenNotFound() {
-            when(mlAnomalyRepository.findById(any())).thenReturn(Optional.empty());
+            when(mlAnomalyRepository.findByIdAndOrganizationId(any(), any())).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> mlAnomalyService.acknowledgeAnomaly(anomalyId, userId))
+            assertThatThrownBy(() -> mlAnomalyService.acknowledgeAnomaly(anomalyId, orgId, userId))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("not found");
         }
@@ -236,10 +236,10 @@ class MLAnomalyServiceTest {
         @DisplayName("Should start investigation")
         void shouldStartInvestigation() {
             testAnomaly.setStatus(MLAnomalyStatus.ACKNOWLEDGED);
-            when(mlAnomalyRepository.findById(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
             when(mlAnomalyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            MLAnomaly result = mlAnomalyService.startInvestigation(anomalyId);
+            MLAnomaly result = mlAnomalyService.startInvestigation(anomalyId, orgId);
 
             assertThat(result.getStatus()).isEqualTo(MLAnomalyStatus.INVESTIGATING);
         }
@@ -248,9 +248,9 @@ class MLAnomalyServiceTest {
         @DisplayName("Should throw when investigating closed anomaly")
         void shouldThrowWhenClosed() {
             testAnomaly.setStatus(MLAnomalyStatus.RESOLVED);
-            when(mlAnomalyRepository.findById(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
 
-            assertThatThrownBy(() -> mlAnomalyService.startInvestigation(anomalyId))
+            assertThatThrownBy(() -> mlAnomalyService.startInvestigation(anomalyId, orgId))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("closed");
         }
@@ -264,10 +264,10 @@ class MLAnomalyServiceTest {
         @DisplayName("Should resolve anomaly")
         void shouldResolveAnomaly() {
             testAnomaly.setStatus(MLAnomalyStatus.INVESTIGATING);
-            when(mlAnomalyRepository.findById(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
             when(mlAnomalyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            MLAnomaly result = mlAnomalyService.resolveAnomaly(anomalyId, userId, "Fixed sensor");
+            MLAnomaly result = mlAnomalyService.resolveAnomaly(anomalyId, orgId, userId, "Fixed sensor");
 
             assertThat(result.getStatus()).isEqualTo(MLAnomalyStatus.RESOLVED);
             assertThat(result.getResolvedAt()).isNotNull();
@@ -279,9 +279,9 @@ class MLAnomalyServiceTest {
         @DisplayName("Should throw when already resolved")
         void shouldThrowWhenAlreadyResolved() {
             testAnomaly.setStatus(MLAnomalyStatus.RESOLVED);
-            when(mlAnomalyRepository.findById(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
 
-            assertThatThrownBy(() -> mlAnomalyService.resolveAnomaly(anomalyId, userId, "note"))
+            assertThatThrownBy(() -> mlAnomalyService.resolveAnomaly(anomalyId, orgId, userId, "note"))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("already closed");
         }
@@ -294,11 +294,11 @@ class MLAnomalyServiceTest {
         @Test
         @DisplayName("Should mark as false positive")
         void shouldMarkFalsePositive() {
-            when(mlAnomalyRepository.findById(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
             when(mlAnomalyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
             when(mlPredictionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            MLAnomaly result = mlAnomalyService.markFalsePositive(anomalyId, userId, "Sensor noise");
+            MLAnomaly result = mlAnomalyService.markFalsePositive(anomalyId, orgId, userId, "Sensor noise");
 
             assertThat(result.getStatus()).isEqualTo(MLAnomalyStatus.FALSE_POSITIVE);
             assertThat(result.getResolvedBy()).isEqualTo(userId);
@@ -319,10 +319,10 @@ class MLAnomalyServiceTest {
         @DisplayName("Should link anomaly to alert")
         void shouldLinkToAlert() {
             UUID alertId = UUID.randomUUID();
-            when(mlAnomalyRepository.findById(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
             when(mlAnomalyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            MLAnomaly result = mlAnomalyService.linkToAlert(anomalyId, alertId);
+            MLAnomaly result = mlAnomalyService.linkToAlert(anomalyId, orgId, alertId);
 
             assertThat(result.getGlobalAlertId()).isEqualTo(alertId);
         }

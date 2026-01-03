@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -21,6 +22,17 @@ public interface MLAnomalyRepository extends JpaRepository<MLAnomaly, UUID> {
 
     Page<MLAnomaly> findByDeviceId(UUID deviceId, Pageable pageable);
 
+    // Organization-scoped queries for authorization
+    Optional<MLAnomaly> findByIdAndOrganizationId(UUID id, Long organizationId);
+
+    Page<MLAnomaly> findByDeviceIdAndOrganizationId(UUID deviceId, Long organizationId, Pageable pageable);
+
+    // Paginated status/severity filtering
+    Page<MLAnomaly> findByOrganizationIdAndStatus(Long organizationId, MLAnomalyStatus status, Pageable pageable);
+
+    Page<MLAnomaly> findByOrganizationIdAndSeverity(Long organizationId, MLAnomalySeverity severity, Pageable pageable);
+
+    // Legacy list versions (kept for backward compatibility)
     List<MLAnomaly> findByOrganizationIdAndStatus(Long organizationId, MLAnomalyStatus status);
 
     List<MLAnomaly> findByOrganizationIdAndSeverity(Long organizationId, MLAnomalySeverity severity);

@@ -37,19 +37,19 @@ public class MLAnomalyService {
     }
 
     /**
-     * Get anomalies for a device.
+     * Get anomalies for a device (organization-scoped for security).
      */
     @Transactional(readOnly = true)
-    public Page<MLAnomaly> getAnomaliesByDevice(UUID deviceId, Pageable pageable) {
-        return mlAnomalyRepository.findByDeviceId(deviceId, pageable);
+    public Page<MLAnomaly> getAnomaliesByDevice(UUID deviceId, Long organizationId, Pageable pageable) {
+        return mlAnomalyRepository.findByDeviceIdAndOrganizationId(deviceId, organizationId, pageable);
     }
 
     /**
-     * Get an anomaly by ID.
+     * Get an anomaly by ID (organization-scoped for security).
      */
     @Transactional(readOnly = true)
-    public Optional<MLAnomaly> getAnomaly(UUID anomalyId) {
-        return mlAnomalyRepository.findById(anomalyId);
+    public Optional<MLAnomaly> getAnomaly(UUID anomalyId, Long organizationId) {
+        return mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, organizationId);
     }
 
     /**
@@ -61,19 +61,19 @@ public class MLAnomalyService {
     }
 
     /**
-     * Get anomalies by status.
+     * Get anomalies by status (paginated).
      */
     @Transactional(readOnly = true)
-    public List<MLAnomaly> getAnomaliesByStatus(Long organizationId, MLAnomalyStatus status) {
-        return mlAnomalyRepository.findByOrganizationIdAndStatus(organizationId, status);
+    public Page<MLAnomaly> getAnomaliesByStatus(Long organizationId, MLAnomalyStatus status, Pageable pageable) {
+        return mlAnomalyRepository.findByOrganizationIdAndStatus(organizationId, status, pageable);
     }
 
     /**
-     * Get anomalies by severity.
+     * Get anomalies by severity (paginated).
      */
     @Transactional(readOnly = true)
-    public List<MLAnomaly> getAnomaliesBySeverity(Long organizationId, MLAnomalySeverity severity) {
-        return mlAnomalyRepository.findByOrganizationIdAndSeverity(organizationId, severity);
+    public Page<MLAnomaly> getAnomaliesBySeverity(Long organizationId, MLAnomalySeverity severity, Pageable pageable) {
+        return mlAnomalyRepository.findByOrganizationIdAndSeverity(organizationId, severity, pageable);
     }
 
     /**
@@ -124,11 +124,11 @@ public class MLAnomalyService {
     }
 
     /**
-     * Acknowledge an anomaly.
+     * Acknowledge an anomaly (organization-scoped for security).
      */
     @Transactional
-    public MLAnomaly acknowledgeAnomaly(UUID anomalyId, Long userId) {
-        MLAnomaly anomaly = mlAnomalyRepository.findById(anomalyId)
+    public MLAnomaly acknowledgeAnomaly(UUID anomalyId, Long organizationId, Long userId) {
+        MLAnomaly anomaly = mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Anomaly not found: " + anomalyId));
 
         if (anomaly.getStatus() != MLAnomalyStatus.NEW) {
@@ -145,11 +145,11 @@ public class MLAnomalyService {
     }
 
     /**
-     * Start investigating an anomaly.
+     * Start investigating an anomaly (organization-scoped for security).
      */
     @Transactional
-    public MLAnomaly startInvestigation(UUID anomalyId) {
-        MLAnomaly anomaly = mlAnomalyRepository.findById(anomalyId)
+    public MLAnomaly startInvestigation(UUID anomalyId, Long organizationId) {
+        MLAnomaly anomaly = mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Anomaly not found: " + anomalyId));
 
         if (anomaly.getStatus() == MLAnomalyStatus.RESOLVED ||
@@ -163,11 +163,11 @@ public class MLAnomalyService {
     }
 
     /**
-     * Resolve an anomaly.
+     * Resolve an anomaly (organization-scoped for security).
      */
     @Transactional
-    public MLAnomaly resolveAnomaly(UUID anomalyId, Long userId, String resolutionNote) {
-        MLAnomaly anomaly = mlAnomalyRepository.findById(anomalyId)
+    public MLAnomaly resolveAnomaly(UUID anomalyId, Long organizationId, Long userId, String resolutionNote) {
+        MLAnomaly anomaly = mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Anomaly not found: " + anomalyId));
 
         if (anomaly.getStatus() == MLAnomalyStatus.RESOLVED ||
@@ -186,11 +186,11 @@ public class MLAnomalyService {
     }
 
     /**
-     * Mark anomaly as false positive.
+     * Mark anomaly as false positive (organization-scoped for security).
      */
     @Transactional
-    public MLAnomaly markFalsePositive(UUID anomalyId, Long userId, String note) {
-        MLAnomaly anomaly = mlAnomalyRepository.findById(anomalyId)
+    public MLAnomaly markFalsePositive(UUID anomalyId, Long organizationId, Long userId, String note) {
+        MLAnomaly anomaly = mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Anomaly not found: " + anomalyId));
 
         anomaly.setStatus(MLAnomalyStatus.FALSE_POSITIVE);
@@ -214,11 +214,11 @@ public class MLAnomalyService {
     }
 
     /**
-     * Link anomaly to a global alert.
+     * Link anomaly to a global alert (organization-scoped for security).
      */
     @Transactional
-    public MLAnomaly linkToAlert(UUID anomalyId, UUID globalAlertId) {
-        MLAnomaly anomaly = mlAnomalyRepository.findById(anomalyId)
+    public MLAnomaly linkToAlert(UUID anomalyId, Long organizationId, UUID globalAlertId) {
+        MLAnomaly anomaly = mlAnomalyRepository.findByIdAndOrganizationId(anomalyId, organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Anomaly not found: " + anomalyId));
 
         anomaly.setGlobalAlertId(globalAlertId);

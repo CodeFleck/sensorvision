@@ -68,6 +68,7 @@ class MLAnomalyControllerTest {
         testUser = new User();
         testUser.setId(userId);
         testUser.setUsername("testuser");
+        testUser.setOrganization(testOrganization);
 
         deviceId = UUID.randomUUID();
         testDevice = new Device();
@@ -118,32 +119,34 @@ class MLAnomalyControllerTest {
         @DisplayName("Should filter by status")
         void shouldFilterByStatus() {
             // Given
+            Page<MLAnomaly> anomalyPage = new PageImpl<>(List.of(testAnomaly));
             Pageable pageable = PageRequest.of(0, 20);
-            when(mlAnomalyService.getAnomaliesByStatus(orgId, MLAnomalyStatus.NEW))
-                    .thenReturn(List.of(testAnomaly));
+            when(mlAnomalyService.getAnomaliesByStatus(orgId, MLAnomalyStatus.NEW, pageable))
+                    .thenReturn(anomalyPage);
 
             // When
             Page<MLAnomalyResponse> response = mlAnomalyController.getAnomalies(pageable, MLAnomalyStatus.NEW, null);
 
             // Then
             assertThat(response.getTotalElements()).isEqualTo(1);
-            verify(mlAnomalyService).getAnomaliesByStatus(orgId, MLAnomalyStatus.NEW);
+            verify(mlAnomalyService).getAnomaliesByStatus(orgId, MLAnomalyStatus.NEW, pageable);
         }
 
         @Test
         @DisplayName("Should filter by severity")
         void shouldFilterBySeverity() {
             // Given
+            Page<MLAnomaly> anomalyPage = new PageImpl<>(List.of(testAnomaly));
             Pageable pageable = PageRequest.of(0, 20);
-            when(mlAnomalyService.getAnomaliesBySeverity(orgId, MLAnomalySeverity.HIGH))
-                    .thenReturn(List.of(testAnomaly));
+            when(mlAnomalyService.getAnomaliesBySeverity(orgId, MLAnomalySeverity.HIGH, pageable))
+                    .thenReturn(anomalyPage);
 
             // When
             Page<MLAnomalyResponse> response = mlAnomalyController.getAnomalies(pageable, null, MLAnomalySeverity.HIGH);
 
             // Then
             assertThat(response.getTotalElements()).isEqualTo(1);
-            verify(mlAnomalyService).getAnomaliesBySeverity(orgId, MLAnomalySeverity.HIGH);
+            verify(mlAnomalyService).getAnomaliesBySeverity(orgId, MLAnomalySeverity.HIGH, pageable);
         }
     }
 
@@ -158,7 +161,7 @@ class MLAnomalyControllerTest {
             Page<MLAnomaly> anomalyPage = new PageImpl<>(List.of(testAnomaly));
             Pageable pageable = PageRequest.of(0, 20);
 
-            when(mlAnomalyService.getAnomaliesByDevice(deviceId, pageable)).thenReturn(anomalyPage);
+            when(mlAnomalyService.getAnomaliesByDevice(deviceId, orgId, pageable)).thenReturn(anomalyPage);
 
             // When
             Page<MLAnomalyResponse> response = mlAnomalyController.getDeviceAnomalies(deviceId, pageable);
@@ -177,7 +180,7 @@ class MLAnomalyControllerTest {
         @DisplayName("Should return anomaly by ID")
         void shouldReturnAnomalyById() {
             // Given
-            when(mlAnomalyService.getAnomaly(anomalyId)).thenReturn(Optional.of(testAnomaly));
+            when(mlAnomalyService.getAnomaly(anomalyId, orgId)).thenReturn(Optional.of(testAnomaly));
 
             // When
             ResponseEntity<MLAnomalyResponse> response = mlAnomalyController.getAnomaly(anomalyId);
@@ -192,7 +195,7 @@ class MLAnomalyControllerTest {
         @DisplayName("Should return 404 when anomaly not found")
         void shouldReturn404WhenNotFound() {
             // Given
-            when(mlAnomalyService.getAnomaly(anomalyId)).thenReturn(Optional.empty());
+            when(mlAnomalyService.getAnomaly(anomalyId, orgId)).thenReturn(Optional.empty());
 
             // When
             ResponseEntity<MLAnomalyResponse> response = mlAnomalyController.getAnomaly(anomalyId);
@@ -253,7 +256,7 @@ class MLAnomalyControllerTest {
             testAnomaly.setAcknowledgedBy(userId);
             testAnomaly.setAcknowledgedAt(Instant.now());
 
-            when(mlAnomalyService.acknowledgeAnomaly(anomalyId, userId)).thenReturn(testAnomaly);
+            when(mlAnomalyService.acknowledgeAnomaly(anomalyId, orgId, userId)).thenReturn(testAnomaly);
 
             // When
             ResponseEntity<MLAnomalyResponse> response = mlAnomalyController.acknowledgeAnomaly(anomalyId);
@@ -268,7 +271,7 @@ class MLAnomalyControllerTest {
         @DisplayName("Should return 404 when anomaly not found")
         void shouldReturn404WhenNotFound() {
             // Given
-            when(mlAnomalyService.acknowledgeAnomaly(anomalyId, userId))
+            when(mlAnomalyService.acknowledgeAnomaly(anomalyId, orgId, userId))
                     .thenThrow(new IllegalArgumentException("Anomaly not found"));
 
             // When
@@ -282,7 +285,7 @@ class MLAnomalyControllerTest {
         @DisplayName("Should return 400 when acknowledging non-new anomaly")
         void shouldReturn400WhenNotNew() {
             // Given
-            when(mlAnomalyService.acknowledgeAnomaly(anomalyId, userId))
+            when(mlAnomalyService.acknowledgeAnomaly(anomalyId, orgId, userId))
                     .thenThrow(new IllegalStateException("Can only acknowledge NEW anomalies"));
 
             // When
@@ -302,7 +305,7 @@ class MLAnomalyControllerTest {
         void shouldStartInvestigation() {
             // Given
             testAnomaly.setStatus(MLAnomalyStatus.INVESTIGATING);
-            when(mlAnomalyService.startInvestigation(anomalyId)).thenReturn(testAnomaly);
+            when(mlAnomalyService.startInvestigation(anomalyId, orgId)).thenReturn(testAnomaly);
 
             // When
             ResponseEntity<MLAnomalyResponse> response = mlAnomalyController.startInvestigation(anomalyId);
@@ -316,7 +319,7 @@ class MLAnomalyControllerTest {
         @DisplayName("Should return 400 when investigating closed anomaly")
         void shouldReturn400WhenClosed() {
             // Given
-            when(mlAnomalyService.startInvestigation(anomalyId))
+            when(mlAnomalyService.startInvestigation(anomalyId, orgId))
                     .thenThrow(new IllegalStateException("Cannot investigate closed anomaly"));
 
             // When
@@ -343,7 +346,7 @@ class MLAnomalyControllerTest {
             MLAnomalyResolveRequest request = new MLAnomalyResolveRequest();
             request.setResolutionNote("Fixed the sensor");
 
-            when(mlAnomalyService.resolveAnomaly(anomalyId, userId, "Fixed the sensor"))
+            when(mlAnomalyService.resolveAnomaly(anomalyId, orgId, userId, "Fixed the sensor"))
                     .thenReturn(testAnomaly);
 
             // When
@@ -362,7 +365,7 @@ class MLAnomalyControllerTest {
             testAnomaly.setStatus(MLAnomalyStatus.RESOLVED);
             testAnomaly.setResolvedBy(userId);
 
-            when(mlAnomalyService.resolveAnomaly(anomalyId, userId, null)).thenReturn(testAnomaly);
+            when(mlAnomalyService.resolveAnomaly(anomalyId, orgId, userId, null)).thenReturn(testAnomaly);
 
             // When
             ResponseEntity<MLAnomalyResponse> response = mlAnomalyController.resolveAnomaly(anomalyId, null);
@@ -375,7 +378,7 @@ class MLAnomalyControllerTest {
         @DisplayName("Should return 400 when already resolved")
         void shouldReturn400WhenAlreadyResolved() {
             // Given
-            when(mlAnomalyService.resolveAnomaly(anomalyId, userId, null))
+            when(mlAnomalyService.resolveAnomaly(anomalyId, orgId, userId, null))
                     .thenThrow(new IllegalStateException("Anomaly is already closed"));
 
             // When
@@ -401,7 +404,7 @@ class MLAnomalyControllerTest {
             MLAnomalyResolveRequest request = new MLAnomalyResolveRequest();
             request.setResolutionNote("Sensor noise");
 
-            when(mlAnomalyService.markFalsePositive(anomalyId, userId, "Sensor noise"))
+            when(mlAnomalyService.markFalsePositive(anomalyId, orgId, userId, "Sensor noise"))
                     .thenReturn(testAnomaly);
 
             // When
@@ -424,7 +427,7 @@ class MLAnomalyControllerTest {
             UUID alertId = UUID.randomUUID();
             testAnomaly.setGlobalAlertId(alertId);
 
-            when(mlAnomalyService.linkToAlert(anomalyId, alertId)).thenReturn(testAnomaly);
+            when(mlAnomalyService.linkToAlert(anomalyId, orgId, alertId)).thenReturn(testAnomaly);
 
             // When
             ResponseEntity<MLAnomalyResponse> response = mlAnomalyController.linkToAlert(anomalyId, alertId);
@@ -439,7 +442,7 @@ class MLAnomalyControllerTest {
         void shouldReturn404WhenNotFound() {
             // Given
             UUID alertId = UUID.randomUUID();
-            when(mlAnomalyService.linkToAlert(anomalyId, alertId))
+            when(mlAnomalyService.linkToAlert(anomalyId, orgId, alertId))
                     .thenThrow(new IllegalArgumentException("Anomaly not found"));
 
             // When

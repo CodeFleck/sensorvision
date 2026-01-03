@@ -244,6 +244,9 @@ public class MLModelService {
         MLModel model = mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
 
+        // Check if this is a retrain (model was previously trained) BEFORE updating trainedAt
+        boolean isRetrain = model.getTrainedAt() != null;
+
         model.setStatus(MLModelStatus.TRAINED);
         model.setTrainedAt(Instant.now());
         model.setTrainingMetrics(trainingMetrics);
@@ -251,15 +254,17 @@ public class MLModelService {
         model.setModelPath(modelPath);
         model.setModelSizeBytes(modelSizeBytes);
 
-        // Increment version if retrained
-        if (model.getTrainedAt() != null) {
+        // Increment version only if this is a retrain
+        if (isRetrain) {
             String[] parts = model.getVersion().split("\\.");
-            int minor = Integer.parseInt(parts[1]) + 1;
-            model.setVersion(parts[0] + "." + minor + "." + parts[2]);
+            if (parts.length == 3) {
+                int minor = Integer.parseInt(parts[1]) + 1;
+                model.setVersion(parts[0] + "." + minor + "." + parts[2]);
+            }
         }
 
         MLModel trained = mlModelRepository.save(model);
-        log.info("Training completed for model: {} (version={})", modelId, trained.getVersion());
+        log.info("Training completed for model: {} (version={}, retrain={})", modelId, trained.getVersion(), isRetrain);
         return trained;
     }
 
