@@ -44,6 +44,9 @@ dependencies {
     // Email support (optional - requires SMTP configuration)
     implementation("org.springframework.boot:spring-boot-starter-mail")
 
+    // WebClient for ML service communication
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
     // Twilio SMS support
     implementation("com.twilio.sdk:twilio:10.5.1")
 

@@ -74,6 +74,11 @@ services:
       WEBHOOK_ENABLED: ${WEBHOOK_ENABLED:-true}
       SLACK_ENABLED: ${SLACK_ENABLED:-false}
       TEAMS_ENABLED: ${TEAMS_ENABLED:-false}
+
+      # ML Service
+      ML_SERVICE_URL: http://ml-service:8000
+      ML_SERVICE_TIMEOUT: ${ML_SERVICE_TIMEOUT:-30}
+      ML_SERVICE_API_KEY: ${ML_SERVICE_API_KEY:-}
     env_file:
       - .env
     healthcheck:
@@ -83,5 +88,40 @@ services:
       retries: 5
       start_period: 60s
 
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: indcloud-ml-service
+    restart: unless-stopped
+    ports:
+      - "${ML_SERVICE_PORT:-8000}:8000"
+    volumes:
+      - ml-models:/app/models
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: ${ML_ENVIRONMENT:-production}
+      DEBUG: ${ML_DEBUG:-false}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${POSTGRES_DB:-indcloud}
+      DATABASE_USER: ${DB_USERNAME:-indcloud}
+      DATABASE_PASSWORD: ${DB_PASSWORD:-indcloud123}
+      BACKEND_URL: http://backend:8080
+      MODEL_STORAGE_PATH: /app/models
+      MAX_BATCH_SIZE: ${ML_MAX_BATCH_SIZE:-1000}
+      INFERENCE_TIMEOUT_SECONDS: ${ML_INFERENCE_TIMEOUT:-300}
+      API_KEY: ${ML_SERVICE_API_KEY:-}
+      API_KEY_REQUIRED: ${ML_API_KEY_REQUIRED:-true}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
 volumes:
   postgres-data:
+  ml-models:
