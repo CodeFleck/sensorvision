@@ -265,23 +265,23 @@ public class SigfoxPlugin extends BaseWebhookPlugin {
                 return data[offset];
 
             case "UINT16":
-                if (offset + 1 >= data.length) {
-                    throw new PluginProcessingException("Not enough bytes for UINT16 at offset " + offset);
+                if (offset + 2 > data.length) {
+                    throw new PluginProcessingException("Not enough bytes for UINT16 at offset " + offset + " (need 2 bytes, have " + (data.length - offset) + ")");
                 }
                 // Big-endian by default
                 return ((data[offset] & 0xFF) << 8) | (data[offset + 1] & 0xFF);
 
             case "INT16":
-                if (offset + 1 >= data.length) {
-                    throw new PluginProcessingException("Not enough bytes for INT16 at offset " + offset);
+                if (offset + 2 > data.length) {
+                    throw new PluginProcessingException("Not enough bytes for INT16 at offset " + offset + " (need 2 bytes, have " + (data.length - offset) + ")");
                 }
                 // Big-endian, sign-extended
                 int uint16 = ((data[offset] & 0xFF) << 8) | (data[offset + 1] & 0xFF);
                 return (short) uint16;
 
             case "UINT32":
-                if (offset + 3 >= data.length) {
-                    throw new PluginProcessingException("Not enough bytes for UINT32 at offset " + offset);
+                if (offset + 4 > data.length) {
+                    throw new PluginProcessingException("Not enough bytes for UINT32 at offset " + offset + " (need 4 bytes, have " + (data.length - offset) + ")");
                 }
                 // Big-endian
                 long uint32 = ((long)(data[offset] & 0xFF) << 24) |
@@ -291,8 +291,8 @@ public class SigfoxPlugin extends BaseWebhookPlugin {
                 return uint32;
 
             case "INT32":
-                if (offset + 3 >= data.length) {
-                    throw new PluginProcessingException("Not enough bytes for INT32 at offset " + offset);
+                if (offset + 4 > data.length) {
+                    throw new PluginProcessingException("Not enough bytes for INT32 at offset " + offset + " (need 4 bytes, have " + (data.length - offset) + ")");
                 }
                 // Big-endian
                 int int32 = ((data[offset] & 0xFF) << 24) |
@@ -302,8 +302,8 @@ public class SigfoxPlugin extends BaseWebhookPlugin {
                 return int32;
 
             case "FLOAT32":
-                if (offset + 3 >= data.length) {
-                    throw new PluginProcessingException("Not enough bytes for FLOAT32 at offset " + offset);
+                if (offset + 4 > data.length) {
+                    throw new PluginProcessingException("Not enough bytes for FLOAT32 at offset " + offset + " (need 4 bytes, have " + (data.length - offset) + ")");
                 }
                 // Big-endian
                 int bits = ((data[offset] & 0xFF) << 24) |
@@ -320,11 +320,18 @@ public class SigfoxPlugin extends BaseWebhookPlugin {
     /**
      * Convert hex string to byte array
      */
-    private byte[] hexStringToByteArray(String hexString) {
+    private byte[] hexStringToByteArray(String hexString) throws PluginProcessingException {
         // Remove any spaces or non-hex characters
         hexString = hexString.replaceAll("[^0-9A-Fa-f]", "");
 
         int len = hexString.length();
+
+        // Validate even length (each byte is 2 hex chars)
+        if (len % 2 != 0) {
+            throw new PluginProcessingException(
+                "Invalid hex string length: " + len + " (must be even). Hex string may be truncated.");
+        }
+
         byte[] data = new byte[len / 2];
 
         for (int i = 0; i < len; i += 2) {
