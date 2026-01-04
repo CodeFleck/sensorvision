@@ -223,7 +223,7 @@ The application uses rate limiting to protect against abuse:
 - Integration tests using `@SpringBootTest` with H2 database
 - MQTT integration tests should use test profile to avoid Docker dependency
 - Frontend testing via npm test (Jest/React Testing Library)
-- This project is already deployed to PROD. Project urls: https://github.com/CodeFleck/indcloud, http://35.88.65.186.nip.io:8080/
+- This project is already deployed to PROD. Project urls: https://github.com/CodeFleck/indcloud, https://indcloud.io (IP: 54.149.190.208)
 
 ## Production Operations
 
@@ -263,7 +263,7 @@ docker logs indcloud-mosquitto
 docker logs -f indcloud-mosquitto
 
 # Monitor MQTT messages (requires mosquitto-clients)
-mosquitto_sub -h 35.88.65.186 -p 1883 -t "#" -v
+mosquitto_sub -h 54.149.190.208 -p 1883 -t "#" -v
 ```
 
 **Database Logs:**
@@ -280,25 +280,25 @@ docker logs -f indcloud-postgres
 **Check Service Health:**
 ```bash
 # Backend health check
-curl -s http://35.88.65.186.nip.io:8080/actuator/health
+curl -s http://indcloud.io/actuator/health
 
 # View detailed health info
-curl -s http://35.88.65.186.nip.io:8080/actuator/health | jq
+curl -s http://indcloud.io/actuator/health | jq
 
 # Check metrics
-curl -s http://35.88.65.186.nip.io:8080/actuator/metrics
+curl -s http://indcloud.io/actuator/metrics
 ```
 
 **Test MQTT Connectivity:**
 ```bash
 # Test MQTT port accessibility from external network
-telnet 35.88.65.186 1883
+telnet 54.149.190.208 1883
 
 # Subscribe to all MQTT topics (requires mosquitto-clients)
-mosquitto_sub -h 35.88.65.186 -p 1883 -t "#" -v
+mosquitto_sub -h 54.149.190.208 -p 1883 -t "#" -v
 
 # Publish test message
-mosquitto_pub -h 35.88.65.186 -p 1883 \
+mosquitto_pub -h 54.149.190.208 -p 1883 \
   -t "indcloud/devices/test-001/telemetry" \
   -m '{"deviceId":"test-001","timestamp":"2024-01-01T12:00:00Z","variables":{"temperature":23.5}}'
 ```
@@ -308,15 +308,15 @@ mosquitto_pub -h 35.88.65.186 -p 1883 \
 1. **MQTT Port Not Accessible:**
    - Issue: Customers can send data locally but not from remote devices
    - Solution: Ensure port 1883 is open in AWS Security Group/Firewall
-   - Verify: `telnet 35.88.65.186 1883` from external network
+   - Verify: `telnet 54.149.190.208 1883` from external network
 
 2. **Integration Wizard URLs:**
    - Development: Uses `http://localhost:8080`
-   - Production: Uses `http://35.88.65.186.nip.io:8080`
+   - Production: Uses `http://indcloud.io`
    - MQTT: Strips `.nip.io` suffix to get raw IP for broker connection
 
 3. **WebSocket Connectivity:**
-   - WebSocket endpoint: `ws://35.88.65.186.nip.io:8080/ws/telemetry`
+   - WebSocket endpoint: `ws://indcloud.io/ws/telemetry`
    - Check browser console for connection errors
    - Verify backend logs for WebSocket handshake issues
 

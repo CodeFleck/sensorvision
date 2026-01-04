@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+"""
+Device Telemetry Simulator for SensorVision/IndCloud
+Simulates varied telemetry data from multiple devices to test alerts and notifications.
+
+Usage:
+    python simulate_devices.py
+
+Requirements:
+    pip install paho-mqtt
+"""
+
+import json
+import random
+import time
+from datetime import datetime, timezone
+import paho.mqtt.client as mqtt
+
+# Configuration
+MQTT_BROKER = "54.149.190.208"  # Production server (indcloud.io)
+MQTT_PORT = 1883
+
+# Device configurations for danielfleck268@gmail.com account
+DEVICES = [
+    {"device_id": "d82c1dcb-198c-42cf-af83-237654920534", "name": "meter-001", "type": "smart_meter"},
+    {"device_id": "42543167-6fd2-4d59-82a1-c3e299fd12a0", "name": "meter-002", "type": "smart_meter"},
+    {"device_id": "979f2fc1-1d38-487c-819d-25b2c49e5787", "name": "meter-003", "type": "smart_meter"},
+    {"device_id": "975d17bf-ee2f-49e2-9ffc-3ca1e4a770b5", "name": "test", "type": "temperature_sensor"},
+    {"device_id": "bda2ff84-884d-4cf6-85c5-94403a847764", "name": "aaaa111", "type": "pressure_sensor"},
+    {"device_id": "23448ec3-7bf6-4492-a546-9f758716475f", "name": "huahauh", "type": "vibration_sensor"},
+]
+
+# Telemetry patterns for different device types
+TELEMETRY_PATTERNS = {
+    "smart_meter": {
+        "variables": {
+            "kw_consumption": {"min": 10, "max": 100, "unit": "kW", "spike_value": 200},
+            "voltage": {"min": 218, "max": 242, "unit": "V", "spike_value": 260},
+            "current": {"min": 5, "max": 50, "unit": "A", "spike_value": 80},
+            "power_factor": {"min": 0.85, "max": 0.99, "unit": "", "spike_value": 0.5},
+        }
+    },
+    "temperature_sensor": {
+        "variables": {
+            "temperature": {"min": 20, "max": 35, "unit": "°C", "spike_value": 55},
+            "humidity": {"min": 30, "max": 70, "unit": "%", "spike_value": 95},
+        }
+    },
+    "pressure_sensor": {
+        "variables": {
+            "pressure": {"min": 1.0, "max": 5.0, "unit": "bar", "spike_value": 8.0},
+            "flow_rate": {"min": 10, "max": 100, "unit": "L/min", "spike_value": 150},
+        }
+    },
+    "vibration_sensor": {
+        "variables": {
+            "vibration": {"min": 0.1, "max": 2.0, "unit": "mm/s", "spike_value": 5.0},
+            "frequency": {"min": 50, "max": 200, "unit": "Hz", "spike_value": 500},
+            "temperature": {"min": 30, "max": 60, "unit": "°C", "spike_value": 90},
+        }
+    },
+}
+
+
+def generate_telemetry(device_type: str, spike_probability: float = 0.1) -> dict:
+    """Generate telemetry data with occasional spikes for alert testing."""
+    pattern = TELEMETRY_PATTERNS.get(device_type, TELEMETRY_PATTERNS["smart_meter"])
+    variables = {}
+
+    for var_name, config in pattern["variables"].items():
+        # Randomly decide if this reading should spike (for alert testing)
+        if random.random() < spike_probability:
+            value = config["spike_value"]
+            print(f"  ⚠️  SPIKE: {var_name} = {value} (alert trigger)")
+        else:
+            value = round(random.uniform(config["min"], config["max"]), 2)
+        variables[var_name] = value
+
+    return variables
+
+
+def on_connect(client, userdata, flags, rc, properties=None):
+    if rc == 0:
+        print(f"✅ Connected to MQTT broker")
+    else:
+        print(f"❌ Connection failed with code {rc}")
+
+
+def on_publish(client, userdata, mid, *args):
+    pass  # Silent publish confirmation
+
+
+def simulate_device(client: mqtt.Client, device: dict, spike_probability: float = 0.1):
+    """Send telemetry for a single device."""
+    device_id = device["device_id"]
+    device_name = device.get("name", device_id)
+    device_type = device.get("type", "smart_meter")
+
+    # Generate telemetry
+    variables = generate_telemetry(device_type, spike_probability)
+
+    payload = {
+        "deviceId": device_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "variables": variables,
+    }
+
+    # MQTT topic for telemetry
+    topic = f"indcloud/devices/{device_id}/telemetry"
+
+    # Publish telemetry data
+    result = client.publish(topic, json.dumps(payload), qos=1)
+
+    print(f"📡 {device_name} ({device_type}): {variables}")
+    return result
+
+
+def main():
+    print("=" * 60)
+    print("SensorVision Device Telemetry Simulator")
+    print("=" * 60)
+    print(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
+    print(f"Devices: {len(DEVICES)}")
+    print()
+
+    # Display device configuration
+    print("Configured devices:")
+    for d in DEVICES:
+        print(f"  - {d['name']} ({d['type']})")
+    print()
+
+    # Create MQTT client
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    client.on_connect = on_connect
+    client.on_publish = on_publish
+
+    # Connect to broker
+    print(f"Connecting to {MQTT_BROKER}...")
+    try:
+        client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        client.loop_start()
+        time.sleep(1)  # Wait for connection
+    except Exception as e:
+        print(f"❌ Failed to connect: {e}")
+        return
+
+    print()
+    print("Starting simulation (Ctrl+C to stop)...")
+    print("-" * 60)
+
+    iteration = 0
+    try:
+        while True:
+            iteration += 1
+            print(f"\n📊 Iteration {iteration} - {datetime.now().strftime('%H:%M:%S')}")
+
+            # Increase spike probability every 5th iteration for testing alerts
+            spike_prob = 0.3 if iteration % 5 == 0 else 0.1
+            if spike_prob > 0.1:
+                print("   (Higher spike probability this iteration)")
+
+            for device in DEVICES:
+                simulate_device(client, device, spike_prob)
+                time.sleep(0.5)  # Small delay between devices
+
+            # Wait before next iteration
+            print(f"\n⏳ Waiting 30 seconds before next iteration...")
+            time.sleep(30)
+
+    except KeyboardInterrupt:
+        print("\n\n🛑 Simulation stopped by user")
+    finally:
+        client.loop_stop()
+        client.disconnect()
+        print("Disconnected from MQTT broker")
+
+
+if __name__ == "__main__":
+    main()
