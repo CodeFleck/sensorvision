@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import {
   Search,
   AlertOctagon,
@@ -79,9 +80,12 @@ export const MLAnomalies = () => {
     try {
       setActionLoading(anomaly.id);
       await mlAnomaliesApi.acknowledge(anomaly.id);
+      toast.success('Anomaly acknowledged');
       await fetchAnomalies();
       await fetchStats();
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to acknowledge anomaly';
+      toast.error(message);
       console.error('Failed to acknowledge anomaly:', error);
     } finally {
       setActionLoading(null);
@@ -93,8 +97,11 @@ export const MLAnomalies = () => {
     try {
       setActionLoading(anomaly.id);
       await mlAnomaliesApi.investigate(anomaly.id);
+      toast.success('Investigation started');
       await fetchAnomalies();
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to start investigation';
+      toast.error(message);
       console.error('Failed to start investigation:', error);
     } finally {
       setActionLoading(null);
@@ -107,9 +114,12 @@ export const MLAnomalies = () => {
     try {
       setActionLoading(anomaly.id);
       await mlAnomaliesApi.resolve(anomaly.id, { resolutionNote: note || undefined });
+      toast.success('Anomaly resolved');
       await fetchAnomalies();
       await fetchStats();
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to resolve anomaly';
+      toast.error(message);
       console.error('Failed to resolve anomaly:', error);
     } finally {
       setActionLoading(null);
@@ -123,9 +133,12 @@ export const MLAnomalies = () => {
     try {
       setActionLoading(anomaly.id);
       await mlAnomaliesApi.markFalsePositive(anomaly.id, { resolutionNote: note || undefined });
+      toast.success('Marked as false positive');
       await fetchAnomalies();
       await fetchStats();
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to mark as false positive';
+      toast.error(message);
       console.error('Failed to mark as false positive:', error);
     } finally {
       setActionLoading(null);

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import {
   Plus,
   Search,
@@ -79,8 +80,11 @@ export const MLModels = () => {
     try {
       setActionLoading(model.id);
       await mlModelsApi.train(model.id);
+      toast.success(`Training started for "${model.name}"`);
       await fetchModels();
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to start training';
+      toast.error(message);
       console.error('Failed to start training:', error);
     } finally {
       setActionLoading(null);
@@ -92,8 +96,11 @@ export const MLModels = () => {
     try {
       setActionLoading(model.id);
       await mlModelsApi.deploy(model.id);
+      toast.success(`Model "${model.name}" deployed successfully`);
       await fetchModels();
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to deploy model';
+      toast.error(message);
       console.error('Failed to deploy model:', error);
     } finally {
       setActionLoading(null);
@@ -108,8 +115,11 @@ export const MLModels = () => {
     try {
       setActionLoading(model.id);
       await mlModelsApi.archive(model.id);
+      toast.success(`Model "${model.name}" archived`);
       await fetchModels();
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to archive model';
+      toast.error(message);
       console.error('Failed to archive model:', error);
     } finally {
       setActionLoading(null);
@@ -124,8 +134,11 @@ export const MLModels = () => {
     try {
       setActionLoading(model.id);
       await mlModelsApi.delete(model.id);
+      toast.success(`Model "${model.name}" deleted`);
       await fetchModels();
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete model';
+      toast.error(message);
       console.error('Failed to delete model:', error);
     } finally {
       setActionLoading(null);
