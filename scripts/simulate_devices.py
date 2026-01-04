@@ -3,22 +3,33 @@
 Device Telemetry Simulator for SensorVision/IndCloud
 Simulates varied telemetry data from multiple devices to test alerts and notifications.
 
+NOTE: This is a DEVELOPMENT/TESTING script. Not intended for production use.
+
 Usage:
     python simulate_devices.py
+
+Environment variables (optional):
+    MQTT_BROKER - MQTT broker host (default: 54.149.190.208)
+    MQTT_PORT   - MQTT broker port (default: 1883)
+    MQTT_USERNAME - MQTT username (optional)
+    MQTT_PASSWORD - MQTT password (optional)
 
 Requirements:
     pip install paho-mqtt
 """
 
 import json
+import os
 import random
 import time
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 
-# Configuration
-MQTT_BROKER = "54.149.190.208"  # Production server (indcloud.io)
-MQTT_PORT = 1883
+# Configuration (can be overridden via environment variables)
+MQTT_BROKER = os.environ.get("MQTT_BROKER", "54.149.190.208")  # Production: indcloud.io
+MQTT_PORT = int(os.environ.get("MQTT_PORT", "1883"))
+MQTT_USERNAME = os.environ.get("MQTT_USERNAME")
+MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD")
 
 # Device configurations for danielfleck268@gmail.com account
 DEVICES = [
@@ -79,11 +90,23 @@ def generate_telemetry(device_type: str, spike_probability: float = 0.1) -> dict
     return variables
 
 
+# MQTT connection result codes
+MQTT_RC_CODES = {
+    0: "Connection successful",
+    1: "Incorrect protocol version",
+    2: "Invalid client identifier",
+    3: "Server unavailable",
+    4: "Bad username or password",
+    5: "Not authorized",
+}
+
+
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
         print(f"✅ Connected to MQTT broker")
     else:
-        print(f"❌ Connection failed with code {rc}")
+        error_msg = MQTT_RC_CODES.get(rc, f"Unknown error (code {rc})")
+        print(f"❌ Connection failed: {error_msg}")
 
 
 def on_publish(client, userdata, mid, *args):
@@ -134,12 +157,24 @@ def main():
     client.on_connect = on_connect
     client.on_publish = on_publish
 
+    # Set authentication if provided
+    if MQTT_USERNAME and MQTT_PASSWORD:
+        client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
+        print(f"Using MQTT authentication (username: {MQTT_USERNAME})")
+
     # Connect to broker
-    print(f"Connecting to {MQTT_BROKER}...")
+    print(f"Connecting to {MQTT_BROKER}:{MQTT_PORT}...")
     try:
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
         client.loop_start()
-        time.sleep(1)  # Wait for connection
+        # Wait for connection with timeout
+        for _ in range(10):
+            time.sleep(0.5)
+            if client.is_connected():
+                break
+        if not client.is_connected():
+            print("❌ Connection timeout - broker may be unreachable")
+            return
     except Exception as e:
         print(f"❌ Failed to connect: {e}")
         return
