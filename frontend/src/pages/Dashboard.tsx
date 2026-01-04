@@ -179,7 +179,7 @@ export const Dashboard = () => {
       {Object.keys(latestTelemetry).length > 0 && (
         <Card>
           <CardBody>
-            <h2 className="text-lg font-semibold text-primary mb-4">Real-time Power Consumption</h2>
+            <h2 className="text-lg font-semibold text-primary mb-4">Real-time Telemetry</h2>
             <RealTimeChart telemetryData={Object.values(latestTelemetry)} />
           </CardBody>
         </Card>

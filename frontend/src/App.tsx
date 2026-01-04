@@ -52,6 +52,8 @@ import { GlobalRules } from './pages/GlobalRules';
 import { GlobalAlerts } from './pages/GlobalAlerts';
 import LogViewer from './pages/LogViewer';
 import Settings from './pages/Settings';
+import { MLModels } from './pages/MLModels';
+import { MLAnomalies } from './pages/MLAnomalies';
 
 import AdminDashboard from './pages/AdminDashboard';
 import { config } from './config';
@@ -124,6 +126,10 @@ function App() {
                       <Route path="/phone-numbers" element={<PhoneNumbers />} />
                       <Route path="/sms-settings" element={<SmsSettings />} />
                       <Route path="/events" element={<Events />} />
+
+                      {/* ML Pipeline routes (user-accessible) */}
+                      <Route path="/ml-models" element={<MLModels />} />
+                      <Route path="/ml-anomalies" element={<MLAnomalies />} />
 
                       {/* Data Management routes (user-accessible) */}
                       <Route path="/data-ingestion" element={<DataIngestion />} />

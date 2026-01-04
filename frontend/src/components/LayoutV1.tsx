@@ -37,6 +37,8 @@ import {
   Building2,
   Rocket,
   Trash2,
+  Brain,
+  AlertOctagon,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -124,6 +126,17 @@ const navigationSections: NavigationSection[] = [
       { name: 'Phone Numbers', href: '/phone-numbers', icon: Phone, adminOnly: false, excludeForAdmin: true },
       { name: 'SMS Settings', href: '/sms-settings', icon: DollarSign, adminOnly: false, excludeForAdmin: true },
       { name: 'Events', href: '/events', icon: Clock, adminOnly: false, excludeForAdmin: true },
+    ],
+  },
+  {
+    name: 'ML PIPELINE',
+    icon: Brain,
+    iconColor: 'text-violet-600',
+    adminOnly: false,
+    excludeForAdmin: true, // Hide from admin dashboard - user-only feature
+    items: [
+      { name: 'ML Models', href: '/ml-models', icon: Brain, adminOnly: false, excludeForAdmin: true },
+      { name: 'ML Anomalies', href: '/ml-anomalies', icon: AlertOctagon, adminOnly: false, excludeForAdmin: true },
     ],
   },
   {
