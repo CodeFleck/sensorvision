@@ -18,6 +18,7 @@ import { DashboardTemplates } from './pages/DashboardTemplates';
 import { Devices } from './pages/Devices';
 import DeviceGroups from './pages/DeviceGroups';
 import DeviceTags from './pages/DeviceTags';
+import DeviceTypes from './pages/DeviceTypes';
 import { Analytics } from './pages/Analytics';
 import { Rules } from './pages/Rules';
 import { Alerts } from './pages/Alerts';
@@ -111,6 +112,7 @@ function App() {
                       <Route path="/devices" element={<Devices />} />
                       <Route path="/device-groups" element={<DeviceGroups />} />
                       <Route path="/device-tags" element={<DeviceTags />} />
+                      <Route path="/device-types" element={<DeviceTypes />} />
                       <Route path="/integration-wizard" element={<IntegrationWizard />} />
                       <Route path="/serverless-functions" element={<ServerlessFunctions />} />
                       <Route path="/data-plugins" element={<DataPlugins />} />
