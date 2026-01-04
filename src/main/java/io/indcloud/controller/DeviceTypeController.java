@@ -69,7 +69,14 @@ public class DeviceTypeController {
     @Operation(summary = "Get device type by ID", description = "Returns a single device type with all its templates")
     public ResponseEntity<DeviceTypeResponse> getDeviceType(@PathVariable Long id) {
         log.debug("REST request to get device type: {}", id);
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         DeviceType deviceType = deviceTypeService.getDeviceType(id);
+
+        // Verify device type is accessible (either system template or belongs to user's org)
+        if (!deviceType.getIsSystemTemplate() && !deviceType.getOrganization().getId().equals(userOrg.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied to device type: " + id);
+        }
+
         return ResponseEntity.ok(DeviceTypeResponse.from(deviceType));
     }
 
@@ -84,37 +91,25 @@ public class DeviceTypeController {
                 ? request.variables().stream().map(this::toVariable).collect(Collectors.toList())
                 : List.of();
 
-        DeviceType created = deviceTypeService.createDeviceType(
+        List<DeviceTypeRuleTemplate> ruleTemplates = request.ruleTemplates() != null
+                ? request.ruleTemplates().stream().map(this::toRuleTemplate).collect(Collectors.toList())
+                : List.of();
+
+        List<DeviceTypeDashboardTemplate> dashboardTemplates = request.dashboardTemplates() != null
+                ? request.dashboardTemplates().stream().map(this::toDashboardTemplate).collect(Collectors.toList())
+                : List.of();
+
+        DeviceType created = deviceTypeService.createDeviceTypeWithTemplates(
                 org,
                 request.name(),
                 request.description(),
                 request.icon(),
-                variables
+                request.color(),
+                request.category(),
+                variables,
+                ruleTemplates,
+                dashboardTemplates
         );
-
-        // Set additional fields
-        if (request.color() != null) {
-            created.setColor(request.color());
-        }
-        if (request.category() != null) {
-            created.setTemplateCategory(request.category());
-        }
-
-        // Add rule templates
-        if (request.ruleTemplates() != null) {
-            for (DeviceTypeRuleTemplateRequest ruleReq : request.ruleTemplates()) {
-                DeviceTypeRuleTemplate ruleTemplate = toRuleTemplate(ruleReq);
-                created.addRuleTemplate(ruleTemplate);
-            }
-        }
-
-        // Add dashboard templates
-        if (request.dashboardTemplates() != null) {
-            for (DeviceTypeDashboardTemplateRequest dashReq : request.dashboardTemplates()) {
-                DeviceTypeDashboardTemplate dashTemplate = toDashboardTemplate(dashReq);
-                created.addDashboardTemplate(dashTemplate);
-            }
-        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(DeviceTypeResponse.from(created));
     }
@@ -173,9 +168,21 @@ public class DeviceTypeController {
             @PathVariable String deviceExternalId) {
         log.debug("REST request to apply device type {} to device {}", id, deviceExternalId);
 
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
+
         DeviceType deviceType = deviceTypeService.getDeviceType(id);
+        // Verify device type is accessible (either system template or belongs to user's org)
+        if (!deviceType.getIsSystemTemplate() && !deviceType.getOrganization().getId().equals(userOrg.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied to device type: " + id);
+        }
+
         Device device = deviceRepository.findByExternalId(deviceExternalId)
                 .orElseThrow(() -> new io.indcloud.exception.ResourceNotFoundException("Device not found: " + deviceExternalId));
+
+        // Verify device belongs to user's organization
+        if (!device.getOrganization().getId().equals(userOrg.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied to device: " + deviceExternalId);
+        }
 
         String currentUser = securityUtils.getCurrentUser().getUsername();
         DeviceTemplateApplication application = autoProvisioningService.applyTemplate(device, deviceType, currentUser);

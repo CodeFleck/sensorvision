@@ -244,7 +244,6 @@ public class DeviceAutoProvisioningService {
             case LT -> RuleOperator.LT;
             case LTE -> RuleOperator.LTE;
             case EQ -> RuleOperator.EQ;
-            case NEQ -> RuleOperator.EQ; // NEQ maps to EQ since standalone doesn't have NEQ
         };
     }
 

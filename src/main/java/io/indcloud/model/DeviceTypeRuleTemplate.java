@@ -80,8 +80,7 @@ public class DeviceTypeRuleTemplate {
         GTE,  // Greater than or equal
         LT,   // Less than
         LTE,  // Less than or equal
-        EQ,   // Equal
-        NEQ   // Not equal
+        EQ    // Equal
     }
 
     public enum RuleSeverity {

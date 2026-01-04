@@ -50,6 +50,23 @@ public class DeviceTypeService {
      * Create a new device type
      */
     public DeviceType createDeviceType(Organization organization, String name, String description, String icon, List<DeviceTypeVariable> variables) {
+        return createDeviceTypeWithTemplates(organization, name, description, icon, null, null, variables, null, null);
+    }
+
+    /**
+     * Create a new device type with all templates
+     */
+    public DeviceType createDeviceTypeWithTemplates(
+            Organization organization,
+            String name,
+            String description,
+            String icon,
+            String color,
+            DeviceType.TemplateCategory category,
+            List<DeviceTypeVariable> variables,
+            List<DeviceTypeRuleTemplate> ruleTemplates,
+            List<DeviceTypeDashboardTemplate> dashboardTemplates) {
+
         // Check if name already exists
         if (deviceTypeRepository.existsByOrganizationAndName(organization, name)) {
             throw new IllegalArgumentException("Device type with name '" + name + "' already exists");
@@ -60,7 +77,10 @@ public class DeviceTypeService {
                 .name(name)
                 .description(description)
                 .icon(icon)
+                .color(color)
+                .templateCategory(category)
                 .isActive(true)
+                .isSystemTemplate(false)
                 .build();
 
         // Add variables
@@ -68,15 +88,29 @@ public class DeviceTypeService {
             variables.forEach(deviceType::addVariable);
         }
 
+        // Add rule templates
+        if (ruleTemplates != null) {
+            ruleTemplates.forEach(deviceType::addRuleTemplate);
+        }
+
+        // Add dashboard templates
+        if (dashboardTemplates != null) {
+            dashboardTemplates.forEach(deviceType::addDashboardTemplate);
+        }
+
         DeviceType saved = deviceTypeRepository.save(deviceType);
 
         // Emit event
+        int totalTemplates = (variables != null ? variables.size() : 0)
+                + (ruleTemplates != null ? ruleTemplates.size() : 0)
+                + (dashboardTemplates != null ? dashboardTemplates.size() : 0);
+
         eventService.createEvent(
                 organization,
                 Event.EventType.DEVICE_CREATED,
                 Event.EventSeverity.INFO,
                 "Device Type Created",
-                String.format("Device type '%s' created with %d variables", name, variables != null ? variables.size() : 0)
+                String.format("Device type '%s' created with %d templates", name, totalTemplates)
         );
 
         log.info("Device type created: {} for organization: {}", name, organization.getName());
