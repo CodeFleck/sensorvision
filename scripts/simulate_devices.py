@@ -31,14 +31,13 @@ MQTT_PORT = int(os.environ.get("MQTT_PORT", "1883"))
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME")
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD")
 
-# Device configurations for danielfleck268@gmail.com account
+# Device configurations for danielfleck268+01@gmail.com account
 DEVICES = [
-    {"device_id": "d82c1dcb-198c-42cf-af83-237654920534", "name": "meter-001", "type": "smart_meter"},
-    {"device_id": "42543167-6fd2-4d59-82a1-c3e299fd12a0", "name": "meter-002", "type": "smart_meter"},
-    {"device_id": "979f2fc1-1d38-487c-819d-25b2c49e5787", "name": "meter-003", "type": "smart_meter"},
-    {"device_id": "975d17bf-ee2f-49e2-9ffc-3ca1e4a770b5", "name": "test", "type": "temperature_sensor"},
-    {"device_id": "bda2ff84-884d-4cf6-85c5-94403a847764", "name": "aaaa111", "type": "pressure_sensor"},
-    {"device_id": "23448ec3-7bf6-4492-a546-9f758716475f", "name": "huahauh", "type": "vibration_sensor"},
+    {"device_id": "42a94d06-d3b6-4791-ba8b-f3cd8ec65ecd", "name": "smart-meter-001", "type": "smart_meter"},
+    {"device_id": "558b0623-9b85-488a-8909-d0e185dee2a3", "name": "smart-meter-002", "type": "smart_meter"},
+    {"device_id": "34e14c04-2e55-4384-b871-ff950184964b", "name": "temp-sensor-001", "type": "temperature_sensor"},
+    {"device_id": "472f1d2f-a6f5-4d24-9f4a-8ffd7164acd6", "name": "pressure-sensor-001", "type": "pressure_sensor"},
+    {"device_id": "64d2ced4-78a5-4243-84e9-0b71c9ea5f8e", "name": "vibration-sensor-001", "type": "vibration_sensor"},
 ]
 
 # Telemetry patterns for different device types
@@ -82,7 +81,7 @@ def generate_telemetry(device_type: str, spike_probability: float = 0.1) -> dict
         # Randomly decide if this reading should spike (for alert testing)
         if random.random() < spike_probability:
             value = config["spike_value"]
-            print(f"  ⚠️  SPIKE: {var_name} = {value} (alert trigger)")
+            print(f"  [!] SPIKE: {var_name} = {value} (alert trigger)")
         else:
             value = round(random.uniform(config["min"], config["max"]), 2)
         variables[var_name] = value
@@ -103,10 +102,10 @@ MQTT_RC_CODES = {
 
 def on_connect(client, userdata, flags, rc, properties=None):
     if rc == 0:
-        print(f"✅ Connected to MQTT broker")
+        print("[OK] Connected to MQTT broker")
     else:
         error_msg = MQTT_RC_CODES.get(rc, f"Unknown error (code {rc})")
-        print(f"❌ Connection failed: {error_msg}")
+        print(f"[ERROR] Connection failed: {error_msg}")
 
 
 def on_publish(client, userdata, mid, *args):
@@ -134,7 +133,7 @@ def simulate_device(client: mqtt.Client, device: dict, spike_probability: float 
     # Publish telemetry data
     result = client.publish(topic, json.dumps(payload), qos=1)
 
-    print(f"📡 {device_name} ({device_type}): {variables}")
+    print(f"[TX] {device_name} ({device_type}): {variables}")
     return result
 
 
@@ -173,10 +172,10 @@ def main():
             if client.is_connected():
                 break
         if not client.is_connected():
-            print("❌ Connection timeout - broker may be unreachable")
+            print("[ERROR] Connection timeout - broker may be unreachable")
             return
     except Exception as e:
-        print(f"❌ Failed to connect: {e}")
+        print(f"[ERROR] Failed to connect: {e}")
         return
 
     print()
@@ -187,7 +186,7 @@ def main():
     try:
         while True:
             iteration += 1
-            print(f"\n📊 Iteration {iteration} - {datetime.now().strftime('%H:%M:%S')}")
+            print(f"\n[{iteration}] Iteration - {datetime.now().strftime('%H:%M:%S')}")
 
             # Increase spike probability every 5th iteration for testing alerts
             spike_prob = 0.3 if iteration % 5 == 0 else 0.1
@@ -199,11 +198,11 @@ def main():
                 time.sleep(0.5)  # Small delay between devices
 
             # Wait before next iteration
-            print(f"\n⏳ Waiting 30 seconds before next iteration...")
+            print(f"\n... Waiting 30 seconds before next iteration...")
             time.sleep(30)
 
     except KeyboardInterrupt:
-        print("\n\n🛑 Simulation stopped by user")
+        print("\n\n[STOP] Simulation stopped by user")
     finally:
         client.loop_stop()
         client.disconnect()
