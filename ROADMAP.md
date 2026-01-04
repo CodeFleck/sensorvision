@@ -118,8 +118,8 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 ### 🔮 Phase 2: Intelligent Features (Weeks 7-12, Q1 2025)
 *Goal: Add predictive capabilities and advanced analytics*
 
-#### 2.1 Machine Learning Pipeline 🚧 IN PROGRESS
-**Effort**: 6-8 weeks | **Status**: Sprint 1 Complete (Foundation)
+#### 2.1 Machine Learning Pipeline ✅ COMPLETE
+**Effort**: 6-8 weeks | **Status**: All Sprints Complete
 **GitHub Issue**: [#87](https://github.com/CodeFleck/sensorvision/issues/87)
 
 **Sprint 1 - Foundation (✅ COMPLETE)**:
@@ -131,17 +131,18 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 - ✅ REST API: MLModelController, MLAnomalyController
 - ✅ Unit tests: 10+ test files for ML components
 
-**Sprint 2 - Pre-Built ML Features (🚧 NEXT)**:
-1. 🚧 **Predictive Maintenance** - Detect equipment failure 24-48 hours in advance
-2. ✅ **Anomaly Detection** - Isolation Forest + Z-Score (COMPLETE)
-3. 🚧 **Energy Consumption Forecasting** - Predict next 7 days of usage
-4. 🚧 **Equipment RUL** - Estimate days until maintenance
+**Sprint 2 - Pre-Built ML Features (✅ COMPLETE)**:
+1. ✅ **Predictive Maintenance** - Detect equipment failure 24-48 hours in advance
+2. ✅ **Anomaly Detection** - Isolation Forest + Z-Score
+3. ✅ **Energy Consumption Forecasting** - Predict next 7 days of usage
+4. ✅ **Equipment RUL** - Estimate days until maintenance
 
-**Sprint 3 - Frontend UI (📋 PLANNED)**:
-- ML Models management page
-- Training workflow wizard
-- Anomaly dashboard with visualizations
-- Prediction insights panel
+**Sprint 3 - Frontend UI (✅ COMPLETE)**:
+- ✅ ML Models management page with CRUD operations
+- ✅ Training workflow (train, deploy, archive actions)
+- ✅ Anomaly dashboard with stats and workflow actions
+- ✅ Navigation integrated with ML Pipeline section
+- ✅ Dynamic variables support in real-time charts
 
 **Technologies**: scikit-learn, TensorFlow Lite, ONNX, FastAPI
 
@@ -817,24 +818,28 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ---
 
-**Last Updated**: 2026-01-03
-**Current Phase**: Phase 2 - ML Pipeline (Q2 2025 Planning)
-**Next Milestone**: ML Pipeline Foundation (#87)
-**Status**: Q1 2025 Complete - 85% Feature Parity Achieved ✅
+**Last Updated**: 2026-01-04
+**Current Phase**: Phase 3 - Enterprise Features (Planning)
+**Next Milestone**: Advanced Device Types & Auto-Provisioning (#TBD)
+**Status**: Q1 2025 Complete + ML Pipeline Complete - 90% Feature Parity Achieved ✅
 
-**Recent Progress** (2026-01-02 - 2026-01-03):
+**Recent Progress** (2026-01-02 - 2026-01-04):
 - ✅ Sprint 3 plugins completed (Sigfox, MQTT Bridge, Modbus TCP)
 - ✅ V62 migration column name fixes deployed
 - ✅ SMS Alerts via Twilio verified in production
 - ✅ AWS SES email working in production
 - ✅ Security hardening: removed hardcoded credentials, added secret scanning
 - ✅ Password reset token expiry extended to 24 hours
+- ✅ ML Pipeline Sprint 2: Predictive Maintenance, Energy Forecasting, Equipment RUL engines
+- ✅ ML Pipeline Sprint 3: Frontend UI (ML Models page, Anomalies dashboard)
+- ✅ Dynamic variables support in real-time dashboard charts
 
-**Q1 2025 Complete**:
+**Q1 2025 Complete + ML Pipeline**:
 - ✅ All 6 sprints completed
 - ✅ 6 protocol plugins operational
 - ✅ Plugin marketplace with 6 pre-built plugins
 - ✅ Global Events / Fleet-wide rules
 - ✅ Advanced synthetic variables (31 functions)
 - ✅ SMS + Email notifications in production
-- ✅ 85% feature parity with Ubidots core
+- ✅ ML Pipeline complete (4 engines: Anomaly, Predictive Maintenance, Energy Forecasting, Equipment RUL)
+- ✅ 90% feature parity with Ubidots core
