@@ -514,7 +514,7 @@ client = IndCloudClient(sdk_config)
 # Send data
 data = {"temperature": 25.3, "humidity": 58}
 response = client.send_telemetry(data)
-print(f"Success: {String.fromCharCode(123)}response{String.fromCharCode(125)}")`.replaceAll('${config.backendUrl}', config.backendUrl)}
+print(f"Success: {response}")`}
                 />
 
                 <Callout type="info" title="Advanced Features">
