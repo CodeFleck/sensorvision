@@ -96,6 +96,13 @@ ecr_login() {
     # Check if AWS CLI is installed, install if missing
     if ! command -v aws &> /dev/null; then
         log "AWS CLI not found, installing..."
+
+        # Install unzip if missing
+        if ! command -v unzip &> /dev/null; then
+            log "Installing unzip..."
+            sudo apt-get update -qq && sudo apt-get install -y -qq unzip
+        fi
+
         cd /tmp
         curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
         unzip -q -o awscliv2.zip
