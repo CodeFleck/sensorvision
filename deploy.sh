@@ -93,9 +93,21 @@ pre_deployment_checks() {
 ecr_login() {
     log "Logging into AWS ECR..."
 
-    # Check if AWS CLI is installed
+    # Check if AWS CLI is installed, install if missing
     if ! command -v aws &> /dev/null; then
-        error "AWS CLI is not installed!"
+        log "AWS CLI not found, installing..."
+        cd /tmp
+        curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip -q -o awscliv2.zip
+        sudo ./aws/install --update
+        rm -rf awscliv2.zip aws
+        cd -
+        log "AWS CLI installed successfully"
+    fi
+
+    # Verify AWS CLI is now available
+    if ! command -v aws &> /dev/null; then
+        error "AWS CLI installation failed!"
         exit 1
     fi
 
