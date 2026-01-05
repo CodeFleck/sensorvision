@@ -1,7 +1,12 @@
-import { useState } from 'react';
-import { X } from 'lucide-react';
-import { Device } from '../types';
+import { useState, useEffect, useRef } from 'react';
+import { X, Zap } from 'lucide-react';
+import { Device, DeviceTypeSimple } from '../types';
 import { apiService } from '../services/api';
+
+interface TemplateResult {
+  message: string;
+  success: boolean;
+}
 
 interface DeviceModalProps {
   device: Device | null;
@@ -21,6 +26,41 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
   const [error, setError] = useState<string | null>(null);
   const [deviceIdError, setDeviceIdError] = useState<string | null>(null);
 
+  // Template selection state (only for new devices)
+  const [deviceTypes, setDeviceTypes] = useState<DeviceTypeSimple[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
+  const [templateResult, setTemplateResult] = useState<TemplateResult | null>(null);
+
+  // Track mounted state to prevent memory leaks from setTimeout
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Fetch device types on mount (only for new devices)
+  const isNewDevice = !device;
+  useEffect(() => {
+    if (isNewDevice) {
+      loadDeviceTypes();
+    }
+  }, [isNewDevice]);
+
+  const loadDeviceTypes = async () => {
+    setLoadingTemplates(true);
+    try {
+      const types = await apiService.getDeviceTypes();
+      setDeviceTypes(types);
+    } catch (err) {
+      console.error('Failed to load device types:', err);
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -31,6 +71,7 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
 
     setLoading(true);
     setError(null);
+    setTemplateResult(null);
 
     try {
       // Map deviceId back to externalId for API
@@ -46,11 +87,44 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
       if (device) {
         // Update existing device
         await apiService.updateDevice(device.externalId, apiData);
+        onClose();
       } else {
         // Create new device
         await apiService.createDevice(apiData);
+
+        // Apply template if selected
+        if (selectedTemplateId) {
+          setApplyingTemplate(true);
+          try {
+            const result = await apiService.applyDeviceTypeTemplate(selectedTemplateId, formData.deviceId);
+            setTemplateResult({
+              message: `Template applied: ${result.variablesCreated} variables, ${result.rulesCreated} rules${result.dashboardCreated ? ', dashboard created' : ''}`,
+              success: true,
+            });
+            // Brief delay to show success message before closing
+            setTimeout(() => {
+              if (isMountedRef.current) {
+                onClose();
+              }
+            }, 1500);
+          } catch (templateError) {
+            // Device was created but template failed - show warning but don't fail
+            setTemplateResult({
+              message: `Device created, but template application failed: ${templateError instanceof Error ? templateError.message : 'Unknown error'}`,
+              success: false,
+            });
+            setTimeout(() => {
+              if (isMountedRef.current) {
+                onClose();
+              }
+            }, 2000);
+          } finally {
+            setApplyingTemplate(false);
+          }
+        } else {
+          onClose();
+        }
       }
-      onClose();
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
@@ -196,20 +270,82 @@ export const DeviceModal = ({ device, onClose }: DeviceModalProps) => {
             />
           </div>
 
+          {/* Template Selection (only for new devices) */}
+          {!device && (
+            <div className="border-t border-gray-200 pt-4 mt-2">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="h-4 w-4 text-blue-600" />
+                <label htmlFor="deviceTemplate" className="block text-sm font-medium text-gray-700">
+                  Apply Device Type Template (Optional)
+                </label>
+              </div>
+              {loadingTemplates ? (
+                <div className="text-sm text-gray-500">Loading templates...</div>
+              ) : deviceTypes.length === 0 ? (
+                <div className="text-sm text-gray-500">No templates available</div>
+              ) : (
+                <select
+                  id="deviceTemplate"
+                  aria-describedby={selectedTemplateId ? 'template-description' : undefined}
+                  value={selectedTemplateId ?? ''}
+                  onChange={(e) => setSelectedTemplateId(e.target.value ? Number(e.target.value) : null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">No template - configure manually</option>
+                  {deviceTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name} ({type.variableCount} variables)
+                      {type.isSystemTemplate ? ' ⭐' : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {selectedTemplateId && (
+                <p id="template-description" className="mt-2 text-xs text-gray-500">
+                  Auto-creates variables, alert rules, and dashboard based on the selected template.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Template application status */}
+          {templateResult && (
+            <div className={`p-3 rounded-lg text-sm ${
+              templateResult.success
+                ? 'bg-green-100 border border-green-300 text-green-700'
+                : 'bg-yellow-100 border border-yellow-300 text-yellow-700'
+            }`}>
+              {templateResult.message}
+            </div>
+          )}
+
           <div className="flex space-x-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              disabled={loading || applyingTemplate}
+              className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg transition-colors ${
+                loading || applyingTemplate
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-gray-200'
+              }`}
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || applyingTemplate}
               className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Saving...' : device ? 'Update' : 'Create'}
+              {applyingTemplate
+                ? 'Applying Template...'
+                : loading
+                  ? 'Saving...'
+                  : device
+                    ? 'Update'
+                    : selectedTemplateId
+                      ? 'Create & Apply Template'
+                      : 'Create'}
             </button>
           </div>
         </form>
