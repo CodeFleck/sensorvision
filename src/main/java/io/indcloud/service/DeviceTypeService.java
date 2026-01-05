@@ -122,6 +122,14 @@ public class DeviceTypeService {
      * Update device type
      */
     public DeviceType updateDeviceType(Long id, String name, String description, String icon, Boolean isActive) {
+        return updateDeviceType(id, name, description, icon, isActive, null, null);
+    }
+
+    /**
+     * Update device type with all optional fields
+     */
+    public DeviceType updateDeviceType(Long id, String name, String description, String icon, Boolean isActive,
+                                       String color, DeviceType.TemplateCategory category) {
         DeviceType deviceType = getDeviceType(id);
 
         if (name != null && !name.equals(deviceType.getName())) {
@@ -142,6 +150,14 @@ public class DeviceTypeService {
 
         if (isActive != null) {
             deviceType.setIsActive(isActive);
+        }
+
+        if (color != null) {
+            deviceType.setColor(color);
+        }
+
+        if (category != null) {
+            deviceType.setTemplateCategory(category);
         }
 
         DeviceType updated = deviceTypeRepository.save(deviceType);

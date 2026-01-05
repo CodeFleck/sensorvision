@@ -122,9 +122,17 @@ public class DeviceTypeController {
             @Valid @RequestBody DeviceTypeRequest request) {
         log.debug("REST request to update device type: {}", id);
 
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         DeviceType deviceType = deviceTypeService.getDeviceType(id);
+
+        // System templates cannot be edited
         if (!deviceType.isEditable()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Verify organization ownership
+        if (!deviceType.getOrganization().getId().equals(userOrg.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied to device type: " + id);
         }
 
         DeviceType updated = deviceTypeService.updateDeviceType(
@@ -132,15 +140,10 @@ public class DeviceTypeController {
                 request.name(),
                 request.description(),
                 request.icon(),
-                null // isActive unchanged
+                null, // isActive unchanged
+                request.color(),
+                request.category()
         );
-
-        if (request.color() != null) {
-            updated.setColor(request.color());
-        }
-        if (request.category() != null) {
-            updated.setTemplateCategory(request.category());
-        }
 
         return ResponseEntity.ok(DeviceTypeResponse.from(updated));
     }
@@ -151,9 +154,17 @@ public class DeviceTypeController {
     public ResponseEntity<Void> deleteDeviceType(@PathVariable Long id) {
         log.debug("REST request to delete device type: {}", id);
 
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
         DeviceType deviceType = deviceTypeService.getDeviceType(id);
+
+        // System templates cannot be deleted
         if (!deviceType.isEditable()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Verify organization ownership
+        if (!deviceType.getOrganization().getId().equals(userOrg.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied to device type: " + id);
         }
 
         deviceTypeService.deleteDeviceType(id);
