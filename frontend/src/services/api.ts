@@ -1,4 +1,4 @@
-import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization, PluginRegistry, InstalledPlugin, PluginRating, DeviceVariable, VariableValue, VariableStatistics } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization, PluginRegistry, InstalledPlugin, PluginRating, DeviceVariable, VariableValue, VariableStatistics, DeviceType, DeviceTypeSimple, TemplateApplicationResult } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -1099,6 +1099,32 @@ class ApiService {
     const params = reason ? `?reason=${encodeURIComponent(reason)}` : '';
     return this.request<{ success: boolean; data: SoftDeleteResponse; message: string }>(`/admin/organizations/${organizationId}${params}`, {
       method: 'DELETE',
+    });
+  }
+
+  // ========== Device Type Templates ==========
+
+  /**
+   * Get all device type templates.
+   */
+  async getDeviceTypes(): Promise<DeviceTypeSimple[]> {
+    return this.request<DeviceTypeSimple[]>('/device-types');
+  }
+
+  /**
+   * Get a device type by ID with full details.
+   */
+  async getDeviceType(id: number): Promise<DeviceType> {
+    return this.request<DeviceType>(`/device-types/${id}`);
+  }
+
+  /**
+   * Apply a device type template to a device.
+   * Creates variables, rules, and optionally a dashboard.
+   */
+  async applyDeviceTypeTemplate(deviceTypeId: number, deviceExternalId: string): Promise<TemplateApplicationResult> {
+    return this.request<TemplateApplicationResult>(`/device-types/${deviceTypeId}/apply/${deviceExternalId}`, {
+      method: 'POST',
     });
   }
 }

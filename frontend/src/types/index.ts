@@ -661,6 +661,53 @@ export interface DynamicTelemetryPoint {
   variables: Record<string, number>;
 }
 
+// Device Type Template types
+export type DeviceTypeCategory = 'ENERGY' | 'ENVIRONMENTAL' | 'INDUSTRIAL' | 'SMART_HOME' | 'CUSTOM';
+
+export interface DeviceTypeVariable {
+  id?: number;
+  name: string;
+  label: string;
+  unit: string;
+  dataType: 'NUMBER' | 'BOOLEAN' | 'STRING' | 'LOCATION' | 'DATETIME' | 'JSON';
+  minValue?: number;
+  maxValue?: number;
+  required: boolean;
+  defaultValue?: string;
+  description?: string;
+  displayOrder?: number;
+}
+
+export interface DeviceType {
+  id: number;
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  templateCategory?: DeviceTypeCategory;
+  isSystemTemplate: boolean;
+  isActive: boolean;
+  variables: DeviceTypeVariable[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface DeviceTypeSimple {
+  id: number;
+  name: string;
+  description?: string;
+  color?: string;
+  templateCategory?: DeviceTypeCategory;
+  isSystemTemplate: boolean;
+  variableCount: number;
+}
+
+export interface TemplateApplicationResult {
+  variablesCreated: number;
+  rulesCreated: number;
+  dashboardCreated: boolean;
+}
+
 // Log Viewer types
 export type LogSource = 'backend' | 'mosquitto' | 'postgres';
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
