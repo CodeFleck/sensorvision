@@ -36,4 +36,10 @@ public interface RuleRepository extends JpaRepository<Rule, UUID> {
      * Count enabled rules
      */
     long countByEnabledTrue();
+
+    /**
+     * Check if a rule with given name exists for a device
+     */
+    @Query("SELECT COUNT(r) > 0 FROM Rule r WHERE r.device = :device AND r.name = :name")
+    boolean existsByDeviceAndName(@Param("device") io.indcloud.model.Device device, @Param("name") String name);
 }

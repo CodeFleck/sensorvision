@@ -345,11 +345,11 @@ npm run dev
 - **MQTT Broker**: localhost:1883
 
 **Production Deployment (AWS):**
-- **🌟 Industrial Cloud Application**: http://35.88.65.186.nip.io:8080
-- **📊 Grafana Monitoring**: http://35.88.65.186.nip.io:3000 (admin/admin)
-- **📈 Prometheus Metrics**: http://35.88.65.186.nip.io:9090
-- **Backend API**: http://35.88.65.186.nip.io:8080/api/v1/*
-- **MQTT Broker**: 35.88.65.186:1883
+- **🌟 Industrial Cloud Application**: http://54.149.190.208.nip.io:8080
+- **📊 Grafana Monitoring**: http://54.149.190.208.nip.io:3000 (admin/admin)
+- **📈 Prometheus Metrics**: http://54.149.190.208.nip.io:9090
+- **Backend API**: http://54.149.190.208.nip.io:8080/api/v1/*
+- **MQTT Broker**: 54.149.190.208:1883
 
 ### 6. First Time Setup
 

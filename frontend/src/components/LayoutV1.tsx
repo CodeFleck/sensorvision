@@ -39,6 +39,7 @@ import {
   Trash2,
   Brain,
   AlertOctagon,
+  Layers,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -106,6 +107,7 @@ const navigationSections: NavigationSection[] = [
       { name: 'Devices', href: '/devices', icon: Cpu, adminOnly: false, excludeForAdmin: true },
       { name: 'Device Groups', href: '/device-groups', icon: FolderTree, adminOnly: false, excludeForAdmin: true },
       { name: 'Device Tags', href: '/device-tags', icon: Tag, adminOnly: false, excludeForAdmin: true },
+      { name: 'Device Types', href: '/device-types', icon: Layers, adminOnly: false, excludeForAdmin: true },
       { name: 'Serverless Functions', href: '/serverless-functions', icon: Code, adminOnly: false, excludeForAdmin: true },
       { name: 'Data Plugins', href: '/data-plugins', icon: Plug2, adminOnly: false, excludeForAdmin: true },
       { name: 'Plugin Marketplace', href: '/plugin-marketplace', icon: Store, adminOnly: false, excludeForAdmin: true },

@@ -47,6 +47,21 @@ export const getLogsWebSocketUrl = (): string => {
   return 'ws://localhost:8080/ws/logs';
 };
 
+export const getMqttBrokerHost = (): string => {
+  // In production, extract host from current location (strip port)
+  if (import.meta.env.PROD) {
+    // Extract just the hostname/IP without port
+    return window.location.hostname;
+  }
+
+  // In development, use localhost
+  return 'localhost';
+};
+
+export const getMqttBrokerPort = (): number => {
+  return 1883; // Standard MQTT port
+};
+
 // Config object for convenience - calls functions at access time
 export const config = {
   get apiBaseUrl() {
@@ -60,5 +75,11 @@ export const config = {
   },
   get logsWebSocketUrl() {
     return getLogsWebSocketUrl();
+  },
+  get mqttBrokerHost() {
+    return getMqttBrokerHost();
+  },
+  get mqttBrokerPort() {
+    return getMqttBrokerPort();
   },
 };
