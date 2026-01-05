@@ -278,7 +278,7 @@ const HowItWorks = () => {
 
             <CodeBlock
               language="bash"
-              code={`curl -X POST http://35.88.65.186:8080/api/v1/ingest/my-device-001 \\
+              code={`curl -X POST http://54.149.190.208:8080/api/v1/ingest/my-device-001 \\
   -H "X-API-Key: YOUR_DEVICE_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -474,7 +474,7 @@ const HowItWorks = () => {
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">Basic curl Example</h4>
                 <CodeBlock
                   language="bash"
-                  code={`curl -X POST http://35.88.65.186:8080/api/v1/ingest/sensor-42 \\
+                  code={`curl -X POST http://54.149.190.208:8080/api/v1/ingest/sensor-42 \\
   -H "X-API-Key: abc123token" \\
   -H "Content-Type: application/json" \\
   -d '{"temperature": 25.3, "humidity": 58}'`}
@@ -501,7 +501,7 @@ const HowItWorks = () => {
 
 # Configure with retry logic
 config = ClientConfig(
-    base_url="http://35.88.65.186:8080",
+    base_url="http://54.149.190.208:8080",
     device_id="sensor-42",
     api_key="abc123token",
     retry_attempts=3,
@@ -543,7 +543,7 @@ print(f"Success: {response}")`}
                   code={`const { IndCloudClient } = require('indcloud-sdk-js');
 
 const client = new IndCloudClient({
-  baseUrl: 'http://35.88.65.186:8080',
+  baseUrl: 'http://54.149.190.208:8080',
   deviceId: 'sensor-42',
   apiKey: 'abc123token'
 });
@@ -563,7 +563,7 @@ await client.sendTelemetry({
                   code={`<script src="https://unpkg.com/indcloud-sdk-js/dist/umd/indcloud-sdk.min.js"></script>
 <script>
   const client = new Industrial CloudSDK.IndCloudClient({
-    baseUrl: 'http://35.88.65.186:8080',
+    baseUrl: 'http://54.149.190.208:8080',
     deviceId: 'sensor-42',
     apiKey: 'abc123token'
   });
@@ -604,7 +604,7 @@ import json
 
 client = mqtt.Client()
 client.username_pw_set("device-id", "your-token")
-client.connect("35.88.65.186", 1883)
+client.connect("54.149.190.208", 1883)
 
 data = {
     "deviceId": "sensor-42",
@@ -634,7 +634,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 void setup() {
-  client.setServer("35.88.65.186", 1883);
+  client.setServer("54.149.190.208", 1883);
   client.connect("sensor-42", "device-id", "your-token");
 }
 
@@ -668,7 +668,7 @@ void loop() {
                 <CodeBlock
                   language="javascript"
                   code={`const client = new IndCloudClient({
-  baseUrl: 'http://35.88.65.186:8080',
+  baseUrl: 'http://54.149.190.208:8080',
   deviceId: 'sensor-42',
   apiKey: 'abc123token'
 });
@@ -688,7 +688,7 @@ await client.disconnect();`}
               <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
                 <h4 className="font-semibold text-gray-900 mb-2">WebSocket URL</h4>
                 <code className="text-sm bg-white px-3 py-1 rounded border border-gray-200 text-cyan-600">
-                  ws://35.88.65.186:8080/ws/telemetry
+                  ws://54.149.190.208:8080/ws/telemetry
                 </code>
                 <p className="text-sm text-gray-600 mt-2">
                   Authentication: Provide JWT token via query parameter or headers
