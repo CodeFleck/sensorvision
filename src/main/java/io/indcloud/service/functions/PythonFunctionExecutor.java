@@ -251,14 +251,6 @@ public class PythonFunctionExecutor implements FunctionExecutor {
         return (int) usedMemory;
     }
 
-    private String getStackTrace(Throwable throwable) {
-        StringBuilder sb = new StringBuilder();
-        for (StackTraceElement element : throwable.getStackTrace()) {
-            sb.append(element.toString()).append("\n");
-        }
-        return sb.toString();
-    }
-
     private void deleteDirectory(File directory) {
         File[] files = directory.listFiles();
         if (files != null) {

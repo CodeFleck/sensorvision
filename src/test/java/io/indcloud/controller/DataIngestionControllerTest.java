@@ -273,4 +273,74 @@ class DataIngestionControllerTest {
         assertThat(response.getBody().status()).isEqualTo("error");
         assertThat(response.getBody().message()).contains("value is required");
     }
+
+    // ===== ERROR SANITIZATION TESTS =====
+
+    @Test
+    void ingestTelemetry_withInternalError_shouldReturnSanitizedError() {
+        // Given - simulate an internal error with sensitive information
+        doThrow(new RuntimeException("Database connection failed: host=prod-db.internal, password=secret123"))
+                .when(telemetryIngestionService).ingest(any());
+
+        // When
+        ResponseEntity<HttpTelemetryResponse> response = dataIngestionController.ingestTelemetry(validRequest);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().status()).isEqualTo("error");
+        // CRITICAL: Error message should be sanitized, not exposing internal details
+        assertThat(response.getBody().message()).isEqualTo("Internal server error");
+        assertThat(response.getBody().message()).doesNotContain("Database");
+        assertThat(response.getBody().message()).doesNotContain("password");
+        assertThat(response.getBody().message()).doesNotContain("prod-db");
+    }
+
+    @Test
+    void bulkIngest_withInternalError_shouldReturnSanitizedError() {
+        // Given - simulate an internal error with sensitive information
+        doThrow(new RuntimeException("Database connection failed: host=prod-db.internal, password=secret123"))
+                .when(telemetryIngestionService).ingest(any());
+
+        HttpTelemetryRequest request = new HttpTelemetryRequest(
+                "device-001",
+                "2024-01-15T10:30:00Z",
+                Map.of("temperature", new BigDecimal("23.5")),
+                null
+        );
+
+        // When
+        ResponseEntity<List<HttpTelemetryResponse>> response = dataIngestionController.bulkIngest(List.of(request));
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).hasSize(1);
+        assertThat(response.getBody().get(0).status()).isEqualTo("error");
+        // CRITICAL: Error message should be sanitized, not exposing internal details
+        assertThat(response.getBody().get(0).message()).isEqualTo("Internal server error");
+        assertThat(response.getBody().get(0).message()).doesNotContain("Database");
+        assertThat(response.getBody().get(0).message()).doesNotContain("password");
+        assertThat(response.getBody().get(0).message()).doesNotContain("prod-db");
+    }
+
+    @Test
+    void ingestSingleVariable_withInternalError_shouldReturnSanitizedError() {
+        // Given - simulate an internal error with sensitive information
+        doThrow(new RuntimeException("Database connection failed: host=prod-db.internal, password=secret123"))
+                .when(telemetryIngestionService).ingest(any());
+
+        // When
+        ResponseEntity<HttpTelemetryResponse> response = dataIngestionController.ingestSingleVariable(
+                "device-001", "temperature", new BigDecimal("23.5"));
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().status()).isEqualTo("error");
+        // CRITICAL: Error message should be sanitized, not exposing internal details
+        assertThat(response.getBody().message()).isEqualTo("Internal server error");
+        assertThat(response.getBody().message()).doesNotContain("Database");
+        assertThat(response.getBody().message()).doesNotContain("password");
+    }
 }

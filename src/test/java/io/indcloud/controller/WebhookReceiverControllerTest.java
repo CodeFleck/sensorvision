@@ -156,11 +156,11 @@ class WebhookReceiverControllerTest {
     }
 
     @Test
-    void receiveWebhook_withPluginError_shouldReturnBadRequest() {
+    void receiveWebhook_withPluginError_shouldReturnSanitizedError() {
         // Given
         when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrganization);
         when(pluginService.executePluginByName(eq(1L), eq("broken"), any()))
-                .thenThrow(new IllegalStateException("Plugin execution failed"));
+                .thenThrow(new IllegalStateException("Database connection failed: password=secret"));
 
         // When
         ResponseEntity<Map<String, Object>> response = controller.receiveWebhook(
@@ -169,6 +169,10 @@ class WebhookReceiverControllerTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody()).containsKey("error");
+        // CRITICAL: Error message should be sanitized, not exposing internal details
+        assertThat(response.getBody().get("error")).isEqualTo("Plugin execution failed");
+        assertThat(response.getBody().get("error").toString()).doesNotContain("Database");
+        assertThat(response.getBody().get("error").toString()).doesNotContain("password");
     }
 
     @Test
@@ -187,5 +191,24 @@ class WebhookReceiverControllerTest {
         assertThat(response.getBody()).isNotNull();
         // Error message should be generic, not exposing internal details
         assertThat(response.getBody().get("error")).isEqualTo("Internal server error");
+    }
+
+    @Test
+    void testWebhook_withExecutionError_shouldNotLeakDetails() {
+        // Given
+        when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrganization);
+        when(pluginService.executePluginByName(eq(1L), eq("test-plugin"), eq("{}")))
+                .thenThrow(new RuntimeException("Database connection failed: password=secret123"));
+
+        // When
+        ResponseEntity<Map<String, Object>> response = controller.testWebhook(1L, "test-plugin");
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("success")).isEqualTo(false);
+        assertThat(response.getBody().get("message")).isEqualTo("Plugin exists but configuration may need adjustment");
+        // CRITICAL: Response should NOT contain the error key with internal details
+        assertThat(response.getBody()).doesNotContainKey("error");
     }
 }

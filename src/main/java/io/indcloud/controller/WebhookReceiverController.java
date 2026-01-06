@@ -86,7 +86,7 @@ public class WebhookReceiverController {
         } catch (IllegalStateException e) {
             log.error("Plugin execution error: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", "Plugin execution failed"));
 
         } catch (Exception e) {
             log.error("Unexpected error processing webhook: {}", e.getMessage(), e);
@@ -124,10 +124,10 @@ public class WebhookReceiverController {
             return ResponseEntity.notFound().build();
 
         } catch (Exception e) {
+            log.warn("Plugin test failed for {}/{}: {}", organizationId, pluginName, e.getMessage());
             return ResponseEntity.ok(Map.of(
                     "success", false,
-                    "message", "Plugin exists but configuration may need adjustment",
-                    "error", e.getMessage()
+                    "message", "Plugin exists but configuration may need adjustment"
             ));
         }
     }
