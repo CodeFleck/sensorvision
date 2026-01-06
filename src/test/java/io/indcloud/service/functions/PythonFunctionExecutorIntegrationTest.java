@@ -110,7 +110,35 @@ class PythonFunctionExecutorIntegrationTest {
         // Assert
         assertThat(result.isSuccess()).isFalse();
         assertThat(result.getErrorMessage()).contains("failed with exit code");
-        assertThat(result.getErrorStack()).isNotNull();
+        // Error stack is intentionally null to prevent information leakage
+        assertThat(result.getErrorStack()).isNull();
+    }
+
+    @Test
+    void execute_shouldNotLeakInternalErrorDetails() throws Exception {
+        // Arrange - code that raises exception with potentially sensitive info
+        String pythonCode = """
+            def main(event):
+                import os
+                # Try to access a secret (simulated)
+                secret = os.environ.get('DB_PASSWORD', 'default_secret')
+                raise ValueError(f"Connection failed with password: {secret}")
+            """;
+
+        ServerlessFunction function = createFunction("sensitive-error-function", pythonCode);
+        JsonNode input = objectMapper.readTree("{}");
+
+        // Act
+        FunctionExecutionResult result = executor.execute(function, input);
+
+        // Assert
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.getErrorMessage()).contains("failed with exit code");
+        // CRITICAL: Error stack should be null to prevent leaking sensitive info
+        assertThat(result.getErrorStack()).isNull();
+        // Error message should NOT contain the actual error details
+        assertThat(result.getErrorMessage()).doesNotContain("password");
+        assertThat(result.getErrorMessage()).doesNotContain("secret");
     }
 
     @Test
@@ -133,7 +161,7 @@ class PythonFunctionExecutorIntegrationTest {
 
         // Assert
         assertThat(result.isSuccess()).isFalse();
-        assertThat(result.getErrorMessage()).contains("timeout");
+        assertThat(result.getErrorMessage()).containsIgnoringCase("timeout");
         assertThat(result.getDurationMs()).isGreaterThanOrEqualTo(2000);
         assertThat(result.getDurationMs()).isLessThan(15000);  // Should not wait full 10 seconds
     }

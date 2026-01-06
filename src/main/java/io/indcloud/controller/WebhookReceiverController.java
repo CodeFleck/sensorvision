@@ -3,8 +3,12 @@ package io.indcloud.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import io.indcloud.model.PluginExecution;
+import io.indcloud.model.Organization;
+import io.indcloud.security.SecurityUtils;
 import io.indcloud.service.DataPluginService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -26,6 +30,7 @@ import java.util.Map;
 public class WebhookReceiverController {
 
     private final DataPluginService pluginService;
+    private final SecurityUtils securityUtils;
 
     /**
      * Receive webhook data and process it through the specified plugin.
@@ -36,11 +41,18 @@ public class WebhookReceiverController {
      * @return Execution result
      */
     @PostMapping("/{organizationId}/{pluginName}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, Object>> receiveWebhook(
             @PathVariable Long organizationId,
             @PathVariable String pluginName,
             @RequestBody String payload
     ) {
+        // Security check: Validate user has access to this organization
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
+        if (userOrg == null || !userOrg.getId().equals(organizationId)) {
+            throw new AccessDeniedException("Access denied to organization: " + organizationId);
+        }
+
         log.info("Received webhook for plugin: {} (org: {})", pluginName, organizationId);
         log.debug("Webhook payload: {}", payload);
 
@@ -74,7 +86,7 @@ public class WebhookReceiverController {
         } catch (IllegalStateException e) {
             log.error("Plugin execution error: {}", e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", "Plugin execution failed"));
 
         } catch (Exception e) {
             log.error("Unexpected error processing webhook: {}", e.getMessage(), e);
@@ -88,10 +100,17 @@ public class WebhookReceiverController {
      * Returns 200 OK if the plugin exists and is enabled.
      */
     @GetMapping("/{organizationId}/{pluginName}/test")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, Object>> testWebhook(
             @PathVariable Long organizationId,
             @PathVariable String pluginName
     ) {
+        // Security check: Validate user has access to this organization
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
+        if (userOrg == null || !userOrg.getId().equals(organizationId)) {
+            throw new AccessDeniedException("Access denied to organization: " + organizationId);
+        }
+
         try {
             // This will throw if plugin doesn't exist or is disabled
             pluginService.executePluginByName(organizationId, pluginName, "{}");
@@ -105,10 +124,10 @@ public class WebhookReceiverController {
             return ResponseEntity.notFound().build();
 
         } catch (Exception e) {
+            log.warn("Plugin test failed for {}/{}: {}", organizationId, pluginName, e.getMessage());
             return ResponseEntity.ok(Map.of(
                     "success", false,
-                    "message", "Plugin exists but configuration may need adjustment",
-                    "error", e.getMessage()
+                    "message", "Plugin exists but configuration may need adjustment"
             ));
         }
     }

@@ -24,11 +24,22 @@ public class TelemetryWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
     private final CopyOnWriteArraySet<WebSocketSession> sessions = new CopyOnWriteArraySet<>();
 
+    // Maximum number of concurrent WebSocket sessions to prevent resource exhaustion
+    private static final int MAX_SESSIONS = 1000;
+
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        // Enforce session limit to prevent resource exhaustion
+        if (sessions.size() >= MAX_SESSIONS) {
+            log.warn("WebSocket session limit ({}) reached, rejecting connection from {}",
+                    MAX_SESSIONS, session.getRemoteAddress());
+            session.close(CloseStatus.SERVICE_OVERLOAD);
+            return;
+        }
+
         sessions.add(session);
-        log.debug("WebSocket connection established: {} from {}",
-                session.getId(), session.getRemoteAddress());
+        log.debug("WebSocket connection established: {} from {} (total: {})",
+                session.getId(), session.getRemoteAddress(), sessions.size());
     }
 
     @Override

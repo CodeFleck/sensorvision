@@ -91,8 +91,9 @@ public class DataIngestionController {
             );
         } catch (Exception e) {
             log.error("Failed to ingest telemetry data for device {}: {}", request.deviceId(), e.getMessage(), e);
+            // Don't leak internal error details to clients
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    HttpTelemetryResponse.error(request.deviceId(), "Internal server error: " + e.getMessage())
+                    HttpTelemetryResponse.error(request.deviceId(), "Internal server error")
             );
         }
     }
@@ -145,8 +146,9 @@ public class DataIngestionController {
             );
         } catch (Exception e) {
             log.error("Failed to ingest single variable for device {}: {}", deviceId, e.getMessage(), e);
+            // Don't leak internal error details to clients
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    HttpTelemetryResponse.error(deviceId, "Internal server error: " + e.getMessage())
+                    HttpTelemetryResponse.error(deviceId, "Internal server error")
             );
         }
     }
@@ -201,9 +203,10 @@ public class DataIngestionController {
 
             } catch (Exception e) {
                 log.error("Failed to ingest data for device {}: {}", request.deviceId(), e.getMessage());
+                // Don't leak internal error details to clients
                 responses.add(HttpTelemetryResponse.error(
                         request.deviceId(),
-                        e.getMessage()
+                        "Internal server error"
                 ));
             }
         }

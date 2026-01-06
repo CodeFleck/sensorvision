@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.indcloud.model.FunctionTrigger;
 import io.indcloud.model.FunctionTriggerType;
+import io.indcloud.model.Organization;
 import io.indcloud.repository.FunctionTriggerRepository;
+import io.indcloud.security.SecurityUtils;
 import io.indcloud.service.FunctionExecutionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -29,15 +32,18 @@ public class FunctionWebhookController {
     private final FunctionTriggerRepository triggerRepository;
     private final FunctionExecutionService executionService;
     private final ObjectMapper objectMapper;
+    private final SecurityUtils securityUtils;
 
     public FunctionWebhookController(
         FunctionTriggerRepository triggerRepository,
         FunctionExecutionService executionService,
-        ObjectMapper objectMapper
+        ObjectMapper objectMapper,
+        SecurityUtils securityUtils
     ) {
         this.triggerRepository = triggerRepository;
         this.executionService = executionService;
         this.objectMapper = objectMapper;
+        this.securityUtils = securityUtils;
     }
 
     /**
@@ -47,6 +53,7 @@ public class FunctionWebhookController {
      * The {path} is configured in the trigger's config as {"path": "my-function"}
      */
     @PostMapping("/{path}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, Object>> invokeFunction(
         @PathVariable String path,
         @RequestBody(required = false) JsonNode payload,
@@ -54,10 +61,19 @@ public class FunctionWebhookController {
     ) {
         logger.info("Webhook invoked: path={}", path);
 
-        // Find HTTP triggers matching this path
+        // Get user's organization for filtering
+        Organization userOrg = securityUtils.getCurrentUserOrganization();
+
+        // Find HTTP triggers matching this path and user's organization
         List<FunctionTrigger> triggers = triggerRepository.findByTriggerTypeAndEnabledTrue(FunctionTriggerType.HTTP);
 
         FunctionTrigger matchingTrigger = triggers.stream()
+            // Filter to only triggers belonging to user's organization
+            .filter(trigger -> {
+                if (userOrg == null) return false;
+                Organization funcOrg = trigger.getFunction().getOrganization();
+                return funcOrg != null && funcOrg.getId().equals(userOrg.getId());
+            })
             .filter(trigger -> {
                 JsonNode config = trigger.getTriggerConfig();
                 if (config != null && config.has("path")) {
@@ -116,10 +132,11 @@ public class FunctionWebhookController {
 
         } catch (Exception e) {
             logger.error("Error invoking function: {}", e.getMessage(), e);
+            // Don't leak internal error details to clients
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of(
                     "error", "Function invocation failed",
-                    "message", e.getMessage()
+                    "message", "An internal error occurred. Please try again later."
                 ));
         }
     }
