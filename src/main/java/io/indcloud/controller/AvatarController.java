@@ -25,7 +25,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/users")
-@CrossOrigin(origins = "*", maxAge = 3600)
+// CORS is handled globally in SecurityConfig with proper domain restrictions
 @Slf4j
 public class AvatarController {
 
