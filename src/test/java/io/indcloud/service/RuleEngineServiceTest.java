@@ -440,6 +440,56 @@ class RuleEngineServiceTest {
     // ===== MISSING VARIABLE TESTS =====
 
     @Test
+    void evaluateRules_shouldSkipRule_whenVariableNameIsNull() {
+        // Given - Test for bug fix: NPE when rule.getVariable() is null
+        Rule ruleWithNullVariable = Rule.builder()
+                .id(UUID.randomUUID())
+                .name("Rule With Null Variable")
+                .device(testDevice)
+                .variable(null)  // Null variable name
+                .operator(RuleOperator.GT)
+                .threshold(new BigDecimal("100.0"))
+                .enabled(true)
+                .organization(testOrganization)
+                .build();
+
+        when(ruleRepository.findByDeviceExternalIdAndEnabledTrue("test-device-001"))
+                .thenReturn(List.of(ruleWithNullVariable));
+
+        // When
+        ruleEngineService.evaluateRules(testTelemetry);
+
+        // Then - Should not throw NPE, should skip the rule gracefully
+        verify(alertRepository, never()).save(any(Alert.class));
+        verify(alertService, never()).sendAlertNotification(any(Alert.class));
+    }
+
+    @Test
+    void evaluateRules_shouldSkipRule_whenVariableNameIsEmpty() {
+        // Given - Test for bug fix: handle empty variable name
+        Rule ruleWithEmptyVariable = Rule.builder()
+                .id(UUID.randomUUID())
+                .name("Rule With Empty Variable")
+                .device(testDevice)
+                .variable("")  // Empty variable name
+                .operator(RuleOperator.GT)
+                .threshold(new BigDecimal("100.0"))
+                .enabled(true)
+                .organization(testOrganization)
+                .build();
+
+        when(ruleRepository.findByDeviceExternalIdAndEnabledTrue("test-device-001"))
+                .thenReturn(List.of(ruleWithEmptyVariable));
+
+        // When
+        ruleEngineService.evaluateRules(testTelemetry);
+
+        // Then - Should not throw exception, should skip the rule gracefully
+        verify(alertRepository, never()).save(any(Alert.class));
+        verify(alertService, never()).sendAlertNotification(any(Alert.class));
+    }
+
+    @Test
     void evaluateRules_shouldNotTriggerAlert_whenVariableNotInTelemetry() {
         // Given
         testRule.setOperator(RuleOperator.GT);

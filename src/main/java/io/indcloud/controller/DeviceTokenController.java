@@ -121,9 +121,16 @@ public class DeviceTokenController {
             return ResponseEntity.ok(DeviceTokenResponse.noToken(deviceId));
         }
 
-        // Mask the token for security (show first 8 chars only)
-        String maskedToken = device.getApiToken().substring(0, 8) + "..." +
-                device.getApiToken().substring(device.getApiToken().length() - 4);
+        // Mask the token for security - handle short tokens gracefully
+        String token = device.getApiToken();
+        String maskedToken;
+        if (token.length() >= 12) {
+            maskedToken = token.substring(0, 8) + "..." + token.substring(token.length() - 4);
+        } else if (token.length() >= 4) {
+            maskedToken = token.substring(0, 2) + "..." + token.substring(token.length() - 2);
+        } else {
+            maskedToken = "****";
+        }
 
         return ResponseEntity.ok(DeviceTokenResponse.masked(
                 deviceId,

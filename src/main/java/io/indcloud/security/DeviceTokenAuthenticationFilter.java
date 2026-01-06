@@ -73,7 +73,8 @@ public class DeviceTokenAuthenticationFilter extends OncePerRequestFilter {
 
                     log.debug("Device token authenticated successfully for device: {}", device.getExternalId());
                 } else {
-                    log.debug("Invalid device token provided: {}...", token.substring(0, 8));
+                    // Don't log any token characters to prevent token reconstruction attacks
+                    log.debug("Invalid device token provided (token not logged for security)");
                 }
             }
         } catch (Exception e) {

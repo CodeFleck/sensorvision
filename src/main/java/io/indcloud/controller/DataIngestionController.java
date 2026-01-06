@@ -160,6 +160,13 @@ public class DataIngestionController {
     public ResponseEntity<java.util.List<HttpTelemetryResponse>> bulkIngest(
             @RequestBody java.util.List<HttpTelemetryRequest> requests) {
 
+        // Guard against null request body
+        if (requests == null) {
+            return ResponseEntity.badRequest().body(java.util.List.of(
+                    HttpTelemetryResponse.error(null, "Request body cannot be null")
+            ));
+        }
+
         java.util.List<HttpTelemetryResponse> responses = new java.util.ArrayList<>();
 
         for (HttpTelemetryRequest request : requests) {
