@@ -93,66 +93,78 @@ public class PythonFunctionExecutor implements FunctionExecutor {
             try {
                 process = processBuilder.start();
             } catch (java.io.IOException e) {
-                String pythonCmd = command.get(0);
-                if (e.getMessage().contains("CreateProcess error=3") ||
+                // Log the technical details for debugging, but don't expose them to users
+                logger.error("Failed to start Python process: {}", e.getMessage());
+                if (e.getMessage() != null && (
+                    e.getMessage().contains("CreateProcess error=3") ||
                     e.getMessage().contains("Cannot run program") ||
-                    e.getMessage().contains("No such file")) {
+                    e.getMessage().contains("No such file"))) {
+                    // Generic user-friendly message that doesn't expose system paths
                     throw new FunctionExecutionException(
-                        "Python interpreter not found. Please ensure Python is installed and available in PATH. " +
-                        "Attempted command: " + pythonCmd,
-                        "To fix this issue:\n" +
-                        "1. Install Python 3.10+ from https://python.org\n" +
-                        "2. During installation, check 'Add Python to PATH'\n" +
-                        "3. Or set PYTHON_HOME environment variable\n" +
-                        "4. Restart the application after installation"
-                    );
+                        "Python runtime is not available. Please contact your administrator.");
                 }
-                throw e;
+                throw new FunctionExecutionException(
+                    "Failed to start function execution. Please try again later.");
             }
 
-            // Capture output and errors
+            // Capture output and errors using executor service
             ExecutorService executor = Executors.newFixedThreadPool(2);
-            Future<String> stdoutFuture = executor.submit(() -> readStream(process.getInputStream()));
-            Future<String> stderrFuture = executor.submit(() -> readStream(process.getErrorStream()));
-
-            boolean completed;
             try {
-                completed = process.waitFor(function.getTimeoutSeconds(), TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                process.destroyForcibly();
-                throw new FunctionExecutionException("Function execution interrupted", e);
+                Future<String> stdoutFuture = executor.submit(() -> readStream(process.getInputStream()));
+                Future<String> stderrFuture = executor.submit(() -> readStream(process.getErrorStream()));
+
+                boolean completed;
+                try {
+                    completed = process.waitFor(function.getTimeoutSeconds(), TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    process.destroyForcibly();
+                    throw new FunctionExecutionException("Function execution interrupted", e);
+                }
+
+                if (!completed) {
+                    process.destroyForcibly();
+                    throw new FunctionExecutionException("Function execution timed out");
+                }
+
+                // Read streams with timeout, handling potential TimeoutException
+                String stdout;
+                String stderr;
+                try {
+                    stdout = stdoutFuture.get(5, TimeUnit.SECONDS);
+                    stderr = stderrFuture.get(5, TimeUnit.SECONDS);
+                } catch (TimeoutException e) {
+                    logger.warn("Timeout reading process streams");
+                    stdout = "";
+                    stderr = "";
+                }
+
+                int exitCode = process.exitValue();
+                long duration = System.currentTimeMillis() - startTime;
+
+                if (exitCode != 0) {
+                    // Log technical details, but sanitize user-facing message
+                    logger.debug("Function failed with exit code {}. stderr: {}", exitCode, stderr);
+                    // Don't expose stderr contents to users
+                    throw new FunctionExecutionException(
+                        "Function execution failed with exit code " + exitCode);
+                }
+
+                // Read output
+                JsonNode output = null;
+                if (Files.exists(outputPath)) {
+                    output = objectMapper.readTree(outputPath.toFile());
+                }
+
+                return FunctionExecutionResult.builder()
+                    .success(true)
+                    .output(output)
+                    .durationMs(duration)
+                    .memoryUsedMb(estimateMemoryUsage())
+                    .build();
+            } finally {
+                // Always shut down the executor service
+                executor.shutdownNow();
             }
-
-            if (!completed) {
-                process.destroyForcibly();
-                throw new FunctionExecutionException("Function execution timeout after " + function.getTimeoutSeconds() + " seconds");
-            }
-
-            String stdout = stdoutFuture.get(1, TimeUnit.SECONDS);
-            String stderr = stderrFuture.get(1, TimeUnit.SECONDS);
-            executor.shutdown();
-
-            int exitCode = process.exitValue();
-            long duration = System.currentTimeMillis() - startTime;
-
-            if (exitCode != 0) {
-                String errorMessage = "Python function failed with exit code " + exitCode;
-                String errorDetails = stderr.isEmpty() ? stdout : stderr;
-                throw new FunctionExecutionException(errorMessage, errorDetails);
-            }
-
-            // Read output
-            JsonNode output = null;
-            if (Files.exists(outputPath)) {
-                output = objectMapper.readTree(outputPath.toFile());
-            }
-
-            return FunctionExecutionResult.builder()
-                .success(true)
-                .output(output)
-                .durationMs(duration)
-                .memoryUsedMb(estimateMemoryUsage())
-                .build();
 
         } catch (FunctionExecutionException e) {
             long duration = System.currentTimeMillis() - startTime;
@@ -165,11 +177,12 @@ public class PythonFunctionExecutor implements FunctionExecutor {
                 .build();
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;
+            // Log full error details for debugging, but don't expose to users
             logger.error("Error executing Python function: {}", e.getMessage(), e);
             return FunctionExecutionResult.builder()
                 .success(false)
-                .errorMessage("Execution error: " + e.getMessage())
-                .errorStack(getStackTrace(e))
+                .errorMessage("An unexpected error occurred during function execution")
+                .errorStack(null)  // Don't expose internal stack traces
                 .durationMs(duration)
                 .memoryUsedMb(estimateMemoryUsage())
                 .build();

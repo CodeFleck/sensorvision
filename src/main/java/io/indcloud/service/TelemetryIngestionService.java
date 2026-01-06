@@ -212,14 +212,18 @@ public class TelemetryIngestionService {
         syntheticVariableService.calculateSyntheticVariables(record);
     }
 
+    // Lock object for synchronizing gauge creation to prevent cardinality overflow
+    private final Object gaugeLock = new Object();
+
     /**
      * Update a dynamic gauge for any variable name (EAV pattern support).
      * Limited to MAX_DYNAMIC_GAUGES to prevent unbounded metric cardinality.
+     * Uses synchronization to prevent race conditions when creating new gauges.
      */
     private void updateDynamicGauge(String deviceId, String variableName, BigDecimal value) {
         String gaugeKey = deviceId + ":" + variableName;
 
-        // Check if gauge already exists
+        // Fast path: check if gauge already exists (no lock needed for reads)
         AtomicDouble existingGauge = dynamicGauges.get(gaugeKey);
         if (existingGauge != null) {
             if (value != null) {
@@ -228,21 +232,31 @@ public class TelemetryIngestionService {
             return;
         }
 
-        // Check cardinality limit before creating new gauge
-        if (dynamicGauges.size() >= MAX_DYNAMIC_GAUGES) {
-            log.warn("Dynamic gauge limit ({}) reached. Skipping gauge for device '{}', variable '{}'",
-                    MAX_DYNAMIC_GAUGES, deviceId, variableName);
-            return;
-        }
+        // Slow path: need to create a new gauge - synchronize to prevent race condition
+        synchronized (gaugeLock) {
+            // Double-check after acquiring lock (another thread may have created it)
+            existingGauge = dynamicGauges.get(gaugeKey);
+            if (existingGauge != null) {
+                if (value != null) {
+                    existingGauge.set(value.doubleValue());
+                }
+                return;
+            }
 
-        String metricName = "iot_dynamic_" + sanitizeMetricName(variableName);
-        AtomicDouble gauge = dynamicGauges.computeIfAbsent(gaugeKey, k ->
-                meterRegistry.gauge(metricName,
-                        Tags.of("deviceId", deviceId, "variable", variableName),
-                        new AtomicDouble(0.0)));
+            // Check cardinality limit before creating new gauge
+            if (dynamicGauges.size() >= MAX_DYNAMIC_GAUGES) {
+                log.warn("Dynamic gauge limit ({}) reached. Skipping gauge for device '{}', variable '{}'",
+                        MAX_DYNAMIC_GAUGES, deviceId, variableName);
+                return;
+            }
 
-        if (gauge != null && value != null) {
-            gauge.set(value.doubleValue());
+            // Safe to create new gauge now
+            String metricName = "iot_dynamic_" + sanitizeMetricName(variableName);
+            AtomicDouble gauge = new AtomicDouble(value != null ? value.doubleValue() : 0.0);
+            meterRegistry.gauge(metricName,
+                    Tags.of("deviceId", deviceId, "variable", variableName),
+                    gauge);
+            dynamicGauges.put(gaugeKey, gauge);
         }
     }
 
