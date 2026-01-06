@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@CrossOrigin(origins = "*", maxAge = 3600)
+// CORS is handled globally in SecurityConfig with proper domain restrictions
 public class AuthController {
 
     @Autowired

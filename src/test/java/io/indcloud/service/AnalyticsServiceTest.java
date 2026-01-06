@@ -427,20 +427,20 @@ class AnalyticsServiceTest {
     }
 
     @Test
-    void aggregateData_shouldFilterOutNullAndZeroValues() {
-        // Given
-        List<TelemetryRecord> recordsWithNulls = List.of(
+    void aggregateData_shouldFilterOutOnlyNullValues_notZeroValues() {
+        // Given - Bug fix: zero is a legitimate measurement value and should NOT be filtered
+        List<TelemetryRecord> recordsWithNullsAndZeros = List.of(
                 TelemetryRecord.builder()
                         .device(userDevice)
                         .timestamp(from.plus(5, ChronoUnit.MINUTES))
                         .kwConsumption(new BigDecimal("100.0"))
-                        .voltage(null)  // null value
+                        .voltage(null)  // null value - should be filtered
                         .build(),
                 TelemetryRecord.builder()
                         .device(userDevice)
                         .timestamp(from.plus(10, ChronoUnit.MINUTES))
                         .kwConsumption(new BigDecimal("150.0"))
-                        .voltage(BigDecimal.ZERO)  // zero value
+                        .voltage(BigDecimal.ZERO)  // zero value - should NOT be filtered (it's a valid measurement!)
                         .build(),
                 TelemetryRecord.builder()
                         .device(userDevice)
@@ -454,16 +454,54 @@ class AnalyticsServiceTest {
         when(deviceRepository.findByExternalId("device-001")).thenReturn(Optional.of(userDevice));
         when(telemetryRecordRepository.findByDeviceExternalIdAndTimestampBetweenOrderByTimestamp(
                 eq("device-001"), any(Instant.class), any(Instant.class)))
-                .thenReturn(recordsWithNulls);
+                .thenReturn(recordsWithNullsAndZeros);
+
+        // When - aggregate voltage (has null and zero values)
+        List<AggregationResponse> results = analyticsService.aggregateData(
+                "device-001", "voltage", "AVG", from, to, null);
+
+        // Then - zero value should be included, only null filtered
+        assertThat(results).hasSize(1);
+        // Count should be 2: zero (valid) + 220.0 (valid), null is filtered
+        assertThat(results.get(0).count()).isEqualTo(2L);
+        // Average of 0 and 220 = 110
+        assertThat(results.get(0).value()).isEqualByComparingTo(new BigDecimal("110.0"));
+    }
+
+    @Test
+    void aggregateData_shouldIncludeZeroValuesInCalculations() {
+        // Given - Test that zero values are properly included in aggregations
+        List<TelemetryRecord> recordsWithZeros = List.of(
+                TelemetryRecord.builder()
+                        .device(userDevice)
+                        .timestamp(from.plus(5, ChronoUnit.MINUTES))
+                        .kwConsumption(BigDecimal.ZERO)  // Valid zero reading
+                        .voltage(new BigDecimal("220.0"))
+                        .build(),
+                TelemetryRecord.builder()
+                        .device(userDevice)
+                        .timestamp(from.plus(10, ChronoUnit.MINUTES))
+                        .kwConsumption(new BigDecimal("100.0"))
+                        .voltage(new BigDecimal("220.0"))
+                        .build()
+        );
+
+        when(securityUtils.getCurrentUserOrganization()).thenReturn(userOrganization);
+        when(deviceRepository.findByExternalId("device-001")).thenReturn(Optional.of(userDevice));
+        when(telemetryRecordRepository.findByDeviceExternalIdAndTimestampBetweenOrderByTimestamp(
+                eq("device-001"), any(Instant.class), any(Instant.class)))
+                .thenReturn(recordsWithZeros);
 
         // When
-        List<AggregationResponse> results = analyticsService.aggregateData(
+        List<AggregationResponse> minResults = analyticsService.aggregateData(
+                "device-001", "kwConsumption", "MIN", from, to, null);
+        List<AggregationResponse> avgResults = analyticsService.aggregateData(
                 "device-001", "kwConsumption", "AVG", from, to, null);
 
-        // Then
-        assertThat(results).hasSize(1);
-        // Should only count non-null, non-zero values
-        assertThat(results.get(0).count()).isEqualTo(3L);
+        // Then - Zero should be included
+        assertThat(minResults.get(0).value()).isEqualByComparingTo(BigDecimal.ZERO);  // MIN should be 0
+        assertThat(avgResults.get(0).value()).isEqualByComparingTo(new BigDecimal("50.0")); // AVG of 0 and 100 = 50
+        assertThat(minResults.get(0).count()).isEqualTo(2L);  // Both records counted
     }
 
     @Test

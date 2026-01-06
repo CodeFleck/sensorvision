@@ -227,7 +227,8 @@ public class AnalyticsService {
                     case "frequency" -> record.getFrequency();
                     default -> null;
                 })
-                .filter(value -> value != null && value.compareTo(BigDecimal.ZERO) != 0)
+                // Only filter null values, NOT zero - zero is a legitimate measurement
+                .filter(value -> value != null)
                 .toList();
     }
 
@@ -273,9 +274,10 @@ public class AnalyticsService {
                                                             String aggregation,
                                                             Instant timestamp) {
 
+        // Only filter null values, NOT zero - zero is a legitimate measurement
         List<BigDecimal> numericValues = values.stream()
                 .map(VariableValue::getValue)
-                .filter(v -> v != null && v.compareTo(BigDecimal.ZERO) != 0)
+                .filter(v -> v != null)
                 .toList();
 
         if (numericValues.isEmpty()) {

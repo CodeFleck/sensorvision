@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Dashboard, Widget, TelemetryPoint } from '../types';
 import { apiService } from '../services/api';
@@ -63,22 +63,8 @@ export const Dashboards: React.FC = () => {
     loadAllDashboards();
   }, []);
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
-  // Auto-refresh logic
-  useEffect(() => {
-    if (refreshInterval > 0) {
-      const interval = setInterval(() => {
-        loadDashboard();
-      }, refreshInterval);
-
-      return () => clearInterval(interval);
-    }
-  }, [refreshInterval]);
-
-  const loadDashboard = async () => {
+  // Memoize loadDashboard to prevent stale closures in interval callbacks
+  const loadDashboard = useCallback(async () => {
     try {
       setLoading(true);
       const data = await apiService.getDefaultDashboard();
@@ -91,7 +77,23 @@ export const Dashboards: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Initial dashboard load
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  // Auto-refresh logic - loadDashboard is now stable via useCallback
+  useEffect(() => {
+    if (refreshInterval > 0) {
+      const interval = setInterval(() => {
+        loadDashboard();
+      }, refreshInterval);
+
+      return () => clearInterval(interval);
+    }
+  }, [refreshInterval, loadDashboard]);
 
   const handleDeleteWidget = async (widgetId: number) => {
     if (!dashboard) return;

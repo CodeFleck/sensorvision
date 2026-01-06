@@ -187,6 +187,46 @@ class DeviceTokenControllerTest {
     }
 
     @Test
+    void getTokenInfo_withShortToken_shouldMaskCorrectly() {
+        // Given - Test for bug fix: NPE when token is less than 12 characters
+        String shortToken = "abc123"; // 6 characters - less than 12
+        testDevice.setApiToken(shortToken);
+        testDevice.setTokenCreatedAt(LocalDateTime.now().minusDays(1));
+
+        when(deviceRepository.findByExternalId(DEVICE_ID)).thenReturn(Optional.of(testDevice));
+
+        // When
+        ResponseEntity<DeviceTokenResponse> response = deviceTokenController.getTokenInfo(DEVICE_ID);
+
+        // Then - Should not throw NPE, should mask appropriately
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isSuccess()).isTrue();
+        assertThat(response.getBody().getMaskedToken()).isNotNull();
+        // For tokens 4-11 chars: first 2 + "..." + last 2
+        assertThat(response.getBody().getMaskedToken()).isEqualTo("ab...23");
+    }
+
+    @Test
+    void getTokenInfo_withVeryShortToken_shouldMaskWithStars() {
+        // Given - Test for bug fix: handle tokens shorter than 4 characters
+        String veryShortToken = "xyz"; // 3 characters
+        testDevice.setApiToken(veryShortToken);
+        testDevice.setTokenCreatedAt(LocalDateTime.now().minusDays(1));
+
+        when(deviceRepository.findByExternalId(DEVICE_ID)).thenReturn(Optional.of(testDevice));
+
+        // When
+        ResponseEntity<DeviceTokenResponse> response = deviceTokenController.getTokenInfo(DEVICE_ID);
+
+        // Then - Should not throw NPE, should mask with ****
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().isSuccess()).isTrue();
+        assertThat(response.getBody().getMaskedToken()).isEqualTo("****");
+    }
+
+    @Test
     void getTokenInfo_withDeviceWithoutToken_shouldReturnNoTokenMessage() {
         // Given
         testDevice.setApiToken(null);

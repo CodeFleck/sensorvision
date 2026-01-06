@@ -56,9 +56,16 @@ public class RuleEngineService {
     }
 
     private void evaluateRule(Rule rule, Map<String, BigDecimal> telemetryValues, TelemetryRecord telemetryRecord) {
-        BigDecimal actualValue = telemetryValues.get(rule.getVariable());
+        // Guard against null variable name in rule configuration
+        String variableName = rule.getVariable();
+        if (variableName == null || variableName.isEmpty()) {
+            log.warn("Rule '{}' has null or empty variable name, skipping evaluation", rule.getName());
+            return;
+        }
+
+        BigDecimal actualValue = telemetryValues.get(variableName);
         if (actualValue == null) {
-            log.debug("No value found for variable '{}' in telemetry record", rule.getVariable());
+            log.debug("No value found for variable '{}' in telemetry record", variableName);
             return;
         }
 
