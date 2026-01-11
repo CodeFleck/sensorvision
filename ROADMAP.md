@@ -144,6 +144,15 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 - ✅ Navigation integrated with ML Pipeline section
 - ✅ Dynamic variables support in real-time charts
 
+**Sprint 4 - REST API Integration (✅ COMPLETE - 2026-01-10)**:
+- ✅ Inference endpoints: `/anomaly`, `/anomaly/batch`, `/maintenance`, `/energy`, `/rul`
+- ✅ Training endpoints: create, list, get, cancel, logs
+- ✅ Thread-safe job management with progress tracking
+- ✅ Resource limits: MAX_JOBS (10K), n_samples validation, log limits
+- ✅ Model loading with LRU caching
+- ✅ 226 comprehensive tests (all passing)
+- ✅ GitHub PRs: [#220](https://github.com/CodeFleck/sensorvision/pull/220), [#221](https://github.com/CodeFleck/sensorvision/pull/221)
+
 **Technologies**: scikit-learn, TensorFlow Lite, ONNX, FastAPI
 
 ---
@@ -824,14 +833,16 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 
 ---
 
-**Last Updated**: 2026-01-04
-**Current Phase**: Phase 3 - Enterprise Features (Planning)
-**Next Milestone**: Advanced Device Types & Auto-Provisioning (#TBD)
-**Status**: Q1 2025 Complete + ML Pipeline Complete - 90% Feature Parity Achieved ✅
+**Last Updated**: 2026-01-10
+**Current Phase**: Phase 3 - Enterprise Features (In Progress)
+**Next Milestone**: White-Labeling & Multi-Tenancy Enhancements
+**Status**: Q1 2025 Complete + ML Pipeline API Complete - 95% Feature Parity Achieved ✅
 
-**Recent Progress** (2026-01-02 - 2026-01-04):
+**Recent Progress** (2026-01-02 - 2026-01-10):
 - ✅ Sprint 3 plugins completed (Sigfox, MQTT Bridge, Modbus TCP)
 - ✅ V62 migration column name fixes deployed
+- ✅ ML Pipeline Sprint 4: Inference endpoints (PR #220) - 5 REST endpoints for model predictions
+- ✅ ML Pipeline Sprint 4: Training endpoints (PR #221) - Thread-safe job management with 226 tests
 - ✅ SMS Alerts via Twilio verified in production
 - ✅ AWS SES email working in production
 - ✅ Security hardening: removed hardcoded credentials, added secret scanning
