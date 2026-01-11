@@ -3,20 +3,26 @@ package io.indcloud.model;
 import java.math.BigDecimal;
 
 public enum RuleOperator {
-    GT("Greater than"),
-    GTE("Greater than or equal"),
-    LT("Less than"),
-    LTE("Less than or equal"),
-    EQ("Equal to");
+    GT("Greater than", ">"),
+    GTE("Greater than or equal", ">="),
+    LT("Less than", "<"),
+    LTE("Less than or equal", "<="),
+    EQ("Equal to", "=");
 
     private final String description;
+    private final String symbol;
 
-    RuleOperator(String description) {
+    RuleOperator(String description, String symbol) {
         this.description = description;
+        this.symbol = symbol;
     }
 
     public String getDescription() {
         return description;
+    }
+
+    public String getSymbol() {
+        return symbol;
     }
 
     /**

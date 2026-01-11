@@ -294,15 +294,206 @@ public class EmailTemplateService {
     }
 
     /**
-     * Simplified alert notification for backwards compatibility
+     * Generate alert notification email from Alert entity
+     * Extracts all relevant information for a detailed, professional email
      */
-    public String generateAlertNotificationEmail(Object alert) {
+    public String generateAlertNotificationEmail(Object alertObj) {
+        if (alertObj instanceof io.indcloud.model.Alert alert) {
+            String ruleName = alert.getRule() != null ? alert.getRule().getName() : "Unknown Rule";
+            String deviceName = alert.getDevice() != null ? alert.getDevice().getName() : "Unknown Device";
+            String deviceExternalId = alert.getDevice() != null ? alert.getDevice().getExternalId() : "";
+            String severity = alert.getSeverity() != null ? alert.getSeverity().name() : "MEDIUM";
+            String message = alert.getMessage() != null ? alert.getMessage() : "An alert was triggered.";
+            String triggeredValue = alert.getTriggeredValue() != null ? alert.getTriggeredValue().toString() : "N/A";
+            String variable = alert.getRule() != null ? alert.getRule().getVariable() : "unknown";
+            String operator = alert.getRule() != null && alert.getRule().getOperator() != null
+                ? alert.getRule().getOperator().getSymbol() : "";
+            String threshold = alert.getRule() != null && alert.getRule().getThreshold() != null
+                ? alert.getRule().getThreshold().toString() : "N/A";
+            String triggeredAt = alert.getTriggeredAt() != null
+                ? alert.getTriggeredAt().toString() : java.time.LocalDateTime.now().toString();
+
+            return generateLuxuryAlertEmail(
+                ruleName,
+                deviceName,
+                deviceExternalId,
+                severity,
+                message,
+                variable,
+                operator,
+                threshold,
+                triggeredValue,
+                triggeredAt,
+                "https://indcloud.io/alerts"
+            );
+        }
+
+        // Fallback for non-Alert objects
         return generateAlertNotificationEmail(
             "System Alert",
             "Unknown Device",
             "An alert has been triggered in your system.",
             "MEDIUM",
             "https://indcloud.io/dashboard"
+        );
+    }
+
+    /**
+     * Generate luxury-themed alert email with comprehensive details
+     */
+    private String generateLuxuryAlertEmail(String ruleName, String deviceName, String deviceExternalId,
+            String severity, String message, String variable, String operator, String threshold,
+            String triggeredValue, String triggeredAt, String dashboardLink) {
+
+        String safeRuleName = escapeHtml(ruleName);
+        String safeDeviceName = escapeHtml(deviceName);
+        String safeDeviceId = escapeHtml(deviceExternalId);
+        String safeSeverity = escapeHtml(severity);
+        String safeMessage = escapeHtml(message);
+        String safeVariable = escapeHtml(variable);
+        String safeOperator = escapeHtml(operator);
+        String safeThreshold = escapeHtml(threshold);
+        String safeTriggeredValue = escapeHtml(triggeredValue);
+        String safeTriggeredAt = escapeHtml(triggeredAt);
+        String safeDashboardLink = sanitizeUrl(dashboardLink);
+
+        // Luxury color scheme
+        String severityColor = switch (severity != null ? severity.toUpperCase() : "") {
+            case "CRITICAL" -> "#991b1b"; // Deep red
+            case "HIGH" -> "#c2410c"; // Dark orange
+            case "MEDIUM" -> "#a16207"; // Dark amber
+            default -> "#166534"; // Dark green
+        };
+
+        String severityBgColor = switch (severity != null ? severity.toUpperCase() : "") {
+            case "CRITICAL" -> "#fef2f2";
+            case "HIGH" -> "#fff7ed";
+            case "MEDIUM" -> "#fffbeb";
+            default -> "#f0fdf4";
+        };
+
+        return String.format("""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Alert Notification</title>
+            </head>
+            <body style="margin: 0; padding: 0; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0a0a;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #0a0a0a;">
+                    <tr>
+                        <td style="padding: 48px 24px;">
+                            <!-- Main Card -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="560" style="margin: 0 auto; max-width: 560px; background: linear-gradient(145deg, #1a1a1a 0%%, #0f0f0f 100%%); border-radius: 16px; border: 1px solid #2a2a2a; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                                <!-- Header with Logo -->
+                                <tr>
+                                    <td style="padding: 32px 40px 24px; border-bottom: 1px solid #2a2a2a;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
+                                            <tr>
+                                                <td>
+                                                    <span style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">SensorVision</span>
+                                                </td>
+                                                <td style="text-align: right;">
+                                                    <span style="display: inline-block; background-color: %s; color: #ffffff; font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">%s</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Alert Content -->
+                                <tr>
+                                    <td style="padding: 32px 40px;">
+                                        <!-- Rule Name -->
+                                        <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">%s</h1>
+
+                                        <!-- Device Info -->
+                                        <p style="margin: 0 0 24px; font-size: 14px; color: #737373;">
+                                            Device: <span style="color: #d4d4d4; font-weight: 500;">%s</span>
+                                            <span style="color: #525252;"> · </span>
+                                            <span style="color: #737373;">ID: %s</span>
+                                        </p>
+
+                                        <!-- Alert Message Box -->
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="margin-bottom: 24px;">
+                                            <tr>
+                                                <td style="background-color: %s; border-radius: 12px; padding: 20px; border-left: 4px solid %s;">
+                                                    <p style="margin: 0; font-size: 15px; color: %s; line-height: 1.6; font-weight: 500;">%s</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Details Grid -->
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="margin-bottom: 32px;">
+                                            <tr>
+                                                <td style="padding: 16px; background-color: #1a1a1a; border-radius: 12px 0 0 0; border: 1px solid #2a2a2a; border-right: none; width: 50%%;">
+                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px;">Variable</p>
+                                                    <p style="margin: 0; font-size: 16px; color: #ffffff; font-weight: 600;">%s</p>
+                                                </td>
+                                                <td style="padding: 16px; background-color: #1a1a1a; border-radius: 0 12px 0 0; border: 1px solid #2a2a2a; width: 50%%;">
+                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px;">Condition</p>
+                                                    <p style="margin: 0; font-size: 16px; color: #ffffff; font-weight: 600;">%s %s</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 16px; background-color: #1a1a1a; border-radius: 0 0 0 12px; border: 1px solid #2a2a2a; border-right: none; border-top: none;">
+                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px;">Triggered Value</p>
+                                                    <p style="margin: 0; font-size: 20px; color: %s; font-weight: 700;">%s</p>
+                                                </td>
+                                                <td style="padding: 16px; background-color: #1a1a1a; border-radius: 0 0 12px 0; border: 1px solid #2a2a2a; border-top: none;">
+                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px;">Time</p>
+                                                    <p style="margin: 0; font-size: 14px; color: #d4d4d4; font-weight: 500;">%s</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- CTA Button -->
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
+                                            <tr>
+                                                <td>
+                                                    <a href="%s" style="display: inline-block; background: linear-gradient(135deg, #0d9488 0%%, #0f766e 100%%); color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 14px 28px; border-radius: 10px; box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4);">View Alert Details</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="padding: 24px 40px; border-top: 1px solid #2a2a2a;">
+                                        <p style="margin: 0; font-size: 12px; color: #525252; text-align: center;">
+                                            This is an automated alert from your SensorVision monitoring system.
+                                            <br>
+                                            <a href="https://indcloud.io/settings/notifications" style="color: #737373; text-decoration: underline;">Manage notification preferences</a>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Footer Logo -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="560" style="margin: 32px auto 0; max-width: 560px;">
+                                <tr>
+                                    <td style="text-align: center;">
+                                        <p style="margin: 0; font-size: 13px; color: #404040;">Powered by <span style="color: #737373; font-weight: 600;">Industrial Cloud</span></p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            """,
+            severityColor, safeSeverity,  // Header badge
+            safeRuleName,  // Title
+            safeDeviceName, safeDeviceId,  // Device info
+            severityBgColor, severityColor, severityColor, safeMessage,  // Alert message box
+            safeVariable,  // Variable
+            safeOperator, safeThreshold,  // Condition
+            severityColor, safeTriggeredValue,  // Triggered value
+            safeTriggeredAt,  // Time
+            safeDashboardLink  // CTA link
         );
     }
 
