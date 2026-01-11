@@ -437,11 +437,11 @@ class TrainingService:
         if model_type == MLModelType.ANOMALY_DETECTION:
             return AnomalyDetectionEngine(model_id=model_id, algorithm="isolation_forest")
         elif model_type == MLModelType.PREDICTIVE_MAINTENANCE:
-            return PredictiveMaintenanceEngine(model_id=model_id, algorithm="random_forest")
+            return PredictiveMaintenanceEngine(model_id=model_id)
         elif model_type == MLModelType.ENERGY_FORECAST:
-            return EnergyForecastingEngine(model_id=model_id, algorithm="arima")
+            return EnergyForecastingEngine(model_id=model_id, algorithm="auto")
         elif model_type == MLModelType.EQUIPMENT_RUL:
-            return EquipmentRULEngine(model_id=model_id, algorithm="gradient_boosting")
+            return EquipmentRULEngine(model_id=model_id)
         else:
             raise ValueError(f"Unsupported model type: {model_type}")
 
