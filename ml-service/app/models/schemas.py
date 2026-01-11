@@ -105,13 +105,23 @@ class InferenceRequest(BaseModel):
     device_id: UUID
     organization_id: int
     model_id: Optional[UUID] = None
-    telemetry: List[TelemetryPoint] = Field(..., min_length=1)
+    telemetry: List[TelemetryPoint] = Field(
+        ...,
+        min_length=1,
+        max_length=10000,
+        description="Telemetry data points (max 10,000 points)"
+    )
 
 
 class BatchInferenceRequest(BaseModel):
     organization_id: int
     model_id: UUID
-    device_ids: List[UUID] = Field(..., min_length=1)
+    device_ids: List[UUID] = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+        description="Device IDs to process (max 1,000 devices)"
+    )
     time_range_hours: int = Field(default=24, ge=1, le=168)
 
 
