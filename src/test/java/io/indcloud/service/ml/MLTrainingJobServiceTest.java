@@ -727,19 +727,21 @@ class MLTrainingJobServiceTest {
         }
 
         @Test
-        @DisplayName("Should get all active jobs")
+        @DisplayName("Should get all active jobs with pagination")
         void shouldGetAllActiveJobs() {
             MLTrainingJob pendingJob = MLTrainingJob.builder()
                     .id(UUID.randomUUID())
                     .status(MLTrainingJobStatus.PENDING)
                     .build();
 
-            when(trainingJobRepository.findActiveJobs())
-                    .thenReturn(List.of(testJob, pendingJob));
+            Page<MLTrainingJob> jobsPage = new PageImpl<>(List.of(testJob, pendingJob));
+            when(trainingJobRepository.findActiveJobsWithLimit(any(Pageable.class)))
+                    .thenReturn(jobsPage);
 
             List<MLTrainingJob> result = trainingJobService.getActiveJobs();
 
             assertThat(result).hasSize(2);
+            verify(trainingJobRepository).findActiveJobsWithLimit(any(Pageable.class));
         }
     }
 

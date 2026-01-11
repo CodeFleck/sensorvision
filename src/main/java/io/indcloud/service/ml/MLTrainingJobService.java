@@ -8,7 +8,9 @@ import io.indcloud.repository.MLTrainingJobRepository;
 import io.indcloud.repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,7 +88,7 @@ public class MLTrainingJobService {
                     .build();
 
             response = mlServiceClient.createTrainingJob(request)
-                    .block(Duration.ofSeconds(30));
+                    .block(Duration.ofSeconds(10));
 
             if (response == null) {
                 throw new MLServiceException("Python ML service returned null response");
@@ -150,10 +152,16 @@ public class MLTrainingJobService {
                 .triggeredByUserId(triggeredBy)  // Store actual user ID for audit
                 .build();
 
-        job = trainingJobRepository.save(job);
-        log.info("Created local training job: {} for model: {}", job.getId(), modelId);
-
-        return job;
+        try {
+            job = trainingJobRepository.save(job);
+            log.info("Created local training job: {} for model: {}", job.getId(), modelId);
+            return job;
+        } catch (DataIntegrityViolationException e) {
+            // Race condition: another request already created an active job for this model
+            // The unique partial index (idx_ml_training_jobs_model_active) prevents duplicates
+            log.warn("Race condition detected: active job already exists for model {} (constraint violation)", modelId);
+            throw new IllegalStateException("Model already has an active training job. Wait for it to complete or cancel it first.");
+        }
     }
 
     /**
@@ -471,11 +479,20 @@ public class MLTrainingJobService {
     }
 
     /**
-     * Get all active jobs (for the monitor to poll).
+     * Maximum number of active jobs to poll in a single batch.
+     * This prevents memory exhaustion from unbounded queries.
+     */
+    private static final int MAX_ACTIVE_JOBS_BATCH = 100;
+
+    /**
+     * Get active jobs for the monitor to poll, with a bounded limit to prevent memory exhaustion.
+     * Uses eager fetching to prevent N+1 queries when accessing model/organization.
+     *
+     * @return List of active training jobs (limited to MAX_ACTIVE_JOBS_BATCH)
      */
     @Transactional(readOnly = true)
     public List<MLTrainingJob> getActiveJobs() {
-        return trainingJobRepository.findActiveJobs();
+        return trainingJobRepository.findActiveJobsWithLimit(PageRequest.of(0, MAX_ACTIVE_JOBS_BATCH)).getContent();
     }
 
     /**
