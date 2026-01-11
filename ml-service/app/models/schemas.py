@@ -189,7 +189,7 @@ class PredictiveMaintenanceResult(InferenceResponse):
 # Training Schemas
 class TrainingJobCreate(BaseModel):
     model_id: UUID
-    organization_id: int
+    organization_id: int = Field(..., gt=0, description="Organization ID must be positive")
     job_type: str = Field(default="INITIAL_TRAINING")
     training_config: Dict[str, Any] = Field(default_factory=dict)
     training_data_start: Optional[datetime] = None

@@ -270,6 +270,24 @@ class TestTrainingJobCreate:
         assert job.job_type == "RETRAINING"
         assert job.training_config["epochs"] == 100
 
+    def test_fails_with_negative_organization_id(self):
+        """Test that negative organization_id is rejected."""
+        with pytest.raises(ValidationError) as exc_info:
+            TrainingJobCreate(
+                model_id=uuid4(),
+                organization_id=-1
+            )
+        assert "greater than 0" in str(exc_info.value).lower()
+
+    def test_fails_with_zero_organization_id(self):
+        """Test that zero organization_id is rejected."""
+        with pytest.raises(ValidationError) as exc_info:
+            TrainingJobCreate(
+                model_id=uuid4(),
+                organization_id=0
+            )
+        assert "greater than 0" in str(exc_info.value).lower()
+
 
 class TestAnomalyDetectionResult:
     """Tests for AnomalyDetectionResult schema."""
