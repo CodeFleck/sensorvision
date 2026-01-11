@@ -3,13 +3,17 @@ package io.indcloud.controller;
 import io.indcloud.dto.ml.MLModelCreateRequest;
 import io.indcloud.dto.ml.MLModelResponse;
 import io.indcloud.dto.ml.MLModelUpdateRequest;
+import io.indcloud.dto.ml.TrainingJobResponseDto;
 import io.indcloud.model.MLModel;
 import io.indcloud.model.MLModelStatus;
 import io.indcloud.model.MLModelType;
+import io.indcloud.model.MLTrainingJob;
 import io.indcloud.model.Organization;
 import io.indcloud.model.User;
 import io.indcloud.security.SecurityUtils;
 import io.indcloud.service.ml.MLModelService;
+import io.indcloud.service.ml.MLTrainingJobService;
+import io.indcloud.service.ml.MLTrainingJobService.MLServiceException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -34,6 +39,7 @@ import java.util.UUID;
 public class MLModelController {
 
     private final MLModelService mlModelService;
+    private final MLTrainingJobService trainingJobService;
     private final SecurityUtils securityUtils;
 
     /**
@@ -170,17 +176,62 @@ public class MLModelController {
 
     /**
      * Start training for an ML model.
+     * This now creates a training job and triggers training on the Python ML service.
+     *
+     * @param id The model ID to train
+     * @return Training start response with model and job information
      */
     @PostMapping("/{id}/train")
-    public ResponseEntity<MLModelResponse> startTraining(@PathVariable UUID id) {
+    public ResponseEntity<?> startTraining(@PathVariable UUID id) {
         User user = securityUtils.getCurrentUser();
         Organization org = user.getOrganization();
 
-        return mlModelService.startTraining(id, org.getId(), user.getId())
-                .map(this::toResponse)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            // Start training via the training job service (calls Python ML service)
+            MLTrainingJob job = trainingJobService.startTraining(
+                    id,
+                    org.getId(),
+                    user.getId(), // Pass actual user ID for audit trail
+                    null  // Auto-detect job type (INITIAL_TRAINING or RETRAINING)
+            );
+
+            log.info("Started training job {} for model {} (user={}, org={})",
+                    job.getId(), id, user.getEmail(), org.getId());
+
+            // Return combined response with model and job info
+            MLModel model = job.getModel();
+            TrainingStartResponse response = new TrainingStartResponse(
+                    toResponse(model),
+                    trainingJobService.toResponse(job)
+            );
+
+            return ResponseEntity.accepted().body(response);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Training start failed - not found: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+
+        } catch (IllegalStateException e) {
+            log.warn("Training start failed - conflict: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", e.getMessage()));
+
+        } catch (MLServiceException e) {
+            log.error("Training start failed - ML service error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "ML service unavailable. Please try again later.",
+                                 "details", e.getMessage()));
+        }
     }
+
+    /**
+     * Response DTO for training start operation.
+     * Contains both the model (with updated status) and the training job details.
+     */
+    public record TrainingStartResponse(
+            MLModelResponse model,
+            TrainingJobResponseDto trainingJob
+    ) {}
 
     /**
      * Get deployed models for the organization.

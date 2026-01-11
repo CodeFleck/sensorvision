@@ -4,6 +4,7 @@ import io.indcloud.model.MLTrainingJob;
 import io.indcloud.model.MLTrainingJobStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -37,4 +38,40 @@ public interface MLTrainingJobRepository extends JpaRepository<MLTrainingJob, UU
 
     @Query("SELECT COUNT(j) FROM MLTrainingJob j WHERE j.model.id = :modelId AND j.status = 'COMPLETED'")
     long countCompletedJobsByModel(@Param("modelId") UUID modelId);
+
+    /**
+     * Find all active training jobs (PENDING or RUNNING) for status monitoring.
+     * Uses EntityGraph to eagerly fetch model and organization to prevent N+1 queries.
+     * @deprecated Use findActiveJobsWithLimit for bounded queries
+     */
+    @Deprecated
+    @Query("SELECT j FROM MLTrainingJob j WHERE j.status IN ('PENDING', 'RUNNING') ORDER BY j.createdAt ASC")
+    List<MLTrainingJob> findActiveJobs();
+
+    /**
+     * Find active training jobs with pagination to prevent memory exhaustion.
+     * Uses EntityGraph to eagerly fetch model and organization to prevent N+1 queries.
+     *
+     * @param pageable Pagination parameters (should include a sensible limit)
+     * @return Page of active training jobs with model and organization eagerly loaded
+     */
+    @EntityGraph(attributePaths = {"model", "organization"})
+    @Query("SELECT j FROM MLTrainingJob j WHERE j.status IN ('PENDING', 'RUNNING') ORDER BY j.createdAt ASC")
+    Page<MLTrainingJob> findActiveJobsWithLimit(Pageable pageable);
+
+    /**
+     * Find a training job by its external ID (from Python ML service).
+     */
+    Optional<MLTrainingJob> findByExternalJobId(UUID externalJobId);
+
+    /**
+     * Check if a model has any active training jobs.
+     */
+    @Query("SELECT COUNT(j) > 0 FROM MLTrainingJob j WHERE j.model.id = :modelId AND j.status IN ('PENDING', 'RUNNING')")
+    boolean existsActiveJobForModel(@Param("modelId") UUID modelId);
+
+    /**
+     * Find the latest job for a model regardless of status.
+     */
+    Optional<MLTrainingJob> findFirstByModelIdOrderByCreatedAtDesc(UUID modelId);
 }

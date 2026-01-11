@@ -85,8 +85,26 @@ public class MLTrainingJob {
     @Column(name = "duration_seconds")
     private Integer durationSeconds;
 
+    /**
+     * @deprecated Use triggeredByUserId for proper audit trail.
+     */
     @Column(name = "triggered_by")
+    @Deprecated
     private UUID triggeredBy;
+
+    /**
+     * User ID who triggered this training job.
+     * Used for audit trail and tracking who initiated training.
+     */
+    @Column(name = "triggered_by_user_id")
+    private Long triggeredByUserId;
+
+    /**
+     * External job ID from Python ML service.
+     * Used for polling status updates from the Python ML service.
+     */
+    @Column(name = "external_job_id")
+    private UUID externalJobId;
 
     @Column(name = "created_at")
     @Builder.Default

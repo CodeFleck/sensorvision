@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
   Plus,
@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Filter,
   ChevronDown,
+  Loader2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import {
@@ -19,12 +20,14 @@ import {
   MLModel,
   MLModelType,
   MLModelStatus,
+  TrainingJob,
   getModelTypeLabel,
   getModelStatusLabel,
   getModelStatusColor,
   PageResponse,
 } from '../services/mlService';
 import { MLModelModal } from '../components/MLModelModal';
+import { TrainingProgressModal } from '../components/ml/TrainingProgressModal';
 import { formatTimeAgo } from '../utils/timeUtils';
 
 export const MLModels = () => {
@@ -39,15 +42,13 @@ export const MLModels = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadModels = async () => {
-      await fetchModels();
-    };
-    loadModels();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, typeFilter, statusFilter]);
+  // Training progress modal state
+  const [trainingJobId, setTrainingJobId] = useState<string | null>(null);
+  const [trainingModelName, setTrainingModelName] = useState<string>('');
+  const [isTrainingModalOpen, setIsTrainingModalOpen] = useState(false);
 
-  const fetchModels = async () => {
+  // Memoized fetch function to avoid recreating on every render
+  const fetchModels = useCallback(async () => {
     try {
       setLoading(true);
       const response: PageResponse<MLModel> = await mlModelsApi.list({
@@ -63,7 +64,12 @@ export const MLModels = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, typeFilter, statusFilter]);
+
+  // Load models when filters change
+  useEffect(() => {
+    fetchModels();
+  }, [fetchModels]);
 
   const handleCreate = () => {
     setSelectedModel(null);
@@ -79,7 +85,13 @@ export const MLModels = () => {
     if (actionLoading) return;
     try {
       setActionLoading(model.id);
-      await mlModelsApi.train(model.id);
+      const response = await mlModelsApi.train(model.id);
+
+      // Open training progress modal
+      setTrainingJobId(response.trainingJob.id);
+      setTrainingModelName(model.name);
+      setIsTrainingModalOpen(true);
+
       toast.success(`Training started for "${model.name}"`);
       await fetchModels();
     } catch (error) {
@@ -90,6 +102,22 @@ export const MLModels = () => {
       setActionLoading(null);
     }
   };
+
+  // Memoized handler for training completion - refreshes model list
+  const handleTrainingComplete = useCallback((_job: TrainingJob) => {
+    // Refresh models list when training completes
+    // Note: We don't need to use the job parameter currently,
+    // but it's available if needed for future enhancements
+    fetchModels();
+  }, [fetchModels]);
+
+  const handleTrainingModalClose = useCallback(() => {
+    setIsTrainingModalOpen(false);
+    setTrainingJobId(null);
+    setTrainingModelName('');
+    // Refresh models to show updated status
+    fetchModels();
+  }, [fetchModels]);
 
   const handleDeploy = async (model: MLModel) => {
     if (actionLoading) return;
@@ -446,6 +474,17 @@ export const MLModels = () => {
         <MLModelModal
           model={selectedModel}
           onClose={handleModalClose}
+        />
+      )}
+
+      {/* Training Progress Modal */}
+      {trainingJobId && (
+        <TrainingProgressModal
+          jobId={trainingJobId}
+          modelName={trainingModelName}
+          isOpen={isTrainingModalOpen}
+          onClose={handleTrainingModalClose}
+          onComplete={handleTrainingComplete}
         />
       )}
     </div>

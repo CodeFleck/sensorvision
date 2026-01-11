@@ -153,6 +153,16 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 - ✅ 226 comprehensive tests (all passing)
 - ✅ GitHub PRs: [#220](https://github.com/CodeFleck/sensorvision/pull/220), [#221](https://github.com/CodeFleck/sensorvision/pull/221)
 
+**Sprint 4 - Frontend Training UI (✅ COMPLETE - 2026-01-10)**:
+- ✅ TrainingProgressModal component with real-time polling
+- ✅ Training job lifecycle management (start, cancel, monitor)
+- ✅ MLTrainingJobController REST endpoints (7 endpoints)
+- ✅ MLTrainingJobService for job orchestration
+- ✅ MLTrainingJobMonitor for background status polling
+- ✅ Dashboard Historical Metrics panel with time range selector
+- ✅ V66 migration for external_job_id column
+- ✅ User documentation: `docs/user-guides/ML_TRAINING_USER_GUIDE.md`
+
 **Technologies**: scikit-learn, TensorFlow Lite, ONNX, FastAPI
 
 ---
@@ -843,6 +853,12 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 - ✅ V62 migration column name fixes deployed
 - ✅ ML Pipeline Sprint 4: Inference endpoints (PR #220) - 5 REST endpoints for model predictions
 - ✅ ML Pipeline Sprint 4: Training endpoints (PR #221) - Thread-safe job management with 226 tests
+- ✅ ML Training Pipeline Frontend: TrainingProgressModal, real-time polling, cancel support
+- ✅ Dashboard: Historical Metrics panel with time range selector (1h/6h/12h/24h)
+- ✅ MLTrainingJobController: 7 REST endpoints for job management
+- ✅ MLTrainingJobMonitor: Background polling every 10 seconds
+- ✅ V66 migration: external_job_id for Python ML service integration
+- ✅ User documentation: ML_TRAINING_USER_GUIDE.md
 - ✅ SMS Alerts via Twilio verified in production
 - ✅ AWS SES email working in production
 - ✅ Security hardening: removed hardcoded credentials, added secret scanning
@@ -859,4 +875,6 @@ Build once, deploy anywhere, scale infinitely. SensorVision combines enterprise-
 - ✅ Advanced synthetic variables (31 functions)
 - ✅ SMS + Email notifications in production
 - ✅ ML Pipeline complete (4 engines: Anomaly, Predictive Maintenance, Energy Forecasting, Equipment RUL)
-- ✅ 90% feature parity with Ubidots core
+- ✅ ML Training Pipeline with real-time progress monitoring (TrainingProgressModal)
+- ✅ Dashboard Historical Metrics with time range selector
+- ✅ 95% feature parity with Ubidots core
