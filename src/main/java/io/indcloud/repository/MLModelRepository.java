@@ -26,6 +26,8 @@ public interface MLModelRepository extends JpaRepository<MLModel, UUID> {
 
     Optional<MLModel> findByIdAndOrganizationId(UUID id, Long organizationId);
 
+    boolean existsByIdAndOrganizationId(UUID id, Long organizationId);
+
     @Query("SELECT m FROM MLModel m WHERE m.status = :status AND m.nextInferenceAt <= :now")
     List<MLModel> findModelsReadyForInference(@Param("status") MLModelStatus status, @Param("now") Instant now);
 

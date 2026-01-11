@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, KeyboardEvent } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   X,
   RefreshCw,
@@ -150,6 +150,18 @@ export const TrainingProgressModal = ({
     };
   }, [isOpen, jobId, fetchJob]);
 
+  // Handle close - ask for confirmation if job is still running
+  // Defined early so it can be used in the ESC key effect
+  // Wrapped in useCallback to avoid stale closures in event handlers
+  const handleClose = useCallback(() => {
+    if (job && isTrainingJobActive(job.status)) {
+      if (!window.confirm('Training is still in progress. The job will continue running in the background. Close anyway?')) {
+        return;
+      }
+    }
+    onClose();
+  }, [job, onClose]);
+
   // Handle ESC key to close modal (accessibility)
   useEffect(() => {
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -167,7 +179,7 @@ export const TrainingProgressModal = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   // Handle cancel
   const handleCancel = async () => {
@@ -188,16 +200,6 @@ export const TrainingProgressModal = ({
     } finally {
       setCancelling(false);
     }
-  };
-
-  // Handle close - ask for confirmation if job is still running
-  const handleClose = () => {
-    if (job && isTrainingJobActive(job.status)) {
-      if (!window.confirm('Training is still in progress. The job will continue running in the background. Close anyway?')) {
-        return;
-      }
-    }
-    onClose();
   };
 
   if (!isOpen) return null;

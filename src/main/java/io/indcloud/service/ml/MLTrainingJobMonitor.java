@@ -2,6 +2,7 @@ package io.indcloud.service.ml;
 
 import io.indcloud.model.MLTrainingJob;
 import io.indcloud.model.MLTrainingJobStatus;
+import io.indcloud.model.Organization;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -125,21 +126,34 @@ public class MLTrainingJobMonitor {
      * This ensures stale jobs don't remain in RUNNING state forever.
      */
     private void handleStaleJob(MLTrainingJob job) {
+        // Validate organization exists before attempting cancellation
+        Organization org = job.getOrganization();
+        if (org == null || org.getId() == null) {
+            log.error("Cannot cancel stale job {} - missing organization. Force-marking as FAILED.", job.getId());
+            forceMarkJobAsFailed(job, "Job has no associated organization");
+            return;
+        }
+
         try {
             // Try to cancel the job gracefully first
-            trainingJobService.cancelJob(job.getId(), job.getOrganization().getId());
+            trainingJobService.cancelJob(job.getId(), org.getId());
             log.info("Stale job {} has been cancelled", job.getId());
         } catch (Exception e) {
             log.error("Failed to cancel stale job {}: {}", job.getId(), e.getMessage());
+            forceMarkJobAsFailed(job, "Could not be cancelled: " + e.getMessage());
+        }
+    }
 
-            // If cancellation fails, force-mark the job as FAILED to prevent infinite retries
-            try {
-                trainingJobService.markJobAsStale(job.getId(),
-                        "Job exceeded stale threshold of " + staleThresholdHours + " hours and could not be cancelled: " + e.getMessage());
-                log.warn("Stale job {} has been force-marked as FAILED", job.getId());
-            } catch (Exception markException) {
-                log.error("Failed to mark stale job {} as FAILED: {}", job.getId(), markException.getMessage());
-            }
+    /**
+     * Force-mark a job as FAILED when cancellation is not possible.
+     */
+    private void forceMarkJobAsFailed(MLTrainingJob job, String reason) {
+        try {
+            trainingJobService.markJobAsStale(job.getId(),
+                    "Job exceeded stale threshold of " + staleThresholdHours + " hours. " + reason);
+            log.warn("Stale job {} has been force-marked as FAILED", job.getId());
+        } catch (Exception markException) {
+            log.error("Failed to mark stale job {} as FAILED: {}", job.getId(), markException.getMessage());
         }
     }
 

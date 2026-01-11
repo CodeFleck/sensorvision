@@ -321,21 +321,50 @@ public class MLTrainingJobService {
     /**
      * Cancel a training job.
      *
+     * This method follows the 3-phase pattern to avoid blocking I/O inside transactions:
+     * 1. Validate job and check permissions in transaction
+     * 2. Call Python ML service OUTSIDE transaction
+     * 3. Update local job status in new transaction
+     *
      * @param jobId The job ID to cancel
      * @param organizationId Organization ID for authorization
      * @return The cancelled job
      * @throws IllegalArgumentException if job not found
      * @throws IllegalStateException if job cannot be cancelled
      */
-    @Transactional
     public MLTrainingJob cancelJob(UUID jobId, Long organizationId) {
         log.info("Cancelling training job: {}", jobId);
 
+        // Phase 1: Validate job in transaction
+        CancelJobValidation validation = validateJobForCancellation(jobId, organizationId);
+
+        // Phase 2: Call Python ML service OUTSIDE transaction (no DB connection held)
+        if (validation.externalJobId() != null) {
+            try {
+                mlServiceClient.cancelTrainingJob(validation.externalJobId())
+                        .block(Duration.ofSeconds(10));
+                log.info("Cancelled external job: {}", validation.externalJobId());
+            } catch (Exception e) {
+                log.warn("Failed to cancel external job {}: {} (continuing with local cancellation)",
+                        validation.externalJobId(), sanitizeErrorMessage(e.getMessage()));
+            }
+        }
+
+        // Phase 3: Update local job status in new transaction
+        return completeCancellation(jobId);
+    }
+
+    /**
+     * Phase 1: Validate job can be cancelled.
+     */
+    @Transactional(readOnly = true)
+    protected CancelJobValidation validateJobForCancellation(UUID jobId, Long organizationId) {
         MLTrainingJob job = trainingJobRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Training job not found: " + jobId));
 
         // Verify organization ownership
-        if (!job.getOrganization().getId().equals(organizationId)) {
+        Organization org = job.getOrganization();
+        if (org == null || !org.getId().equals(organizationId)) {
             throw new IllegalArgumentException("Training job not found: " + jobId);
         }
 
@@ -344,39 +373,41 @@ public class MLTrainingJobService {
             throw new IllegalStateException("Cannot cancel job with status: " + job.getStatus());
         }
 
-        // Call Python ML service to cancel if external ID exists
-        if (job.getExternalJobId() != null) {
-            try {
-                mlServiceClient.cancelTrainingJob(job.getExternalJobId())
-                        .block(Duration.ofSeconds(10));
-                log.info("Cancelled external job: {}", job.getExternalJobId());
-            } catch (Exception e) {
-                log.warn("Failed to cancel external job {}: {} (continuing with local cancellation)",
-                        job.getExternalJobId(), e.getMessage());
-            }
-        }
+        return new CancelJobValidation(job.getExternalJobId());
+    }
+
+    /**
+     * Phase 3: Complete cancellation by updating local job status.
+     */
+    @Transactional
+    protected MLTrainingJob completeCancellation(UUID jobId) {
+        MLTrainingJob job = trainingJobRepository.findById(jobId)
+                .orElseThrow(() -> new IllegalStateException("Job not found after validation: " + jobId));
 
         // Update local job status
         job.setStatus(MLTrainingJobStatus.CANCELLED);
         job.setCompletedAt(Instant.now());
         if (job.getStartedAt() != null) {
-            job.setDurationSeconds((int) Duration.between(job.getStartedAt(), Instant.now()).getSeconds());
+            long seconds = Duration.between(job.getStartedAt(), Instant.now()).getSeconds();
+            job.setDurationSeconds((int) Math.min(seconds, Integer.MAX_VALUE));
         }
         job = trainingJobRepository.save(job);
 
         // Update model status back to previous state
-        if (job.getModel() != null) {
-            MLModel model = job.getModel();
-            // If model was TRAINING, revert to DRAFT or TRAINED based on whether it was ever trained
-            if (model.getStatus() == MLModelStatus.TRAINING) {
-                model.setStatus(model.getTrainedAt() != null ? MLModelStatus.TRAINED : MLModelStatus.DRAFT);
-                mlModelRepository.save(model);
-                log.info("Reverted model {} status to {}", model.getId(), model.getStatus());
-            }
+        MLModel model = job.getModel();
+        if (model != null && model.getStatus() == MLModelStatus.TRAINING) {
+            model.setStatus(model.getTrainedAt() != null ? MLModelStatus.TRAINED : MLModelStatus.DRAFT);
+            mlModelRepository.save(model);
+            log.info("Reverted model {} status to {}", model.getId(), model.getStatus());
         }
 
         return job;
     }
+
+    /**
+     * Record for cancel job validation result.
+     */
+    private record CancelJobValidation(UUID externalJobId) {}
 
     /**
      * Get a training job by ID.
@@ -415,10 +446,27 @@ public class MLTrainingJobService {
     }
 
     /**
-     * Get the latest job for a model.
+     * Get the latest job for a model (internal use, no authorization check).
      */
     @Transactional(readOnly = true)
     public Optional<MLTrainingJob> getLatestJobForModel(UUID modelId) {
+        return trainingJobRepository.findFirstByModelIdOrderByCreatedAtDesc(modelId);
+    }
+
+    /**
+     * Get the latest job for a model with authorization check.
+     * Verifies that the model belongs to the specified organization.
+     *
+     * @param modelId The model ID
+     * @param organizationId Organization ID for authorization
+     * @return The latest training job, or empty if not found or not authorized
+     */
+    @Transactional(readOnly = true)
+    public Optional<MLTrainingJob> getLatestJobForModel(UUID modelId, Long organizationId) {
+        // First verify the model belongs to the organization
+        if (!mlModelRepository.existsByIdAndOrganizationId(modelId, organizationId)) {
+            return Optional.empty();
+        }
         return trainingJobRepository.findFirstByModelIdOrderByCreatedAtDesc(modelId);
     }
 

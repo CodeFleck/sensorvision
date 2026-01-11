@@ -149,13 +149,16 @@ public class MLTrainingJobController {
 
     /**
      * Get the latest training job for a model.
+     * Includes authorization check to ensure model belongs to user's organization.
      *
      * @param modelId The model ID
-     * @return The latest training job or 404 if none exist
+     * @return The latest training job or 404 if none exist or not authorized
      */
     @GetMapping("/model/{modelId}/latest")
     public ResponseEntity<TrainingJobResponseDto> getLatestJobForModel(@PathVariable UUID modelId) {
-        return trainingJobService.getLatestJobForModel(modelId)
+        Organization org = securityUtils.getCurrentUserOrganization();
+
+        return trainingJobService.getLatestJobForModel(modelId, org.getId())
                 .map(trainingJobService::toResponse)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

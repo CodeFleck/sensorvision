@@ -329,7 +329,15 @@ class ApiService {
   }
 
   // Analytics
-  async getAggregatedData(deviceId: string, variable: string, aggregation: string, start: string, end: string, interval: string): Promise<any> {
+  async getAggregatedData(
+    deviceId: string,
+    variable: string,
+    aggregation: string,
+    start: string,
+    end: string,
+    interval: string,
+    options?: { signal?: AbortSignal }
+  ): Promise<any> {
     const params = new URLSearchParams({
       deviceId,
       variable,
@@ -338,7 +346,7 @@ class ApiService {
       to: end,      // Backend expects 'to' parameter
       interval,
     });
-    return this.request<any>(`/analytics/aggregate?${params}`);
+    return this.request<any>(`/analytics/aggregate?${params}`, options);
   }
 
   // Events

@@ -109,17 +109,18 @@ export const Dashboard = () => {
         if (abortController.signal.aborted) return;
 
         try {
-          // Fetch all metrics for this device in parallel
+          // Fetch all metrics for this device in parallel, passing abort signal
+          const signal = abortController.signal;
           const [avgPower, minPower, maxPower, avgVoltage, minVoltage, maxVoltage, avgCurrent, minCurrent, maxCurrent] = await Promise.all([
-            apiService.getAggregatedData(device.externalId, 'kwConsumption', 'AVG', start, end, 'NONE'),
-            apiService.getAggregatedData(device.externalId, 'kwConsumption', 'MIN', start, end, 'NONE'),
-            apiService.getAggregatedData(device.externalId, 'kwConsumption', 'MAX', start, end, 'NONE'),
-            apiService.getAggregatedData(device.externalId, 'voltage', 'AVG', start, end, 'NONE'),
-            apiService.getAggregatedData(device.externalId, 'voltage', 'MIN', start, end, 'NONE'),
-            apiService.getAggregatedData(device.externalId, 'voltage', 'MAX', start, end, 'NONE'),
-            apiService.getAggregatedData(device.externalId, 'current', 'AVG', start, end, 'NONE'),
-            apiService.getAggregatedData(device.externalId, 'current', 'MIN', start, end, 'NONE'),
-            apiService.getAggregatedData(device.externalId, 'current', 'MAX', start, end, 'NONE'),
+            apiService.getAggregatedData(device.externalId, 'kwConsumption', 'AVG', start, end, 'NONE', { signal }),
+            apiService.getAggregatedData(device.externalId, 'kwConsumption', 'MIN', start, end, 'NONE', { signal }),
+            apiService.getAggregatedData(device.externalId, 'kwConsumption', 'MAX', start, end, 'NONE', { signal }),
+            apiService.getAggregatedData(device.externalId, 'voltage', 'AVG', start, end, 'NONE', { signal }),
+            apiService.getAggregatedData(device.externalId, 'voltage', 'MIN', start, end, 'NONE', { signal }),
+            apiService.getAggregatedData(device.externalId, 'voltage', 'MAX', start, end, 'NONE', { signal }),
+            apiService.getAggregatedData(device.externalId, 'current', 'AVG', start, end, 'NONE', { signal }),
+            apiService.getAggregatedData(device.externalId, 'current', 'MIN', start, end, 'NONE', { signal }),
+            apiService.getAggregatedData(device.externalId, 'current', 'MAX', start, end, 'NONE', { signal }),
           ]);
 
           // Check if aborted after fetch

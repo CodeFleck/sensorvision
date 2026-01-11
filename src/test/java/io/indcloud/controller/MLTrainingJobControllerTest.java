@@ -304,7 +304,8 @@ class MLTrainingJobControllerTest {
         @Test
         @DisplayName("Should return latest job for model")
         void shouldReturnLatestJobForModel() {
-            when(trainingJobService.getLatestJobForModel(modelId))
+            when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrg);
+            when(trainingJobService.getLatestJobForModel(modelId, orgId))
                     .thenReturn(Optional.of(testJob));
             when(trainingJobService.toResponse(testJob)).thenReturn(testJobResponse);
 
@@ -318,7 +319,8 @@ class MLTrainingJobControllerTest {
         @Test
         @DisplayName("Should return 404 when no jobs for model")
         void shouldReturnNotFoundWhenNoJobsForModel() {
-            when(trainingJobService.getLatestJobForModel(modelId))
+            when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrg);
+            when(trainingJobService.getLatestJobForModel(modelId, orgId))
                     .thenReturn(Optional.empty());
 
             ResponseEntity<TrainingJobResponseDto> response =
