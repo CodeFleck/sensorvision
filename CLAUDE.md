@@ -83,19 +83,78 @@ The `TelemetryIngestionService` is the central orchestrator that:
 - **TelemetryWebSocketHandler**: Manages real-time WebSocket connections
 - **AnalyticsService**: Provides data aggregation (MIN/MAX/AVG/SUM) with time intervals
 
+### ML Training Pipeline Architecture
+The system includes a complete ML training pipeline with real-time job monitoring:
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│                        ML Training Data Flow                           │
+├───────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  Frontend                     Spring Boot                 ML Service   │
+│  (React)                      Backend                     (Python)     │
+│                                                                        │
+│  ┌────────────────┐    ┌──────────────────────┐    ┌───────────────┐  │
+│  │ MLModels.tsx   │───▶│ MLModelController    │───▶│ FastAPI       │  │
+│  │ (Start Train)  │    │ MLTrainingJobService │    │ /training/*   │  │
+│  └────────────────┘    └──────────────────────┘    └───────────────┘  │
+│          │                        │                        │          │
+│          ▼                        ▼                        ▼          │
+│  ┌────────────────┐    ┌──────────────────────┐    ┌───────────────┐  │
+│  │ TrainingProg-  │◀───│ MLTrainingJobMonitor │◀───│ Job Status    │  │
+│  │ ressModal.tsx  │    │ (polls every 10s)    │    │ Updates       │  │
+│  │ (polls 2s)     │    └──────────────────────┘    └───────────────┘  │
+│  └────────────────┘                                                    │
+│                                                                        │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+**Key ML Services:**
+- **MLTrainingJobService**: Orchestrates training job lifecycle (start, cancel, sync status)
+- **MLTrainingJobMonitor**: Background service polling Python ML service every 10 seconds
+- **MLServiceClient**: HTTP client for Python ML service communication
+
+**Training Job Statuses:**
+- `PENDING` - Job created, waiting to start
+- `RUNNING` - Training in progress with progress percentage
+- `COMPLETED` - Training finished successfully
+- `FAILED` - Training failed with error message
+- `CANCELLED` - Job was cancelled by user
+
+**REST API Endpoints (Training Jobs):**
+```
+GET    /api/v1/ml/training-jobs/{id}           # Get job details
+GET    /api/v1/ml/training-jobs                # List jobs (paginated)
+GET    /api/v1/ml/training-jobs/model/{id}     # List jobs for model
+GET    /api/v1/ml/training-jobs/model/{id}/latest  # Get latest job for model
+POST   /api/v1/ml/training-jobs/start/{modelId}    # Start training
+POST   /api/v1/ml/training-jobs/{id}/cancel    # Cancel running job
+POST   /api/v1/ml/training-jobs/{id}/refresh   # Force status refresh
+```
+
+**Configuration Options:**
+```properties
+# ML Training Monitor
+ml.training.monitor.enabled=true              # Enable background polling
+ml.training.monitor.poll-rate-ms=10000       # Poll interval (default 10s)
+ml.training.stale-threshold-hours=24         # Max hours before job marked stale
+```
+
 ### Database Schema Evolution
 The system uses Flyway migrations with main schemas:
 - **V1**: Core devices and telemetry_records tables
 - **V2**: Rules engine (rules, alerts tables)
 - **V3**: Synthetic variables (synthetic_variables, synthetic_variable_values tables)
 - **V56**: Dynamic variables EAV pattern (variables extended with device_id, variable_values table)
+- **V66**: ML training jobs (ml_training_jobs table, external_job_id column for Python ML service integration)
 
 ### Frontend Architecture
 React SPA with TypeScript organized by feature:
-- **Real-time Dashboard**: WebSocket integration with Chart.js visualization
+- **Real-time Dashboard**: WebSocket integration with Chart.js visualization, Historical Metrics panel with time range selector
 - **Device Management**: Full CRUD with modal forms
 - **Rules & Alerts**: Conditional monitoring configuration
 - **Analytics**: Historical data aggregation and charting
+- **ML Pipeline**: Model management, training progress modal with real-time polling, anomaly dashboard
 
 The frontend connects via:
 - REST API calls to `/api/v1/*` endpoints

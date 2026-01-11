@@ -88,6 +88,13 @@ public class MLTrainingJob {
     @Column(name = "triggered_by")
     private UUID triggeredBy;
 
+    /**
+     * External job ID from Python ML service.
+     * Used for polling status updates from the Python ML service.
+     */
+    @Column(name = "external_job_id")
+    private UUID externalJobId;
+
     @Column(name = "created_at")
     @Builder.Default
     private Instant createdAt = Instant.now();

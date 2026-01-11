@@ -3,9 +3,11 @@ package io.indcloud.controller;
 import io.indcloud.dto.ml.MLModelCreateRequest;
 import io.indcloud.dto.ml.MLModelResponse;
 import io.indcloud.dto.ml.MLModelUpdateRequest;
+import io.indcloud.dto.ml.TrainingJobResponseDto;
 import io.indcloud.model.*;
 import io.indcloud.security.SecurityUtils;
 import io.indcloud.service.ml.MLModelService;
+import io.indcloud.service.ml.MLTrainingJobService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,6 +45,9 @@ class MLModelControllerTest {
 
     @Mock
     private MLModelService mlModelService;
+
+    @Mock
+    private MLTrainingJobService trainingJobService;
 
     @Mock
     private SecurityUtils securityUtils;
@@ -400,37 +405,94 @@ class MLModelControllerTest {
     class StartTrainingTests {
 
         @Test
-        @DisplayName("Should start training")
+        @DisplayName("Should start training and return TrainingStartResponse")
         void shouldStartTraining() {
             // Given
             MLModel trainingModel = MLModel.builder()
                     .id(modelId)
+                    .organization(testOrganization)
+                    .name("Test Model")
+                    .modelType(MLModelType.ANOMALY_DETECTION)
                     .status(MLModelStatus.TRAINING)
                     .trainedBy(userId)
                     .build();
 
-            when(mlModelService.startTraining(modelId, orgId, userId)).thenReturn(Optional.of(trainingModel));
+            UUID jobId = UUID.randomUUID();
+            MLTrainingJob trainingJob = MLTrainingJob.builder()
+                    .id(jobId)
+                    .model(trainingModel)
+                    .organization(testOrganization)
+                    .jobType(MLTrainingJobType.INITIAL_TRAINING)
+                    .status(MLTrainingJobStatus.PENDING)
+                    .progressPercent(0)
+                    .build();
+
+            TrainingJobResponseDto jobResponse = TrainingJobResponseDto.builder()
+                    .id(jobId)
+                    .modelId(modelId)
+                    .organizationId(orgId)
+                    .jobType("INITIAL_TRAINING")
+                    .status("PENDING")
+                    .progressPercent(0)
+                    .build();
+
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class), any()))
+                    .thenReturn(trainingJob);
+            when(trainingJobService.toResponse(trainingJob)).thenReturn(jobResponse);
 
             // When
-            ResponseEntity<MLModelResponse> response = mlModelController.startTraining(modelId);
+            ResponseEntity<?> response = mlModelController.startTraining(modelId);
 
             // Then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody().getStatus()).isEqualTo(MLModelStatus.TRAINING);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+            assertThat(response.getBody()).isInstanceOf(MLModelController.TrainingStartResponse.class);
+
+            MLModelController.TrainingStartResponse startResponse =
+                    (MLModelController.TrainingStartResponse) response.getBody();
+            assertThat(startResponse.model().getStatus()).isEqualTo(MLModelStatus.TRAINING);
+            assertThat(startResponse.trainingJob().getId()).isEqualTo(jobId);
         }
 
         @Test
-        @DisplayName("Should throw when already training")
-        void shouldThrowWhenAlreadyTraining() {
+        @DisplayName("Should return conflict when already training")
+        void shouldReturnConflictWhenAlreadyTraining() {
             // Given
-            when(mlModelService.startTraining(modelId, orgId, userId))
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class), any()))
                     .thenThrow(new IllegalStateException("Model is already training"));
 
-            // When/Then
-            org.junit.jupiter.api.Assertions.assertThrows(
-                    IllegalStateException.class,
-                    () -> mlModelController.startTraining(modelId)
-            );
+            // When
+            ResponseEntity<?> response = mlModelController.startTraining(modelId);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        }
+
+        @Test
+        @DisplayName("Should return not found when model does not exist")
+        void shouldReturnNotFoundWhenModelDoesNotExist() {
+            // Given
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class), any()))
+                    .thenThrow(new IllegalArgumentException("Model not found: " + modelId));
+
+            // When
+            ResponseEntity<?> response = mlModelController.startTraining(modelId);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("Should return service unavailable when ML service is down")
+        void shouldReturnServiceUnavailableWhenMLServiceIsDown() {
+            // Given
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class), any()))
+                    .thenThrow(new MLTrainingJobService.MLServiceException("ML service unavailable"));
+
+            // When
+            ResponseEntity<?> response = mlModelController.startTraining(modelId);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         }
     }
 

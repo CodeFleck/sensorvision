@@ -71,6 +71,18 @@ export type MLAnomalyStatus =
   | 'RESOLVED'
   | 'FALSE_POSITIVE';
 
+export type TrainingJobStatus =
+  | 'PENDING'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED';
+
+export type TrainingJobType =
+  | 'INITIAL_TRAINING'
+  | 'RETRAINING'
+  | 'HYPERPARAMETER_TUNING';
+
 export type MLAnomalySeverity =
   | 'LOW'
   | 'MEDIUM'
@@ -172,6 +184,33 @@ export interface MLAnomalyResolveRequest {
   resolutionNote?: string;
 }
 
+export interface TrainingJob {
+  id: string;
+  modelId: string;
+  organizationId: number;
+  jobType: TrainingJobType;
+  status: TrainingJobStatus;
+  trainingConfig: Record<string, unknown>;
+  trainingDataStart?: string;
+  trainingDataEnd?: string;
+  recordCount?: number;
+  deviceCount?: number;
+  progressPercent: number;
+  currentStep?: string;
+  resultMetrics?: Record<string, unknown>;
+  errorMessage?: string;
+  startedAt?: string;
+  completedAt?: string;
+  durationSeconds?: number;
+  triggeredBy?: string;
+  createdAt: string;
+}
+
+export interface TrainingStartResponse {
+  model: MLModel;
+  trainingJob: TrainingJob;
+}
+
 export interface ModelStatsResponse {
   deployedCount: number;
 }
@@ -265,10 +304,11 @@ export const mlModelsApi = {
   },
 
   /**
-   * Start training for a model
+   * Start training for a model.
+   * Returns both the updated model and the training job details.
    */
-  async train(id: string): Promise<MLModel> {
-    return request<MLModel>(`/ml/models/${id}/train`, { method: 'POST' });
+  async train(id: string): Promise<TrainingStartResponse> {
+    return request<TrainingStartResponse>(`/ml/models/${id}/train`, { method: 'POST' });
   },
 
   /**
@@ -393,6 +433,80 @@ export const mlAnomaliesApi = {
 };
 
 // ============================================================================
+// Training Jobs API
+// ============================================================================
+
+export const trainingJobsApi = {
+  /**
+   * Get a specific training job by ID
+   */
+  async get(jobId: string): Promise<TrainingJob> {
+    return request<TrainingJob>(`/ml/training-jobs/${jobId}`);
+  },
+
+  /**
+   * List all training jobs for the organization
+   */
+  async list(params?: {
+    page?: number;
+    size?: number;
+  }): Promise<PageResponse<TrainingJob>> {
+    const queryParams = new URLSearchParams();
+    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+    const query = queryParams.toString();
+    return request<PageResponse<TrainingJob>>(`/ml/training-jobs${query ? '?' + query : ''}`);
+  },
+
+  /**
+   * Get training jobs for a specific model
+   */
+  async listForModel(modelId: string, params?: {
+    page?: number;
+    size?: number;
+  }): Promise<PageResponse<TrainingJob>> {
+    const queryParams = new URLSearchParams();
+    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+
+    const query = queryParams.toString();
+    return request<PageResponse<TrainingJob>>(`/ml/training-jobs/model/${modelId}${query ? '?' + query : ''}`);
+  },
+
+  /**
+   * Get the latest training job for a model
+   */
+  async getLatestForModel(modelId: string): Promise<TrainingJob> {
+    return request<TrainingJob>(`/ml/training-jobs/model/${modelId}/latest`);
+  },
+
+  /**
+   * Cancel a training job
+   */
+  async cancel(jobId: string): Promise<TrainingJob> {
+    return request<TrainingJob>(`/ml/training-jobs/${jobId}/cancel`, { method: 'POST' });
+  },
+
+  /**
+   * Refresh job status from ML service
+   */
+  async refresh(jobId: string): Promise<TrainingJob> {
+    return request<TrainingJob>(`/ml/training-jobs/${jobId}/refresh`, { method: 'POST' });
+  },
+
+  /**
+   * Start training for a model (alternative endpoint)
+   */
+  async start(modelId: string, jobType?: TrainingJobType): Promise<TrainingJob> {
+    return request<TrainingJob>(`/ml/training-jobs/start/${modelId}`, {
+      method: 'POST',
+      body: jobType ? JSON.stringify({ jobType }) : undefined,
+    });
+  },
+};
+
+// ============================================================================
 // Helper Functions
 // ============================================================================
 
@@ -470,4 +584,43 @@ export const getAnomalyStatusColor = (status: MLAnomalyStatus): string => {
     FALSE_POSITIVE: 'gray',
   };
   return colors[status] || 'gray';
+};
+
+export const getTrainingJobStatusLabel = (status: TrainingJobStatus): string => {
+  const labels: Record<TrainingJobStatus, string> = {
+    PENDING: 'Pending',
+    RUNNING: 'Running',
+    COMPLETED: 'Completed',
+    FAILED: 'Failed',
+    CANCELLED: 'Cancelled',
+  };
+  return labels[status] || status;
+};
+
+export const getTrainingJobStatusColor = (status: TrainingJobStatus): string => {
+  const colors: Record<TrainingJobStatus, string> = {
+    PENDING: 'yellow',
+    RUNNING: 'blue',
+    COMPLETED: 'green',
+    FAILED: 'red',
+    CANCELLED: 'gray',
+  };
+  return colors[status] || 'gray';
+};
+
+export const getTrainingJobTypeLabel = (type: TrainingJobType): string => {
+  const labels: Record<TrainingJobType, string> = {
+    INITIAL_TRAINING: 'Initial Training',
+    RETRAINING: 'Retraining',
+    HYPERPARAMETER_TUNING: 'Hyperparameter Tuning',
+  };
+  return labels[type] || type;
+};
+
+export const isTrainingJobActive = (status: TrainingJobStatus): boolean => {
+  return status === 'PENDING' || status === 'RUNNING';
+};
+
+export const isTrainingJobTerminal = (status: TrainingJobStatus): boolean => {
+  return status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
 };

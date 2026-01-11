@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
   Plus,
@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Filter,
   ChevronDown,
+  Loader2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import {
@@ -19,12 +20,14 @@ import {
   MLModel,
   MLModelType,
   MLModelStatus,
+  TrainingJob,
   getModelTypeLabel,
   getModelStatusLabel,
   getModelStatusColor,
   PageResponse,
 } from '../services/mlService';
 import { MLModelModal } from '../components/MLModelModal';
+import { TrainingProgressModal } from '../components/ml/TrainingProgressModal';
 import { formatTimeAgo } from '../utils/timeUtils';
 
 export const MLModels = () => {
@@ -38,6 +41,11 @@ export const MLModels = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Training progress modal state
+  const [trainingJobId, setTrainingJobId] = useState<string | null>(null);
+  const [trainingModelName, setTrainingModelName] = useState<string>('');
+  const [isTrainingModalOpen, setIsTrainingModalOpen] = useState(false);
 
   useEffect(() => {
     const loadModels = async () => {
@@ -79,7 +87,13 @@ export const MLModels = () => {
     if (actionLoading) return;
     try {
       setActionLoading(model.id);
-      await mlModelsApi.train(model.id);
+      const response = await mlModelsApi.train(model.id);
+
+      // Open training progress modal
+      setTrainingJobId(response.trainingJob.id);
+      setTrainingModelName(model.name);
+      setIsTrainingModalOpen(true);
+
       toast.success(`Training started for "${model.name}"`);
       await fetchModels();
     } catch (error) {
@@ -89,6 +103,19 @@ export const MLModels = () => {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleTrainingComplete = useCallback((job: TrainingJob) => {
+    // Refresh models list when training completes
+    fetchModels();
+  }, []);
+
+  const handleTrainingModalClose = () => {
+    setIsTrainingModalOpen(false);
+    setTrainingJobId(null);
+    setTrainingModelName('');
+    // Refresh models to show updated status
+    fetchModels();
   };
 
   const handleDeploy = async (model: MLModel) => {
@@ -446,6 +473,17 @@ export const MLModels = () => {
         <MLModelModal
           model={selectedModel}
           onClose={handleModalClose}
+        />
+      )}
+
+      {/* Training Progress Modal */}
+      {trainingJobId && (
+        <TrainingProgressModal
+          jobId={trainingJobId}
+          modelName={trainingModelName}
+          isOpen={isTrainingModalOpen}
+          onClose={handleTrainingModalClose}
+          onComplete={handleTrainingComplete}
         />
       )}
     </div>

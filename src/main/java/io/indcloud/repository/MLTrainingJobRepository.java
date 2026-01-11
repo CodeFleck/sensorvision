@@ -37,4 +37,26 @@ public interface MLTrainingJobRepository extends JpaRepository<MLTrainingJob, UU
 
     @Query("SELECT COUNT(j) FROM MLTrainingJob j WHERE j.model.id = :modelId AND j.status = 'COMPLETED'")
     long countCompletedJobsByModel(@Param("modelId") UUID modelId);
+
+    /**
+     * Find all active training jobs (PENDING or RUNNING) for status monitoring.
+     */
+    @Query("SELECT j FROM MLTrainingJob j WHERE j.status IN ('PENDING', 'RUNNING') ORDER BY j.createdAt ASC")
+    List<MLTrainingJob> findActiveJobs();
+
+    /**
+     * Find a training job by its external ID (from Python ML service).
+     */
+    Optional<MLTrainingJob> findByExternalJobId(UUID externalJobId);
+
+    /**
+     * Check if a model has any active training jobs.
+     */
+    @Query("SELECT COUNT(j) > 0 FROM MLTrainingJob j WHERE j.model.id = :modelId AND j.status IN ('PENDING', 'RUNNING')")
+    boolean existsActiveJobForModel(@Param("modelId") UUID modelId);
+
+    /**
+     * Find the latest job for a model regardless of status.
+     */
+    Optional<MLTrainingJob> findFirstByModelIdOrderByCreatedAtDesc(UUID modelId);
 }
