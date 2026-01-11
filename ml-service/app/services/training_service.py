@@ -6,9 +6,10 @@ tracking, and managing training jobs across all model types.
 """
 import logging
 import time
+from collections import OrderedDict
 from datetime import datetime, timezone
 from threading import Lock, Thread
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from uuid import UUID, uuid4
 
 import numpy as np
@@ -22,6 +23,12 @@ from app.engines.predictive_maintenance import PredictiveMaintenanceEngine
 from app.models.schemas import MLModelType, TrainingJobStatus
 
 logger = logging.getLogger(__name__)
+
+# Resource limits
+MAX_JOBS = 10000  # Maximum jobs to store (prevents memory exhaustion)
+MAX_LOGS_PER_JOB = 1000  # Maximum logs per job
+MAX_N_SAMPLES = 1000000  # Maximum training samples
+MIN_N_SAMPLES = 10  # Minimum training samples
 
 
 class TrainingJob:
@@ -85,9 +92,12 @@ class TrainingJob:
         }
 
     def add_log(self, message: str) -> None:
-        """Add a log entry with timestamp."""
+        """Add a log entry with timestamp, respecting MAX_LOGS_PER_JOB limit."""
         timestamp = datetime.now(timezone.utc).isoformat()
         self.logs.append(f"[{timestamp}] {message}")
+        # Enforce log limit to prevent memory growth
+        if len(self.logs) > MAX_LOGS_PER_JOB:
+            self.logs = self.logs[-MAX_LOGS_PER_JOB:]
 
 
 class TrainingService:
@@ -100,9 +110,41 @@ class TrainingService:
     """
 
     def __init__(self):
-        self._jobs: Dict[UUID, TrainingJob] = {}
+        self._jobs: OrderedDict[UUID, TrainingJob] = OrderedDict()
         self._lock = Lock()
+        self._active_threads: Set[Thread] = set()
         logger.info("TrainingService initialized")
+
+    def _evict_old_jobs(self) -> None:
+        """
+        Evict oldest completed jobs when at capacity.
+
+        Uses LRU eviction - removes oldest COMPLETED/FAILED/CANCELLED jobs first.
+        Must be called within lock context.
+        """
+        if len(self._jobs) < MAX_JOBS:
+            return
+
+        # Find completed jobs to evict (oldest first since OrderedDict)
+        jobs_to_evict = []
+        terminal_statuses = {
+            TrainingJobStatus.COMPLETED,
+            TrainingJobStatus.FAILED,
+            TrainingJobStatus.CANCELLED,
+        }
+
+        for job_id, job in self._jobs.items():
+            if job.status in terminal_statuses:
+                jobs_to_evict.append(job_id)
+                if len(self._jobs) - len(jobs_to_evict) < MAX_JOBS:
+                    break
+
+        for job_id in jobs_to_evict:
+            del self._jobs[job_id]
+            logger.debug(f"Evicted old job {job_id} due to MAX_JOBS limit")
+
+        if jobs_to_evict:
+            logger.info(f"Evicted {len(jobs_to_evict)} old jobs to stay under MAX_JOBS={MAX_JOBS}")
 
     def create_job(
         self,
@@ -149,6 +191,8 @@ class TrainingService:
         job.triggered_by = triggered_by
 
         with self._lock:
+            # Evict old jobs if at capacity before adding new one
+            self._evict_old_jobs()
             self._jobs[job_id] = job
 
         job.add_log(f"Training job created: {job_type} for model {model_id}")
@@ -362,8 +406,22 @@ class TrainingService:
 
         Returns:
             Tuple of (DataFrame, feature_columns, target_column).
+
+        Raises:
+            ValueError: If n_samples is outside allowed bounds.
         """
         n_samples = config.get("n_samples", 1000)
+
+        # Validate n_samples bounds to prevent resource exhaustion
+        if n_samples < MIN_N_SAMPLES:
+            raise ValueError(
+                f"n_samples ({n_samples}) must be at least {MIN_N_SAMPLES}"
+            )
+        if n_samples > MAX_N_SAMPLES:
+            raise ValueError(
+                f"n_samples ({n_samples}) exceeds maximum of {MAX_N_SAMPLES}"
+            )
+
         np.random.seed(42)
 
         # Generate time series data

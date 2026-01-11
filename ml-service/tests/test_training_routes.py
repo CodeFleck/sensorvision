@@ -661,3 +661,146 @@ class TestTrainingIntegration:
             final_response = client.get(f"/api/v1/training/jobs/{job_id}")
             data = final_response.json()
             assert len(data["result_metrics"]) > 0, f"{model_type} should have metrics"
+
+
+class TestResourceLimits:
+    """Tests for resource limit enforcement."""
+
+    def test_n_samples_too_small_fails(self, client, model_id, organization_id):
+        """Test that n_samples below MIN_N_SAMPLES causes training to fail."""
+        from app.services.training_service import MIN_N_SAMPLES
+
+        # Create job with n_samples = 5 (below MIN_N_SAMPLES = 10)
+        create_response = client.post(
+            "/api/v1/training/jobs",
+            json={
+                "model_id": model_id,
+                "organization_id": organization_id,
+                "job_type": "INITIAL_TRAINING",
+                "training_config": {
+                    "model_type": "ANOMALY_DETECTION",
+                    "n_samples": MIN_N_SAMPLES - 1,
+                },
+            },
+        )
+
+        assert create_response.status_code == 201
+        job_id = create_response.json()["id"]
+
+        # Wait for job to fail
+        max_wait = 5
+        final_status = None
+        for _ in range(max_wait * 10):
+            response = client.get(f"/api/v1/training/jobs/{job_id}")
+            status = response.json()["status"]
+
+            if status in ["COMPLETED", "FAILED"]:
+                final_status = status
+                break
+
+            time.sleep(0.1)
+
+        # Should fail due to n_samples validation
+        assert final_status == "FAILED"
+        data = response.json()
+        assert "n_samples" in data["error_message"].lower()
+
+    def test_max_jobs_limit_evicts_old_completed_jobs(self, client, model_id, organization_id):
+        """Test that MAX_JOBS limit triggers eviction of old completed jobs."""
+        from app.services.training_service import training_service, MAX_JOBS, TrainingJob
+        from app.models.schemas import MLModelType, TrainingJobStatus
+        from uuid import uuid4
+
+        # Clear existing jobs
+        with training_service._lock:
+            training_service._jobs.clear()
+
+        # Add MAX_JOBS completed jobs directly to the service
+        for i in range(MAX_JOBS):
+            job = TrainingJob(
+                job_id=uuid4(),
+                model_id=uuid4(),
+                organization_id=organization_id,
+                model_type=MLModelType.ANOMALY_DETECTION,
+                job_type="INITIAL_TRAINING",
+                training_config={},
+            )
+            job.status = TrainingJobStatus.COMPLETED
+            training_service._jobs[job.id] = job
+
+        assert len(training_service._jobs) == MAX_JOBS
+
+        # Create a new job - should trigger eviction
+        old_job_ids = set(training_service._jobs.keys())
+
+        create_response = client.post(
+            "/api/v1/training/jobs",
+            json={
+                "model_id": model_id,
+                "organization_id": organization_id,
+                "job_type": "INITIAL_TRAINING",
+                "training_config": {
+                    "model_type": "ANOMALY_DETECTION",
+                    "n_samples": 100,
+                },
+            },
+        )
+
+        assert create_response.status_code == 201
+        new_job_id = create_response.json()["id"]
+
+        # The new job should be in the store
+        assert new_job_id in [str(j) for j in training_service._jobs.keys()]
+
+        # At least one old job should have been evicted
+        current_job_ids = set(training_service._jobs.keys())
+        evicted = old_job_ids - current_job_ids
+        assert len(evicted) >= 1, "At least one old job should be evicted"
+
+    def test_log_limit_enforced(self, client, model_id, organization_id):
+        """Test that logs are limited to MAX_LOGS_PER_JOB."""
+        from app.services.training_service import training_service, MAX_LOGS_PER_JOB
+
+        # Create a job
+        create_response = client.post(
+            "/api/v1/training/jobs",
+            json={
+                "model_id": model_id,
+                "organization_id": organization_id,
+                "job_type": "INITIAL_TRAINING",
+                "training_config": {
+                    "model_type": "ANOMALY_DETECTION",
+                    "n_samples": 50,
+                },
+            },
+        )
+
+        job_id = create_response.json()["id"]
+        from uuid import UUID
+        job = training_service.get_job(UUID(job_id))
+
+        # Add more than MAX_LOGS_PER_JOB logs
+        for i in range(MAX_LOGS_PER_JOB + 100):
+            job.add_log(f"Log entry {i}")
+
+        # Logs should be capped at MAX_LOGS_PER_JOB
+        assert len(job.logs) <= MAX_LOGS_PER_JOB
+
+    def test_negative_organization_id_rejected(self, client, model_id):
+        """Test that negative organization_id is rejected by API."""
+        response = client.post(
+            "/api/v1/training/jobs",
+            json={
+                "model_id": model_id,
+                "organization_id": -1,
+                "job_type": "INITIAL_TRAINING",
+                "training_config": {
+                    "model_type": "ANOMALY_DETECTION",
+                    "n_samples": 100,
+                },
+            },
+        )
+
+        # Should be rejected with 422 Unprocessable Entity
+        assert response.status_code == 422
+        assert "greater than 0" in response.text.lower() or "organization" in response.text.lower()

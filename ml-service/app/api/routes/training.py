@@ -73,12 +73,17 @@ async def create_training_job(
     # Start training in background thread
     # Note: Using Thread instead of BackgroundTasks for long-running operations
     # BackgroundTasks are designed for quick cleanup tasks, not long-running work
+    # Using daemon=False to allow graceful completion during shutdown
     thread = Thread(
         target=training_service.run_training,
         args=(training_job.id,),
-        daemon=True,
+        daemon=False,
+        name=f"training-job-{training_job.id}",
     )
     thread.start()
+
+    # Track thread for graceful shutdown
+    training_service._active_threads.add(thread)
 
     logger.info(f"Training job {training_job.id} started in background")
 
