@@ -2,7 +2,7 @@
 Tests for Pydantic schemas.
 """
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 from pydantic import ValidationError
 
@@ -155,7 +155,8 @@ class TestTelemetryPoint:
     """Tests for TelemetryPoint schema."""
 
     def test_create_telemetry_point(self):
-        now = datetime.now()
+        # Use timezone-aware datetime since the validator enforces UTC
+        now = datetime.now(timezone.utc)
         point = TelemetryPoint(
             timestamp=now,
             variables={"temp": 25.5, "humidity": 60.0}
@@ -164,9 +165,60 @@ class TestTelemetryPoint:
         assert point.timestamp == now
         assert len(point.variables) == 2
 
+    def test_naive_timestamp_converted_to_utc(self):
+        """Test that naive timestamps are converted to UTC."""
+        naive_dt = datetime(2024, 1, 15, 12, 30, 0)
+        point = TelemetryPoint(
+            timestamp=naive_dt,
+            variables={"temp": 25.0}
+        )
+
+        # Should be converted to UTC
+        assert point.timestamp.tzinfo == timezone.utc
+        # The time value should remain the same (just with UTC timezone added)
+        assert point.timestamp.year == 2024
+        assert point.timestamp.month == 1
+        assert point.timestamp.day == 15
+        assert point.timestamp.hour == 12
+        assert point.timestamp.minute == 30
+
+    def test_timezone_aware_timestamp_converted_to_utc(self):
+        """Test that non-UTC timezone-aware timestamps are converted to UTC."""
+        from datetime import timedelta
+
+        # Create a timestamp with UTC+2 timezone
+        plus_two = timezone(timedelta(hours=2))
+        aware_dt = datetime(2024, 1, 15, 14, 30, 0, tzinfo=plus_two)  # 14:30 UTC+2 = 12:30 UTC
+
+        point = TelemetryPoint(
+            timestamp=aware_dt,
+            variables={"temp": 25.0}
+        )
+
+        # Should be converted to UTC
+        assert point.timestamp.tzinfo == timezone.utc
+        # 14:30 UTC+2 should become 12:30 UTC
+        assert point.timestamp.hour == 12
+        assert point.timestamp.minute == 30
+
     def test_fails_without_timestamp(self):
         with pytest.raises(ValidationError):
             TelemetryPoint(variables={"temp": 25.0})
+
+    def test_fails_with_too_many_variables(self):
+        """Test that more than MAX_VARIABLES_PER_POINT variables are rejected."""
+        from app.models.schemas import MAX_VARIABLES_PER_POINT
+
+        # Create variables dict with too many entries
+        too_many_vars = {f"var_{i}": float(i) for i in range(MAX_VARIABLES_PER_POINT + 1)}
+
+        with pytest.raises(ValidationError) as exc_info:
+            TelemetryPoint(
+                timestamp=datetime.now(timezone.utc),
+                variables=too_many_vars
+            )
+
+        assert "Too many variables" in str(exc_info.value)
 
 
 class TestBatchInferenceRequest:

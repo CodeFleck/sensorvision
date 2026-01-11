@@ -1,12 +1,15 @@
 """
 Pydantic schemas for ML service API.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+# Limits for request validation
+MAX_VARIABLES_PER_POINT = 100  # Prevent memory exhaustion
 
 
 # Enums
@@ -100,18 +103,48 @@ class TelemetryPoint(BaseModel):
     timestamp: datetime
     variables: Dict[str, float]
 
+    @field_validator("timestamp")
+    @classmethod
+    def ensure_utc_timestamp(cls, v: datetime) -> datetime:
+        """Ensure timestamp is timezone-aware and convert to UTC."""
+        if v.tzinfo is None:
+            # Naive datetime - assume UTC
+            return v.replace(tzinfo=timezone.utc)
+        # Convert to UTC if different timezone
+        return v.astimezone(timezone.utc)
+
+    @field_validator("variables")
+    @classmethod
+    def validate_variables_count(cls, v: Dict[str, float]) -> Dict[str, float]:
+        """Limit number of variables to prevent memory exhaustion."""
+        if len(v) > MAX_VARIABLES_PER_POINT:
+            raise ValueError(
+                f"Too many variables: {len(v)} exceeds maximum of {MAX_VARIABLES_PER_POINT}"
+            )
+        return v
+
 
 class InferenceRequest(BaseModel):
     device_id: UUID
     organization_id: int
     model_id: Optional[UUID] = None
-    telemetry: List[TelemetryPoint] = Field(..., min_length=1)
+    telemetry: List[TelemetryPoint] = Field(
+        ...,
+        min_length=1,
+        max_length=10000,
+        description="Telemetry data points (max 10,000 points)"
+    )
 
 
 class BatchInferenceRequest(BaseModel):
     organization_id: int
     model_id: UUID
-    device_ids: List[UUID] = Field(..., min_length=1)
+    device_ids: List[UUID] = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+        description="Device IDs to process (max 1,000 devices)"
+    )
     time_range_hours: int = Field(default=24, ge=1, le=168)
 
 

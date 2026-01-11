@@ -36,6 +36,16 @@ class Settings(BaseSettings):
     MODEL_STORAGE_PATH: str = "/app/models"
     MAX_BATCH_SIZE: int = 1000
     INFERENCE_TIMEOUT_SECONDS: int = 300
+    ML_MODEL_CACHE_SIZE: int = 20  # Max models in LRU cache
+
+    # Inference Configuration
+    DEFAULT_FORECAST_CONFIDENCE: float = 0.85
+    MAX_FORECAST_VALUES_RETURNED: int = 168  # Max values in response (7 days hourly)
+    MAX_FEATURE_COLUMNS: int = 100  # Limit feature columns to prevent memory issues
+    RUL_CRITICAL_THRESHOLD_DAYS: int = 7
+    RUL_WARNING_THRESHOLD_DAYS: int = 30
+    RUL_ATTENTION_THRESHOLD_DAYS: int = 90
+    RUL_CONFIDENCE_SCALE_DAYS: int = 100  # Scale factor for confidence when RUL=0
 
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:3001", "http://localhost:8080"]
