@@ -264,6 +264,14 @@ const AddPhoneModal = ({ onClose, onAdd }: AddPhoneModalProps) => {
     return dialCodes[country] || '+1';
   };
 
+  // Handle phone number input - only allow digits
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Extract only digits from the input
+    const digitsOnly = value.replace(/\D/g, '');
+    setPhoneNumber(digitsOnly);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -314,14 +322,17 @@ const AddPhoneModal = ({ onClose, onAdd }: AddPhoneModalProps) => {
                 {getDialCode(countryCode)}
               </div>
               <input
-                type="tel"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 id="phoneNumber"
                 required
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                onChange={handlePhoneChange}
                 placeholder={countryCode === 'US' || countryCode === 'CA' ? '5551234567' : 'Phone number'}
                 maxLength={countryCode === 'US' || countryCode === 'CA' ? 10 : 15}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                autoComplete="off"
               />
             </div>
             <p className="mt-1 text-sm text-gray-500">
@@ -417,6 +428,8 @@ const VerifyPhoneModal = ({ phoneId, phoneNumber, onClose, onVerify, onResend, c
             </label>
             <input
               type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               id="code"
               required
               maxLength={6}
@@ -424,6 +437,7 @@ const VerifyPhoneModal = ({ phoneId, phoneNumber, onClose, onVerify, onResend, c
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
               placeholder="123456"
               className="w-full px-3 py-2 text-center text-2xl tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              autoComplete="one-time-code"
             />
           </div>
 
