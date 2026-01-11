@@ -55,19 +55,35 @@ public class PhoneNumberController {
         try {
             User currentUser = securityUtils.getCurrentUser();
 
+            // Check if SMS verification is available before adding
+            boolean smsAvailable = phoneNumberService.isSmsVerificationAvailable();
+
             UserPhoneNumber phoneNumber = phoneNumberService.addPhoneNumber(
                 currentUser,
                 request.phoneNumber(),
                 request.countryCode()
             );
 
-            log.info("Phone number added for user {}: {}", currentUser.getUsername(),
-                phoneNumber.getMaskedPhoneNumber());
+            log.info("Phone number added for user {}: {} (SMS available: {})",
+                currentUser.getUsername(),
+                phoneNumber.getMaskedPhoneNumber(),
+                smsAvailable);
+
+            // Return appropriate message based on SMS availability
+            String message;
+            if (smsAvailable) {
+                message = "Phone number added. Verification code sent via SMS.";
+            } else {
+                message = "Phone number added, but SMS verification is currently unavailable. " +
+                          "Please contact support or try again later.";
+                log.warn("SMS verification unavailable - phone {} added without verification SMS",
+                    phoneNumber.getMaskedPhoneNumber());
+            }
 
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(
                     toResponse(phoneNumber),
-                    "Phone number added. Verification code sent via SMS."
+                    message
                 ));
         } catch (IllegalArgumentException e) {
             log.warn("Failed to add phone number: {}", e.getMessage());
@@ -124,6 +140,13 @@ public class PhoneNumberController {
     public ResponseEntity<ApiResponse<String>> resendVerificationCode(@PathVariable UUID phoneId) {
         try {
             User currentUser = securityUtils.getCurrentUser();
+
+            // Check if SMS verification is available first
+            if (!phoneNumberService.isSmsVerificationAvailable()) {
+                log.warn("SMS verification unavailable - cannot resend code");
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("SMS verification is currently unavailable. Please contact support."));
+            }
 
             // Find the phone number
             List<UserPhoneNumber> userPhones = phoneNumberService.getUserPhoneNumbers(currentUser);
