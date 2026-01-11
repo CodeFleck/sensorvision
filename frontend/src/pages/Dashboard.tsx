@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { DeviceCard } from '../components/DeviceCard';
 import { RealTimeChart } from '../components/RealTimeChart';
@@ -58,6 +58,11 @@ export const Dashboard = () => {
   const [metricsData, setMetricsData] = useState<MetricsData | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(false);
 
+  // AbortController ref to cancel in-flight requests on time range change
+  const metricsAbortControllerRef = useRef<AbortController | null>(null);
+  // Track if initial data has been fetched to prevent duplicate fetches
+  const initialFetchDone = useRef(false);
+
   // Dynamically construct WebSocket URL based on current host
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsUrl = `${wsProtocol}//${window.location.host}/ws/telemetry`;
@@ -75,126 +80,129 @@ export const Dashboard = () => {
   }, []);
 
   // Fetch aggregated metrics for the selected time range
+  // Uses AbortController to cancel in-flight requests on time range change
   const fetchMetrics = useCallback(async (deviceList: Device[], timeRange: TimeRangeValue) => {
     if (deviceList.length === 0) return;
+
+    // Cancel any in-flight request
+    if (metricsAbortControllerRef.current) {
+      metricsAbortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    metricsAbortControllerRef.current = abortController;
 
     try {
       setMetricsLoading(true);
       const { start, end } = getTimeRange(timeRange);
 
-      // Initialize metrics
-      const metrics: MetricsData = {
-        power: { avg: null, min: null, max: null, count: 0 },
-        voltage: { avg: null, min: null, max: null, count: 0 },
-        current: { avg: null, min: null, max: null, count: 0 },
-      };
+      // Initialize metrics with accumulators for proper averaging
+      const powerAcc = { sum: 0, min: Number.MAX_VALUE, max: Number.MIN_VALUE, count: 0 };
+      const voltageAcc = { sum: 0, min: Number.MAX_VALUE, max: Number.MIN_VALUE, count: 0 };
+      const currentAcc = { sum: 0, min: Number.MAX_VALUE, max: Number.MIN_VALUE, count: 0 };
 
       // Fetch aggregated data for each device and aggregate across all devices
-      // We'll use the first device that has data for simplicity
-      // In a real implementation, you might want to aggregate across all devices
-      for (const device of deviceList) {
+      // Use Promise.allSettled to handle partial failures gracefully
+      const devicePromises = deviceList.map(async (device) => {
+        // Check if aborted before starting
+        if (abortController.signal.aborted) return;
+
         try {
-          // Fetch power metrics
-          const [avgPower, minPower, maxPower] = await Promise.all([
+          // Fetch all metrics for this device in parallel
+          const [avgPower, minPower, maxPower, avgVoltage, minVoltage, maxVoltage, avgCurrent, minCurrent, maxCurrent] = await Promise.all([
             apiService.getAggregatedData(device.externalId, 'kwConsumption', 'AVG', start, end, 'NONE'),
             apiService.getAggregatedData(device.externalId, 'kwConsumption', 'MIN', start, end, 'NONE'),
             apiService.getAggregatedData(device.externalId, 'kwConsumption', 'MAX', start, end, 'NONE'),
-          ]);
-
-          // Parse the aggregation results
-          if (avgPower && avgPower.length > 0) {
-            const avgVal = avgPower[0]?.value;
-            const minVal = minPower[0]?.value;
-            const maxVal = maxPower[0]?.value;
-
-            if (avgVal !== undefined) {
-              metrics.power.avg = metrics.power.avg === null
-                ? avgVal
-                : (metrics.power.avg + avgVal) / 2;
-            }
-            if (minVal !== undefined) {
-              metrics.power.min = metrics.power.min === null
-                ? minVal
-                : Math.min(metrics.power.min, minVal);
-            }
-            if (maxVal !== undefined) {
-              metrics.power.max = metrics.power.max === null
-                ? maxVal
-                : Math.max(metrics.power.max, maxVal);
-            }
-            metrics.power.count++;
-          }
-
-          // Fetch voltage metrics
-          const [avgVoltage, minVoltage, maxVoltage] = await Promise.all([
             apiService.getAggregatedData(device.externalId, 'voltage', 'AVG', start, end, 'NONE'),
             apiService.getAggregatedData(device.externalId, 'voltage', 'MIN', start, end, 'NONE'),
             apiService.getAggregatedData(device.externalId, 'voltage', 'MAX', start, end, 'NONE'),
-          ]);
-
-          if (avgVoltage && avgVoltage.length > 0) {
-            const avgVal = avgVoltage[0]?.value;
-            const minVal = minVoltage[0]?.value;
-            const maxVal = maxVoltage[0]?.value;
-
-            if (avgVal !== undefined) {
-              metrics.voltage.avg = metrics.voltage.avg === null
-                ? avgVal
-                : (metrics.voltage.avg + avgVal) / 2;
-            }
-            if (minVal !== undefined) {
-              metrics.voltage.min = metrics.voltage.min === null
-                ? minVal
-                : Math.min(metrics.voltage.min, minVal);
-            }
-            if (maxVal !== undefined) {
-              metrics.voltage.max = metrics.voltage.max === null
-                ? maxVal
-                : Math.max(metrics.voltage.max, maxVal);
-            }
-            metrics.voltage.count++;
-          }
-
-          // Fetch current metrics
-          const [avgCurrent, minCurrent, maxCurrent] = await Promise.all([
             apiService.getAggregatedData(device.externalId, 'current', 'AVG', start, end, 'NONE'),
             apiService.getAggregatedData(device.externalId, 'current', 'MIN', start, end, 'NONE'),
             apiService.getAggregatedData(device.externalId, 'current', 'MAX', start, end, 'NONE'),
           ]);
 
-          if (avgCurrent && avgCurrent.length > 0) {
-            const avgVal = avgCurrent[0]?.value;
-            const minVal = minCurrent[0]?.value;
-            const maxVal = maxCurrent[0]?.value;
+          // Check if aborted after fetch
+          if (abortController.signal.aborted) return;
 
-            if (avgVal !== undefined) {
-              metrics.current.avg = metrics.current.avg === null
-                ? avgVal
-                : (metrics.current.avg + avgVal) / 2;
-            }
-            if (minVal !== undefined) {
-              metrics.current.min = metrics.current.min === null
-                ? minVal
-                : Math.min(metrics.current.min, minVal);
-            }
-            if (maxVal !== undefined) {
-              metrics.current.max = metrics.current.max === null
-                ? maxVal
-                : Math.max(metrics.current.max, maxVal);
-            }
-            metrics.current.count++;
+          // Process power metrics with proper sum accumulation
+          if (avgPower && avgPower.length > 0 && avgPower[0]?.value !== undefined) {
+            powerAcc.sum += avgPower[0].value;
+            powerAcc.count++;
+          }
+          if (minPower && minPower.length > 0 && minPower[0]?.value !== undefined) {
+            powerAcc.min = Math.min(powerAcc.min, minPower[0].value);
+          }
+          if (maxPower && maxPower.length > 0 && maxPower[0]?.value !== undefined) {
+            powerAcc.max = Math.max(powerAcc.max, maxPower[0].value);
+          }
+
+          // Process voltage metrics
+          if (avgVoltage && avgVoltage.length > 0 && avgVoltage[0]?.value !== undefined) {
+            voltageAcc.sum += avgVoltage[0].value;
+            voltageAcc.count++;
+          }
+          if (minVoltage && minVoltage.length > 0 && minVoltage[0]?.value !== undefined) {
+            voltageAcc.min = Math.min(voltageAcc.min, minVoltage[0].value);
+          }
+          if (maxVoltage && maxVoltage.length > 0 && maxVoltage[0]?.value !== undefined) {
+            voltageAcc.max = Math.max(voltageAcc.max, maxVoltage[0].value);
+          }
+
+          // Process current metrics
+          if (avgCurrent && avgCurrent.length > 0 && avgCurrent[0]?.value !== undefined) {
+            currentAcc.sum += avgCurrent[0].value;
+            currentAcc.count++;
+          }
+          if (minCurrent && minCurrent.length > 0 && minCurrent[0]?.value !== undefined) {
+            currentAcc.min = Math.min(currentAcc.min, minCurrent[0].value);
+          }
+          if (maxCurrent && maxCurrent.length > 0 && maxCurrent[0]?.value !== undefined) {
+            currentAcc.max = Math.max(currentAcc.max, maxCurrent[0].value);
           }
         } catch (err) {
           // Skip this device if metrics fetch fails
           console.warn(`Failed to fetch metrics for device ${device.externalId}:`, err);
         }
-      }
+      });
+
+      await Promise.allSettled(devicePromises);
+
+      // Check if aborted after all fetches
+      if (abortController.signal.aborted) return;
+
+      // Calculate final metrics from accumulators
+      const metrics: MetricsData = {
+        power: {
+          avg: powerAcc.count > 0 ? powerAcc.sum / powerAcc.count : null,
+          min: powerAcc.min !== Number.MAX_VALUE ? powerAcc.min : null,
+          max: powerAcc.max !== Number.MIN_VALUE ? powerAcc.max : null,
+          count: powerAcc.count,
+        },
+        voltage: {
+          avg: voltageAcc.count > 0 ? voltageAcc.sum / voltageAcc.count : null,
+          min: voltageAcc.min !== Number.MAX_VALUE ? voltageAcc.min : null,
+          max: voltageAcc.max !== Number.MIN_VALUE ? voltageAcc.max : null,
+          count: voltageAcc.count,
+        },
+        current: {
+          avg: currentAcc.count > 0 ? currentAcc.sum / currentAcc.count : null,
+          min: currentAcc.min !== Number.MAX_VALUE ? currentAcc.min : null,
+          max: currentAcc.max !== Number.MIN_VALUE ? currentAcc.max : null,
+          count: currentAcc.count,
+        },
+      };
 
       setMetricsData(metrics);
     } catch (err) {
+      // Ignore abort errors
+      if (err instanceof Error && err.name === 'AbortError') return;
       console.error('Failed to fetch metrics:', err);
     } finally {
-      setMetricsLoading(false);
+      // Only update loading state if this is the current request
+      if (!abortController.signal.aborted) {
+        setMetricsLoading(false);
+      }
     }
   }, [getTimeRange]);
 
@@ -229,18 +237,32 @@ export const Dashboard = () => {
     }
   };
 
+  // Initial data fetch - runs once on mount
   useEffect(() => {
-    fetchData();
+    if (!initialFetchDone.current) {
+      initialFetchDone.current = true;
+      fetchData();
+    }
+
+    // Cleanup: abort any in-flight metrics requests on unmount
+    return () => {
+      if (metricsAbortControllerRef.current) {
+        metricsAbortControllerRef.current.abort();
+      }
+    };
+    // fetchData is intentionally excluded - we only want this to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refetch metrics when time range changes
+  // Refetch metrics when time range changes (not on initial mount)
   useEffect(() => {
+    // Skip initial render - fetchData already handles the first fetch
+    if (!initialFetchDone.current) return;
+
     if (devices.length > 0) {
       fetchMetrics(devices, selectedTimeRange);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTimeRange]);
+  }, [selectedTimeRange, devices, fetchMetrics]);
 
   // Handle time range change
   const handleTimeRangeChange = (value: TimeRangeValue) => {

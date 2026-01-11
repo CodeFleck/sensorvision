@@ -121,7 +121,8 @@ public class MLTrainingJobMonitor {
     }
 
     /**
-     * Handle a stale job by marking it as FAILED.
+     * Handle a stale job by attempting to cancel it, then marking as FAILED if cancellation fails.
+     * This ensures stale jobs don't remain in RUNNING state forever.
      */
     private void handleStaleJob(MLTrainingJob job) {
         try {
@@ -130,6 +131,15 @@ public class MLTrainingJobMonitor {
             log.info("Stale job {} has been cancelled", job.getId());
         } catch (Exception e) {
             log.error("Failed to cancel stale job {}: {}", job.getId(), e.getMessage());
+
+            // If cancellation fails, force-mark the job as FAILED to prevent infinite retries
+            try {
+                trainingJobService.markJobAsStale(job.getId(),
+                        "Job exceeded stale threshold of " + staleThresholdHours + " hours and could not be cancelled: " + e.getMessage());
+                log.warn("Stale job {} has been force-marked as FAILED", job.getId());
+            } catch (Exception markException) {
+                log.error("Failed to mark stale job {} as FAILED: {}", job.getId(), markException.getMessage());
+            }
         }
     }
 

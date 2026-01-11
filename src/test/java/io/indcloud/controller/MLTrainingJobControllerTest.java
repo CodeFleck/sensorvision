@@ -109,7 +109,7 @@ class MLTrainingJobControllerTest {
         @DisplayName("Should start training and return 201 Created")
         void shouldStartTrainingSuccessfully() {
             when(securityUtils.getCurrentUser()).thenReturn(testUser);
-            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class), isNull()))
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), anyLong(), isNull()))
                     .thenReturn(testJob);
             when(trainingJobService.toResponse(testJob)).thenReturn(testJobResponse);
 
@@ -123,7 +123,7 @@ class MLTrainingJobControllerTest {
         @DisplayName("Should start training with specific job type")
         void shouldStartTrainingWithJobType() {
             when(securityUtils.getCurrentUser()).thenReturn(testUser);
-            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class),
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), anyLong(),
                     eq(MLTrainingJobType.RETRAINING)))
                     .thenReturn(testJob);
             when(trainingJobService.toResponse(testJob)).thenReturn(testJobResponse);
@@ -134,7 +134,7 @@ class MLTrainingJobControllerTest {
             ResponseEntity<?> response = controller.startTraining(modelId, request);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-            verify(trainingJobService).startTraining(eq(modelId), eq(orgId), any(),
+            verify(trainingJobService).startTraining(eq(modelId), eq(orgId), anyLong(),
                     eq(MLTrainingJobType.RETRAINING));
         }
 
@@ -284,14 +284,16 @@ class MLTrainingJobControllerTest {
             Pageable pageable = PageRequest.of(0, 20);
             Page<MLTrainingJob> jobPage = new PageImpl<>(List.of(testJob));
 
-            when(trainingJobService.getJobsForModel(modelId, pageable))
+            when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrg);
+            when(trainingJobService.getJobsForModel(modelId, orgId, pageable))
                     .thenReturn(jobPage);
             when(trainingJobService.toResponse(testJob)).thenReturn(testJobResponse);
 
-            Page<TrainingJobResponseDto> result = controller.getJobsForModel(modelId, pageable);
+            ResponseEntity<Page<TrainingJobResponseDto>> response = controller.getJobsForModel(modelId, pageable);
 
-            assertThat(result.getTotalElements()).isEqualTo(1);
-            assertThat(result.getContent().get(0).getModelId()).isEqualTo(modelId);
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody().getTotalElements()).isEqualTo(1);
+            assertThat(response.getBody().getContent().get(0).getModelId()).isEqualTo(modelId);
         }
     }
 
@@ -466,7 +468,7 @@ class MLTrainingJobControllerTest {
             controller.startTraining(modelId, null);
 
             verify(securityUtils).getCurrentUser();
-            verify(trainingJobService).startTraining(eq(modelId), eq(orgId), any(UUID.class), any());
+            verify(trainingJobService).startTraining(eq(modelId), eq(orgId), anyLong(), any());
         }
     }
 }

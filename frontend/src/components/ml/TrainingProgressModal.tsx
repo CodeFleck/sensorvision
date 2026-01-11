@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, KeyboardEvent } from 'react';
 import {
   X,
   RefreshCw,
@@ -23,6 +23,9 @@ import {
   isTrainingJobActive,
 } from '../../services/mlService';
 import toast from 'react-hot-toast';
+
+/** Polling interval in milliseconds */
+const POLLING_INTERVAL_MS = 2000;
 
 interface TrainingProgressModalProps {
   /** The training job ID to monitor */
@@ -61,8 +64,11 @@ export const TrainingProgressModal = ({
   const [cancelling, setCancelling] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasNotifiedRef = useRef(false);
+  // Use ref to track terminal status to avoid stale closure in interval
+  const isTerminalRef = useRef(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  // Fetch job status
+  // Fetch job status - stable callback that doesn't depend on job state
   const fetchJob = useCallback(async () => {
     if (!jobId) return;
 
@@ -71,9 +77,19 @@ export const TrainingProgressModal = ({
       setJob(updatedJob);
       setError(null);
 
+      // Update terminal ref for interval check
+      const isTerminal = isTrainingJobTerminal(updatedJob.status);
+      isTerminalRef.current = isTerminal;
+
       // Check if job completed and notify once
-      if (isTrainingJobTerminal(updatedJob.status) && !hasNotifiedRef.current) {
+      if (isTerminal && !hasNotifiedRef.current) {
         hasNotifiedRef.current = true;
+
+        // Stop polling immediately when terminal
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
 
         if (updatedJob.status === 'COMPLETED') {
           toast.success(`Training completed for "${modelName}"`);
@@ -88,27 +104,35 @@ export const TrainingProgressModal = ({
     } catch (err) {
       console.error('Failed to fetch job status:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch job status');
+      // Stop polling on error to prevent hammering a failing endpoint
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     } finally {
       setLoading(false);
     }
   }, [jobId, modelName, onComplete]);
 
-  // Set up polling
+  // Set up polling - uses ref to check terminal status (no stale closure)
   useEffect(() => {
     if (!isOpen || !jobId) return;
 
     // Reset state for new job
     hasNotifiedRef.current = false;
+    isTerminalRef.current = false;
     setLoading(true);
     setError(null);
+    setJob(null);
 
     // Initial fetch
     fetchJob();
 
-    // Set up polling interval (every 2 seconds)
+    // Set up polling interval
+    // Uses ref to check terminal status - avoids stale closure bug
     intervalRef.current = setInterval(() => {
-      // Only poll if job is still active
-      if (job && isTrainingJobTerminal(job.status)) {
+      // Check ref instead of state to avoid stale closure
+      if (isTerminalRef.current) {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
@@ -116,7 +140,7 @@ export const TrainingProgressModal = ({
         return;
       }
       fetchJob();
-    }, 2000);
+    }, POLLING_INTERVAL_MS);
 
     return () => {
       if (intervalRef.current) {
@@ -124,7 +148,26 @@ export const TrainingProgressModal = ({
         intervalRef.current = null;
       }
     };
-  }, [isOpen, jobId, fetchJob, job?.status]);
+  }, [isOpen, jobId, fetchJob]);
+
+  // Handle ESC key to close modal (accessibility)
+  useEffect(() => {
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Focus the modal when it opens for accessibility
+      modalRef.current?.focus();
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
 
   // Handle cancel
   const handleCancel = async () => {
@@ -197,20 +240,42 @@ export const TrainingProgressModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-primary rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      role="presentation"
+      onClick={(e) => {
+        // Close modal when clicking backdrop (outside modal content)
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+    >
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="training-modal-title"
+        aria-describedby="training-modal-description"
+        tabIndex={-1}
+        className="bg-primary rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-hidden flex flex-col"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-default">
           <div className="flex items-center gap-3">
             {getStatusIcon()}
             <div>
-              <h2 className="text-lg font-semibold text-primary">Training Progress</h2>
-              <p className="text-sm text-secondary">{modelName}</p>
+              <h2 id="training-modal-title" className="text-lg font-semibold text-primary">
+                Training Progress
+              </h2>
+              <p id="training-modal-description" className="text-sm text-secondary">
+                {modelName}
+              </p>
             </div>
           </div>
           <button
             onClick={handleClose}
             className="p-2 text-secondary hover:text-primary hover:bg-hover rounded-lg transition-colors"
+            aria-label="Close training progress modal"
           >
             <X className="h-5 w-5" />
           </button>

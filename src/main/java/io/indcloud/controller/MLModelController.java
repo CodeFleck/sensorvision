@@ -191,7 +191,7 @@ public class MLModelController {
             MLTrainingJob job = trainingJobService.startTraining(
                     id,
                     org.getId(),
-                    UUID.randomUUID(), // Generate UUID for triggeredBy tracking
+                    user.getId(), // Pass actual user ID for audit trail
                     null  // Auto-detect job type (INITIAL_TRAINING or RETRAINING)
             );
 

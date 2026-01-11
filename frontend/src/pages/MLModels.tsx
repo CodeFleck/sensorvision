@@ -47,15 +47,8 @@ export const MLModels = () => {
   const [trainingModelName, setTrainingModelName] = useState<string>('');
   const [isTrainingModalOpen, setIsTrainingModalOpen] = useState(false);
 
-  useEffect(() => {
-    const loadModels = async () => {
-      await fetchModels();
-    };
-    loadModels();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, typeFilter, statusFilter]);
-
-  const fetchModels = async () => {
+  // Memoized fetch function to avoid recreating on every render
+  const fetchModels = useCallback(async () => {
     try {
       setLoading(true);
       const response: PageResponse<MLModel> = await mlModelsApi.list({
@@ -71,7 +64,12 @@ export const MLModels = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, typeFilter, statusFilter]);
+
+  // Load models when filters change
+  useEffect(() => {
+    fetchModels();
+  }, [fetchModels]);
 
   const handleCreate = () => {
     setSelectedModel(null);
@@ -105,18 +103,21 @@ export const MLModels = () => {
     }
   };
 
-  const handleTrainingComplete = useCallback((job: TrainingJob) => {
+  // Memoized handler for training completion - refreshes model list
+  const handleTrainingComplete = useCallback((_job: TrainingJob) => {
     // Refresh models list when training completes
+    // Note: We don't need to use the job parameter currently,
+    // but it's available if needed for future enhancements
     fetchModels();
-  }, []);
+  }, [fetchModels]);
 
-  const handleTrainingModalClose = () => {
+  const handleTrainingModalClose = useCallback(() => {
     setIsTrainingModalOpen(false);
     setTrainingJobId(null);
     setTrainingModelName('');
     // Refresh models to show updated status
     fetchModels();
-  };
+  }, [fetchModels]);
 
   const handleDeploy = async (model: MLModel) => {
     if (actionLoading) return;

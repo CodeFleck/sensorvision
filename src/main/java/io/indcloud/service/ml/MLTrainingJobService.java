@@ -28,6 +28,12 @@ import java.util.*;
  *
  * Architecture:
  * Spring Boot DB (ml_training_jobs) <-> MLTrainingJobService <-> Python ML Service
+ *
+ * IMPORTANT: External HTTP calls are made OUTSIDE of transactions to prevent
+ * connection pool starvation. The pattern is:
+ * 1. Create/update DB records in transaction
+ * 2. Make HTTP call (non-transactional)
+ * 3. Update DB with result in new transaction
  */
 @Service
 @Slf4j
@@ -40,47 +46,87 @@ public class MLTrainingJobService {
     private final MLServiceClient mlServiceClient;
     private final MLModelService mlModelService;
 
+    /** Maximum progress percent value (for validation) */
+    private static final int MAX_PROGRESS_PERCENT = 100;
+    private static final int MIN_PROGRESS_PERCENT = 0;
+
     /**
      * Start training for a model.
      *
-     * This method:
-     * 1. Validates the model exists and is trainable
-     * 2. Creates a local training job record
-     * 3. Calls Python ML service to start training
-     * 4. Updates local record with external job ID
-     * 5. Updates model status to TRAINING
+     * This method follows a pattern to avoid blocking I/O inside transactions:
+     * 1. Create local job record in transaction (PENDING status)
+     * 2. Call Python ML service OUTSIDE transaction (no DB connection held)
+     * 3. Update job and model in new transaction with results
      *
      * @param modelId The model to train
      * @param organizationId Organization ID for authorization
-     * @param triggeredBy User ID who triggered training
+     * @param triggeredBy User ID who triggered training (as Long, converted internally)
      * @param jobType Type of training (INITIAL_TRAINING, RETRAINING, etc.)
      * @return The created training job
      * @throws IllegalArgumentException if model not found
      * @throws IllegalStateException if model already has active training job
      * @throws MLServiceException if Python ML service call fails
      */
-    @Transactional
-    public MLTrainingJob startTraining(UUID modelId, Long organizationId, UUID triggeredBy, MLTrainingJobType jobType) {
-        log.info("Starting training for model {} (org={}, type={})", modelId, organizationId, jobType);
+    public MLTrainingJob startTraining(UUID modelId, Long organizationId, Long triggeredBy, MLTrainingJobType jobType) {
+        log.info("Starting training for model {} (org={}, type={}, user={})", modelId, organizationId, jobType, triggeredBy);
 
-        // 1. Validate model exists and belongs to organization
+        // Phase 1: Create local job record (transactional)
+        MLTrainingJob job = createLocalTrainingJob(modelId, organizationId, triggeredBy, jobType);
+
+        // Phase 2: Call Python ML service (NOT transactional - no DB connection held)
+        TrainingJobResponseDto response;
+        try {
+            TrainingJobCreateDto request = TrainingJobCreateDto.builder()
+                    .modelId(modelId)
+                    .organizationId(organizationId)
+                    .jobType(job.getJobType().name())
+                    .trainingConfig(job.getTrainingConfig())
+                    .trainingDataStart(job.getTrainingDataStart())
+                    .trainingDataEnd(job.getTrainingDataEnd())
+                    .build();
+
+            response = mlServiceClient.createTrainingJob(request)
+                    .block(Duration.ofSeconds(30));
+
+            if (response == null) {
+                throw new MLServiceException("Python ML service returned null response");
+            }
+
+        } catch (Exception e) {
+            // HTTP call failed - mark job as FAILED in separate transaction
+            log.error("Failed to start training job {} on Python ML service", job.getId(), e);
+            markJobAsFailed(job.getId(), "Failed to start training on ML service: " + sanitizeErrorMessage(e.getMessage()));
+            throw new MLServiceException("Failed to start training: " + sanitizeErrorMessage(e.getMessage()), e);
+        }
+
+        // Phase 3: Update job with external ID and model status (transactional)
+        return updateJobWithExternalResponse(job.getId(), response, triggeredBy);
+    }
+
+    /**
+     * Phase 1: Create local training job record.
+     * Validates model and creates PENDING job in transaction.
+     */
+    @Transactional
+    protected MLTrainingJob createLocalTrainingJob(UUID modelId, Long organizationId, Long triggeredBy, MLTrainingJobType jobType) {
+        // Validate model exists and belongs to organization
         MLModel model = mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
 
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new IllegalArgumentException("Organization not found: " + organizationId));
 
-        // 2. Check if model already has an active training job
+        // Check if model already has an active training job
         if (trainingJobRepository.existsActiveJobForModel(modelId)) {
             throw new IllegalStateException("Model already has an active training job. Wait for it to complete or cancel it first.");
         }
 
-        // 3. Check if model is in a trainable state
+        // Check if model is in a trainable state
         if (model.getStatus() == MLModelStatus.TRAINING) {
             throw new IllegalStateException("Model is already in TRAINING status");
         }
 
-        // 4. Determine job type automatically if not specified
+        // Determine job type automatically if not specified
         MLTrainingJobType effectiveJobType = jobType;
         if (effectiveJobType == null) {
             effectiveJobType = model.getTrainedAt() == null
@@ -88,10 +134,11 @@ public class MLTrainingJobService {
                     : MLTrainingJobType.RETRAINING;
         }
 
-        // 5. Build training configuration from model
+        // Build training configuration from model
         Map<String, Object> trainingConfig = buildTrainingConfig(model);
 
-        // 6. Create local training job record (PENDING status)
+        // Create local training job record (PENDING status)
+        // Store triggeredBy as Long directly for proper audit trail
         MLTrainingJob job = MLTrainingJob.builder()
                 .model(model)
                 .organization(organization)
@@ -100,60 +147,93 @@ public class MLTrainingJobService {
                 .trainingConfig(trainingConfig)
                 .progressPercent(0)
                 .currentStep("Initializing")
-                .triggeredBy(triggeredBy)
+                .triggeredByUserId(triggeredBy)  // Store actual user ID for audit
                 .build();
 
         job = trainingJobRepository.save(job);
         log.info("Created local training job: {} for model: {}", job.getId(), modelId);
 
-        // 7. Call Python ML service to create training job
-        try {
-            TrainingJobCreateDto request = TrainingJobCreateDto.builder()
-                    .modelId(modelId)
-                    .organizationId(organizationId)
-                    .jobType(effectiveJobType.name())
-                    .trainingConfig(trainingConfig)
-                    .trainingDataStart(job.getTrainingDataStart())
-                    .trainingDataEnd(job.getTrainingDataEnd())
-                    .build();
+        return job;
+    }
 
-            TrainingJobResponseDto response = mlServiceClient.createTrainingJob(request)
-                    .block(Duration.ofSeconds(30));
+    /**
+     * Phase 3: Update job with external response and set model to TRAINING.
+     */
+    @Transactional
+    protected MLTrainingJob updateJobWithExternalResponse(UUID jobId, TrainingJobResponseDto response, Long triggeredBy) {
+        MLTrainingJob job = trainingJobRepository.findById(jobId)
+                .orElseThrow(() -> new IllegalStateException("Job not found after creation: " + jobId));
 
-            if (response == null) {
-                throw new MLServiceException("Python ML service returned null response");
-            }
+        // Update job with external ID and status from Python
+        job.setExternalJobId(response.getId());
+        job.setStatus(mapStatus(response.getStatus()));
+        job.setProgressPercent(validateProgressPercent(response.getProgressPercent()));
+        job.setCurrentStep(response.getCurrentStep());
+        if (response.getStartedAt() != null) {
+            job.setStartedAt(response.getStartedAt());
+        }
 
-            // 8. Update local job with external ID and status from Python
-            job.setExternalJobId(response.getId());
-            job.setStatus(mapStatus(response.getStatus()));
-            job.setProgressPercent(response.getProgressPercent() != null ? response.getProgressPercent() : 0);
-            job.setCurrentStep(response.getCurrentStep());
-            if (response.getStartedAt() != null) {
-                job.setStartedAt(response.getStartedAt());
-            }
+        job = trainingJobRepository.save(job);
+        log.info("Training job {} linked to external job: {}", job.getId(), response.getId());
 
-            job = trainingJobRepository.save(job);
-            log.info("Training job {} linked to external job: {}", job.getId(), response.getId());
-
-            // 9. Update model status to TRAINING
+        // Update model status to TRAINING
+        MLModel model = job.getModel();
+        if (model != null) {
             model.setStatus(MLModelStatus.TRAINING);
-            model.setTrainedBy(triggeredBy != null ? triggeredBy.getMostSignificantBits() : null);
+            model.setTrainedBy(triggeredBy);  // Store actual user ID
             mlModelRepository.save(model);
+        }
 
-            return job;
+        return job;
+    }
 
-        } catch (Exception e) {
-            // Training request failed - mark job as FAILED
-            log.error("Failed to start training job {} on Python ML service: {}", job.getId(), e.getMessage(), e);
-
+    /**
+     * Mark a job as failed in a separate transaction.
+     */
+    @Transactional
+    protected void markJobAsFailed(UUID jobId, String errorMessage) {
+        trainingJobRepository.findById(jobId).ifPresent(job -> {
             job.setStatus(MLTrainingJobStatus.FAILED);
-            job.setErrorMessage("Failed to start training on ML service: " + e.getMessage());
+            job.setErrorMessage(errorMessage);
             job.setCompletedAt(Instant.now());
             trainingJobRepository.save(job);
+        });
+    }
 
-            // Keep model in its previous state (don't update to TRAINING since it didn't start)
-            throw new MLServiceException("Failed to start training: " + e.getMessage(), e);
+    /**
+     * Mark a job as stale/failed when it has exceeded the stale threshold.
+     * Called by the monitor when cancellation fails.
+     * Also updates the associated model status back to DRAFT or TRAINED.
+     *
+     * @param jobId The job ID to mark as stale
+     * @param errorMessage The error message describing why the job is stale
+     */
+    @Transactional
+    public void markJobAsStale(UUID jobId, String errorMessage) {
+        MLTrainingJob job = trainingJobRepository.findById(jobId).orElse(null);
+        if (job == null) {
+            log.warn("Cannot mark job {} as stale - job not found", jobId);
+            return;
+        }
+
+        // Mark job as FAILED
+        job.setStatus(MLTrainingJobStatus.FAILED);
+        job.setErrorMessage(sanitizeErrorMessage(errorMessage));
+        job.setCompletedAt(Instant.now());
+        if (job.getStartedAt() != null) {
+            job.setDurationSeconds((int) Math.min(
+                    Duration.between(job.getStartedAt(), Instant.now()).getSeconds(),
+                    Integer.MAX_VALUE
+            ));
+        }
+        trainingJobRepository.save(job);
+
+        // Update model status back to previous state
+        MLModel model = job.getModel();
+        if (model != null && model.getStatus() == MLModelStatus.TRAINING) {
+            model.setStatus(model.getTrainedAt() != null ? MLModelStatus.TRAINED : MLModelStatus.DRAFT);
+            mlModelRepository.save(model);
+            log.info("Reverted model {} status to {} after stale job cleanup", model.getId(), model.getStatus());
         }
     }
 
@@ -161,62 +241,81 @@ public class MLTrainingJobService {
      * Synchronize job status from Python ML service.
      * Called by MLTrainingJobMonitor to poll for updates.
      *
+     * This method follows the same pattern as startTraining:
+     * HTTP call OUTSIDE transaction, DB updates inside transaction.
+     *
      * @param job The job to synchronize
-     * @return Updated job, or null if sync failed
+     * @return Updated job, or the original job if sync failed
      */
-    @Transactional
     public MLTrainingJob syncJobStatus(MLTrainingJob job) {
         if (job.getExternalJobId() == null) {
             log.warn("Cannot sync job {} - no external job ID", job.getId());
             return job;
         }
 
+        // Phase 1: Make HTTP call OUTSIDE transaction
+        TrainingJobResponseDto response;
         try {
-            TrainingJobResponseDto response = mlServiceClient.getTrainingJob(job.getExternalJobId())
+            response = mlServiceClient.getTrainingJob(job.getExternalJobId())
                     .block(Duration.ofSeconds(10));
 
             if (response == null) {
                 log.warn("Python ML service returned null for job {}", job.getExternalJobId());
                 return job;
             }
-
-            // Update local job with latest status from Python
-            MLTrainingJobStatus previousStatus = job.getStatus();
-            MLTrainingJobStatus newStatus = mapStatus(response.getStatus());
-
-            job.setStatus(newStatus);
-            job.setProgressPercent(response.getProgressPercent() != null ? response.getProgressPercent() : job.getProgressPercent());
-            job.setCurrentStep(response.getCurrentStep());
-            job.setRecordCount(response.getRecordCount());
-            job.setDeviceCount(response.getDeviceCount());
-            job.setResultMetrics(response.getResultMetrics());
-
-            if (response.getStartedAt() != null && job.getStartedAt() == null) {
-                job.setStartedAt(response.getStartedAt());
-            }
-
-            if (response.getErrorMessage() != null) {
-                job.setErrorMessage(response.getErrorMessage());
-            }
-
-            // Handle terminal states
-            if (isTerminalStatus(newStatus) && !isTerminalStatus(previousStatus)) {
-                handleJobCompletion(job, response);
-            }
-
-            job = trainingJobRepository.save(job);
-
-            if (newStatus != previousStatus) {
-                log.info("Job {} status changed: {} -> {} (progress: {}%)",
-                        job.getId(), previousStatus, newStatus, job.getProgressPercent());
-            }
-
-            return job;
-
         } catch (Exception e) {
-            log.error("Failed to sync job {} status: {}", job.getId(), e.getMessage());
+            log.error("Failed to sync job {} status from ML service: {}", job.getId(), sanitizeErrorMessage(e.getMessage()));
             return job;
         }
+
+        // Phase 2: Update local job in transaction
+        return updateJobFromSyncResponse(job.getId(), job.getStatus(), response);
+    }
+
+    /**
+     * Update job status from sync response in a transaction.
+     */
+    @Transactional
+    protected MLTrainingJob updateJobFromSyncResponse(UUID jobId, MLTrainingJobStatus previousStatus, TrainingJobResponseDto response) {
+        MLTrainingJob job = trainingJobRepository.findById(jobId)
+                .orElse(null);
+
+        if (job == null) {
+            log.warn("Job {} not found during sync update", jobId);
+            return null;
+        }
+
+        MLTrainingJobStatus newStatus = mapStatus(response.getStatus());
+
+        job.setStatus(newStatus);
+        job.setProgressPercent(validateProgressPercent(response.getProgressPercent() != null ? response.getProgressPercent() : job.getProgressPercent()));
+        job.setCurrentStep(response.getCurrentStep());
+        job.setRecordCount(response.getRecordCount());
+        job.setDeviceCount(response.getDeviceCount());
+        job.setResultMetrics(response.getResultMetrics());
+
+        if (response.getStartedAt() != null && job.getStartedAt() == null) {
+            job.setStartedAt(response.getStartedAt());
+        }
+
+        if (response.getErrorMessage() != null) {
+            // Sanitize error message before storing
+            job.setErrorMessage(sanitizeErrorMessage(response.getErrorMessage()));
+        }
+
+        // Handle terminal states
+        if (isTerminalStatus(newStatus) && !isTerminalStatus(previousStatus)) {
+            handleJobCompletion(job, response);
+        }
+
+        job = trainingJobRepository.save(job);
+
+        if (newStatus != previousStatus) {
+            log.info("Job {} status changed: {} -> {} (progress: {}%)",
+                    job.getId(), previousStatus, newStatus, job.getProgressPercent());
+        }
+
+        return job;
     }
 
     /**
@@ -290,9 +389,20 @@ public class MLTrainingJobService {
 
     /**
      * Get all jobs for a model.
+     * Includes authorization check to ensure model belongs to the organization.
+     *
+     * @param modelId The model ID
+     * @param organizationId Organization ID for authorization
+     * @param pageable Pagination parameters
+     * @return Page of training jobs for the model
+     * @throws IllegalArgumentException if model not found or doesn't belong to organization
      */
     @Transactional(readOnly = true)
-    public Page<MLTrainingJob> getJobsForModel(UUID modelId, Pageable pageable) {
+    public Page<MLTrainingJob> getJobsForModel(UUID modelId, Long organizationId, Pageable pageable) {
+        // Verify model belongs to organization (authorization check)
+        mlModelRepository.findByIdAndOrganizationId(modelId, organizationId)
+                .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
+
         return trainingJobRepository.findByModelId(modelId, pageable);
     }
 
@@ -418,6 +528,7 @@ public class MLTrainingJobService {
 
     /**
      * Handle job completion - update timestamps and model status.
+     * Includes comprehensive null checks to prevent NPE.
      */
     private void handleJobCompletion(MLTrainingJob job, TrainingJobResponseDto response) {
         job.setCompletedAt(response.getCompletedAt() != null ? response.getCompletedAt() : Instant.now());
@@ -425,28 +536,53 @@ public class MLTrainingJobService {
         job.setResultMetrics(response.getResultMetrics());
 
         // Update model status based on job result
-        if (job.getModel() != null) {
-            MLModel model = job.getModel();
+        // Full null-safety: check model AND organization
+        MLModel model = job.getModel();
+        if (model == null) {
+            log.warn("Job {} completed but has no associated model", job.getId());
+            return;
+        }
 
-            if (job.getStatus() == MLTrainingJobStatus.COMPLETED) {
-                // Training succeeded - update model to TRAINED
+        Organization org = model.getOrganization();
+        if (org == null) {
+            log.warn("Job {} completed but model {} has no organization", job.getId(), model.getId());
+            return;
+        }
+
+        UUID modelId = model.getId();
+        Long orgId = org.getId();
+
+        if (modelId == null || orgId == null) {
+            log.warn("Job {} completed but model or organization ID is null", job.getId());
+            return;
+        }
+
+        if (job.getStatus() == MLTrainingJobStatus.COMPLETED) {
+            // Training succeeded - update model to TRAINED
+            try {
                 mlModelService.completeTraining(
-                        model.getId(),
-                        model.getOrganization().getId(),
+                        modelId,
+                        orgId,
                         response.getResultMetrics(),
                         null, // validationMetrics - could be extracted from resultMetrics
-                        buildModelPath(model.getId()),
+                        buildModelPath(modelId),
                         null  // modelSizeBytes - not tracked yet
                 );
-                log.info("Model {} training completed successfully", model.getId());
-
-            } else if (job.getStatus() == MLTrainingJobStatus.FAILED) {
-                // Training failed - revert model to DRAFT or FAILED
-                mlModelService.failTraining(model.getId(), model.getOrganization().getId());
-                log.warn("Model {} training failed: {}", model.getId(), job.getErrorMessage());
+                log.info("Model {} training completed successfully", modelId);
+            } catch (Exception e) {
+                log.error("Failed to update model {} after training completion: {}", modelId, e.getMessage());
             }
-            // CANCELLED is handled in cancelJob method
+
+        } else if (job.getStatus() == MLTrainingJobStatus.FAILED) {
+            // Training failed - revert model to DRAFT or FAILED
+            try {
+                mlModelService.failTraining(modelId, orgId);
+                log.warn("Model {} training failed: {}", modelId, sanitizeErrorMessage(job.getErrorMessage()));
+            } catch (Exception e) {
+                log.error("Failed to update model {} after training failure: {}", modelId, e.getMessage());
+            }
         }
+        // CANCELLED is handled in cancelJob method
     }
 
     /**
@@ -456,6 +592,43 @@ public class MLTrainingJobService {
         // Models are stored by the Python ML service
         // This path is relative to the ML service's model storage directory
         return "models/" + modelId + ".joblib";
+    }
+
+    /**
+     * Validate progress percent is within valid range (0-100).
+     * Returns 0 if null, clamps to valid range otherwise.
+     */
+    private int validateProgressPercent(Integer progress) {
+        if (progress == null) {
+            return MIN_PROGRESS_PERCENT;
+        }
+        return Math.max(MIN_PROGRESS_PERCENT, Math.min(MAX_PROGRESS_PERCENT, progress));
+    }
+
+    /**
+     * Sanitize error messages before logging or storing.
+     * Removes potentially sensitive information like stack traces, file paths, and credentials.
+     */
+    private String sanitizeErrorMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+
+        // Truncate very long messages
+        String sanitized = message.length() > 500 ? message.substring(0, 500) + "..." : message;
+
+        // Remove common patterns that might leak sensitive information
+        // Remove file paths (both Unix and Windows style)
+        sanitized = sanitized.replaceAll("[A-Za-z]:\\\\[^\\s]+", "[path]");
+        sanitized = sanitized.replaceAll("/[a-zA-Z0-9_/-]+\\.[a-zA-Z]+", "[path]");
+
+        // Remove potential connection strings
+        sanitized = sanitized.replaceAll("(?i)(password|pwd|secret|key|token)\\s*[=:]\\s*[^\\s,;]+", "$1=[REDACTED]");
+
+        // Remove IP addresses and ports that might be internal
+        sanitized = sanitized.replaceAll("\\b(?:10|172\\.(?:1[6-9]|2\\d|3[01])|192\\.168)\\.[\\d.]+(?::\\d+)?\\b", "[internal-address]");
+
+        return sanitized;
     }
 
     /**

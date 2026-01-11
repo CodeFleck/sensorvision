@@ -436,7 +436,7 @@ class MLModelControllerTest {
                     .progressPercent(0)
                     .build();
 
-            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class), any()))
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), anyLong(), any()))
                     .thenReturn(trainingJob);
             when(trainingJobService.toResponse(trainingJob)).thenReturn(jobResponse);
 
@@ -457,7 +457,7 @@ class MLModelControllerTest {
         @DisplayName("Should return conflict when already training")
         void shouldReturnConflictWhenAlreadyTraining() {
             // Given
-            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class), any()))
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), anyLong(), any()))
                     .thenThrow(new IllegalStateException("Model is already training"));
 
             // When
@@ -471,7 +471,7 @@ class MLModelControllerTest {
         @DisplayName("Should return not found when model does not exist")
         void shouldReturnNotFoundWhenModelDoesNotExist() {
             // Given
-            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class), any()))
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), anyLong(), any()))
                     .thenThrow(new IllegalArgumentException("Model not found: " + modelId));
 
             // When
@@ -485,7 +485,7 @@ class MLModelControllerTest {
         @DisplayName("Should return service unavailable when ML service is down")
         void shouldReturnServiceUnavailableWhenMLServiceIsDown() {
             // Given
-            when(trainingJobService.startTraining(eq(modelId), eq(orgId), any(UUID.class), any()))
+            when(trainingJobService.startTraining(eq(modelId), eq(orgId), anyLong(), any()))
                     .thenThrow(new MLTrainingJobService.MLServiceException("ML service unavailable"));
 
             // When

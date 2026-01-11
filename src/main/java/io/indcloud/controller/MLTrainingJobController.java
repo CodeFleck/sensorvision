@@ -63,7 +63,7 @@ public class MLTrainingJobController {
             MLTrainingJob job = trainingJobService.startTraining(
                     modelId,
                     org.getId(),
-                    UUID.randomUUID(), // Generate a UUID for triggeredBy since user.getId() is Long
+                    user.getId(), // Pass actual user ID for audit trail
                     jobType
             );
 
@@ -124,18 +124,27 @@ public class MLTrainingJobController {
 
     /**
      * List training jobs for a specific model.
+     * Includes authorization check to verify model belongs to user's organization.
      *
      * @param modelId The model ID
      * @param pageable Pagination parameters
      * @return Page of training jobs for the model
      */
     @GetMapping("/model/{modelId}")
-    public Page<TrainingJobResponseDto> getJobsForModel(
+    public ResponseEntity<Page<TrainingJobResponseDto>> getJobsForModel(
             @PathVariable UUID modelId,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
 
-        return trainingJobService.getJobsForModel(modelId, pageable)
-                .map(trainingJobService::toResponse);
+        Organization org = securityUtils.getCurrentUserOrganization();
+
+        try {
+            Page<TrainingJobResponseDto> jobs = trainingJobService.getJobsForModel(modelId, org.getId(), pageable)
+                    .map(trainingJobService::toResponse);
+            return ResponseEntity.ok(jobs);
+        } catch (IllegalArgumentException e) {
+            // Model not found or doesn't belong to organization
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**
