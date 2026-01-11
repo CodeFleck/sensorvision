@@ -705,6 +705,45 @@ class TestResourceLimits:
         data = response.json()
         assert "n_samples" in data["error_message"].lower()
 
+    def test_n_samples_too_large_fails(self, client, model_id, organization_id):
+        """Test that n_samples above MAX_N_SAMPLES causes training to fail."""
+        from app.services.training_service import MAX_N_SAMPLES
+
+        # Create job with n_samples exceeding MAX_N_SAMPLES
+        create_response = client.post(
+            "/api/v1/training/jobs",
+            json={
+                "model_id": model_id,
+                "organization_id": organization_id,
+                "job_type": "INITIAL_TRAINING",
+                "training_config": {
+                    "model_type": "ANOMALY_DETECTION",
+                    "n_samples": MAX_N_SAMPLES + 1,
+                },
+            },
+        )
+
+        assert create_response.status_code == 201
+        job_id = create_response.json()["id"]
+
+        # Wait for job to fail
+        max_wait = 5
+        final_status = None
+        for _ in range(max_wait * 10):
+            response = client.get(f"/api/v1/training/jobs/{job_id}")
+            status = response.json()["status"]
+
+            if status in ["COMPLETED", "FAILED"]:
+                final_status = status
+                break
+
+            time.sleep(0.1)
+
+        # Should fail due to n_samples validation
+        assert final_status == "FAILED"
+        data = response.json()
+        assert "n_samples" in data["error_message"].lower() or "maximum" in data["error_message"].lower()
+
     def test_max_jobs_limit_evicts_old_completed_jobs(self, client, model_id, organization_id):
         """Test that MAX_JOBS limit triggers eviction of old completed jobs."""
         from app.services.training_service import training_service, MAX_JOBS, TrainingJob
@@ -804,3 +843,46 @@ class TestResourceLimits:
         # Should be rejected with 422 Unprocessable Entity
         assert response.status_code == 422
         assert "greater than 0" in response.text.lower() or "organization" in response.text.lower()
+
+    def test_max_jobs_all_active_rejects_new_job(self, client, model_id, organization_id):
+        """Test that when all MAX_JOBS are active, new jobs are rejected."""
+        from app.services.training_service import training_service, MAX_JOBS, TrainingJob
+        from app.models.schemas import MLModelType, TrainingJobStatus
+        from uuid import uuid4
+
+        # Clear existing jobs
+        with training_service._lock:
+            training_service._jobs.clear()
+
+        # Add MAX_JOBS RUNNING jobs (not evictable)
+        for i in range(MAX_JOBS):
+            job = TrainingJob(
+                job_id=uuid4(),
+                model_id=uuid4(),
+                organization_id=organization_id,
+                model_type=MLModelType.ANOMALY_DETECTION,
+                job_type="INITIAL_TRAINING",
+                training_config={},
+            )
+            job.status = TrainingJobStatus.RUNNING  # Active, not evictable
+            training_service._jobs[job.id] = job
+
+        assert len(training_service._jobs) == MAX_JOBS
+
+        # Try to create a new job - should fail since no jobs can be evicted
+        response = client.post(
+            "/api/v1/training/jobs",
+            json={
+                "model_id": model_id,
+                "organization_id": organization_id,
+                "job_type": "INITIAL_TRAINING",
+                "training_config": {
+                    "model_type": "ANOMALY_DETECTION",
+                    "n_samples": 100,
+                },
+            },
+        )
+
+        # Should fail with 503 Service Unavailable (capacity exceeded)
+        assert response.status_code == 503
+        assert "occupied" in response.text.lower() or "cannot create" in response.text.lower()

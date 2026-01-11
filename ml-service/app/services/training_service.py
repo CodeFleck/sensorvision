@@ -8,7 +8,7 @@ import logging
 import time
 from collections import OrderedDict
 from datetime import datetime, timezone
-from threading import Lock, Thread
+from threading import Lock, Thread, current_thread
 from typing import Any, Dict, List, Optional, Set
 from uuid import UUID, uuid4
 
@@ -145,6 +145,12 @@ class TrainingService:
 
         if jobs_to_evict:
             logger.info(f"Evicted {len(jobs_to_evict)} old jobs to stay under MAX_JOBS={MAX_JOBS}")
+        elif len(self._jobs) >= MAX_JOBS:
+            # All jobs are active (PENDING/RUNNING) - cannot accept new job
+            raise ValueError(
+                f"Cannot create training job: all {MAX_JOBS} job slots are occupied "
+                f"by active (PENDING/RUNNING) jobs. Wait for jobs to complete."
+            )
 
     def create_job(
         self,
@@ -389,6 +395,11 @@ class TrainingService:
                 if job.started_at:
                     job.duration_seconds = int((job.completed_at - job.started_at).total_seconds())
                 job.add_log(f"Training failed: {str(e)}")
+
+        finally:
+            # Clean up thread reference to prevent memory leak
+            with self._lock:
+                self._active_threads.discard(current_thread())
 
     def _generate_mock_data(
         self,

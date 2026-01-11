@@ -60,15 +60,18 @@ async def create_training_job(
         )
 
     # Create job
-    training_job = training_service.create_job(
-        model_id=job.model_id,
-        organization_id=job.organization_id,
-        model_type=model_type,
-        job_type=job.job_type,
-        training_config=job.training_config,
-        training_data_start=job.training_data_start,
-        training_data_end=job.training_data_end,
-    )
+    try:
+        training_job = training_service.create_job(
+            model_id=job.model_id,
+            organization_id=job.organization_id,
+            model_type=model_type,
+            job_type=job.job_type,
+            training_config=job.training_config,
+            training_data_start=job.training_data_start,
+            training_data_end=job.training_data_end,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
     # Start training in background thread
     # Note: Using Thread instead of BackgroundTasks for long-running operations
