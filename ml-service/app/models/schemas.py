@@ -1,12 +1,15 @@
 """
 Pydantic schemas for ML service API.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+# Limits for request validation
+MAX_VARIABLES_PER_POINT = 100  # Prevent memory exhaustion
 
 
 # Enums
@@ -99,6 +102,26 @@ class MLModelResponse(MLModelBase):
 class TelemetryPoint(BaseModel):
     timestamp: datetime
     variables: Dict[str, float]
+
+    @field_validator("timestamp")
+    @classmethod
+    def ensure_utc_timestamp(cls, v: datetime) -> datetime:
+        """Ensure timestamp is timezone-aware and convert to UTC."""
+        if v.tzinfo is None:
+            # Naive datetime - assume UTC
+            return v.replace(tzinfo=timezone.utc)
+        # Convert to UTC if different timezone
+        return v.astimezone(timezone.utc)
+
+    @field_validator("variables")
+    @classmethod
+    def validate_variables_count(cls, v: Dict[str, float]) -> Dict[str, float]:
+        """Limit number of variables to prevent memory exhaustion."""
+        if len(v) > MAX_VARIABLES_PER_POINT:
+            raise ValueError(
+                f"Too many variables: {len(v)} exceeds maximum of {MAX_VARIABLES_PER_POINT}"
+            )
+        return v
 
 
 class InferenceRequest(BaseModel):

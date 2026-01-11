@@ -83,7 +83,7 @@ class TestAnomalyEndpoint:
         )
         mock_engine.get_severity.return_value = AnomalySeverity.HIGH
 
-        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine):
+        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine) as mock_get_model:
             response = client.post(
                 "/api/v1/inference/anomaly",
                 json={
@@ -94,6 +94,13 @@ class TestAnomalyEndpoint:
                 }
             )
 
+            # Verify model loader was called correctly
+            mock_get_model.assert_called_once()
+            call_args = mock_get_model.call_args
+            from uuid import UUID
+            assert call_args.kwargs["model_id"] == UUID(model_id)
+            assert call_args.kwargs["model_type"] == MLModelType.ANOMALY_DETECTION
+
         assert response.status_code == 200
         data = response.json()
         assert data["device_id"] == device_id
@@ -103,6 +110,10 @@ class TestAnomalyEndpoint:
         assert data["anomaly_score"] == 0.8
         assert data["severity"] == "HIGH"
         assert "temperature" in data["affected_variables"]
+
+        # Verify engine methods were called
+        mock_engine.predict_with_scores.assert_called_once()
+        mock_engine.get_severity.assert_called_once_with(0.8)
 
     def test_anomaly_detection_model_not_found(self, client, sample_telemetry, model_id, device_id):
         """Test 404 when model not found."""
@@ -156,48 +167,39 @@ class TestAnomalyEndpoint:
 class TestBatchAnomalyEndpoint:
     """Tests for /api/v1/inference/anomaly/batch endpoint."""
 
-    def test_batch_anomaly_detection_success(self, client, model_id):
-        """Test successful batch anomaly detection."""
+    def test_batch_anomaly_returns_501_not_implemented(self, client, model_id):
+        """Test batch endpoint returns 501 Not Implemented."""
         device_ids = [str(uuid4()) for _ in range(3)]
 
-        mock_engine = Mock(spec=AnomalyDetectionEngine)
+        response = client.post(
+            "/api/v1/inference/anomaly/batch",
+            json={
+                "organization_id": 1,
+                "model_id": model_id,
+                "device_ids": device_ids,
+            }
+        )
 
-        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine):
-            response = client.post(
-                "/api/v1/inference/anomaly/batch",
-                json={
-                    "organization_id": 1,
-                    "model_id": model_id,
-                    "device_ids": device_ids,
-                }
-            )
+        assert response.status_code == 501
+        assert "not yet implemented" in response.json()["detail"].lower()
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["model_id"] == model_id
-        assert data["total_devices"] == 3
-        assert data["processed_devices"] == 3
-        assert len(data["predictions"]) == 3
-        assert data["processing_time_ms"] >= 0
-
-    def test_batch_anomaly_model_not_found(self, client, model_id):
-        """Test 404 when model not found in batch."""
+    def test_batch_anomaly_provides_alternative_guidance(self, client, model_id):
+        """Test batch endpoint suggests using single-device endpoint."""
         device_ids = [str(uuid4())]
 
-        with patch(
-            "app.api.routes.inference._model_loader.get_model",
-            side_effect=ModelNotFoundError(f"Model {model_id} not found")
-        ):
-            response = client.post(
-                "/api/v1/inference/anomaly/batch",
-                json={
-                    "organization_id": 1,
-                    "model_id": model_id,
-                    "device_ids": device_ids,
-                }
-            )
+        response = client.post(
+            "/api/v1/inference/anomaly/batch",
+            json={
+                "organization_id": 1,
+                "model_id": model_id,
+                "device_ids": device_ids,
+            }
+        )
 
-        assert response.status_code == 404
+        assert response.status_code == 501
+        detail = response.json()["detail"]
+        # Should provide guidance on alternative
+        assert "/anomaly" in detail or "single-device" in detail.lower()
 
 
 class TestMaintenanceEndpoint:
@@ -221,7 +223,7 @@ class TestMaintenanceEndpoint:
             ]
         )
 
-        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine):
+        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine) as mock_get_model:
             response = client.post(
                 "/api/v1/inference/maintenance",
                 json={
@@ -232,6 +234,13 @@ class TestMaintenanceEndpoint:
                 }
             )
 
+            # Verify model loader was called correctly
+            mock_get_model.assert_called_once()
+            call_args = mock_get_model.call_args
+            from uuid import UUID
+            assert call_args.kwargs["model_id"] == UUID(model_id)
+            assert call_args.kwargs["model_type"] == MLModelType.PREDICTIVE_MAINTENANCE
+
         assert response.status_code == 200
         data = response.json()
         assert data["device_id"] == device_id
@@ -240,6 +249,9 @@ class TestMaintenanceEndpoint:
         assert data["days_to_maintenance"] == 1
         assert len(data["recommended_actions"]) > 0
         assert "Immediate inspection required" in data["recommended_actions"]
+
+        # Verify engine predict method was called
+        mock_engine.predict_with_probability.assert_called_once()
 
     def test_maintenance_prediction_model_not_found(self, client, sample_telemetry, model_id, device_id):
         """Test 404 when model not found."""
@@ -279,6 +291,48 @@ class TestEnergyEndpoint:
         predictions = forecast_df["predicted_consumption"].values
         mock_engine.forecast.return_value = (forecast_df, predictions)
 
+        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine) as mock_get_model:
+            response = client.post(
+                "/api/v1/inference/energy?horizon=24h",
+                json={
+                    "device_id": device_id,
+                    "organization_id": 1,
+                    "model_id": model_id,
+                    "telemetry": telemetry,
+                }
+            )
+
+            # Verify model loader was called correctly
+            mock_get_model.assert_called_once()
+            call_args = mock_get_model.call_args
+            from uuid import UUID
+            assert call_args.kwargs["model_id"] == UUID(model_id)
+            assert call_args.kwargs["model_type"] == MLModelType.ENERGY_FORECAST
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["device_id"] == device_id
+        assert data["prediction_type"] == "ENERGY_FORECAST"
+        assert data["prediction_horizon"] == "24h"
+        assert "forecast_values" in data["prediction_details"]
+        assert "mean_consumption" in data["prediction_details"]
+        # Verify truncation metadata is included
+        assert "forecast_values_count" in data["prediction_details"]
+        assert "forecast_values_total" in data["prediction_details"]
+        assert "forecast_values_truncated" in data["prediction_details"]
+
+        # Verify engine forecast method was called
+        mock_engine.forecast.assert_called_once()
+
+    def test_energy_forecast_no_energy_column_fails(self, client, model_id, device_id):
+        """Test 400 when telemetry has no energy-related column."""
+        # Telemetry without energy-related column names
+        telemetry = [
+            {"timestamp": "2024-01-01T00:00:00Z", "variables": {"temperature": 25.0, "humidity": 60.0}}
+        ]
+
+        mock_engine = Mock(spec=EnergyForecastingEngine)
+
         with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine):
             response = client.post(
                 "/api/v1/inference/energy?horizon=24h",
@@ -290,13 +344,11 @@ class TestEnergyEndpoint:
                 }
             )
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["device_id"] == device_id
-        assert data["prediction_type"] == "ENERGY_FORECAST"
-        assert data["prediction_horizon"] == "24h"
-        assert "forecast_values" in data["prediction_details"]
-        assert "mean_consumption" in data["prediction_details"]
+        assert response.status_code == 400
+        detail = response.json()["detail"]
+        assert "energy-related column" in detail.lower()
+        # Should list available columns
+        assert "temperature" in detail or "humidity" in detail
 
     def test_energy_forecast_invalid_horizon(self, client, model_id, device_id):
         """Test 400 for invalid horizon."""
@@ -357,7 +409,7 @@ class TestRULEndpoint:
             "vibration_std": 0.15,
         }
 
-        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine):
+        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine) as mock_get_model:
             response = client.post(
                 "/api/v1/inference/rul",
                 json={
@@ -368,15 +420,30 @@ class TestRULEndpoint:
                 }
             )
 
+            # Verify model loader was called correctly
+            mock_get_model.assert_called_once()
+            call_args = mock_get_model.call_args
+            from uuid import UUID
+            assert call_args.kwargs["model_id"] == UUID(model_id)
+            assert call_args.kwargs["model_type"] == MLModelType.EQUIPMENT_RUL
+
         assert response.status_code == 200
         data = response.json()
         assert data["device_id"] == device_id
         assert data["prediction_type"] == "EQUIPMENT_RUL"
         assert data["prediction_value"] == 38.0  # Last prediction
-        assert data["prediction_label"] == "ATTENTION"  # 38 days falls in ATTENTION range (31-90 days)
+        assert data["prediction_label"] == "ATTENTION"  # 38 days falls in ATTENTION range (8-90 days)
         assert "rul_days" in data["prediction_details"]
         assert "lower_bound_95" in data["prediction_details"]
         assert "upper_bound_95" in data["prediction_details"]
+        assert "interval_width_days" in data["prediction_details"]
+
+        # Verify engine methods were called
+        mock_engine.predict_with_confidence.assert_called_once()
+        mock_engine.get_feature_importance.assert_called_once()
+
+        # Verify confidence is calculated and within valid range
+        assert 0.0 <= data["confidence"] <= 1.0
 
     def test_rul_estimation_critical_label(self, client, sample_telemetry, model_id, device_id):
         """Test RUL estimation returns CRITICAL for low RUL."""
@@ -402,6 +469,56 @@ class TestRULEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["prediction_label"] == "CRITICAL"
+
+    def test_rul_estimation_warning_label(self, client, sample_telemetry, model_id, device_id):
+        """Test RUL estimation returns WARNING for moderate RUL."""
+        mock_engine = Mock(spec=EquipmentRULEngine)
+        mock_engine.predict_with_confidence.return_value = (
+            np.array([20.0]),  # Between 7 and 30 days
+            np.array([15.0]),
+            np.array([25.0]),
+        )
+        mock_engine.get_feature_importance.return_value = {}
+
+        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine):
+            response = client.post(
+                "/api/v1/inference/rul",
+                json={
+                    "device_id": device_id,
+                    "organization_id": 1,
+                    "model_id": model_id,
+                    "telemetry": [sample_telemetry[0]],
+                }
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["prediction_label"] == "WARNING"
+
+    def test_rul_estimation_healthy_label(self, client, sample_telemetry, model_id, device_id):
+        """Test RUL estimation returns HEALTHY for high RUL."""
+        mock_engine = Mock(spec=EquipmentRULEngine)
+        mock_engine.predict_with_confidence.return_value = (
+            np.array([150.0]),  # More than 90 days
+            np.array([120.0]),
+            np.array([180.0]),
+        )
+        mock_engine.get_feature_importance.return_value = {}
+
+        with patch("app.api.routes.inference._model_loader.get_model", return_value=mock_engine):
+            response = client.post(
+                "/api/v1/inference/rul",
+                json={
+                    "device_id": device_id,
+                    "organization_id": 1,
+                    "model_id": model_id,
+                    "telemetry": [sample_telemetry[0]],
+                }
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["prediction_label"] == "HEALTHY"
 
     def test_rul_estimation_model_not_found(self, client, sample_telemetry, model_id, device_id):
         """Test 404 when model not found."""

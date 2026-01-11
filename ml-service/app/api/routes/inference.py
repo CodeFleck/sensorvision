@@ -6,9 +6,11 @@ Supports anomaly detection, predictive maintenance, energy forecasting,
 and equipment RUL estimation.
 """
 import logging
+import math
+import re
 import time
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
 import numpy as np
@@ -53,6 +55,91 @@ def _safe_error_message(message: str, exception: Exception) -> str:
     return f"{message}: {str(exception)}"
 
 
+def _validate_array_length(
+    arrays: List[Tuple[str, np.ndarray]],
+    min_length: int = 1,
+) -> None:
+    """
+    Validate that all arrays have at least minimum length.
+
+    Args:
+        arrays: List of (name, array) tuples for error messages.
+        min_length: Minimum required length (default 1).
+
+    Raises:
+        ValueError: If any array is shorter than min_length.
+    """
+    for name, arr in arrays:
+        if len(arr) < min_length:
+            raise ValueError(
+                f"Engine returned empty or insufficient {name} "
+                f"(got {len(arr)}, need at least {min_length})"
+            )
+
+
+def _sanitize_prediction(
+    value: float,
+    name: str = "prediction",
+    replace_invalid: bool = True,
+    default: float = 0.0,
+) -> float:
+    """
+    Check prediction value for NaN/Infinity and handle appropriately.
+
+    Args:
+        value: The prediction value to check.
+        name: Name of the value for logging.
+        replace_invalid: If True, replace invalid values with default.
+                        If False, raise ValueError.
+        default: Default value to use when replacing.
+
+    Returns:
+        Sanitized float value.
+
+    Raises:
+        ValueError: If value is invalid and replace_invalid is False.
+    """
+    if math.isnan(value) or math.isinf(value):
+        logger.warning(f"Invalid {name} value: {value}")
+        if replace_invalid:
+            return default
+        raise ValueError(f"Invalid {name} value: {value}")
+    return value
+
+
+def _find_energy_column(df: pd.DataFrame) -> Optional[str]:
+    """
+    Find an energy-related column using word-part matching.
+
+    Splits column names by non-alphanumeric characters (underscores, hyphens, etc.)
+    and checks if any part matches an energy keyword. This avoids false positives
+    like "disempowerment" matching "power" while still matching "energy_consumption"
+    or "power_kw".
+
+    Args:
+        df: DataFrame to search for energy columns.
+
+    Returns:
+        Name of energy column if found, None otherwise.
+    """
+    energy_keywords = {"energy", "consumption", "power", "kw", "kwh", "watt"}
+
+    for col in df.columns:
+        if col == "timestamp":
+            continue
+
+        # Split by non-alphanumeric characters to get word parts
+        # e.g., "energy_consumption" -> ["energy", "consumption"]
+        # e.g., "disempowerment" -> ["disempowerment"]
+        col_parts = set(re.split(r'[^a-zA-Z0-9]+', col.lower()))
+
+        # Check if any part matches an energy keyword
+        if col_parts & energy_keywords:  # Set intersection
+            return col
+
+    return None
+
+
 def telemetry_to_dataframe(telemetry: List[TelemetryPoint]) -> pd.DataFrame:
     """
     Convert list of TelemetryPoint to pandas DataFrame.
@@ -78,17 +165,34 @@ def telemetry_to_dataframe(telemetry: List[TelemetryPoint]) -> pd.DataFrame:
     return df
 
 
-def get_feature_columns(df: pd.DataFrame) -> List[str]:
+def get_feature_columns(df: pd.DataFrame, max_columns: Optional[int] = None) -> List[str]:
     """
     Extract feature columns from DataFrame (exclude timestamp).
 
     Args:
         df: DataFrame with telemetry data.
+        max_columns: Maximum number of feature columns to return.
+                    If None, uses settings.MAX_FEATURE_COLUMNS.
 
     Returns:
-        List of feature column names.
+        List of feature column names (limited to max_columns).
+
+    Note:
+        Columns are returned in their original order, truncated at max.
+        Callers should be aware that if data has more columns than the
+        limit, only the first N columns will be used for inference.
     """
-    return [col for col in df.columns if col != "timestamp"]
+    limit = max_columns if max_columns is not None else settings.MAX_FEATURE_COLUMNS
+    columns = [col for col in df.columns if col != "timestamp"]
+
+    if len(columns) > limit:
+        logger.warning(
+            f"Feature columns ({len(columns)}) exceed limit ({limit}). "
+            f"Using first {limit} columns: {columns[:limit]}"
+        )
+        return columns[:limit]
+
+    return columns
 
 
 @router.post("/anomaly", response_model=AnomalyDetectionResult)
@@ -130,10 +234,22 @@ async def detect_anomaly(request: InferenceRequest):
         # Run inference - use the last data point for single prediction
         labels, scores, details = engine.predict_with_scores(df, feature_columns)
 
+        # Validate arrays have data before indexing
+        _validate_array_length([
+            ("labels", labels),
+            ("scores", scores),
+            ("details", np.array(details)),  # details is a list
+        ])
+
         # Use the most recent result (last row)
         idx = -1
         is_anomaly = labels[idx] == -1
-        anomaly_score = float(scores[idx])
+        anomaly_score = _sanitize_prediction(
+            float(scores[idx]),
+            name="anomaly_score",
+            replace_invalid=True,
+            default=0.5,
+        )
         severity = engine.get_severity(anomaly_score)
         detail = details[idx]
 
@@ -157,12 +273,19 @@ async def detect_anomaly(request: InferenceRequest):
             actual_values=detail.get("actual_values", {}),
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (e.g., from validation above)
+        raise
     except ModelNotFoundError:
         raise HTTPException(status_code=404, detail="Model not found")
     except ModelLoadError as e:
         raise HTTPException(status_code=400, detail=_safe_error_message("Model load failed", e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=_safe_error_message("Invalid request", e))
+    except (KeyError, TypeError, IndexError) as e:
+        # Specific exceptions for data access issues
+        logger.error(f"Data processing error in anomaly detection: {type(e).__name__}")
+        raise HTTPException(status_code=400, detail=_safe_error_message("Invalid telemetry data", e))
     except Exception as e:
         logger.exception("Anomaly detection failed")
         raise HTTPException(status_code=500, detail=_safe_error_message("Inference failed", e))
@@ -173,8 +296,9 @@ async def detect_anomalies_batch(request: BatchInferenceRequest):
     """
     Run batch anomaly detection on multiple devices.
 
-    Optimized for scheduled inference across many devices.
-    Each device's telemetry should be provided separately.
+    NOT YET IMPLEMENTED: Requires database integration to fetch telemetry
+    data for each device. The telemetry data should be fetched from the
+    Spring Boot backend via the data service.
 
     Args:
         request: Batch request with model_id and list of device_ids.
@@ -183,70 +307,18 @@ async def detect_anomalies_batch(request: BatchInferenceRequest):
         BatchInferenceResponse with predictions for all devices.
 
     Raises:
-        HTTPException: 404 if model not found.
+        HTTPException: 501 - This endpoint is not yet implemented.
     """
-    logger.info(f"Batch anomaly detection for {len(request.device_ids)} devices")
-    start_time = time.time()
-
-    try:
-        # Load model once for all devices
-        engine: AnomalyDetectionEngine = _model_loader.get_model(
-            model_id=request.model_id,
-            model_type=MLModelType.ANOMALY_DETECTION,
-        )
-
-        predictions: List[InferenceResponse] = []
-        errors: List[Dict] = []
-
-        for device_id in request.device_ids:
-            try:
-                # Note: In a full implementation, we would fetch telemetry
-                # from the database for each device. For now, we create
-                # a placeholder response indicating the device was processed.
-                # The actual telemetry would come from the Spring Boot backend.
-
-                predictions.append(
-                    AnomalyDetectionResult(
-                        device_id=device_id,
-                        model_id=request.model_id,
-                        prediction_type="ANOMALY_DETECTION",
-                        prediction_value=0.0,
-                        prediction_label="PENDING",
-                        confidence=0.0,
-                        prediction_details={"status": "requires_telemetry_data"},
-                        prediction_timestamp=datetime.now(timezone.utc),
-                        anomaly_score=0.0,
-                        is_anomaly=False,
-                        severity=AnomalySeverity.LOW,
-                        affected_variables=[],
-                        expected_values={},
-                        actual_values={},
-                    )
-                )
-            except Exception as e:
-                errors.append({
-                    "device_id": str(device_id),
-                    "error": str(e),
-                })
-
-        processing_time = int((time.time() - start_time) * 1000)
-
-        return BatchInferenceResponse(
-            model_id=request.model_id,
-            total_devices=len(request.device_ids),
-            processed_devices=len(predictions),
-            predictions=predictions,
-            errors=errors,
-            processing_time_ms=processing_time,
-        )
-
-    except ModelNotFoundError:
-        raise HTTPException(status_code=404, detail="Model not found")
-    except ModelLoadError as e:
-        raise HTTPException(status_code=400, detail=_safe_error_message("Model load failed", e))
-    except Exception as e:
-        logger.exception("Batch anomaly detection failed")
-        raise HTTPException(status_code=500, detail=_safe_error_message("Batch inference failed", e))
+    logger.warning(
+        f"Batch endpoint called but not implemented: "
+        f"model={request.model_id}, devices={len(request.device_ids)}"
+    )
+    raise HTTPException(
+        status_code=501,
+        detail="Batch inference is not yet implemented. "
+               "Use the single-device /anomaly endpoint instead, "
+               "or implement database integration to fetch telemetry per device."
+    )
 
 
 @router.post("/maintenance", response_model=PredictiveMaintenanceResult)
@@ -288,9 +360,21 @@ async def predict_maintenance(request: InferenceRequest):
         # Run inference
         labels, probabilities, details = engine.predict_with_probability(df, feature_columns)
 
+        # Validate arrays have data before indexing
+        _validate_array_length([
+            ("labels", labels),
+            ("probabilities", probabilities),
+            ("details", np.array(details)),
+        ])
+
         # Use the most recent result
         idx = -1
-        maintenance_probability = float(probabilities[idx])
+        maintenance_probability = _sanitize_prediction(
+            float(probabilities[idx]),
+            name="maintenance_probability",
+            replace_invalid=True,
+            default=0.5,
+        )
         detail = details[idx]
         is_failure_imminent = labels[idx] == 1
 
@@ -316,12 +400,19 @@ async def predict_maintenance(request: InferenceRequest):
             risk_factors=detail.get("top_risk_factors", {}),
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (e.g., from validation above)
+        raise
     except ModelNotFoundError:
         raise HTTPException(status_code=404, detail="Model not found")
     except ModelLoadError as e:
         raise HTTPException(status_code=400, detail=_safe_error_message("Model load failed", e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=_safe_error_message("Invalid request", e))
+    except (KeyError, TypeError, IndexError) as e:
+        # Specific exceptions for data access issues
+        logger.error(f"Data processing error in maintenance prediction: {type(e).__name__}")
+        raise HTTPException(status_code=400, detail=_safe_error_message("Invalid telemetry data", e))
     except Exception as e:
         logger.exception("Maintenance prediction failed")
         raise HTTPException(status_code=500, detail=_safe_error_message("Inference failed", e))
@@ -329,42 +420,44 @@ async def predict_maintenance(request: InferenceRequest):
 
 def _get_maintenance_recommendations(risk_level: str, risk_factors: Dict[str, float]) -> List[str]:
     """
-    Generate maintenance recommendations based on risk level and factors.
+    Generate maintenance recommendations based on risk level.
+
+    Returns general recommendations based on the risk level. Specific
+    factor-based recommendations should be handled by the client UI,
+    which has access to the raw risk_factors data.
 
     Args:
         risk_level: Risk level (LOW, MEDIUM, HIGH, CRITICAL).
         risk_factors: Dictionary of risk factor names to contribution scores.
+                     (Passed for completeness but not used - factors are returned
+                     separately in the response for client-side processing)
 
     Returns:
-        List of recommended actions.
+        List of recommended actions based on risk level.
     """
-    recommendations = []
-
     if risk_level == "CRITICAL":
-        recommendations.append("Immediate inspection required")
-        recommendations.append("Schedule emergency maintenance within 24 hours")
-        recommendations.append("Prepare backup equipment")
+        return [
+            "Immediate inspection required",
+            "Schedule emergency maintenance within 24 hours",
+            "Prepare backup equipment",
+            "Review operational logs for recent anomalies",
+        ]
     elif risk_level == "HIGH":
-        recommendations.append("Schedule maintenance within 48 hours")
-        recommendations.append("Increase monitoring frequency")
-        recommendations.append("Review recent operational changes")
+        return [
+            "Schedule maintenance within 48 hours",
+            "Increase monitoring frequency",
+            "Review recent operational changes",
+        ]
     elif risk_level == "MEDIUM":
-        recommendations.append("Plan maintenance within 1 week")
-        recommendations.append("Monitor key indicators closely")
+        return [
+            "Plan maintenance within 1 week",
+            "Monitor key indicators closely",
+        ]
     else:
-        recommendations.append("Continue normal operation")
-        recommendations.append("Maintain regular maintenance schedule")
-
-    # Add specific recommendations based on risk factors
-    for factor in list(risk_factors.keys())[:3]:
-        if "temperature" in factor.lower():
-            recommendations.append("Check cooling system")
-        elif "vibration" in factor.lower():
-            recommendations.append("Inspect bearings and alignment")
-        elif "pressure" in factor.lower():
-            recommendations.append("Check for leaks and blockages")
-
-    return recommendations
+        return [
+            "Continue normal operation",
+            "Maintain regular maintenance schedule",
+        ]
 
 
 @router.post("/energy", response_model=InferenceResponse)
@@ -386,7 +479,7 @@ async def forecast_energy(
         InferenceResponse with forecasted consumption values.
 
     Raises:
-        HTTPException: 404 if model not found, 400 if inference fails.
+        HTTPException: 404 if model not found, 400 if inference fails or no energy column.
     """
     logger.info(f"Energy forecast for device {request.device_id}, horizon={horizon}")
 
@@ -415,20 +508,18 @@ async def forecast_energy(
         # Convert telemetry to DataFrame
         df = telemetry_to_dataframe(request.telemetry)
 
-        # Determine target column (energy/consumption related)
-        target_column = None
-        for col in df.columns:
-            if any(keyword in col.lower() for keyword in ["energy", "consumption", "power", "kw"]):
-                target_column = col
-                break
+        # Determine target column - MUST be energy-related
+        # Use word boundary matching to avoid false positives (e.g., "disempowerment" for "power")
+        target_column = _find_energy_column(df)
 
         if not target_column:
-            # Use first numeric column if no energy column found
-            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-            if numeric_cols:
-                target_column = numeric_cols[0]
-            else:
-                raise HTTPException(status_code=400, detail="No numeric columns for forecasting")
+            available_cols = [c for c in df.columns if c != "timestamp"]
+            energy_keywords = ["energy", "consumption", "power", "kw", "kwh", "watt"]
+            raise HTTPException(
+                status_code=400,
+                detail=f"No energy-related column found. Expected column with word matching one of: "
+                       f"{energy_keywords}. Available columns: {available_cols}"
+            )
 
         # Run forecast
         forecast_df, predictions = engine.forecast(
@@ -437,14 +528,49 @@ async def forecast_energy(
             periods=periods,
         )
 
-        # Calculate summary statistics
-        mean_forecast = float(np.mean(predictions))
-        min_forecast = float(np.min(predictions))
-        max_forecast = float(np.max(predictions))
-        total_forecast = float(np.sum(predictions))
+        # Validate predictions array is not empty
+        if len(predictions) == 0:
+            raise ValueError("Forecast engine returned empty predictions")
+
+        # Calculate summary statistics with sanity checks
+        # Use nanmean/nanmin/nanmax to handle potential NaN values gracefully
+        mean_forecast = _sanitize_prediction(
+            float(np.nanmean(predictions)),
+            name="mean_forecast",
+            replace_invalid=True,
+            default=0.0,
+        )
+        min_forecast = _sanitize_prediction(
+            float(np.nanmin(predictions)),
+            name="min_forecast",
+            replace_invalid=True,
+            default=0.0,
+        )
+        max_forecast = _sanitize_prediction(
+            float(np.nanmax(predictions)),
+            name="max_forecast",
+            replace_invalid=True,
+            default=0.0,
+        )
+        total_forecast = _sanitize_prediction(
+            float(np.nansum(predictions)),
+            name="total_forecast",
+            replace_invalid=True,
+            default=0.0,
+        )
 
         # Get valid until timestamp
         valid_until = forecast_df["timestamp"].max() if not forecast_df.empty else None
+
+        # Truncate forecast values for response, with metadata
+        max_values = settings.MAX_FORECAST_VALUES_RETURNED
+        total_values = len(predictions)
+        is_truncated = total_values > max_values
+        # Sanitize individual forecast values (replace NaN/Inf with 0)
+        forecast_values = [
+            _sanitize_prediction(float(v), "forecast_value", replace_invalid=True, default=0.0)
+            for v in predictions[:max_values]
+        ]
 
         return InferenceResponse(
             device_id=request.device_id,
@@ -452,7 +578,7 @@ async def forecast_energy(
             prediction_type="ENERGY_FORECAST",
             prediction_value=mean_forecast,
             prediction_label=f"{horizon}_FORECAST",
-            confidence=0.85,  # Default confidence for forecasts
+            confidence=settings.DEFAULT_FORECAST_CONFIDENCE,
             prediction_details={
                 "horizon": horizon,
                 "periods": periods,
@@ -461,19 +587,29 @@ async def forecast_energy(
                 "min_consumption": min_forecast,
                 "max_consumption": max_forecast,
                 "total_consumption": total_forecast,
-                "forecast_values": predictions.tolist()[:48],  # Limit to first 48 values
+                "forecast_values": forecast_values,
+                "forecast_values_count": len(forecast_values),
+                "forecast_values_total": total_values,
+                "forecast_values_truncated": is_truncated,
             },
             prediction_timestamp=datetime.now(timezone.utc),
             prediction_horizon=horizon,
             valid_until=valid_until,
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (e.g., from column validation above)
+        raise
     except ModelNotFoundError:
         raise HTTPException(status_code=404, detail="Model not found")
     except ModelLoadError as e:
         raise HTTPException(status_code=400, detail=_safe_error_message("Model load failed", e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=_safe_error_message("Invalid request", e))
+    except (KeyError, TypeError) as e:
+        # Specific exceptions for data access issues
+        logger.error(f"Data processing error in energy forecast: {type(e).__name__}")
+        raise HTTPException(status_code=400, detail=_safe_error_message("Invalid telemetry data", e))
     except Exception as e:
         logger.exception("Energy forecast failed")
         raise HTTPException(status_code=500, detail=_safe_error_message("Inference failed", e))
@@ -520,22 +656,56 @@ async def estimate_rul(request: InferenceRequest):
             df, feature_columns, confidence_level=0.95
         )
 
+        # Validate arrays have data before indexing
+        _validate_array_length([
+            ("predictions", predictions),
+            ("lower_bounds", lower_bounds),
+            ("upper_bounds", upper_bounds),
+        ])
+
         # Use the most recent prediction
         idx = -1
-        rul_days = float(predictions[idx])
-        lower_bound = float(lower_bounds[idx])
-        upper_bound = float(upper_bounds[idx])
+        rul_days = _sanitize_prediction(
+            float(predictions[idx]),
+            name="rul_days",
+            replace_invalid=True,
+            default=0.0,
+        )
+        lower_bound = _sanitize_prediction(
+            float(lower_bounds[idx]),
+            name="lower_bound",
+            replace_invalid=True,
+            default=0.0,
+        )
+        upper_bound = _sanitize_prediction(
+            float(upper_bounds[idx]),
+            name="upper_bound",
+            replace_invalid=True,
+            default=0.0,
+        )
 
-        # Calculate confidence based on interval width
+        # Calculate confidence using coefficient of variation approach
+        # Confidence is higher when the interval is narrow relative to the prediction
         interval_width = upper_bound - lower_bound
-        confidence = max(0.5, 1.0 - (interval_width / (rul_days + 1)))
+        if rul_days > 0:
+            # Use relative precision: 1 - (half_interval / prediction)
+            # Normalized so that an interval spanning +/- 50% of prediction gives ~0.5 confidence
+            relative_uncertainty = (interval_width / 2) / rul_days
+            confidence = max(0.0, min(1.0, 1.0 - relative_uncertainty))
+        else:
+            # RUL is 0 or negative: confidence based purely on interval width
+            # Narrow interval = high confidence the equipment needs attention
+            # Scale factor is configurable (default 100 days) - represents the interval
+            # width at which confidence would be 0 when RUL is already 0
+            scale_days = settings.RUL_CONFIDENCE_SCALE_DAYS
+            confidence = max(0.0, min(1.0, 1.0 - (interval_width / scale_days)))
 
-        # Determine label based on RUL
-        if rul_days <= 7:
+        # Determine label based on RUL using configurable thresholds
+        if rul_days <= settings.RUL_CRITICAL_THRESHOLD_DAYS:
             label = "CRITICAL"
-        elif rul_days <= 30:
+        elif rul_days <= settings.RUL_WARNING_THRESHOLD_DAYS:
             label = "WARNING"
-        elif rul_days <= 90:
+        elif rul_days <= settings.RUL_ATTENTION_THRESHOLD_DAYS:
             label = "ATTENTION"
         else:
             label = "HEALTHY"
@@ -549,24 +719,32 @@ async def estimate_rul(request: InferenceRequest):
             prediction_type="EQUIPMENT_RUL",
             prediction_value=rul_days,
             prediction_label=label,
-            confidence=confidence,
+            confidence=round(confidence, 3),
             prediction_details={
                 "rul_days": rul_days,
                 "lower_bound_95": lower_bound,
                 "upper_bound_95": upper_bound,
                 "confidence_interval": f"[{lower_bound:.1f}, {upper_bound:.1f}]",
+                "interval_width_days": round(interval_width, 1),
                 "samples_analyzed": len(df),
                 "top_factors": dict(list(feature_importance.items())[:5]),
             },
             prediction_timestamp=datetime.now(timezone.utc),
         )
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (e.g., from validation above)
+        raise
     except ModelNotFoundError:
         raise HTTPException(status_code=404, detail="Model not found")
     except ModelLoadError as e:
         raise HTTPException(status_code=400, detail=_safe_error_message("Model load failed", e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=_safe_error_message("Invalid request", e))
+    except (KeyError, TypeError) as e:
+        # Specific exceptions for data access issues
+        logger.error(f"Data processing error in RUL estimation: {type(e).__name__}")
+        raise HTTPException(status_code=400, detail=_safe_error_message("Invalid telemetry data", e))
     except Exception as e:
         logger.exception("RUL estimation failed")
         raise HTTPException(status_code=500, detail=_safe_error_message("Inference failed", e))
