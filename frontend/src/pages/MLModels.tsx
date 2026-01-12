@@ -12,7 +12,6 @@ import {
   RefreshCw,
   Filter,
   ChevronDown,
-  Loader2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import {

@@ -62,6 +62,7 @@ describe('TrainingProgressModal', () => {
     organizationId: 1,
     jobType: 'INITIAL_TRAINING',
     status: 'RUNNING',
+    trainingConfig: {},
     progressPercent: 50,
     currentStep: 'Training model',
     recordCount: 10000,
