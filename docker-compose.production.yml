@@ -82,8 +82,10 @@ services:
       SPRING_MAIL_USERNAME: ${SMTP_USERNAME:-}
       SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD:-}
 
+      # SMS Notifications (AWS SNS or Twilio)
       SMS_ENABLED: ${SMS_ENABLED:-false}
-      SMS_PROVIDER: ${SMS_PROVIDER:-sns}
+      SMS_PROVIDER: ${SMS_PROVIDER:-sns}  # Options: 'sns' (AWS) or 'twilio'
+      AWS_REGION: ${AWS_REGION:-us-west-2}  # For AWS SNS (uses EC2 IAM role for auth)
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
       SMS_FROM_NUMBER: ${SMS_FROM_NUMBER:-}
