@@ -355,7 +355,7 @@ public class EmailTemplateService {
     }
 
     /**
-     * Generate luxury-themed alert email with comprehensive details
+     * Generate elegant light-themed alert email with comprehensive details
      */
     private String generateLuxuryAlertEmail(String ruleName, String deviceName, String deviceExternalId,
             String severity, String message, String variable, String operator, String threshold,
@@ -373,19 +373,26 @@ public class EmailTemplateService {
         String safeTriggeredAt = escapeHtml(triggeredAt);
         String safeDashboardLink = sanitizeUrl(dashboardLink);
 
-        // Luxury color scheme
+        // Elegant light color scheme
         String severityColor = switch (severity != null ? severity.toUpperCase() : "") {
-            case "CRITICAL" -> "#991b1b"; // Deep red
-            case "HIGH" -> "#c2410c"; // Dark orange
-            case "MEDIUM" -> "#a16207"; // Dark amber
-            default -> "#166534"; // Dark green
+            case "CRITICAL" -> "#b91c1c";
+            case "HIGH" -> "#c2410c";
+            case "MEDIUM" -> "#b45309";
+            default -> "#047857";
         };
 
         String severityBgColor = switch (severity != null ? severity.toUpperCase() : "") {
             case "CRITICAL" -> "#fef2f2";
             case "HIGH" -> "#fff7ed";
             case "MEDIUM" -> "#fffbeb";
-            default -> "#f0fdf4";
+            default -> "#ecfdf5";
+        };
+
+        String severityBorderColor = switch (severity != null ? severity.toUpperCase() : "") {
+            case "CRITICAL" -> "#fecaca";
+            case "HIGH" -> "#fed7aa";
+            case "MEDIUM" -> "#fde68a";
+            default -> "#a7f3d0";
         };
 
         return String.format("""
@@ -396,22 +403,22 @@ public class EmailTemplateService {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Alert Notification</title>
             </head>
-            <body style="margin: 0; padding: 0; font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0a0a;">
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #0a0a0a;">
+            <body style="margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="background-color: #f8fafc;">
                     <tr>
                         <td style="padding: 48px 24px;">
                             <!-- Main Card -->
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="560" style="margin: 0 auto; max-width: 560px; background: linear-gradient(145deg, #1a1a1a 0%%, #0f0f0f 100%%); border-radius: 16px; border: 1px solid #2a2a2a; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-                                <!-- Header with Logo -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="580" style="margin: 0 auto; max-width: 580px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.08);">
+                                <!-- Header -->
                                 <tr>
-                                    <td style="padding: 32px 40px 24px; border-bottom: 1px solid #2a2a2a;">
+                                    <td style="padding: 32px 40px 24px; border-bottom: 1px solid #e2e8f0;">
                                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
                                             <tr>
                                                 <td>
-                                                    <span style="font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">SensorVision</span>
+                                                    <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 600; color: #1e293b; letter-spacing: -0.5px;">SensorVision</span>
                                                 </td>
                                                 <td style="text-align: right;">
-                                                    <span style="display: inline-block; background-color: %s; color: #ffffff; font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">%s</span>
+                                                    <span style="display: inline-block; background-color: %s; color: #ffffff; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">%s</span>
                                                 </td>
                                             </tr>
                                         </table>
@@ -422,44 +429,44 @@ public class EmailTemplateService {
                                 <tr>
                                     <td style="padding: 32px 40px;">
                                         <!-- Rule Name -->
-                                        <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">%s</h1>
+                                        <h1 style="margin: 0 0 8px; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 600; color: #0f172a; letter-spacing: -0.5px; line-height: 1.3;">%s</h1>
 
                                         <!-- Device Info -->
-                                        <p style="margin: 0 0 24px; font-size: 14px; color: #737373;">
-                                            Device: <span style="color: #d4d4d4; font-weight: 500;">%s</span>
-                                            <span style="color: #525252;"> · </span>
-                                            <span style="color: #737373;">ID: %s</span>
+                                        <p style="margin: 0 0 28px; font-size: 14px; color: #64748b;">
+                                            Device: <span style="color: #334155; font-weight: 500;">%s</span>
+                                            <span style="color: #cbd5e1; padding: 0 6px;">|</span>
+                                            <span style="color: #94a3b8;">%s</span>
                                         </p>
 
                                         <!-- Alert Message Box -->
-                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="margin-bottom: 24px;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="margin-bottom: 28px;">
                                             <tr>
-                                                <td style="background-color: %s; border-radius: 12px; padding: 20px; border-left: 4px solid %s;">
+                                                <td style="background-color: %s; border-radius: 8px; padding: 18px 20px; border: 1px solid %s;">
                                                     <p style="margin: 0; font-size: 15px; color: %s; line-height: 1.6; font-weight: 500;">%s</p>
                                                 </td>
                                             </tr>
                                         </table>
 
                                         <!-- Details Grid -->
-                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="margin-bottom: 32px;">
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%" style="margin-bottom: 32px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
                                             <tr>
-                                                <td style="padding: 16px; background-color: #1a1a1a; border-radius: 12px 0 0 0; border: 1px solid #2a2a2a; border-right: none; width: 50%%;">
-                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px;">Variable</p>
-                                                    <p style="margin: 0; font-size: 16px; color: #ffffff; font-weight: 600;">%s</p>
+                                                <td style="padding: 16px 18px; background-color: #f8fafc; border-right: 1px solid #e2e8f0; width: 50%%;">
+                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Variable</p>
+                                                    <p style="margin: 0; font-size: 16px; color: #1e293b; font-weight: 600;">%s</p>
                                                 </td>
-                                                <td style="padding: 16px; background-color: #1a1a1a; border-radius: 0 12px 0 0; border: 1px solid #2a2a2a; width: 50%%;">
-                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px;">Condition</p>
-                                                    <p style="margin: 0; font-size: 16px; color: #ffffff; font-weight: 600;">%s %s</p>
+                                                <td style="padding: 16px 18px; background-color: #f8fafc; width: 50%%;">
+                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Threshold</p>
+                                                    <p style="margin: 0; font-size: 16px; color: #1e293b; font-weight: 600;">%s %s</p>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td style="padding: 16px; background-color: #1a1a1a; border-radius: 0 0 0 12px; border: 1px solid #2a2a2a; border-right: none; border-top: none;">
-                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px;">Triggered Value</p>
-                                                    <p style="margin: 0; font-size: 20px; color: %s; font-weight: 700;">%s</p>
+                                                <td style="padding: 16px 18px; background-color: #ffffff; border-right: 1px solid #e2e8f0; border-top: 1px solid #e2e8f0;">
+                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Triggered Value</p>
+                                                    <p style="margin: 0; font-family: 'SF Mono', Monaco, 'Courier New', monospace; font-size: 20px; color: %s; font-weight: 700;">%s</p>
                                                 </td>
-                                                <td style="padding: 16px; background-color: #1a1a1a; border-radius: 0 0 12px 0; border: 1px solid #2a2a2a; border-top: none;">
-                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #737373; text-transform: uppercase; letter-spacing: 0.5px;">Time</p>
-                                                    <p style="margin: 0; font-size: 14px; color: #d4d4d4; font-weight: 500;">%s</p>
+                                                <td style="padding: 16px 18px; background-color: #ffffff; border-top: 1px solid #e2e8f0;">
+                                                    <p style="margin: 0 0 4px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500;">Time</p>
+                                                    <p style="margin: 0; font-size: 14px; color: #475569; font-weight: 500;">%s</p>
                                                 </td>
                                             </tr>
                                         </table>
@@ -468,7 +475,7 @@ public class EmailTemplateService {
                                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
                                             <tr>
                                                 <td>
-                                                    <a href="%s" style="display: inline-block; background: linear-gradient(135deg, #0d9488 0%%, #0f766e 100%%); color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 14px 28px; border-radius: 10px; box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4);">View Alert Details</a>
+                                                    <a href="%s" style="display: inline-block; background-color: #0f766e; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 14px 28px; border-radius: 8px;">View Alert Details</a>
                                                 </td>
                                             </tr>
                                         </table>
@@ -477,21 +484,21 @@ public class EmailTemplateService {
 
                                 <!-- Footer -->
                                 <tr>
-                                    <td style="padding: 24px 40px; border-top: 1px solid #2a2a2a;">
-                                        <p style="margin: 0; font-size: 12px; color: #525252; text-align: center;">
+                                    <td style="padding: 24px 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; border-radius: 0 0 16px 16px;">
+                                        <p style="margin: 0; font-size: 13px; color: #64748b; text-align: center; line-height: 1.6;">
                                             This is an automated alert from your SensorVision monitoring system.
                                             <br>
-                                            <a href="%s/settings/notifications" style="color: #737373; text-decoration: underline;">Manage notification preferences</a>
+                                            <a href="%s/settings/notifications" style="color: #0f766e; text-decoration: none; font-weight: 500;">Manage notification preferences</a>
                                         </p>
                                     </td>
                                 </tr>
                             </table>
 
-                            <!-- Footer Logo -->
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="560" style="margin: 32px auto 0; max-width: 560px;">
+                            <!-- Footer Branding -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="580" style="margin: 28px auto 0; max-width: 580px;">
                                 <tr>
                                     <td style="text-align: center;">
-                                        <p style="margin: 0; font-size: 13px; color: #404040;">Powered by <span style="color: #737373; font-weight: 600;">Industrial Cloud</span></p>
+                                        <p style="margin: 0; font-size: 12px; color: #94a3b8;">Powered by <span style="color: #64748b; font-weight: 500;">Industrial Cloud</span></p>
                                     </td>
                                 </tr>
                             </table>
@@ -504,7 +511,7 @@ public class EmailTemplateService {
             severityColor, safeSeverity,  // Header badge
             safeRuleName,  // Title
             safeDeviceName, safeDeviceId,  // Device info
-            severityBgColor, severityColor, severityColor, safeMessage,  // Alert message box
+            severityBgColor, severityBorderColor, severityColor, safeMessage,  // Alert message box
             safeVariable,  // Variable
             safeOperator, safeThreshold,  // Condition
             severityColor, safeTriggeredValue,  // Triggered value
