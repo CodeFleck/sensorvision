@@ -441,4 +441,28 @@ class PhoneNumberVerificationServiceTest {
 
         verify(phoneNumberRepository, never()).save(any());
     }
+
+    @Test
+    void testIsSmsVerificationAvailable_WhenEnabled_ReturnsTrue() {
+        // Given
+        when(smsNotificationService.isSmsEnabled()).thenReturn(true);
+
+        // When
+        boolean result = verificationService.isSmsVerificationAvailable();
+
+        // Then
+        assertTrue(result);
+    }
+
+    @Test
+    void testIsSmsVerificationAvailable_WhenDisabled_ReturnsFalse() {
+        // Given
+        when(smsNotificationService.isSmsEnabled()).thenReturn(false);
+
+        // When
+        boolean result = verificationService.isSmsVerificationAvailable();
+
+        // Then
+        assertFalse(result);
+    }
 }

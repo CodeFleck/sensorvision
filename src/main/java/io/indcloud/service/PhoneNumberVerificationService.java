@@ -246,8 +246,9 @@ public class PhoneNumberVerificationService {
 
     /**
      * Send verification SMS
+     * @return true if SMS was sent successfully, false otherwise
      */
-    private void sendVerificationSms(String phoneNumber, String code) {
+    private boolean sendVerificationSms(String phoneNumber, String code) {
         String message = String.format(
             "Your SensorVision verification code is: %s. Valid for %d minutes.",
             code,
@@ -259,5 +260,13 @@ public class PhoneNumberVerificationService {
         if (!sent) {
             log.warn("Failed to send verification SMS to {} - code: {}", phoneNumber, code);
         }
+        return sent;
+    }
+
+    /**
+     * Check if SMS verification is available (Twilio configured)
+     */
+    public boolean isSmsVerificationAvailable() {
+        return smsNotificationService.isSmsEnabled();
     }
 }

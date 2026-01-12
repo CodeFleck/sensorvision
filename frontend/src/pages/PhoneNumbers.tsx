@@ -31,12 +31,21 @@ export const PhoneNumbers = () => {
   const handleAddPhone = async (phoneNumber: string, countryCode: string) => {
     try {
       const response = await apiService.addPhoneNumber({ phoneNumber, countryCode });
-      toast.success(response.message || 'Phone number added! Check your SMS for verification code.');
-      setIsAddModalOpen(false);
-      await fetchPhoneNumbers();
+      const message = response.message || 'Phone number added! Check your SMS for verification code.';
 
-      // Auto-open verification modal
-      setVerifyingPhone(response.data.id);
+      // Show warning if SMS is unavailable, success otherwise
+      if (message.toLowerCase().includes('unavailable')) {
+        toast.error(message, { duration: 6000 });
+        setIsAddModalOpen(false);
+        await fetchPhoneNumbers();
+        // Don't auto-open verification modal if SMS wasn't sent
+      } else {
+        toast.success(message);
+        setIsAddModalOpen(false);
+        await fetchPhoneNumbers();
+        // Auto-open verification modal
+        setVerifyingPhone(response.data.id);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to add phone number');
     }

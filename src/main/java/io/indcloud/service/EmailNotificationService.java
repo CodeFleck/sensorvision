@@ -86,9 +86,11 @@ public class EmailNotificationService {
     }
 
     private String generateEmailSubject(Alert alert) {
-        return String.format("[Industrial Cloud] %s Alert: %s",
-                alert.getSeverity(),
-                alert.getRule().getName());
+        String severity = alert.getSeverity() != null ? alert.getSeverity().toString() : "UNKNOWN";
+        String ruleName = (alert.getRule() != null && alert.getRule().getName() != null)
+                ? alert.getRule().getName()
+                : "System Alert";
+        return String.format("[Industrial Cloud] %s Alert: %s", severity, ruleName);
     }
 
     private String generateEmailBody(Alert alert) {
@@ -252,21 +254,11 @@ public class EmailNotificationService {
     }
 
     private String generatePasswordResetLink(String resetToken) {
-        // In production, use configured base URL
-        String baseUrl = System.getenv("APP_BASE_URL");
-        if (baseUrl == null || baseUrl.isEmpty()) {
-            baseUrl = "http://localhost:3001";
-        }
-        return String.format("%s/reset-password?token=%s", baseUrl, resetToken);
+        return String.format("%s/reset-password?token=%s", appBaseUrl, resetToken);
     }
 
     private String generateVerificationLink(String verificationToken) {
-        // In production, use configured base URL
-        String baseUrl = System.getenv("APP_BASE_URL");
-        if (baseUrl == null || baseUrl.isEmpty()) {
-            baseUrl = "http://localhost:3001";
-        }
-        return String.format("%s/verify-email?token=%s", baseUrl, verificationToken);
+        return String.format("%s/verify-email?token=%s", appBaseUrl, verificationToken);
     }
 
     private String generatePasswordResetEmailBody(String resetLink) {
