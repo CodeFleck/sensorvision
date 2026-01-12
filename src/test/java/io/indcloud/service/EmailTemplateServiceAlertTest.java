@@ -278,7 +278,7 @@ class EmailTemplateServiceAlertTest {
 
             String emailHtml = emailTemplateService.generateAlertNotificationEmail(alert);
 
-            assertThat(emailHtml).contains("#991b1b"); // Critical red color
+            assertThat(emailHtml).contains("#b91c1c"); // Critical red color
         }
 
         @Test
@@ -318,7 +318,7 @@ class EmailTemplateServiceAlertTest {
 
             String emailHtml = emailTemplateService.generateAlertNotificationEmail(alert);
 
-            assertThat(emailHtml).contains("#a16207"); // Medium amber color
+            assertThat(emailHtml).contains("#b45309"); // Medium amber color
         }
 
         @Test
@@ -338,7 +338,7 @@ class EmailTemplateServiceAlertTest {
 
             String emailHtml = emailTemplateService.generateAlertNotificationEmail(alert);
 
-            assertThat(emailHtml).contains("#166534"); // Low green color
+            assertThat(emailHtml).contains("#047857"); // Low green color
         }
 
         @Test
@@ -647,7 +647,7 @@ class EmailTemplateServiceAlertTest {
             String emailHtml = emailTemplateService.generateAlertNotificationEmail(alert);
 
             // When severity is null, code defaults to "MEDIUM" string, which uses amber color
-            assertThat(emailHtml).contains("#a16207");
+            assertThat(emailHtml).contains("#b45309");
         }
     }
 }
