@@ -8,7 +8,6 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import io.indcloud.model.Alert;
 import io.indcloud.model.OrganizationSmsSettings;
@@ -18,18 +17,29 @@ import io.indcloud.repository.SmsDeliveryLogRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.model.PublishRequest;
+import software.amazon.awssdk.services.sns.model.PublishResponse;
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sns.model.SnsException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
- * Service for sending SMS notifications via Twilio.
+ * Service for sending SMS notifications via AWS SNS or Twilio.
  * Handles SMS delivery, budget controls, and delivery tracking.
  */
 @Service
@@ -39,17 +49,36 @@ public class SmsNotificationService {
     @Value("${notification.sms.enabled:false}")
     private boolean smsEnabled;
 
+    @Value("${notification.sms.provider:sns}")
+    private String smsProvider;
+
     @Value("${notification.sms.from:}")
     private String fromNumber;
 
+    // Twilio configuration (legacy)
     @Value("${notification.sms.twilio.account-sid:}")
     private String accountSid;
 
     @Value("${notification.sms.twilio.auth-token:}")
     private String authToken;
 
-    @Value("${notification.sms.cost-per-message:0.0075}")
+    // AWS SNS configuration
+    @Value("${notification.sms.aws.region:us-west-2}")
+    private String awsRegion;
+
+    @Value("${notification.sms.aws.access-key:}")
+    private String awsAccessKey;
+
+    @Value("${notification.sms.aws.secret-key:}")
+    private String awsSecretKey;
+
+    @Value("${notification.sms.aws.sender-id:SensorVision}")
+    private String snsSenderId;
+
+    @Value("${notification.sms.cost-per-message:0.00645}")
     private BigDecimal costPerMessage;
+
+    private SnsClient snsClient;
 
     private final SmsDeliveryLogRepository smsDeliveryLogRepository;
     private final OrganizationSmsSettingsRepository smsSettingsRepository;
@@ -78,21 +107,58 @@ public class SmsNotificationService {
 
     @PostConstruct
     public void init() {
-        if (smsEnabled) {
-            if (accountSid == null || accountSid.isBlank() || authToken == null || authToken.isBlank()) {
-                log.warn("SMS enabled but Twilio credentials not configured. SMS notifications will be disabled.");
-                smsEnabled = false;
-                return;
-            }
-            try {
-                Twilio.init(accountSid, authToken);
-                log.info("SMS notifications enabled via Twilio (from: {})", fromNumber);
-            } catch (Exception e) {
-                log.error("Failed to initialize Twilio: {}", e.getMessage(), e);
-                smsEnabled = false;
-            }
-        } else {
+        if (!smsEnabled) {
             log.info("SMS notifications disabled");
+            return;
+        }
+
+        if ("sns".equalsIgnoreCase(smsProvider)) {
+            initializeSns();
+        } else if ("twilio".equalsIgnoreCase(smsProvider)) {
+            initializeTwilio();
+        } else {
+            log.warn("Unknown SMS provider: {}. SMS notifications will be disabled.", smsProvider);
+            smsEnabled = false;
+        }
+    }
+
+    private void initializeSns() {
+        try {
+            // Use explicit credentials if provided, otherwise use default credential chain
+            if (awsAccessKey != null && !awsAccessKey.isBlank()
+                && awsSecretKey != null && !awsSecretKey.isBlank()) {
+                snsClient = SnsClient.builder()
+                    .region(Region.of(awsRegion))
+                    .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(awsAccessKey, awsSecretKey)
+                    ))
+                    .build();
+                log.info("SMS notifications enabled via AWS SNS with explicit credentials (region: {})", awsRegion);
+            } else {
+                snsClient = SnsClient.builder()
+                    .region(Region.of(awsRegion))
+                    .credentialsProvider(DefaultCredentialsProvider.create())
+                    .build();
+                log.info("SMS notifications enabled via AWS SNS with default credentials (region: {})", awsRegion);
+            }
+        } catch (Exception e) {
+            log.error("Failed to initialize AWS SNS: {}", e.getMessage(), e);
+            smsEnabled = false;
+        }
+    }
+
+    private void initializeTwilio() {
+        if (accountSid == null || accountSid.isBlank() || authToken == null || authToken.isBlank()) {
+            log.warn("SMS enabled but Twilio credentials not configured. SMS notifications will be disabled.");
+            smsEnabled = false;
+            return;
+        }
+        try {
+            Twilio.init(accountSid, authToken);
+            log.info("SMS notifications enabled via Twilio (from: {})", fromNumber);
+        } catch (Exception e) {
+            log.error("Failed to initialize Twilio: {}", e.getMessage(), e);
+            smsEnabled = false;
         }
     }
 
@@ -135,20 +201,32 @@ public class SmsNotificationService {
         }
 
         try {
-            // Send SMS via Twilio
-            Message twilioMessage = Message.creator(
-                new PhoneNumber(phoneNumber),
-                new PhoneNumber(fromNumber),
-                message
-            ).create();
+            String messageId;
+            String status;
+
+            if ("sns".equalsIgnoreCase(smsProvider)) {
+                // Send SMS via AWS SNS
+                PublishResponse response = sendViaSns(phoneNumber, message);
+                messageId = response.messageId();
+                status = "SENT";
+            } else {
+                // Send SMS via Twilio
+                Message twilioMessage = Message.creator(
+                    new PhoneNumber(phoneNumber),
+                    new PhoneNumber(fromNumber),
+                    message
+                ).create();
+                messageId = twilioMessage.getSid();
+                status = twilioMessage.getStatus().name();
+            }
 
             // Log delivery
             SmsDeliveryLog deliveryLog = SmsDeliveryLog.builder()
                 .alert(alert)
                 .phoneNumber(phoneNumber)
                 .messageBody(message)
-                .twilioSid(twilioMessage.getSid())
-                .status(twilioMessage.getStatus().name())
+                .twilioSid(messageId)  // Reusing field for SNS message ID
+                .status(status)
                 .cost(costPerMessage)
                 .sentAt(Instant.now())
                 .build();
@@ -162,11 +240,14 @@ public class SmsNotificationService {
             smsSentCounter.increment();
             updateOrganizationMetrics(organizationId, settings);
 
-            log.info("SMS sent to {} for alert {}: SID={}", phoneNumber, alert.getId(), twilioMessage.getSid());
+            log.info("SMS sent to {} for alert {} via {}: ID={}", phoneNumber, alert.getId(), smsProvider, messageId);
             return deliveryLog;
 
+        } catch (SnsException e) {
+            log.error("Failed to send SMS via SNS to {}: {}", phoneNumber, e.getMessage(), e);
+            return createFailedLog(alert, phoneNumber, message, "SNS_ERROR", e.getMessage());
         } catch (TwilioException e) {
-            log.error("Failed to send SMS to {}: {}", phoneNumber, e.getMessage(), e);
+            log.error("Failed to send SMS via Twilio to {}: {}", phoneNumber, e.getMessage(), e);
             return createFailedLog(alert, phoneNumber, message, "TWILIO_ERROR", e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error sending SMS to {}: {}", phoneNumber, e.getMessage(), e);
@@ -306,6 +387,35 @@ public class SmsNotificationService {
     }
 
     /**
+     * Send SMS via AWS SNS
+     */
+    private PublishResponse sendViaSns(String phoneNumber, String message) {
+        Map<String, MessageAttributeValue> smsAttributes = new HashMap<>();
+
+        // Set SMS type to Transactional for high deliverability
+        smsAttributes.put("AWS.SNS.SMS.SMSType", MessageAttributeValue.builder()
+            .stringValue("Transactional")
+            .dataType("String")
+            .build());
+
+        // Set sender ID if configured (may not work in all regions/countries)
+        if (snsSenderId != null && !snsSenderId.isBlank()) {
+            smsAttributes.put("AWS.SNS.SMS.SenderID", MessageAttributeValue.builder()
+                .stringValue(snsSenderId)
+                .dataType("String")
+                .build());
+        }
+
+        PublishRequest request = PublishRequest.builder()
+            .phoneNumber(phoneNumber)
+            .message(message)
+            .messageAttributes(smsAttributes)
+            .build();
+
+        return snsClient.publish(request);
+    }
+
+    /**
      * Check if SMS is enabled globally
      */
     public boolean isSmsEnabled() {
@@ -380,18 +490,30 @@ public class SmsNotificationService {
         }
 
         try {
-            // Send SMS via Twilio
-            Message twilioMessage = Message.creator(
-                new PhoneNumber(phoneNumber),
-                new PhoneNumber(fromNumber),
-                message
-            ).create();
+            String messageId;
 
-            log.info("Verification SMS sent to {}: SID={}", phoneNumber, twilioMessage.getSid());
+            if ("sns".equalsIgnoreCase(smsProvider)) {
+                // Send SMS via AWS SNS
+                PublishResponse response = sendViaSns(phoneNumber, message);
+                messageId = response.messageId();
+            } else {
+                // Send SMS via Twilio
+                Message twilioMessage = Message.creator(
+                    new PhoneNumber(phoneNumber),
+                    new PhoneNumber(fromNumber),
+                    message
+                ).create();
+                messageId = twilioMessage.getSid();
+            }
+
+            log.info("Verification SMS sent to {} via {}: ID={}", phoneNumber, smsProvider, messageId);
             return true;
 
+        } catch (SnsException e) {
+            log.error("Failed to send verification SMS via SNS to {}: {}", phoneNumber, e.getMessage(), e);
+            return false;
         } catch (TwilioException e) {
-            log.error("Failed to send verification SMS to {}: {}", phoneNumber, e.getMessage(), e);
+            log.error("Failed to send verification SMS via Twilio to {}: {}", phoneNumber, e.getMessage(), e);
             return false;
         } catch (Exception e) {
             log.error("Unexpected error sending verification SMS to {}: {}", phoneNumber, e.getMessage(), e);

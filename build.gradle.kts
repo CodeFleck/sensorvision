@@ -47,8 +47,12 @@ dependencies {
     // WebClient for ML service communication
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    // Twilio SMS support
+    // Twilio SMS support (legacy - kept for backwards compatibility)
     implementation("com.twilio.sdk:twilio:10.5.1")
+
+    // AWS SDK v2 for SNS (SMS notifications)
+    implementation(platform("software.amazon.awssdk:bom:2.25.16"))
+    implementation("software.amazon.awssdk:sns")
 
     // Rate limiting with Bucket4j
     implementation("com.bucket4j:bucket4j-core:8.10.1")
