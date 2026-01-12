@@ -74,10 +74,10 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
     aggregationVariable: rule?.aggregationVariable || '',
     aggregationParams: rule?.aggregationParams || {},
     operator: rule?.operator || 'GT',
-    threshold: rule?.threshold || 0,
+    threshold: rule?.threshold?.toString() || '',
     enabled: rule?.enabled !== undefined ? rule.enabled : true,
     evaluationInterval: rule?.evaluationInterval || 'EVERY_5_MINUTES',
-    cooldownMinutes: rule?.cooldownMinutes || 15,
+    cooldownMinutes: rule?.cooldownMinutes?.toString() || '15',
     sendSms: rule?.sendSms || false,
     smsRecipients: rule?.smsRecipients || [],
   });
@@ -110,7 +110,15 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
     e.preventDefault();
     setLoading(true);
     try {
-      await onSave(formData);
+      const ruleData: FleetRuleFormData = {
+        ...formData,
+        threshold: parseFloat(formData.threshold) || 0,
+        cooldownMinutes: parseInt(formData.cooldownMinutes, 10) || 15,
+        selectorValue: needsSelectorValue ? formData.selectorValue : null,
+        aggregationVariable: requiresVariable ? formData.aggregationVariable : null,
+        smsRecipients: formData.sendSms ? formData.smsRecipients : null,
+      };
+      await onSave(ruleData);
     } finally {
       setLoading(false);
     }
@@ -260,11 +268,12 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
                   Threshold *
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*\.?[0-9]*"
                   required
-                  step="0.01"
                   value={formData.threshold}
-                  onChange={(e) => handleChange('threshold', parseFloat(e.target.value))}
+                  onChange={(e) => handleChange('threshold', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -296,11 +305,12 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
                   Cooldown (minutes) *
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
-                  min="0"
                   value={formData.cooldownMinutes}
-                  onChange={(e) => handleChange('cooldownMinutes', parseInt(e.target.value))}
+                  onChange={(e) => handleChange('cooldownMinutes', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>

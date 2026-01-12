@@ -264,8 +264,9 @@ export const RuleModal = ({ rule, devices, onClose }: RuleModalProps) => {
                 Threshold *
               </label>
               <input
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*\.?[0-9]*"
                 id="threshold"
                 name="threshold"
                 required
