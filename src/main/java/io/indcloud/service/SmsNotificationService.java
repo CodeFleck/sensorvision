@@ -8,6 +8,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import io.indcloud.model.Alert;
 import io.indcloud.model.OrganizationSmsSettings;
@@ -78,7 +79,7 @@ public class SmsNotificationService {
     @Value("${notification.sms.cost-per-message:0.00645}")
     private BigDecimal costPerMessage;
 
-    private SnsClient snsClient;
+    private volatile SnsClient snsClient;
 
     private final SmsDeliveryLogRepository smsDeliveryLogRepository;
     private final OrganizationSmsSettingsRepository smsSettingsRepository;
@@ -159,6 +160,18 @@ public class SmsNotificationService {
         } catch (Exception e) {
             log.error("Failed to initialize Twilio: {}", e.getMessage(), e);
             smsEnabled = false;
+        }
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        if (snsClient != null) {
+            try {
+                snsClient.close();
+                log.info("AWS SNS client closed");
+            } catch (Exception e) {
+                log.error("Error closing SNS client: {}", e.getMessage(), e);
+            }
         }
     }
 
