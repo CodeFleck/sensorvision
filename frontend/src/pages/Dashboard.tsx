@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { DeviceCard } from '../components/DeviceCard';
 import { RealTimeChart } from '../components/RealTimeChart';
