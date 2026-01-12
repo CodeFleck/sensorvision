@@ -151,6 +151,7 @@ jobs:
           SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
           SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
           SMS_ENABLED=${{ secrets.SMS_ENABLED }}
+          SMS_PROVIDER=${{ secrets.SMS_PROVIDER }}
           TWILIO_ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }}
           TWILIO_AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }}
           SMS_FROM_NUMBER=${{ secrets.SMS_FROM_NUMBER }}
