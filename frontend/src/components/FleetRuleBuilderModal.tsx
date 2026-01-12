@@ -260,11 +260,12 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
                   Threshold *
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*\.?[0-9]*"
                   required
-                  step="0.01"
                   value={formData.threshold}
-                  onChange={(e) => handleChange('threshold', parseFloat(e.target.value))}
+                  onChange={(e) => handleChange('threshold', parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -296,11 +297,12 @@ export const FleetRuleBuilderModal = ({ rule, onClose, onSave }: FleetRuleBuilde
                   Cooldown (minutes) *
                 </label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
-                  min="0"
                   value={formData.cooldownMinutes}
-                  onChange={(e) => handleChange('cooldownMinutes', parseInt(e.target.value))}
+                  onChange={(e) => handleChange('cooldownMinutes', parseInt(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
