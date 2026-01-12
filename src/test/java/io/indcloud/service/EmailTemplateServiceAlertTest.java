@@ -27,10 +27,12 @@ class EmailTemplateServiceAlertTest {
     private EmailTemplateService emailTemplateService;
     private ObjectMapper objectMapper;
 
+    private static final String TEST_BASE_URL = "https://test.indcloud.io";
+
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        emailTemplateService = new EmailTemplateService(emailTemplateRepository, objectMapper);
+        emailTemplateService = new EmailTemplateService(emailTemplateRepository, objectMapper, TEST_BASE_URL);
     }
 
     private Alert createTestAlert(String ruleName, String deviceName, String deviceExternalId,
@@ -380,7 +382,7 @@ class EmailTemplateServiceAlertTest {
 
             assertThat(emailHtml)
                 .contains("View Alert Details")
-                .contains("https://indcloud.io/alerts");
+                .contains(TEST_BASE_URL + "/alerts");
         }
 
         @Test

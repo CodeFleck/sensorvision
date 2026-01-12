@@ -1,7 +1,6 @@
 package io.indcloud.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import io.indcloud.dto.EmailTemplateRequest;
 import io.indcloud.dto.EmailTemplateResponse;
@@ -10,6 +9,7 @@ import io.indcloud.model.EmailTemplate;
 import io.indcloud.model.Organization;
 import io.indcloud.model.User;
 import io.indcloud.repository.EmailTemplateRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -24,11 +25,24 @@ import java.util.regex.Pattern;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class EmailTemplateService {
 
     private final EmailTemplateRepository emailTemplateRepository;
     private final ObjectMapper objectMapper;
+    private final String appBaseUrl;
+
+    // Human-readable date format for emails
+    private static final DateTimeFormatter EMAIL_DATE_FORMAT =
+        DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a");
+
+    public EmailTemplateService(
+            EmailTemplateRepository emailTemplateRepository,
+            ObjectMapper objectMapper,
+            @Value("${app.base-url:https://indcloud.io}") String appBaseUrl) {
+        this.emailTemplateRepository = emailTemplateRepository;
+        this.objectMapper = objectMapper;
+        this.appBaseUrl = appBaseUrl;
+    }
 
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{\\s*(\\w+)\\s*\\}\\}");
 
@@ -310,8 +324,10 @@ public class EmailTemplateService {
                 ? alert.getRule().getOperator().getSymbol() : "";
             String threshold = alert.getRule() != null && alert.getRule().getThreshold() != null
                 ? alert.getRule().getThreshold().toString() : "N/A";
+            // Format timestamp in human-readable format
             String triggeredAt = alert.getTriggeredAt() != null
-                ? alert.getTriggeredAt().toString() : java.time.LocalDateTime.now().toString();
+                ? alert.getTriggeredAt().format(EMAIL_DATE_FORMAT)
+                : java.time.LocalDateTime.now().format(EMAIL_DATE_FORMAT);
 
             return generateLuxuryAlertEmail(
                 ruleName,
@@ -324,7 +340,7 @@ public class EmailTemplateService {
                 threshold,
                 triggeredValue,
                 triggeredAt,
-                "https://indcloud.io/alerts"
+                appBaseUrl + "/alerts"
             );
         }
 
@@ -334,7 +350,7 @@ public class EmailTemplateService {
             "Unknown Device",
             "An alert has been triggered in your system.",
             "MEDIUM",
-            "https://indcloud.io/dashboard"
+            appBaseUrl + "/dashboard"
         );
     }
 
@@ -465,7 +481,7 @@ public class EmailTemplateService {
                                         <p style="margin: 0; font-size: 12px; color: #525252; text-align: center;">
                                             This is an automated alert from your SensorVision monitoring system.
                                             <br>
-                                            <a href="https://indcloud.io/settings/notifications" style="color: #737373; text-decoration: underline;">Manage notification preferences</a>
+                                            <a href="%s/settings/notifications" style="color: #737373; text-decoration: underline;">Manage notification preferences</a>
                                         </p>
                                     </td>
                                 </tr>
@@ -493,7 +509,8 @@ public class EmailTemplateService {
             safeOperator, safeThreshold,  // Condition
             severityColor, safeTriggeredValue,  // Triggered value
             safeTriggeredAt,  // Time
-            safeDashboardLink  // CTA link
+            safeDashboardLink,  // CTA link
+            appBaseUrl  // Notification preferences link base
         );
     }
 
