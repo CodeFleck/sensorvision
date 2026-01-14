@@ -1,4 +1,4 @@
-import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization, PluginRegistry, InstalledPlugin, PluginRating, DeviceVariable, VariableValue, VariableStatistics, DeviceType, DeviceTypeSimple, TemplateApplicationResult } from '../types';
+import { Device, DeviceTokenResponse, TelemetryPoint, LatestTelemetry, Rule, Alert, Dashboard, Widget, WidgetCreateRequest, DashboardCreateRequest, IssueSubmission, IssueSubmissionRequest, IssueStatus, AdminIssue, IssueComment, IssueCommentRequest, Playlist, PlaylistCreateRequest, PlaylistUpdateRequest, PhoneNumber, PhoneNumberAddRequest, PhoneNumberVerifyRequest, SmsSettings, SmsSettingsUpdateRequest, SmsDeliveryLog, User, Organization, PluginRegistry, InstalledPlugin, PluginRating, DeviceVariable, VariableValue, VariableStatistics, DeviceType, DeviceTypeSimple, TemplateApplicationResult, Event } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -356,6 +356,18 @@ class ApiService {
       queryParams.append(key, value.toString());
     });
     return this.request<any>(`/events?${queryParams}`);
+  }
+
+  async getRecentEvents(hours: number = 24, limit: number = 10): Promise<Event[]> {
+    return this.request<Event[]>(`/events/recent?hours=${hours}&limit=${limit}`);
+  }
+
+  async getEventStatistics(): Promise<{ byType: Record<string, number>; bySeverity: Record<string, number> }> {
+    const [byType, bySeverity] = await Promise.all([
+      this.request<Record<string, number>>('/events/statistics/by-type'),
+      this.request<Record<string, number>>('/events/statistics/by-severity'),
+    ]);
+    return { byType, bySeverity };
   }
 
   // Notifications
