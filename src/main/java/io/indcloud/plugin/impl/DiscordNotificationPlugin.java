@@ -27,7 +27,7 @@ import java.util.List;
  * Configuration schema:
  * {
  *   "webhookUrl": "https://discord.com/api/webhooks/YOUR/WEBHOOK/URL",
- *   "username": "SensorVision" (optional),
+ *   "username": "Industrial Cloud" (optional),
  *   "avatarUrl": "https://..." (optional)
  * }
  */
@@ -57,7 +57,7 @@ public class DiscordNotificationPlugin implements NotificationPlugin, DataPlugin
             if (config.has("username")) {
                 discordMessage.put("username", config.get("username").asText());
             } else {
-                discordMessage.put("username", "SensorVision");
+                discordMessage.put("username", "Industrial Cloud");
             }
 
             // Add optional avatar
@@ -89,7 +89,7 @@ public class DiscordNotificationPlugin implements NotificationPlugin, DataPlugin
 
             // Add footer
             ObjectNode footer = objectMapper.createObjectNode();
-            footer.put("text", "SensorVision Alert System");
+            footer.put("text", "Industrial Cloud Alert System");
             embed.set("footer", footer);
 
             var embeds = objectMapper.createArrayNode();

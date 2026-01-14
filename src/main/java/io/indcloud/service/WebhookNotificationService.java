@@ -122,8 +122,8 @@ public class WebhookNotificationService {
             // Set headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("User-Agent", "SensorVision/1.0");
-            headers.set("X-SensorVision-Event", "alert.triggered");
+            headers.set("User-Agent", "IndCloud/1.0");
+            headers.set("X-IndCloud-Event", "alert.triggered");
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
@@ -217,8 +217,8 @@ public class WebhookNotificationService {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("User-Agent", "SensorVision/1.0");
-            headers.set("X-SensorVision-Event", "webhook.test");
+            headers.set("User-Agent", "IndCloud/1.0");
+            headers.set("X-IndCloud-Event", "webhook.test");
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(testPayload, headers);
 
