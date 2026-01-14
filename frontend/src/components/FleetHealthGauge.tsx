@@ -68,20 +68,22 @@ export const FleetHealthGauge = ({ devices, className }: FleetHealthGaugeProps) 
 
   const healthConfig = HEALTH_CONFIG[fleetMetrics.healthStatus];
 
+  const healthStatusClass = `health-status-${fleetMetrics.healthStatus.toLowerCase()}`;
+
   return (
-    <Card className={className}>
+    <Card className={clsx('fleet-health-card', className)}>
       <CardBody>
         {/* Header */}
         <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500/15 to-cyan-500/15">
-            <Activity className="h-5 w-5 text-link" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 shadow-lg shadow-emerald-500/10">
+            <Activity className="h-5 w-5 text-emerald-400" />
           </div>
           <h2 className="text-lg font-semibold text-primary">Fleet Health</h2>
         </div>
 
         {/* Circular Gauge */}
         <div className="flex justify-center mb-6">
-          <div className="relative">
+          <div className="relative fleet-gauge-glow">
             <svg
               width={size}
               height={size}
@@ -94,6 +96,13 @@ export const FleetHealthGauge = ({ devices, className }: FleetHealthGaugeProps) 
                   <stop offset="0%" stopColor="#10b981" />
                   <stop offset="100%" stopColor="#00d4ff" />
                 </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
               </defs>
               {/* Background circle */}
               <circle
@@ -103,7 +112,7 @@ export const FleetHealthGauge = ({ devices, className }: FleetHealthGaugeProps) 
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={strokeWidth}
-                className="text-hover"
+                className="text-hover opacity-30"
               />
               {/* Value circle */}
               <circle
@@ -117,15 +126,13 @@ export const FleetHealthGauge = ({ devices, className }: FleetHealthGaugeProps) 
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 className="transition-all duration-1000 ease-out fleet-gauge-animate"
-                style={{
-                  filter: `drop-shadow(0 0 10px ${healthConfig.color}50)`,
-                }}
+                filter="url(#glow)"
               />
             </svg>
             {/* Center content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span
-                className="text-4xl font-bold font-mono fleet-health-value"
+                className="text-5xl font-bold font-mono fleet-health-value"
                 style={{
                   background: fleetMetrics.averageHealth > 60
                     ? 'linear-gradient(135deg, #10b981, #00d4ff)'
@@ -137,10 +144,10 @@ export const FleetHealthGauge = ({ devices, className }: FleetHealthGaugeProps) 
               >
                 {fleetMetrics.averageHealth}%
               </span>
-              <span
-                className="text-xs font-semibold uppercase tracking-widest mt-1"
-                style={{ color: healthConfig.color }}
-              >
+              <span className={clsx(
+                'text-sm font-bold uppercase tracking-widest mt-1',
+                healthStatusClass
+              )}>
                 {healthConfig.label}
               </span>
             </div>
@@ -153,18 +160,21 @@ export const FleetHealthGauge = ({ devices, className }: FleetHealthGaugeProps) 
             icon={<Cpu className="h-4 w-4" />}
             value={fleetMetrics.totalDevices}
             label="Devices"
+            iconColor="text-cyan-400"
           />
           <MiniStat
             icon={<Wifi className="h-4 w-4" />}
             value={fleetMetrics.onlineDevices}
             label="Online"
-            valueClassName="text-success"
+            valueClassName="text-emerald-400"
+            iconColor="text-emerald-400"
           />
           <MiniStat
             icon={<Zap className="h-4 w-4" />}
             value={fleetMetrics.totalDevices > 0 ? `${Math.round((fleetMetrics.onlineDevices / fleetMetrics.totalDevices) * 100)}%` : '0%'}
             label="Uptime"
-            valueClassName="text-warning"
+            valueClassName="text-amber-400"
+            iconColor="text-amber-400"
           />
         </div>
       </CardBody>
@@ -178,14 +188,15 @@ interface MiniStatProps {
   value: number | string;
   label: string;
   valueClassName?: string;
+  iconColor?: string;
 }
 
-const MiniStat = ({ icon, value, label, valueClassName }: MiniStatProps) => (
-  <div className="bg-hover rounded-lg p-3 text-center transition-all duration-200 hover:scale-105 cursor-default">
-    <div className="flex justify-center mb-1 text-secondary">{icon}</div>
+const MiniStat = ({ icon, value, label, valueClassName, iconColor }: MiniStatProps) => (
+  <div className="mini-stat-card">
+    <div className={clsx('flex justify-center mb-2', iconColor || 'text-secondary')}>{icon}</div>
     <div className={clsx('text-2xl font-bold font-mono', valueClassName || 'text-primary')}>
       {value}
     </div>
-    <div className="text-xs text-secondary uppercase tracking-wide">{label}</div>
+    <div className="text-xs text-secondary uppercase tracking-wider mt-1">{label}</div>
   </div>
 );
