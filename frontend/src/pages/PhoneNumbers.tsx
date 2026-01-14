@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Phone, Check, X, RefreshCw, Star, Power, Trash2, Shield } from 'lucide-react';
+import { Plus, Phone, X, RefreshCw, Star, Power, Trash2, Shield } from 'lucide-react';
 import { PhoneNumber } from '../types';
 import { apiService } from '../services/api';
 import toast from 'react-hot-toast';
@@ -185,11 +185,15 @@ export const PhoneNumbers = () => {
                 <div className="flex items-center space-x-2">
                   {!phone.verified && (
                     <button
-                      onClick={() => setVerifyingPhone(phone.id)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Verify phone number"
+                      onClick={() => {
+                        handleResendCode(phone.id);
+                        setVerifyingPhone(phone.id);
+                      }}
+                      className="flex items-center space-x-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                      title="Send verification code"
                     >
-                      <Check className="h-5 w-5" />
+                      <Shield className="h-4 w-4" />
+                      <span>Verify</span>
                     </button>
                   )}
                   {!phone.isPrimary && phone.verified && (
