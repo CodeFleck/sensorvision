@@ -224,7 +224,7 @@ export const Login: React.FC = () => {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Username Field */}
+                {/* Username/Email Field */}
                 <div className="relative">
                   <label
                     htmlFor="username"
@@ -234,14 +234,14 @@ export const Login: React.FC = () => {
                         : 'top-3.5 text-[#4a535c]'
                     }`}
                   >
-                    Username
+                    Email or Username
                   </label>
                   <input
                     id="username"
                     type="text"
                     autoComplete="username"
                     required
-                    aria-label="Username"
+                    aria-label="Email or Username"
                     aria-required="true"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
