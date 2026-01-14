@@ -212,7 +212,7 @@ public class WebhookNotificationService {
 
             Map<String, Object> testPayload = new HashMap<>();
             testPayload.put("event", "webhook.test");
-            testPayload.put("message", "This is a test webhook from SensorVision");
+            testPayload.put("message", "This is a test webhook from Industrial Cloud");
             testPayload.put("timestamp", java.time.LocalDateTime.now().format(DATE_FORMATTER));
 
             HttpHeaders headers = new HttpHeaders();

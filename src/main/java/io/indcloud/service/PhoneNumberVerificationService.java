@@ -250,7 +250,7 @@ public class PhoneNumberVerificationService {
      */
     private boolean sendVerificationSms(String phoneNumber, String code) {
         String message = String.format(
-            "Your SensorVision verification code is: %s. Valid for %d minutes.",
+            "Your Industrial Cloud verification code is: %s. Valid for %d minutes.",
             code,
             VERIFICATION_EXPIRY_MINUTES
         );

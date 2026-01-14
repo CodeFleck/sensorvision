@@ -415,7 +415,7 @@ public class EmailTemplateService {
                                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%%">
                                             <tr>
                                                 <td>
-                                                    <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 600; color: #1e293b; letter-spacing: -0.5px;">SensorVision</span>
+                                                    <span style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 600; color: #1e293b; letter-spacing: -0.5px;">Industrial Cloud</span>
                                                 </td>
                                                 <td style="text-align: right;">
                                                     <span style="display: inline-block; background-color: %s; color: #ffffff; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">%s</span>
@@ -486,7 +486,7 @@ public class EmailTemplateService {
                                 <tr>
                                     <td style="padding: 24px 40px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; border-radius: 0 0 16px 16px;">
                                         <p style="margin: 0; font-size: 13px; color: #64748b; text-align: center; line-height: 1.6;">
-                                            This is an automated alert from your SensorVision monitoring system.
+                                            This is an automated alert from your Industrial Cloud monitoring system.
                                             <br>
                                             <a href="%s/settings/notifications" style="color: #0f766e; text-decoration: none; font-weight: 500;">Manage notification preferences</a>
                                         </p>

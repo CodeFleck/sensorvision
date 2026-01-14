@@ -156,7 +156,7 @@ public class TeamsNotificationService {
 
         sendCustomNotification(
                 "Test Notification",
-                "This is a test message from SensorVision. If you're seeing this, Teams integration is working correctly!",
+                "This is a test message from Industrial Cloud. If you're seeing this, Teams integration is working correctly!",
                 "0078D4"
         );
     }
