@@ -457,6 +457,35 @@
 
 @layer utilities {
   /* ========================================
+     BROWSER AUTOFILL DETECTION
+     ======================================== */
+
+  /* These keyframes detect when browser autofills input fields.
+     Browser autofill doesn't trigger React's onChange, so we use
+     CSS animations to detect when :-webkit-autofill is applied. */
+  @keyframes onAutoFillStart {
+    from { /* empty */ }
+    to { /* empty */ }
+  }
+
+  @keyframes onAutoFillCancel {
+    from { /* empty */ }
+    to { /* empty */ }
+  }
+
+  /* Apply animation when input is autofilled */
+  input:-webkit-autofill {
+    animation-name: onAutoFillStart;
+    animation-fill-mode: both;
+  }
+
+  /* Apply cancel animation when autofill is removed */
+  input:not(:-webkit-autofill) {
+    animation-name: onAutoFillCancel;
+    animation-fill-mode: both;
+  }
+
+  /* ========================================
      PREMIUM ANIMATIONS
      ======================================== */
 
