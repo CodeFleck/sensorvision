@@ -28,7 +28,7 @@ import java.util.List;
  * {
  *   "webhookUrl": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
  *   "channel": "#alerts" (optional),
- *   "username": "SensorVision" (optional),
+ *   "username": "Industrial Cloud" (optional),
  *   "iconEmoji": ":robot_face:" (optional)
  * }
  */
@@ -63,7 +63,7 @@ public class SlackNotificationPlugin implements NotificationPlugin, DataPluginPr
             if (config.has("username")) {
                 slackMessage.put("username", config.get("username").asText());
             } else {
-                slackMessage.put("username", "SensorVision");
+                slackMessage.put("username", "Industrial Cloud");
             }
 
             // Add optional icon

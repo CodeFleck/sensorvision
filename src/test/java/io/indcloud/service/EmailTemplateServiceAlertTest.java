@@ -342,8 +342,8 @@ class EmailTemplateServiceAlertTest {
         }
 
         @Test
-        @DisplayName("Should include SensorVision branding")
-        void shouldIncludeSensorVisionBranding() {
+        @DisplayName("Should include Industrial Cloud branding")
+        void shouldIncludeIndustrialCloudBranding() {
             Alert alert = createTestAlert(
                 "Test Alert",
                 "device-001",
@@ -359,7 +359,6 @@ class EmailTemplateServiceAlertTest {
             String emailHtml = emailTemplateService.generateAlertNotificationEmail(alert);
 
             assertThat(emailHtml)
-                .contains("SensorVision")
                 .contains("Industrial Cloud");
         }
 

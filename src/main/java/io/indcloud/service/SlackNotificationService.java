@@ -66,7 +66,7 @@ public class SlackNotificationService {
         attachment.put("color", color);
         attachment.put("title", emoji + " Alert: " + alert.getRule().getName());
         attachment.put("text", alert.getMessage());
-        attachment.put("footer", "SensorVision Alert");
+        attachment.put("footer", "Industrial Cloud Alert");
         attachment.put("ts", alert.getTriggeredAt().atZone(java.time.ZoneId.systemDefault()).toEpochSecond());
 
         Map<String, Object> field1 = new HashMap<>();
@@ -103,7 +103,7 @@ public class SlackNotificationService {
         attachment.put("color", color != null ? color : "#36a64f");
         attachment.put("title", title);
         attachment.put("text", text);
-        attachment.put("footer", "SensorVision");
+        attachment.put("footer", "Industrial Cloud");
         attachment.put("ts", System.currentTimeMillis() / 1000);
 
         Map<String, Object> message = new HashMap<>();
@@ -160,7 +160,7 @@ public class SlackNotificationService {
 
         sendCustomNotification(
                 "Test Notification",
-                "This is a test message from SensorVision. If you're seeing this, Slack integration is working correctly!",
+                "This is a test message from Industrial Cloud. If you're seeing this, Slack integration is working correctly!",
                 "#36a64f"
         );
     }

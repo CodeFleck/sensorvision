@@ -73,7 +73,7 @@ public class SmsNotificationService {
     @Value("${notification.sms.aws.secret-key:}")
     private String awsSecretKey;
 
-    @Value("${notification.sms.aws.sender-id:SensorVision}")
+    @Value("${notification.sms.aws.sender-id:IndCloud}")
     private String snsSenderId;
 
     @Value("${notification.sms.cost-per-message:0.00645}")
