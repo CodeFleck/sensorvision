@@ -18,8 +18,22 @@ export const Register: React.FC = () => {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [autofilledFields, setAutofilledFields] = useState<Set<string>>(new Set());
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  // Detect browser autofill via CSS animation
+  const handleAnimationStart = (e: React.AnimationEvent<HTMLInputElement>, fieldName: string) => {
+    if (e.animationName === 'onAutoFillStart') {
+      setAutofilledFields(prev => new Set(prev).add(fieldName));
+    } else if (e.animationName === 'onAutoFillCancel') {
+      setAutofilledFields(prev => {
+        const next = new Set(prev);
+        next.delete(fieldName);
+        return next;
+      });
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -93,11 +107,11 @@ export const Register: React.FC = () => {
         className={`absolute transition-all duration-200 pointer-events-none ${
           Icon ? 'left-10' : 'left-4'
         } ${
-          focusedField === name || formData[name as keyof typeof formData]
+          focusedField === name || formData[name as keyof typeof formData] || autofilledFields.has(name)
             ? `-top-2.5 !left-4 text-xs font-medium text-[#0969da] px-2 rounded`
             : 'top-3.5 text-[#4a535c]'
         }`}
-        style={focusedField === name || formData[name as keyof typeof formData] ? { backgroundColor: '#ffffff' } : {}}
+        style={focusedField === name || formData[name as keyof typeof formData] || autofilledFields.has(name) ? { backgroundColor: '#ffffff' } : {}}
       >
         {label}
       </label>
@@ -116,6 +130,7 @@ export const Register: React.FC = () => {
         onChange={handleChange}
         onFocus={() => setFocusedField(name)}
         onBlur={() => setFocusedField(null)}
+        onAnimationStart={(e) => handleAnimationStart(e, name)}
         className={`w-full py-3.5 rounded-xl text-[#1f2328] placeholder-transparent focus:outline-none focus:ring-2 focus:ring-[#0969da]/20 transition-all duration-200 ${
           Icon ? 'pl-10 pr-4' : 'px-4'
         } ${showToggle ? 'pr-12' : ''}`}
@@ -367,11 +382,11 @@ export const Register: React.FC = () => {
                   <label
                     htmlFor="password"
                     className={`absolute left-10 transition-all duration-200 pointer-events-none ${
-                      focusedField === 'password' || formData.password
+                      focusedField === 'password' || formData.password || autofilledFields.has('password')
                         ? '-top-2.5 !left-4 text-xs font-medium text-[#0969da] px-2 rounded'
                         : 'top-3.5 text-[#4a535c]'
                     }`}
-                    style={focusedField === 'password' || formData.password ? { backgroundColor: '#ffffff' } : {}}
+                    style={focusedField === 'password' || formData.password || autofilledFields.has('password') ? { backgroundColor: '#ffffff' } : {}}
                   >
                     Password
                   </label>
@@ -388,6 +403,7 @@ export const Register: React.FC = () => {
                     onChange={handleChange}
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
+                    onAnimationStart={(e) => handleAnimationStart(e, 'password')}
                     className="w-full pl-10 pr-12 py-3.5 rounded-xl text-[#1f2328] placeholder-transparent focus:outline-none focus:ring-2 focus:ring-[#0969da]/20 transition-all duration-200"
                     style={{
                       backgroundColor: '#ffffff',
@@ -409,11 +425,11 @@ export const Register: React.FC = () => {
                   <label
                     htmlFor="confirmPassword"
                     className={`absolute left-10 transition-all duration-200 pointer-events-none ${
-                      focusedField === 'confirmPassword' || formData.confirmPassword
+                      focusedField === 'confirmPassword' || formData.confirmPassword || autofilledFields.has('confirmPassword')
                         ? '-top-2.5 !left-4 text-xs font-medium text-[#0969da] px-2 rounded'
                         : 'top-3.5 text-[#4a535c]'
                     }`}
-                    style={focusedField === 'confirmPassword' || formData.confirmPassword ? { backgroundColor: '#ffffff' } : {}}
+                    style={focusedField === 'confirmPassword' || formData.confirmPassword || autofilledFields.has('confirmPassword') ? { backgroundColor: '#ffffff' } : {}}
                   >
                     Confirm Password
                   </label>
@@ -430,6 +446,7 @@ export const Register: React.FC = () => {
                     onChange={handleChange}
                     onFocus={() => setFocusedField('confirmPassword')}
                     onBlur={() => setFocusedField(null)}
+                    onAnimationStart={(e) => handleAnimationStart(e, 'confirmPassword')}
                     className="w-full pl-10 pr-12 py-3.5 rounded-xl text-[#1f2328] placeholder-transparent focus:outline-none focus:ring-2 focus:ring-[#0969da]/20 transition-all duration-200"
                     style={{
                       backgroundColor: '#ffffff',

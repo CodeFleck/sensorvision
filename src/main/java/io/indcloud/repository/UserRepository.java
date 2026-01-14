@@ -14,6 +14,13 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
+
+    /**
+     * Find user by username or email (case-insensitive) in a single query.
+     * This prevents timing attacks that could enumerate valid usernames/emails.
+     */
+    @Query("SELECT u FROM User u WHERE LOWER(u.username) = LOWER(:identifier) OR LOWER(u.email) = LOWER(:identifier)")
+    Optional<User> findByUsernameOrEmailIgnoreCase(@Param("identifier") String identifier);
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
 

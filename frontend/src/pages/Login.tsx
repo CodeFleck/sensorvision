@@ -10,8 +10,22 @@ export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [autofilledFields, setAutofilledFields] = useState<Set<string>>(new Set());
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Detect browser autofill via CSS animation
+  const handleAnimationStart = (e: React.AnimationEvent<HTMLInputElement>, fieldName: string) => {
+    if (e.animationName === 'onAutoFillStart') {
+      setAutofilledFields(prev => new Set(prev).add(fieldName));
+    } else if (e.animationName === 'onAutoFillCancel') {
+      setAutofilledFields(prev => {
+        const next = new Set(prev);
+        next.delete(fieldName);
+        return next;
+      });
+    }
+  };
 
   const backendUrl = window.location.origin;
 
@@ -210,29 +224,30 @@ export const Login: React.FC = () => {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Username Field */}
+                {/* Username/Email Field */}
                 <div className="relative">
                   <label
                     htmlFor="username"
                     className={`absolute left-4 transition-all duration-200 pointer-events-none ${
-                      focusedField === 'username' || username
+                      focusedField === 'username' || username || autofilledFields.has('username')
                         ? '-top-2.5 text-xs font-medium text-[#0969da] bg-white px-2 rounded'
                         : 'top-3.5 text-[#4a535c]'
                     }`}
                   >
-                    Username
+                    Email or Username
                   </label>
                   <input
                     id="username"
                     type="text"
                     autoComplete="username"
                     required
-                    aria-label="Username"
+                    aria-label="Email or Username"
                     aria-required="true"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     onFocus={() => setFocusedField('username')}
                     onBlur={() => setFocusedField(null)}
+                    onAnimationStart={(e) => handleAnimationStart(e, 'username')}
                     className="w-full px-4 py-3.5 rounded-xl text-[#1f2328] placeholder-transparent focus:outline-none focus:border-[#0969da] focus:ring-2 focus:ring-[#0969da]/20 transition-all duration-200"
                     style={{ backgroundColor: '#ffffff', border: '1px solid #d0d7de' }}
                   />
@@ -243,7 +258,7 @@ export const Login: React.FC = () => {
                   <label
                     htmlFor="password"
                     className={`absolute left-4 transition-all duration-200 pointer-events-none ${
-                      focusedField === 'password' || password
+                      focusedField === 'password' || password || autofilledFields.has('password')
                         ? '-top-2.5 text-xs font-medium text-[#0969da] bg-white px-2 rounded'
                         : 'top-3.5 text-[#4a535c]'
                     }`}
@@ -261,6 +276,7 @@ export const Login: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
+                    onAnimationStart={(e) => handleAnimationStart(e, 'password')}
                     className="w-full px-4 py-3.5 pr-12 rounded-xl text-[#1f2328] placeholder-transparent focus:outline-none focus:border-[#0969da] focus:ring-2 focus:ring-[#0969da]/20 transition-all duration-200"
                     style={{ backgroundColor: '#ffffff', border: '1px solid #d0d7de' }}
                   />
