@@ -18,16 +18,18 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-        // Try to find user by username first, then by email
-        User user = userRepository.findByUsername(usernameOrEmail)
-                .or(() -> userRepository.findByEmail(usernameOrEmail))
+        // Single query lookup to prevent timing attacks that could enumerate users
+        // Uses case-insensitive matching for both username and email
+        User user = userRepository.findByUsernameOrEmailIgnoreCase(usernameOrEmail)
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail)
+                        // Use generic error message to prevent information leakage
+                        new UsernameNotFoundException("Invalid credentials")
                 );
 
         // Block soft-deleted users from authenticating
+        // Use same generic message to prevent account enumeration
         if (user.isDeleted()) {
-            throw new UsernameNotFoundException("User account has been deleted: " + usernameOrEmail);
+            throw new UsernameNotFoundException("Invalid credentials");
         }
 
         return UserPrincipal.create(user);
