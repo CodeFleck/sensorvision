@@ -3,21 +3,22 @@ import { Navigate } from 'react-router-dom';
 import { DeviceCard } from '../components/DeviceCard';
 import { RealTimeChart } from '../components/RealTimeChart';
 import { GettingStarted } from '../components/GettingStarted';
+import { FleetHealthGauge } from '../components/FleetHealthGauge';
+import { ActivityTimeline } from '../components/ActivityTimeline';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/api';
 import { Device, LatestTelemetry, TelemetryPoint } from '../types';
 import {
   Activity,
-  Zap,
-  Cpu,
   AlertTriangle,
   RefreshCw,
-  Clock,
-  TrendingUp,
-  TrendingDown,
   BarChart3,
   ChevronDown,
+  TrendingUp,
+  TrendingDown,
+  Zap,
+  Clock,
 } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -58,6 +59,9 @@ export const Dashboard = () => {
   const [metricsData, setMetricsData] = useState<MetricsData | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(false);
 
+  // Telemetry history for sparklines (store last 10 values per device)
+  const telemetryHistoryRef = useRef<Record<string, number[]>>({});
+
   // AbortController ref to cancel in-flight requests on time range change
   const metricsAbortControllerRef = useRef<AbortController | null>(null);
   // Track if initial data has been fetched to prevent duplicate fetches
@@ -80,7 +84,6 @@ export const Dashboard = () => {
   }, []);
 
   // Fetch aggregated metrics for the selected time range
-  // Uses AbortController to cancel in-flight requests on time range change
   const fetchMetrics = useCallback(async (deviceList: Device[], timeRange: TimeRangeValue) => {
     if (deviceList.length === 0) return;
 
@@ -103,13 +106,10 @@ export const Dashboard = () => {
       const currentAcc = { sum: 0, min: Number.MAX_VALUE, max: Number.MIN_VALUE, count: 0 };
 
       // Fetch aggregated data for each device and aggregate across all devices
-      // Use Promise.allSettled to handle partial failures gracefully
       const devicePromises = deviceList.map(async (device) => {
-        // Check if aborted before starting
         if (abortController.signal.aborted) return;
 
         try {
-          // Fetch all metrics for this device in parallel, passing abort signal
           const signal = abortController.signal;
           const [avgPower, minPower, maxPower, avgVoltage, minVoltage, maxVoltage, avgCurrent, minCurrent, maxCurrent] = await Promise.all([
             apiService.getAggregatedData(device.externalId, 'kwConsumption', 'AVG', start, end, 'NONE', { signal }),
@@ -123,10 +123,9 @@ export const Dashboard = () => {
             apiService.getAggregatedData(device.externalId, 'current', 'MAX', start, end, 'NONE', { signal }),
           ]);
 
-          // Check if aborted after fetch
           if (abortController.signal.aborted) return;
 
-          // Process power metrics with proper sum accumulation
+          // Process power metrics
           if (avgPower && avgPower.length > 0 && avgPower[0]?.value !== undefined) {
             powerAcc.sum += avgPower[0].value;
             powerAcc.count++;
@@ -162,17 +161,14 @@ export const Dashboard = () => {
             currentAcc.max = Math.max(currentAcc.max, maxCurrent[0].value);
           }
         } catch (err) {
-          // Skip this device if metrics fetch fails
           console.warn(`Failed to fetch metrics for device ${device.externalId}:`, err);
         }
       });
 
       await Promise.allSettled(devicePromises);
 
-      // Check if aborted after all fetches
       if (abortController.signal.aborted) return;
 
-      // Calculate final metrics from accumulators
       const metrics: MetricsData = {
         power: {
           avg: powerAcc.count > 0 ? powerAcc.sum / powerAcc.count : null,
@@ -196,11 +192,9 @@ export const Dashboard = () => {
 
       setMetricsData(metrics);
     } catch (err) {
-      // Ignore abort errors
       if (err instanceof Error && err.name === 'AbortError') return;
       console.error('Failed to fetch metrics:', err);
     } finally {
-      // Only update loading state if this is the current request
       if (!abortController.signal.aborted) {
         setMetricsLoading(false);
       }
@@ -226,8 +220,6 @@ export const Dashboard = () => {
         }, {});
 
         setLatestTelemetry(telemetryMap);
-
-        // Fetch metrics for the selected time range
         fetchMetrics(devicesData, selectedTimeRange);
       }
     } catch (err) {
@@ -238,28 +230,24 @@ export const Dashboard = () => {
     }
   };
 
-  // Initial data fetch - runs once on mount
+  // Initial data fetch
   useEffect(() => {
     if (!initialFetchDone.current) {
       initialFetchDone.current = true;
       fetchData();
     }
 
-    // Cleanup: abort any in-flight metrics requests on unmount
     return () => {
       if (metricsAbortControllerRef.current) {
         metricsAbortControllerRef.current.abort();
       }
     };
-    // fetchData is intentionally excluded - we only want this to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Refetch metrics when time range changes (not on initial mount)
+  // Refetch metrics when time range changes
   useEffect(() => {
-    // Skip initial render - fetchData already handles the first fetch
     if (!initialFetchDone.current) return;
-
     if (devices.length > 0) {
       fetchMetrics(devices, selectedTimeRange);
     }
@@ -283,17 +271,21 @@ export const Dashboard = () => {
         ...prev,
         [lastMessage.deviceId]: lastMessage,
       }));
+
+      // Store telemetry history for sparklines
+      const deviceId = lastMessage.deviceId;
+      const powerValue = lastMessage.kwConsumption || lastMessage.kw_consumption;
+      if (typeof powerValue === 'number') {
+        const history = telemetryHistoryRef.current[deviceId] || [];
+        telemetryHistoryRef.current[deviceId] = [...history.slice(-9), powerValue];
+      }
     }
   }, [lastMessage]);
 
-  // Redirect admins to admin dashboard - placed after all hooks to comply with Rules of Hooks
+  // Redirect admins to admin dashboard
   if (isAdmin) {
     return <Navigate to="/admin-dashboard" replace />;
   }
-
-  const onlineDevices = devices.filter(d => d.status === 'ONLINE').length;
-  const totalPower = Object.values(latestTelemetry)
-    .reduce((sum, reading) => sum + (reading.kwConsumption || 0), 0);
 
   if (loading) {
     return (
@@ -338,64 +330,38 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
-        <p className="text-secondary mt-1">Real-time IoT monitoring overview</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
+          <p className="text-secondary mt-1">Real-time IoT monitoring overview</p>
+        </div>
+        {/* Connection Status */}
+        <div className="flex items-center space-x-2 px-3 py-2 bg-secondary rounded-lg border border-default">
+          <div className={clsx(
+            'w-2 h-2 rounded-full',
+            connectionStatus === 'Open' ? 'bg-success animate-pulse' : 'bg-danger'
+          )} />
+          <span className={clsx(
+            'text-sm font-medium font-mono',
+            connectionStatus === 'Open' ? 'text-success' : 'text-danger'
+          )}>
+            {connectionStatus === 'Open' ? 'Connected: Live' : 'Disconnected'}
+          </span>
+        </div>
       </div>
 
-      {/* Connection Status */}
-      <Card>
-        <CardBody>
-          <div className="flex items-center space-x-2">
-            <Activity className={`h-4 w-4 ${connectionStatus === 'Open' ? 'text-success' : 'text-danger'}`} />
-            <span className="text-sm font-medium text-primary">
-              Real-time Connection: {connectionStatus}
-            </span>
-          </div>
-        </CardBody>
-      </Card>
+      {/* Top Section: Fleet Health + Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Fleet Health Panel */}
+        <FleetHealthGauge devices={devices} />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardBody>
-            <div className="flex items-center">
-              <Cpu className="h-8 w-8 text-link" />
-              <div className="ml-4">
-                <div className="text-2xl font-bold text-primary">{devices.length}</div>
-                <div className="text-sm text-secondary">Total Devices</div>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody>
-            <div className="flex items-center">
-              <Activity className="h-8 w-8 text-success" />
-              <div className="ml-4">
-                <div className="text-2xl font-bold text-primary">{onlineDevices}</div>
-                <div className="text-sm text-secondary">Online Devices</div>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardBody>
-            <div className="flex items-center">
-              <Zap className="h-8 w-8 text-warning" />
-              <div className="ml-4">
-                <div className="text-2xl font-bold text-primary">{totalPower.toFixed(1)} kW</div>
-                <div className="text-sm text-secondary">Total Power</div>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+        {/* Activity Timeline */}
+        <ActivityTimeline maxItems={10} refreshIntervalMs={30000} />
       </div>
 
-      {/* Historical Metrics Panel - Always Visible */}
+      {/* Historical Metrics Panel */}
       <Card>
         <CardBody>
           {/* Header with Time Range Dropdown */}
@@ -447,31 +413,31 @@ export const Dashboard = () => {
               {/* Power Consumption Metrics */}
               <div className="bg-hover rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Zap className="h-5 w-5 text-yellow-500" />
+                  <Zap className="h-5 w-5 text-amber-400" />
                   <h3 className="font-medium text-primary">Power Consumption</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-secondary text-sm">Average</span>
-                    <span className="font-medium text-primary">
+                    <span className="font-medium text-primary font-mono">
                       {formatMetricValue(metricsData.power.avg, 'kW')}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-secondary text-sm flex items-center gap-1">
-                      <TrendingDown className="h-3 w-3 text-green-500" />
+                      <TrendingDown className="h-3 w-3 text-emerald-400" />
                       Minimum
                     </span>
-                    <span className="font-medium text-green-600">
+                    <span className="font-medium text-emerald-400 font-mono">
                       {formatMetricValue(metricsData.power.min, 'kW')}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-secondary text-sm flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3 text-red-500" />
+                      <TrendingUp className="h-3 w-3 text-rose-400" />
                       Maximum
                     </span>
-                    <span className="font-medium text-red-600">
+                    <span className="font-medium text-rose-400 font-mono">
                       {formatMetricValue(metricsData.power.max, 'kW')}
                     </span>
                   </div>
@@ -481,31 +447,31 @@ export const Dashboard = () => {
               {/* Voltage Metrics */}
               <div className="bg-hover rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Activity className="h-5 w-5 text-blue-500" />
+                  <Activity className="h-5 w-5 text-cyan-400" />
                   <h3 className="font-medium text-primary">Voltage</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-secondary text-sm">Average</span>
-                    <span className="font-medium text-primary">
+                    <span className="font-medium text-primary font-mono">
                       {formatMetricValue(metricsData.voltage.avg, 'V', 1)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-secondary text-sm flex items-center gap-1">
-                      <TrendingDown className="h-3 w-3 text-green-500" />
+                      <TrendingDown className="h-3 w-3 text-emerald-400" />
                       Minimum
                     </span>
-                    <span className="font-medium text-green-600">
+                    <span className="font-medium text-emerald-400 font-mono">
                       {formatMetricValue(metricsData.voltage.min, 'V', 1)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-secondary text-sm flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3 text-red-500" />
+                      <TrendingUp className="h-3 w-3 text-rose-400" />
                       Maximum
                     </span>
-                    <span className="font-medium text-red-600">
+                    <span className="font-medium text-rose-400 font-mono">
                       {formatMetricValue(metricsData.voltage.max, 'V', 1)}
                     </span>
                   </div>
@@ -515,31 +481,31 @@ export const Dashboard = () => {
               {/* Current Metrics */}
               <div className="bg-hover rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Clock className="h-5 w-5 text-purple-500" />
+                  <Clock className="h-5 w-5 text-purple-400" />
                   <h3 className="font-medium text-primary">Current</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-secondary text-sm">Average</span>
-                    <span className="font-medium text-primary">
+                    <span className="font-medium text-primary font-mono">
                       {formatMetricValue(metricsData.current.avg, 'A', 3)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-secondary text-sm flex items-center gap-1">
-                      <TrendingDown className="h-3 w-3 text-green-500" />
+                      <TrendingDown className="h-3 w-3 text-emerald-400" />
                       Minimum
                     </span>
-                    <span className="font-medium text-green-600">
+                    <span className="font-medium text-emerald-400 font-mono">
                       {formatMetricValue(metricsData.current.min, 'A', 3)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-secondary text-sm flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3 text-red-500" />
+                      <TrendingUp className="h-3 w-3 text-rose-400" />
                       Maximum
                     </span>
-                    <span className="font-medium text-red-600">
+                    <span className="font-medium text-rose-400 font-mono">
                       {formatMetricValue(metricsData.current.max, 'A', 3)}
                     </span>
                   </div>
@@ -558,7 +524,7 @@ export const Dashboard = () => {
         </CardBody>
       </Card>
 
-      {/* Real-time Chart - Only show when there's telemetry data */}
+      {/* Real-time Chart */}
       {Object.keys(latestTelemetry).length > 0 && (
         <Card>
           <CardBody>
@@ -577,6 +543,7 @@ export const Dashboard = () => {
               key={device.externalId}
               device={device}
               latestTelemetry={latestTelemetry[device.externalId]}
+              telemetryHistory={telemetryHistoryRef.current[device.externalId] || []}
             />
           ))}
         </div>

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { getApiBaseUrl, getBackendUrl, getWebSocketUrl } from './config';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { getApiBaseUrl, getBackendUrl, getWebSocketUrl, featureFlags } from './config';
 
 describe('config.ts', () => {
   beforeEach(() => {
@@ -130,6 +130,99 @@ describe('config.ts', () => {
 
       expect(wsUrl).toBe('wss://production.sensorvision.com/ws/telemetry');
       expect(wsUrl).not.toContain(':8080');
+    });
+  });
+
+  describe('featureFlags', () => {
+    // Store original localStorage methods
+    const originalGetItem = Storage.prototype.getItem;
+    const originalSetItem = Storage.prototype.setItem;
+    const originalRemoveItem = Storage.prototype.removeItem;
+
+    beforeEach(() => {
+      // Clear any localStorage overrides before each test
+      localStorage.removeItem('FF_ENGAGING_DASHBOARD');
+    });
+
+    afterEach(() => {
+      // Clean up after tests
+      localStorage.removeItem('FF_ENGAGING_DASHBOARD');
+      // Restore original methods if they were mocked
+      Storage.prototype.getItem = originalGetItem;
+      Storage.prototype.setItem = originalSetItem;
+      Storage.prototype.removeItem = originalRemoveItem;
+    });
+
+    describe('engagingDashboard', () => {
+      it('should return true by default (no localStorage override)', () => {
+        // Ensure no override is set
+        localStorage.removeItem('FF_ENGAGING_DASHBOARD');
+
+        expect(featureFlags.engagingDashboard).toBe(true);
+      });
+
+      it('should return true when localStorage override is "true"', () => {
+        localStorage.setItem('FF_ENGAGING_DASHBOARD', 'true');
+
+        expect(featureFlags.engagingDashboard).toBe(true);
+      });
+
+      it('should return false when localStorage override is "false"', () => {
+        localStorage.setItem('FF_ENGAGING_DASHBOARD', 'false');
+
+        expect(featureFlags.engagingDashboard).toBe(false);
+      });
+
+      it('should ignore invalid localStorage values (not "true" or "false")', () => {
+        // Invalid value should be treated as false (since it's not "true")
+        localStorage.setItem('FF_ENGAGING_DASHBOARD', 'invalid');
+
+        expect(featureFlags.engagingDashboard).toBe(false);
+      });
+
+      it('should return default when localStorage is cleared', () => {
+        // First set to false
+        localStorage.setItem('FF_ENGAGING_DASHBOARD', 'false');
+        expect(featureFlags.engagingDashboard).toBe(false);
+
+        // Then clear
+        localStorage.removeItem('FF_ENGAGING_DASHBOARD');
+        expect(featureFlags.engagingDashboard).toBe(true);
+      });
+
+      it('should allow quick rollback by setting to "false"', () => {
+        // Simulate production rollback scenario
+        expect(featureFlags.engagingDashboard).toBe(true);
+
+        // Quick rollback
+        localStorage.setItem('FF_ENGAGING_DASHBOARD', 'false');
+        expect(featureFlags.engagingDashboard).toBe(false);
+
+        // Re-enable
+        localStorage.setItem('FF_ENGAGING_DASHBOARD', 'true');
+        expect(featureFlags.engagingDashboard).toBe(true);
+      });
+
+      it('should read value dynamically on each access', () => {
+        // First access - default
+        expect(featureFlags.engagingDashboard).toBe(true);
+
+        // Change override
+        localStorage.setItem('FF_ENGAGING_DASHBOARD', 'false');
+
+        // Second access - should reflect change immediately
+        expect(featureFlags.engagingDashboard).toBe(false);
+      });
+    });
+
+    describe('localStorage key convention', () => {
+      it('should use FF_ prefix for feature flag keys', () => {
+        // This test documents the expected key naming convention
+        const expectedKey = 'FF_ENGAGING_DASHBOARD';
+
+        localStorage.setItem(expectedKey, 'false');
+        expect(featureFlags.engagingDashboard).toBe(false);
+      });
     });
   });
 });

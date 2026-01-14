@@ -62,6 +62,26 @@ export const getMqttBrokerPort = (): number => {
   return 1883; // Standard MQTT port
 };
 
+// Feature flags for quick rollback capability
+// These can be controlled via environment variables or localStorage for testing
+export const featureFlags = {
+  /**
+   * Enable the new engaging dashboard with Fleet Health, Activity Timeline,
+   * sparklines, and trend indicators.
+   * Set to false to revert to the classic dashboard layout.
+   * Can be overridden via localStorage: localStorage.setItem('FF_ENGAGING_DASHBOARD', 'false')
+   */
+  get engagingDashboard(): boolean {
+    // Check localStorage override first (for quick rollback in production)
+    const override = localStorage.getItem('FF_ENGAGING_DASHBOARD');
+    if (override !== null) {
+      return override === 'true';
+    }
+    // Default: enabled
+    return true;
+  },
+};
+
 // Config object for convenience - calls functions at access time
 export const config = {
   get apiBaseUrl() {
@@ -81,5 +101,8 @@ export const config = {
   },
   get mqttBrokerPort() {
     return getMqttBrokerPort();
+  },
+  get featureFlags() {
+    return featureFlags;
   },
 };
