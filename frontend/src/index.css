@@ -637,6 +637,20 @@
     animation: gauge-fill 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
+  /* Gauge glow pulse animation */
+  @keyframes gauge-glow-pulse {
+    0%, 100% {
+      filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.4)) drop-shadow(0 0 20px rgba(16, 185, 129, 0.2));
+    }
+    50% {
+      filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.6)) drop-shadow(0 0 35px rgba(16, 185, 129, 0.3));
+    }
+  }
+
+  .fleet-gauge-glow {
+    animation: gauge-glow-pulse 3s ease-in-out infinite;
+  }
+
   /* Health value count-up animation */
   @keyframes count-fade-in {
     from {
@@ -670,14 +684,114 @@
     animation: sparkline-draw 1.2s ease-out forwards;
   }
 
-  /* Device card hover lift effect */
+  /* Device card hover lift effect - Enhanced */
   .device-card-hover {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease,
+                border-color 0.3s ease;
+    border: 1px solid transparent;
   }
 
   .device-card-hover:hover {
-    transform: translateY(-4px);
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(0, 212, 255, 0.1);
   }
+
+  .dark .device-card-hover:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4),
+                0 0 30px rgba(0, 212, 255, 0.1),
+                0 0 0 1px rgba(0, 212, 255, 0.2);
+  }
+
+  /* Fleet Health Card styling */
+  .fleet-health-card {
+    background: linear-gradient(135deg,
+      var(--bg-card) 0%,
+      rgba(0, 212, 255, 0.02) 100%);
+    border: 1px solid var(--border-muted);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fleet-health-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #10b981 0%, #00d4ff 100%);
+    opacity: 0.8;
+  }
+
+  .dark .fleet-health-card {
+    background: linear-gradient(135deg,
+      var(--bg-card) 0%,
+      rgba(0, 212, 255, 0.03) 100%);
+    border-color: rgba(0, 212, 255, 0.1);
+  }
+
+  /* Activity Feed Card styling */
+  .activity-feed-card {
+    background: linear-gradient(135deg,
+      var(--bg-card) 0%,
+      rgba(168, 85, 247, 0.02) 100%);
+    border: 1px solid var(--border-muted);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .activity-feed-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+    opacity: 0.8;
+  }
+
+  .dark .activity-feed-card {
+    background: linear-gradient(135deg,
+      var(--bg-card) 0%,
+      rgba(168, 85, 247, 0.03) 100%);
+    border-color: rgba(168, 85, 247, 0.1);
+  }
+
+  /* Mini stat cards in Fleet Health */
+  .mini-stat-card {
+    background: var(--bg-hover);
+    border-radius: 12px;
+    padding: 12px 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+  }
+
+  .mini-stat-card:hover {
+    background: var(--bg-active);
+    transform: translateY(-2px);
+  }
+
+  .dark .mini-stat-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .dark .mini-stat-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(0, 212, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Health status label glow */
+  .health-status-excellent { color: #10b981; text-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+  .health-status-good { color: #00d4ff; text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
+  .health-status-fair { color: #f59e0b; text-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+  .health-status-poor { color: #f97316; text-shadow: 0 0 20px rgba(249, 115, 22, 0.5); }
+  .health-status-critical { color: #f43f5e; text-shadow: 0 0 20px rgba(244, 63, 94, 0.5); }
 
   /* Activity timeline scrollbar styling */
   .activity-timeline-scroll::-webkit-scrollbar {
@@ -698,20 +812,39 @@
     background: var(--accent-primary-hover);
   }
 
-  /* Live indicator pulse */
+  /* Live indicator pulse - Enhanced */
   @keyframes live-pulse {
     0%, 100% {
       opacity: 1;
       transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
     }
     50% {
-      opacity: 0.5;
-      transform: scale(1.2);
+      opacity: 0.8;
+      transform: scale(1.1);
+      box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
     }
   }
 
   .live-indicator-pulse {
-    animation: live-pulse 2s infinite;
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+
+  /* Severity border glow effects */
+  .severity-glow-info {
+    box-shadow: inset 3px 0 0 #00d4ff, 0 0 15px rgba(0, 212, 255, 0.1);
+  }
+
+  .severity-glow-warning {
+    box-shadow: inset 3px 0 0 #f59e0b, 0 0 15px rgba(245, 158, 11, 0.1);
+  }
+
+  .severity-glow-error {
+    box-shadow: inset 3px 0 0 #f43f5e, 0 0 15px rgba(244, 63, 94, 0.1);
+  }
+
+  .severity-glow-critical {
+    box-shadow: inset 3px 0 0 #ef4444, 0 0 20px rgba(239, 68, 68, 0.15);
   }
 
   /* ========================================

@@ -176,16 +176,18 @@ export const ActivityTimeline = ({
   }
 
   return (
-    <Card className={className}>
+    <Card className={clsx('activity-feed-card', className)}>
       <CardBody>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-link" />
+            <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-lg shadow-purple-500/10">
+              <Activity className="h-5 w-5 text-purple-400" />
+            </div>
             <h2 className="text-lg font-semibold text-primary">Activity Feed</h2>
           </div>
           <button
             onClick={fetchEvents}
-            className="p-2 text-secondary hover:text-primary hover:bg-hover rounded-lg transition-colors"
+            className="p-2 text-secondary hover:text-primary hover:bg-hover rounded-lg transition-all duration-200 hover:scale-110"
             title="Refresh"
           >
             <RefreshCw className="h-4 w-4" />
