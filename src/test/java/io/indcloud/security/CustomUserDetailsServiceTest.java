@@ -191,26 +191,26 @@ class CustomUserDetailsServiceTest {
         }
 
         @Test
-        @DisplayName("should throw exception when user not found by ID")
-        void shouldThrowExceptionWhenUserNotFoundById() {
+        @DisplayName("should throw generic error when user not found by ID to prevent enumeration")
+        void shouldThrowGenericErrorWhenUserNotFoundById() {
             when(userRepository.findByIdWithOrganizationAndRoles(999L))
                     .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> customUserDetailsService.loadUserById(999L))
                     .isInstanceOf(UsernameNotFoundException.class)
-                    .hasMessageContaining("User not found with id: 999");
+                    .hasMessage("Invalid credentials");
         }
 
         @Test
-        @DisplayName("should throw exception for deleted user by ID")
-        void shouldThrowExceptionForDeletedUserById() {
+        @DisplayName("should throw generic error for deleted user by ID to prevent enumeration")
+        void shouldThrowGenericErrorForDeletedUserById() {
             testUser.setDeletedAt(Instant.now());
             when(userRepository.findByIdWithOrganizationAndRoles(1L))
                     .thenReturn(Optional.of(testUser));
 
             assertThatThrownBy(() -> customUserDetailsService.loadUserById(1L))
                     .isInstanceOf(UsernameNotFoundException.class)
-                    .hasMessageContaining("User account has been deleted");
+                    .hasMessage("Invalid credentials");
         }
     }
 }
