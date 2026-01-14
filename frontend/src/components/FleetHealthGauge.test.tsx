@@ -11,8 +11,6 @@ const createMockDevice = (overrides: Partial<Device> = {}): Device => ({
   status: 'ONLINE',
   healthScore: 85,
   healthStatus: 'EXCELLENT',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
   ...overrides,
 });
 
@@ -144,8 +142,8 @@ describe('FleetHealthGauge', () => {
     it('should display total device count', () => {
       const devices = [
         createMockDevice(),
-        createMockDevice({ id: 2, externalId: 'device-002' }),
-        createMockDevice({ id: 3, externalId: 'device-003' }),
+        createMockDevice({ id: 'device-uuid-002', externalId: 'device-002' }),
+        createMockDevice({ id: 'device-uuid-003', externalId: 'device-003' }),
       ];
       render(<FleetHealthGauge devices={devices} />);
 
@@ -158,8 +156,8 @@ describe('FleetHealthGauge', () => {
     it('should display online device count', () => {
       const devices = [
         createMockDevice({ status: 'ONLINE' }),
-        createMockDevice({ id: 2, externalId: 'device-002', status: 'ONLINE' }),
-        createMockDevice({ id: 3, externalId: 'device-003', status: 'OFFLINE' }),
+        createMockDevice({ id: 'device-uuid-002', externalId: 'device-002', status: 'ONLINE' }),
+        createMockDevice({ id: 'device-uuid-003', externalId: 'device-003', status: 'OFFLINE' }),
       ];
       render(<FleetHealthGauge devices={devices} />);
 
@@ -171,9 +169,9 @@ describe('FleetHealthGauge', () => {
     it('should display correct uptime percentage', () => {
       const devices = [
         createMockDevice({ status: 'ONLINE' }),
-        createMockDevice({ id: 2, externalId: 'device-002', status: 'ONLINE' }),
-        createMockDevice({ id: 3, externalId: 'device-003', status: 'OFFLINE' }),
-        createMockDevice({ id: 4, externalId: 'device-004', status: 'OFFLINE' }),
+        createMockDevice({ id: 'device-uuid-002', externalId: 'device-002', status: 'ONLINE' }),
+        createMockDevice({ id: 'device-uuid-003', externalId: 'device-003', status: 'OFFLINE' }),
+        createMockDevice({ id: 'device-uuid-004', externalId: 'device-004', status: 'OFFLINE' }),
       ];
       render(<FleetHealthGauge devices={devices} />);
 
@@ -185,7 +183,7 @@ describe('FleetHealthGauge', () => {
     it('should display 100% uptime when all devices online', () => {
       const devices = [
         createMockDevice({ status: 'ONLINE', healthScore: 50 }), // Use different health so we can identify uptime
-        createMockDevice({ id: 2, externalId: 'device-002', status: 'ONLINE', healthScore: 50 }),
+        createMockDevice({ id: 'device-uuid-002', externalId: 'device-002', status: 'ONLINE', healthScore: 50 }),
       ];
       render(<FleetHealthGauge devices={devices} />);
 
@@ -269,7 +267,7 @@ describe('FleetHealthGauge', () => {
     it('should handle devices with all health scores at 0', () => {
       const devices = [
         createMockDevice({ healthScore: 0 }),
-        createMockDevice({ id: 2, externalId: 'device-002', healthScore: 0 }),
+        createMockDevice({ id: 'device-uuid-002', externalId: 'device-002', healthScore: 0 }),
       ];
       render(<FleetHealthGauge devices={devices} />);
 
@@ -280,7 +278,7 @@ describe('FleetHealthGauge', () => {
     it('should handle devices with all health scores at 100', () => {
       const devices = [
         createMockDevice({ healthScore: 100, status: 'ONLINE' }),
-        createMockDevice({ id: 2, externalId: 'device-002', healthScore: 100, status: 'ONLINE' }),
+        createMockDevice({ id: 'device-uuid-002', externalId: 'device-002', healthScore: 100, status: 'ONLINE' }),
       ];
       render(<FleetHealthGauge devices={devices} />);
 
@@ -293,7 +291,7 @@ describe('FleetHealthGauge', () => {
     it('should handle mix of ONLINE and OFFLINE devices', () => {
       const devices = [
         createMockDevice({ status: 'ONLINE', healthScore: 90 }),
-        createMockDevice({ id: 2, externalId: 'device-002', status: 'OFFLINE', healthScore: 30 }),
+        createMockDevice({ id: 'device-uuid-002', externalId: 'device-002', status: 'OFFLINE', healthScore: 30 }),
       ];
       render(<FleetHealthGauge devices={devices} />);
 

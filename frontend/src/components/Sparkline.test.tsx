@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Sparkline, calculateTrend, TrendDirection } from './Sparkline';
+import { Sparkline, calculateTrend } from './Sparkline';
 
 describe('Sparkline', () => {
   // ========== Basic Rendering Tests ==========

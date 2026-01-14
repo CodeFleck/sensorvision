@@ -13,8 +13,6 @@ const createMockDevice = (overrides: Partial<Device> = {}): Device => ({
   healthStatus: 'EXCELLENT',
   location: 'Floor 1, Room A',
   lastSeenAt: new Date().toISOString(),
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
   ...overrides,
 });
 
@@ -175,10 +173,11 @@ describe('DeviceCard', () => {
 
     it('should display kw_consumption as primary metric (snake_case)', () => {
       const device = createMockDevice();
-      const telemetry = createMockTelemetry({
-        kwConsumption: undefined,
+      // Test snake_case variant from API - use type assertion via unknown
+      const telemetry = {
+        ...createMockTelemetry({ kwConsumption: undefined }),
         kw_consumption: 48.7,
-      } as TelemetryPoint);
+      } as unknown as TelemetryPoint;
       render(<DeviceCard device={device} latestTelemetry={telemetry} />);
 
       expect(screen.getByText('48.7')).toBeInTheDocument();

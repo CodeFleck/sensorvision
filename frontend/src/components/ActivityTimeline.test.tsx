@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { ActivityTimeline } from './ActivityTimeline';
 import * as apiService from '../services/api';
@@ -19,7 +19,7 @@ const createMockEvent = (overrides: Partial<Event> = {}): Event => ({
   eventType: 'DEVICE_CONNECTED' as EventType,
   severity: 'INFO' as EventSeverity,
   title: 'Test Event',
-  message: 'Test message',
+  description: 'Test description',
   entityId: 'device-001',
   deviceId: 'device-001',
   createdAt: new Date().toISOString(),
@@ -39,7 +39,8 @@ describe('ActivityTimeline', () => {
     it('should show loading spinner initially', () => {
       // Keep the promise pending
       vi.mocked(apiService.apiService.getRecentEvents).mockImplementation(
-        () => new Promise(() => {}) // Never resolves
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        () => new Promise(() => {}) // Never resolves - keeps loading state
       );
 
       render(<ActivityTimeline />);
@@ -49,7 +50,8 @@ describe('ActivityTimeline', () => {
 
     it('should show Activity Feed header while loading', () => {
       vi.mocked(apiService.apiService.getRecentEvents).mockImplementation(
-        () => new Promise(() => {})
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        () => new Promise(() => {}) // Never resolves - keeps loading state
       );
 
       render(<ActivityTimeline />);

@@ -358,7 +358,7 @@ class ApiService {
     return this.request<any>(`/events?${queryParams}`);
   }
 
-  async getRecentEvents(hours: number = 24, limit: number = 10): Promise<Event[]> {
+  async getRecentEvents(hours = 24, limit = 10): Promise<Event[]> {
     return this.request<Event[]>(`/events/recent?hours=${hours}&limit=${limit}`);
   }
 
