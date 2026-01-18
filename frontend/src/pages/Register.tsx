@@ -46,6 +46,15 @@ export const Register: React.FC = () => {
     e.preventDefault();
     setError('');
 
+    // Trim text fields to prevent whitespace-only submissions
+    const trimmedData = {
+      username: formData.username.trim(),
+      email: formData.email.trim(),
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      organizationName: formData.organizationName.trim(),
+    };
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -60,12 +69,12 @@ export const Register: React.FC = () => {
 
     try {
       await register({
-        username: formData.username,
-        email: formData.email,
+        username: trimmedData.username,
+        email: trimmedData.email,
         password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        organizationName: formData.organizationName || undefined,
+        firstName: trimmedData.firstName,
+        lastName: trimmedData.lastName,
+        organizationName: trimmedData.organizationName || undefined,
       });
       navigate('/');
     } catch (err) {
