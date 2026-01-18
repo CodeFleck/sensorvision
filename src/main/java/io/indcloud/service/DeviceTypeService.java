@@ -22,19 +22,21 @@ public class DeviceTypeService {
     private final EventService eventService;
 
     /**
-     * Get all device types for an organization
+     * Get all device types for an organization including system templates.
+     * Returns both organization-specific templates and system templates available to all.
      */
     @Transactional(readOnly = true)
     public List<DeviceType> getAllDeviceTypes(Organization organization) {
-        return deviceTypeRepository.findByOrganization(organization);
+        return deviceTypeRepository.findAvailableTemplates(organization);
     }
 
     /**
-     * Get active device types only
+     * Get active device types including system templates.
+     * Returns both organization-specific templates and system templates available to all.
      */
     @Transactional(readOnly = true)
     public List<DeviceType> getActiveDeviceTypes(Organization organization) {
-        return deviceTypeRepository.findByOrganizationAndIsActiveTrue(organization);
+        return deviceTypeRepository.findAvailableTemplates(organization);
     }
 
     /**
