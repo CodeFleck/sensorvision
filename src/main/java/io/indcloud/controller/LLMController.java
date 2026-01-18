@@ -11,7 +11,7 @@ import io.indcloud.service.llm.AnomalyExplanationService;
 import io.indcloud.service.llm.LLMUsageService;
 import io.indcloud.service.llm.NaturalLanguageQueryService;
 import io.indcloud.service.llm.PromptSanitizer;
-import io.indcloud.service.llm.ReportGenerationService;
+import io.indcloud.service.llm.LLMReportGenerationService;
 import io.indcloud.service.llm.RootCauseAnalysisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class LLMController {
 
     private final AnomalyExplanationService anomalyExplanationService;
     private final NaturalLanguageQueryService naturalLanguageQueryService;
-    private final ReportGenerationService reportGenerationService;
+    private final LLMReportGenerationService reportGenerationService;
     private final RootCauseAnalysisService rootCauseAnalysisService;
     private final LLMUsageService llmUsageService;
     private final LLMConfigurationProperties config;

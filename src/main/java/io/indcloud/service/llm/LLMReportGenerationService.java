@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ReportGenerationService {
+public class LLMReportGenerationService {
 
     private final LLMServiceRouter llmRouter;
     private final DeviceRepository deviceRepository;

@@ -9,12 +9,10 @@ import {
   Sparkles,
   Clock,
   Zap,
-  ChevronDown,
   Calendar,
   Cpu,
   AlertTriangle,
   TrendingUp,
-  RefreshCw,
   Copy,
   Check,
 } from 'lucide-react';
