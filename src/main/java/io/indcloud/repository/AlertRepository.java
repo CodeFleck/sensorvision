@@ -99,4 +99,13 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
      * Find recent alerts for admin dashboard
      */
     List<Alert> findTop10ByOrderByTriggeredAtDesc();
+
+    /**
+     * Find alerts by device ID and time range for root cause analysis.
+     */
+    @Query("SELECT a FROM Alert a WHERE a.device.id = :deviceId AND a.triggeredAt BETWEEN :startTime AND :endTime ORDER BY a.triggeredAt DESC")
+    List<Alert> findByDeviceIdAndTriggeredAtBetweenOrderByTriggeredAtDesc(
+            @Param("deviceId") UUID deviceId,
+            @Param("startTime") Instant startTime,
+            @Param("endTime") Instant endTime);
 }

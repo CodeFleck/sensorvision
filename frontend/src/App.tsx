@@ -55,6 +55,7 @@ import LogViewer from './pages/LogViewer';
 import Settings from './pages/Settings';
 import { MLModels } from './pages/MLModels';
 import { MLAnomalies } from './pages/MLAnomalies';
+import { AIAssistant } from './pages/AIAssistant';
 
 import AdminDashboard from './pages/AdminDashboard';
 import { config } from './config';
@@ -132,6 +133,7 @@ function App() {
                       {/* ML Pipeline routes (user-accessible) */}
                       <Route path="/ml-models" element={<MLModels />} />
                       <Route path="/ml-anomalies" element={<MLAnomalies />} />
+                      <Route path="/ai-assistant" element={<AIAssistant />} />
 
                       {/* Data Management routes (user-accessible) */}
                       <Route path="/data-ingestion" element={<DataIngestion />} />

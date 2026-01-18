@@ -156,4 +156,27 @@ public interface VariableValueRepository extends JpaRepository<VariableValue, UU
      * Delete all values for a variable.
      */
     void deleteByVariableId(Long variableId);
+
+    /**
+     * Batch calculate statistics (avg, min, max, count) for multiple variables in a single query.
+     * Returns Object[] with: [variableId, avg, min, max, count]
+     * This avoids N+1 queries when processing multiple variables.
+     */
+    @Query("SELECT v.variable.id, AVG(v.value), MIN(v.value), MAX(v.value), COUNT(v) " +
+           "FROM VariableValue v WHERE v.variable.id IN :variableIds " +
+           "AND v.timestamp >= :startTime AND v.timestamp <= :endTime " +
+           "GROUP BY v.variable.id")
+    List<Object[]> calculateBatchStatistics(
+            @Param("variableIds") List<Long> variableIds,
+            @Param("startTime") Instant startTime,
+            @Param("endTime") Instant endTime);
+
+    /**
+     * Batch fetch the latest value for multiple variables in a single query.
+     * Uses a subquery to find max timestamp per variable.
+     */
+    @Query("SELECT vv FROM VariableValue vv WHERE vv.id IN (" +
+           "SELECT v.id FROM VariableValue v WHERE v.variable.id IN :variableIds " +
+           "AND v.timestamp = (SELECT MAX(v2.timestamp) FROM VariableValue v2 WHERE v2.variable.id = v.variable.id))")
+    List<VariableValue> findLatestValuesByVariableIds(@Param("variableIds") List<Long> variableIds);
 }

@@ -12,6 +12,9 @@ import {
   Cpu,
   Clock,
   TrendingUp,
+  Sparkles,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import {
@@ -26,6 +29,8 @@ import {
   getAnomalyStatusColor,
   PageResponse,
 } from '../services/mlService';
+import { llmApi, AnomalyExplanation } from '../services/llmService';
+import { SafeLLMContent } from '../components/SafeLLMContent';
 import { formatTimeAgo } from '../utils/timeUtils';
 
 export const MLAnomalies = () => {
@@ -38,6 +43,12 @@ export const MLAnomalies = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // AI Explanation state
+  const [explainModalOpen, setExplainModalOpen] = useState(false);
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [selectedAnomalyForExplain, setSelectedAnomalyForExplain] = useState<MLAnomaly | null>(null);
+  const [aiExplanation, setAiExplanation] = useState<AnomalyExplanation | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -142,6 +153,27 @@ export const MLAnomalies = () => {
       console.error('Failed to mark as false positive:', error);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleExplainWithAI = async (anomaly: MLAnomaly) => {
+    setSelectedAnomalyForExplain(anomaly);
+    setAiExplanation(null);
+    setExplainModalOpen(true);
+    setExplainLoading(true);
+
+    try {
+      const explanation = await llmApi.explainAnomaly(anomaly.id);
+      setAiExplanation(explanation);
+      if (!explanation.success) {
+        toast.error(explanation.errorMessage || 'Failed to generate explanation');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to explain anomaly';
+      toast.error(message);
+      console.error('Failed to explain anomaly:', error);
+    } finally {
+      setExplainLoading(false);
     }
   };
 
@@ -385,6 +417,16 @@ export const MLAnomalies = () => {
 
                   {/* Right side - Actions */}
                   <div className="flex items-center space-x-2">
+                    {/* AI Explain Button */}
+                    <button
+                      onClick={() => handleExplainWithAI(anomaly)}
+                      disabled={isLoading}
+                      className="px-3 py-1.5 text-xs font-medium text-violet-600 bg-violet-50 rounded-md hover:bg-violet-100 transition-colors disabled:opacity-50"
+                      title="Explain with AI"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </button>
+
                     {anomaly.status === 'NEW' && (
                       <button
                         onClick={() => handleAcknowledge(anomaly)}
@@ -484,6 +526,99 @@ export const MLAnomalies = () => {
             >
               Next
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* AI Explanation Modal */}
+      {explainModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-primary/10">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-violet-500" />
+                <h2 className="text-lg font-semibold text-primary">AI Explanation</h2>
+              </div>
+              <button
+                onClick={() => setExplainModalOpen(false)}
+                className="p-1 text-secondary hover:text-primary transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Anomaly Info */}
+              {selectedAnomalyForExplain && (
+                <div className="mb-4 p-3 bg-hover rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertOctagon className="h-4 w-4 text-orange-500" />
+                    <span className="font-medium text-primary">
+                      {selectedAnomalyForExplain.anomalyType || 'Anomaly'}
+                    </span>
+                    <span className={clsx(
+                      'px-2 py-0.5 text-xs font-medium rounded-full',
+                      severityColorMap[getAnomalySeverityColor(selectedAnomalyForExplain.severity)] || 'bg-gray-100'
+                    )}>
+                      {getAnomalySeverityLabel(selectedAnomalyForExplain.severity)}
+                    </span>
+                  </div>
+                  {selectedAnomalyForExplain.deviceName && (
+                    <p className="text-sm text-secondary">
+                      Device: {selectedAnomalyForExplain.deviceName}
+                    </p>
+                  )}
+                  <p className="text-sm text-secondary">
+                    Score: {(selectedAnomalyForExplain.anomalyScore * 100).toFixed(1)}%
+                  </p>
+                </div>
+              )}
+
+              {/* Loading State */}
+              {explainLoading && (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-violet-500 mb-4" />
+                  <p className="text-secondary">Analyzing anomaly with AI...</p>
+                </div>
+              )}
+
+              {/* Explanation Content */}
+              {!explainLoading && aiExplanation && (
+                <div className="space-y-4">
+                  {aiExplanation.success ? (
+                    <>
+                      <SafeLLMContent content={aiExplanation.explanation} />
+
+                      <div className="pt-4 border-t border-default flex items-center gap-4 text-xs text-secondary">
+                        {aiExplanation.tokensUsed && (
+                          <span>{aiExplanation.tokensUsed} tokens</span>
+                        )}
+                        {aiExplanation.latencyMs && (
+                          <span>{aiExplanation.latencyMs}ms</span>
+                        )}
+                        {aiExplanation.provider && (
+                          <span>{aiExplanation.provider}</span>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <AlertOctagon className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                      <p className="text-red-600">{aiExplanation.errorMessage}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 p-4 border-t border-primary/10">
+              <button
+                onClick={() => setExplainModalOpen(false)}
+                className="px-4 py-2 border border-default rounded-lg text-secondary hover:bg-hover transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

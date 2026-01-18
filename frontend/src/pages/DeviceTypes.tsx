@@ -80,6 +80,137 @@ const CATEGORY_ICONS: Record<string, string> = {
   CUSTOM: 'box',
 };
 
+// Preset template interface for gallery
+interface PresetTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: 'ENERGY' | 'ENVIRONMENTAL' | 'INDUSTRIAL' | 'SMART_HOME' | 'CUSTOM';
+  color: string;
+  variables: Omit<DeviceTypeVariable, 'id' | 'displayOrder'>[];
+}
+
+// Pre-built device type templates
+const PRESET_TEMPLATES: PresetTemplate[] = [
+  {
+    id: 'smart-meter',
+    name: 'Smart Meter',
+    description: 'Monitor electrical consumption with power, voltage, and current readings',
+    icon: '\u26A1',
+    category: 'ENERGY',
+    color: '#F59E0B',
+    variables: [
+      { name: 'kw_consumption', label: 'Power Consumption', unit: 'kW', dataType: 'NUMBER', required: true },
+      { name: 'voltage', label: 'Voltage', unit: 'V', dataType: 'NUMBER', required: true },
+      { name: 'current', label: 'Current', unit: 'A', dataType: 'NUMBER', required: true },
+      { name: 'power_factor', label: 'Power Factor', unit: '', dataType: 'NUMBER', required: false },
+    ],
+  },
+  {
+    id: 'temperature-sensor',
+    name: 'Temperature Sensor',
+    description: 'Track temperature and humidity with battery monitoring',
+    icon: '\uD83C\uDF21\uFE0F',
+    category: 'ENVIRONMENTAL',
+    color: '#10B981',
+    variables: [
+      { name: 'temperature', label: 'Temperature', unit: '\u00B0C', dataType: 'NUMBER', required: true },
+      { name: 'humidity', label: 'Humidity', unit: '%', dataType: 'NUMBER', required: false },
+      { name: 'battery_level', label: 'Battery Level', unit: '%', dataType: 'NUMBER', required: false },
+    ],
+  },
+  {
+    id: 'air-quality',
+    name: 'Air Quality Monitor',
+    description: 'Monitor particulate matter, CO2, and volatile organic compounds',
+    icon: '\uD83D\uDCA8',
+    category: 'ENVIRONMENTAL',
+    color: '#6366F1',
+    variables: [
+      { name: 'pm25', label: 'PM2.5', unit: '\u03BCg/m\u00B3', dataType: 'NUMBER', required: true },
+      { name: 'pm10', label: 'PM10', unit: '\u03BCg/m\u00B3', dataType: 'NUMBER', required: false },
+      { name: 'co2', label: 'CO2', unit: 'ppm', dataType: 'NUMBER', required: true },
+      { name: 'voc', label: 'VOC', unit: 'ppb', dataType: 'NUMBER', required: false },
+      { name: 'aqi', label: 'Air Quality Index', unit: '', dataType: 'NUMBER', required: false },
+    ],
+  },
+  {
+    id: 'water-meter',
+    name: 'Water Meter',
+    description: 'Track water flow rate, total volume, and pressure',
+    icon: '\uD83D\uDCA7',
+    category: 'ENERGY',
+    color: '#3B82F6',
+    variables: [
+      { name: 'flow_rate', label: 'Flow Rate', unit: 'L/min', dataType: 'NUMBER', required: true },
+      { name: 'total_volume', label: 'Total Volume', unit: 'm\u00B3', dataType: 'NUMBER', required: true },
+      { name: 'pressure', label: 'Pressure', unit: 'bar', dataType: 'NUMBER', required: false },
+    ],
+  },
+  {
+    id: 'solar-inverter',
+    name: 'Solar Inverter',
+    description: 'Monitor solar power output, yield, and efficiency',
+    icon: '\u2600\uFE0F',
+    category: 'ENERGY',
+    color: '#EAB308',
+    variables: [
+      { name: 'power_output', label: 'Power Output', unit: 'kW', dataType: 'NUMBER', required: true },
+      { name: 'daily_yield', label: 'Daily Yield', unit: 'kWh', dataType: 'NUMBER', required: true },
+      { name: 'total_yield', label: 'Total Yield', unit: 'MWh', dataType: 'NUMBER', required: false },
+      { name: 'efficiency', label: 'Efficiency', unit: '%', dataType: 'NUMBER', required: false },
+      { name: 'dc_voltage', label: 'DC Voltage', unit: 'V', dataType: 'NUMBER', required: false },
+    ],
+  },
+  {
+    id: 'gps-tracker',
+    name: 'GPS Tracker',
+    description: 'Track location, speed, and heading with battery status',
+    icon: '\uD83D\uDCCD',
+    category: 'CUSTOM',
+    color: '#EC4899',
+    variables: [
+      { name: 'latitude', label: 'Latitude', unit: '\u00B0', dataType: 'NUMBER', required: true },
+      { name: 'longitude', label: 'Longitude', unit: '\u00B0', dataType: 'NUMBER', required: true },
+      { name: 'speed', label: 'Speed', unit: 'km/h', dataType: 'NUMBER', required: false },
+      { name: 'heading', label: 'Heading', unit: '\u00B0', dataType: 'NUMBER', required: false },
+      { name: 'battery_level', label: 'Battery Level', unit: '%', dataType: 'NUMBER', required: false },
+    ],
+  },
+  {
+    id: 'industrial-pump',
+    name: 'Industrial Pump',
+    description: 'Monitor pump flow, pressure, temperature, and vibration',
+    icon: '\uD83C\uDFED',
+    category: 'INDUSTRIAL',
+    color: '#6B7280',
+    variables: [
+      { name: 'flow_rate', label: 'Flow Rate', unit: 'L/min', dataType: 'NUMBER', required: true },
+      { name: 'pressure', label: 'Pressure', unit: 'bar', dataType: 'NUMBER', required: true },
+      { name: 'motor_temp', label: 'Motor Temperature', unit: '\u00B0C', dataType: 'NUMBER', required: false },
+      { name: 'vibration', label: 'Vibration', unit: 'mm/s', dataType: 'NUMBER', required: false },
+      { name: 'runtime_hours', label: 'Runtime Hours', unit: 'h', dataType: 'NUMBER', required: false },
+    ],
+  },
+  {
+    id: 'weather-station',
+    name: 'Weather Station',
+    description: 'Comprehensive weather monitoring with multiple sensors',
+    icon: '\uD83C\uDF26\uFE0F',
+    category: 'ENVIRONMENTAL',
+    color: '#0EA5E9',
+    variables: [
+      { name: 'temperature', label: 'Temperature', unit: '\u00B0C', dataType: 'NUMBER', required: true },
+      { name: 'humidity', label: 'Humidity', unit: '%', dataType: 'NUMBER', required: true },
+      { name: 'wind_speed', label: 'Wind Speed', unit: 'm/s', dataType: 'NUMBER', required: false },
+      { name: 'wind_direction', label: 'Wind Direction', unit: '\u00B0', dataType: 'NUMBER', required: false },
+      { name: 'pressure', label: 'Atmospheric Pressure', unit: 'hPa', dataType: 'NUMBER', required: false },
+      { name: 'rainfall', label: 'Rainfall', unit: 'mm', dataType: 'NUMBER', required: false },
+    ],
+  },
+];
+
 const DeviceTypes: React.FC = () => {
   const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
@@ -92,6 +223,9 @@ const DeviceTypes: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'details' | 'variables' | 'rules' | 'dashboard'>('details');
   const [applyLoading, setApplyLoading] = useState(false);
   const [applySuccess, setApplySuccess] = useState<string | null>(null);
+
+  // Template gallery state
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
 
   // Form state for creating new device type
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -208,6 +342,35 @@ const DeviceTypes: React.FC = () => {
     setFormVariables([]);
   };
 
+  // Template gallery handlers
+  const handleCreateClick = () => {
+    setShowTemplateGallery(true);
+  };
+
+  const selectTemplate = (template: PresetTemplate) => {
+    setFormData({
+      name: template.name,
+      description: template.description,
+      icon: template.icon,
+      color: template.color,
+      category: template.category,
+    });
+    setFormVariables(
+      template.variables.map((v, i) => ({
+        ...v,
+        displayOrder: i,
+      }))
+    );
+    setShowTemplateGallery(false);
+    setShowCreateModal(true);
+  };
+
+  const startFromScratch = () => {
+    resetCreateForm();
+    setShowTemplateGallery(false);
+    setShowCreateModal(true);
+  };
+
   const addVariable = () => {
     setFormVariables([
       ...formVariables,
@@ -258,7 +421,7 @@ const DeviceTypes: React.FC = () => {
           <p className="text-secondary mt-1">Manage device type templates for auto-provisioning</p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={handleCreateClick}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
         >
           + Create Device Type
@@ -341,11 +504,93 @@ const DeviceTypes: React.FC = () => {
         <div className="text-center py-12 bg-card rounded-lg border border-primary/10">
           <p className="text-secondary mb-4">No device types found</p>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={handleCreateClick}
             className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
           >
             Create Your First Device Type
           </button>
+        </div>
+      )}
+
+      {/* Template Gallery Modal */}
+      {showTemplateGallery && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-primary/10">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-bold text-primary">Choose a Starting Point</h2>
+                  <p className="text-secondary mt-1">Select a template to get started quickly, or create from scratch</p>
+                </div>
+                <button
+                  onClick={() => setShowTemplateGallery(false)}
+                  className="text-secondary hover:text-primary text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Template Cards Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                {PRESET_TEMPLATES.map((template) => (
+                  <div
+                    key={template.id}
+                    onClick={() => selectTemplate(template)}
+                    className="p-4 border border-primary/10 rounded-lg cursor-pointer hover:border-blue-500 hover:shadow-md transition-all group bg-surface"
+                  >
+                    <div
+                      className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl mb-3"
+                      style={{ backgroundColor: template.color + '20' }}
+                    >
+                      {template.icon}
+                    </div>
+                    <h3 className="font-semibold text-primary group-hover:text-blue-600 transition-colors">
+                      {template.name}
+                    </h3>
+                    <p className="text-sm text-secondary line-clamp-2 mt-1">{template.description}</p>
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded">
+                        {template.variables.length} variables
+                      </span>
+                      <span className={`text-xs px-2 py-0.5 rounded ${CATEGORY_COLORS[template.category]}`}>
+                        {template.category.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-primary/10"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-card text-secondary">or</span>
+                </div>
+              </div>
+
+              {/* Start from Scratch Option */}
+              <button
+                onClick={startFromScratch}
+                className="w-full p-4 border-2 border-dashed border-primary/20 rounded-lg hover:border-blue-500 hover:bg-blue-50/50 transition-all group text-left"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-2xl text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                    +
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-primary group-hover:text-blue-600 transition-colors">
+                      Start from Scratch
+                    </h3>
+                    <p className="text-sm text-secondary">Create a custom device type with your own variables</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
