@@ -40,6 +40,7 @@ import {
   Brain,
   AlertOctagon,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -139,6 +140,7 @@ const navigationSections: NavigationSection[] = [
     items: [
       { name: 'ML Models', href: '/ml-models', icon: Brain, adminOnly: false, excludeForAdmin: true },
       { name: 'ML Anomalies', href: '/ml-anomalies', icon: AlertOctagon, adminOnly: false, excludeForAdmin: true },
+      { name: 'AI Assistant', href: '/ai-assistant', icon: Sparkles, adminOnly: false, excludeForAdmin: true },
     ],
   },
   {

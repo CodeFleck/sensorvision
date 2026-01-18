@@ -51,6 +51,17 @@ public interface MLAnomalyRepository extends JpaRepository<MLAnomaly, UUID> {
             @Param("end") Instant end
     );
 
+    /**
+     * Batch query to fetch anomalies for multiple devices in a single query.
+     * This avoids N+1 query problems when generating reports.
+     */
+    @Query("SELECT a FROM MLAnomaly a WHERE a.device.id IN :deviceIds AND a.detectedAt BETWEEN :start AND :end ORDER BY a.device.id, a.detectedAt DESC")
+    List<MLAnomaly> findByDeviceIdsAndTimeRange(
+            @Param("deviceIds") List<UUID> deviceIds,
+            @Param("start") Instant start,
+            @Param("end") Instant end
+    );
+
     @Query("SELECT a FROM MLAnomaly a WHERE a.organization.id = :orgId AND a.severity IN :severities AND a.status = :status ORDER BY a.detectedAt DESC")
     List<MLAnomaly> findBySeveritiesAndStatus(
             @Param("orgId") Long organizationId,

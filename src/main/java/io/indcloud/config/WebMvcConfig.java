@@ -15,13 +15,22 @@ import java.io.IOException;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final RateLimitInterceptor rateLimitInterceptor;
+    private final io.indcloud.interceptor.LLMRateLimitInterceptor llmRateLimitInterceptor;
 
-    public WebMvcConfig(RateLimitInterceptor rateLimitInterceptor) {
+    public WebMvcConfig(RateLimitInterceptor rateLimitInterceptor,
+                        io.indcloud.interceptor.LLMRateLimitInterceptor llmRateLimitInterceptor) {
         this.rateLimitInterceptor = rateLimitInterceptor;
+        this.llmRateLimitInterceptor = llmRateLimitInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // LLM-specific rate limiter with stricter limits (must be registered first for priority)
+        registry.addInterceptor(llmRateLimitInterceptor)
+                .addPathPatterns("/api/v1/llm/**")
+                .order(0);
+
+        // General API rate limiter
         registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns("/api/v1/**")
                 .excludePathPatterns(
@@ -34,9 +43,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/dashboard-templates/**",  // Exclude dashboard template browsing
                         "/api/v1/admin/dashboard/**",  // Exclude admin dashboard (stats endpoint)
                         "/api/v1/admin/support-tickets/**",  // Exclude support ticket operations
+                        "/api/v1/llm/**",  // Exclude LLM endpoints (handled by LLMRateLimitInterceptor)
                         "/swagger-ui/**",  // Exclude Swagger UI
                         "/v3/api-docs/**"  // Exclude OpenAPI docs
-                );
+                )
+                .order(1);
     }
 
     @Override

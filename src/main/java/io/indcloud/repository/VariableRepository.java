@@ -81,4 +81,10 @@ public interface VariableRepository extends JpaRepository<Variable, Long> {
      */
     @Query("SELECT v.device.id, COUNT(v) FROM Variable v WHERE v.device IS NOT NULL GROUP BY v.device.id")
     List<Object[]> countVariablesPerDevice();
+
+    /**
+     * Find all variables for multiple devices in a single query (batch fetch to avoid N+1).
+     */
+    @Query("SELECT v FROM Variable v WHERE v.device.id IN :deviceIds ORDER BY v.device.id, v.name")
+    List<Variable> findByDeviceIds(@Param("deviceIds") List<UUID> deviceIds);
 }
