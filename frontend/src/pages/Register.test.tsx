@@ -3,7 +3,7 @@ import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import { Register } from './Register';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, AuthContextType } from '../contexts/AuthContext';
 import type { User, RegisterRequest } from '../types';
 
 // Mock the AuthContext
@@ -25,17 +25,17 @@ const createMockAuthContext = (overrides: {
   loading?: boolean;
   isAuthenticated?: boolean;
   register?: ReturnType<typeof vi.fn>;
-} = {}) => ({
+} = {}): AuthContextType => ({
   user: overrides.user ?? null,
   loading: overrides.loading ?? false,
-  login: vi.fn(),
-  register: overrides.register ?? vi.fn(),
-  logout: vi.fn(),
-  setTokens: vi.fn(),
-  refreshUser: vi.fn(),
+  login: vi.fn() as AuthContextType['login'],
+  register: (overrides.register ?? vi.fn()) as AuthContextType['register'],
+  logout: vi.fn() as AuthContextType['logout'],
+  setTokens: vi.fn() as AuthContextType['setTokens'],
+  refreshUser: vi.fn() as AuthContextType['refreshUser'],
   isAuthenticated: overrides.isAuthenticated ?? false,
   isAdmin: false,
-  hasRole: vi.fn().mockReturnValue(false),
+  hasRole: vi.fn().mockReturnValue(false) as AuthContextType['hasRole'],
 });
 
 // Helper to render with router
