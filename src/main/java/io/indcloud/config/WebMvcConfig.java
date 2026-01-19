@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
@@ -21,6 +22,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         io.indcloud.interceptor.LLMRateLimitInterceptor llmRateLimitInterceptor) {
         this.rateLimitInterceptor = rateLimitInterceptor;
         this.llmRateLimitInterceptor = llmRateLimitInterceptor;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        // Enable trailing slash matching for backward compatibility
+        // e.g., /api/v1/devices and /api/v1/devices/ both match the same controller
+        // This is deprecated in Spring 6.0+ but still functional in Spring Boot 3.3.x
+        configurer.setUseTrailingSlashMatch(true);
     }
 
     @Override
@@ -66,6 +76,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         // If the resource exists (like CSS, JS, images), serve it
                         if (requestedResource.exists() && requestedResource.isReadable()) {
                             return requestedResource;
+                        }
+
+                        // DON'T serve index.html for API paths - let them return 404
+                        // This prevents API requests with mismatched trailing slashes from
+                        // returning HTML instead of a proper error response
+                        if (resourcePath.startsWith("api/")) {
+                            return null;  // Return null to trigger 404
                         }
 
                         // For all other paths (React Router routes), serve index.html
