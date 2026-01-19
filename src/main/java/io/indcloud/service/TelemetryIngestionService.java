@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import io.indcloud.model.Device;
 import io.indcloud.model.DeviceStatus;
+import io.indcloud.model.Event;
 import io.indcloud.model.Organization;
 import io.indcloud.model.TelemetryRecord;
 import io.indcloud.model.VariableValue;
@@ -44,6 +45,7 @@ public class TelemetryIngestionService {
     private final RuleEngineService ruleEngineService;
     private final SyntheticVariableService syntheticVariableService;
     private final DynamicVariableService dynamicVariableService;
+    private final EventService eventService;
     private final MeterRegistry meterRegistry;
     private final TelemetryConfigurationProperties telemetryConfig;
     private final Counter mqttMessagesCounter;
@@ -66,6 +68,7 @@ public class TelemetryIngestionService {
                                      RuleEngineService ruleEngineService,
                                      SyntheticVariableService syntheticVariableService,
                                      DynamicVariableService dynamicVariableService,
+                                     EventService eventService,
                                      MeterRegistry meterRegistry,
                                      TelemetryConfigurationProperties telemetryConfig) {
         this.deviceRepository = deviceRepository;
@@ -76,6 +79,7 @@ public class TelemetryIngestionService {
         this.ruleEngineService = ruleEngineService;
         this.syntheticVariableService = syntheticVariableService;
         this.dynamicVariableService = dynamicVariableService;
+        this.eventService = eventService;
         this.meterRegistry = meterRegistry;
         this.telemetryConfig = telemetryConfig;
         this.mqttMessagesCounter = meterRegistry.counter("mqtt_messages_total");
@@ -123,10 +127,30 @@ public class TelemetryIngestionService {
             device.setSensorType((String) metadata.getOrDefault("sensor_type", device.getSensorType()));
             device.setFirmwareVersion((String) metadata.getOrDefault("firmware_version", device.getFirmwareVersion()));
         }
+
+        // Track previous status to detect status changes
+        DeviceStatus previousStatus = device.getStatus();
+        boolean wasOffline = previousStatus == null ||
+                             previousStatus == DeviceStatus.OFFLINE ||
+                             previousStatus == DeviceStatus.UNKNOWN;
+
         device.setStatus(DeviceStatus.ONLINE);
         device.setLastSeenAt(payload.timestamp());
         deviceRepository.save(device);
         updateDeviceGauge(device.getExternalId(), true);
+
+        // Create DEVICE_CONNECTED event when device comes online from offline/unknown state
+        if (wasOffline && device.getOrganization() != null) {
+            eventService.createDeviceEvent(
+                    device.getOrganization(),
+                    device.getExternalId(),
+                    Event.EventType.DEVICE_CONNECTED,
+                    Event.EventSeverity.INFO,
+                    "Device connected",
+                    String.format("Device %s (%s) is now online", device.getName(), device.getExternalId())
+            );
+            log.info("Device {} came online, created DEVICE_CONNECTED event", device.getExternalId());
+        }
 
         BigDecimal kw = value(payload.variables(), "kw_consumption");
         BigDecimal voltage = value(payload.variables(), "voltage");
