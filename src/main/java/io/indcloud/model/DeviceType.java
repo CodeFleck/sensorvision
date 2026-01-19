@@ -6,8 +6,8 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -37,15 +37,15 @@ public class DeviceType extends AuditableEntity {
 
     @OneToMany(mappedBy = "deviceType", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<DeviceTypeVariable> variables = new ArrayList<>();
+    private Set<DeviceTypeVariable> variables = new HashSet<>();
 
     @OneToMany(mappedBy = "deviceType", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<DeviceTypeRuleTemplate> ruleTemplates = new ArrayList<>();
+    private Set<DeviceTypeRuleTemplate> ruleTemplates = new HashSet<>();
 
     @OneToMany(mappedBy = "deviceType", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<DeviceTypeDashboardTemplate> dashboardTemplates = new ArrayList<>();
+    private Set<DeviceTypeDashboardTemplate> dashboardTemplates = new HashSet<>();
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default
