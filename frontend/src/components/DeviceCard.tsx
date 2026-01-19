@@ -139,8 +139,9 @@ export const DeviceCard = ({ device, latestTelemetry, telemetryHistory = [], pre
           <div className="flex flex-col items-end gap-1.5">
             {device.healthScore !== undefined && (
               <div
+                title={`Device Health: ${device.healthScore}% (${device.healthStatus})\n\nCalculated from:\n• Uptime (40%) - Time since last seen\n• Alerts (30%) - Unacknowledged alerts\n• Data Quality (20%) - Telemetry consistency\n• Status (10%) - Online/Offline state\n\nUpdated every 5 minutes`}
                 className={clsx(
-                  'flex items-center gap-1.5 px-2 py-1 rounded-full border',
+                  'flex items-center gap-1.5 px-2 py-1 rounded-full border cursor-help',
                   healthConfig.bgColor,
                   healthConfig.borderColor
                 )}
