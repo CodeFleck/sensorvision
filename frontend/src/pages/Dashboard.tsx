@@ -525,14 +525,20 @@ export const Dashboard = () => {
       </Card>
 
       {/* Real-time Chart */}
-      {Object.keys(latestTelemetry).length > 0 && (
-        <Card>
-          <CardBody>
-            <h2 className="text-lg font-semibold text-primary mb-4">Real-time Telemetry</h2>
+      <Card>
+        <CardBody>
+          <h2 className="text-lg font-semibold text-primary mb-4">Real-time Telemetry</h2>
+          {Object.keys(latestTelemetry).length > 0 ? (
             <RealTimeChart telemetryData={Object.values(latestTelemetry)} />
-          </CardBody>
-        </Card>
-      )}
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-secondary">
+              <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>Waiting for real-time telemetry data...</p>
+              <p className="text-sm mt-1">Data will appear here when devices send telemetry via WebSocket</p>
+            </div>
+          )}
+        </CardBody>
+      </Card>
 
       {/* Device Grid */}
       <div>

@@ -188,7 +188,7 @@ BEGIN
             INSERT INTO telemetry_records (
                 id, device_id, measurement_timestamp,
                 kw_consumption, voltage, current, power_factor, frequency,
-                metadata, created_at, updated_at
+                metadata, created_at, updated_at, organization_id
             )
             VALUES (
                 gen_random_uuid(),
@@ -200,7 +200,7 @@ BEGIN
                     'sensor_type', v_device_types[i],
                     'data_source', 'mock_seeder'
                 ),
-                v_timestamp, v_timestamp
+                v_timestamp, v_timestamp, v_org_id
             );
 
             v_timestamp := v_timestamp + INTERVAL '5 minutes';

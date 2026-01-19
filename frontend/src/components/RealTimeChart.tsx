@@ -26,6 +26,9 @@ ChartJS.register(
   TimeScale
 );
 
+// Set default font to match dashboard UI
+ChartJS.defaults.font.family = "'Satoshi', system-ui, sans-serif";
+
 interface RealTimeChartProps {
   telemetryData: TelemetryPoint[];
 }
