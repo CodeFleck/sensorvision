@@ -582,7 +582,13 @@ describe('Dashboard', () => {
         expect(apiService.getAggregatedData).toHaveBeenCalled();
       });
 
-      const callCountBefore = vi.mocked(apiService.getAggregatedData).mock.calls.length;
+      // Wait for initial data to load completely
+      await waitFor(() => {
+        expect(screen.getByText('Historical Metrics')).toBeInTheDocument();
+      });
+
+      // Clear mock calls to get a clean count
+      vi.mocked(apiService.getAggregatedData).mockClear();
 
       const refreshButtons = screen.getAllByTitle('Refresh metrics');
       const refreshButton = refreshButtons[0];
@@ -592,8 +598,8 @@ describe('Dashboard', () => {
       });
 
       await waitFor(() => {
-        const callCountAfter = vi.mocked(apiService.getAggregatedData).mock.calls.length;
-        expect(callCountAfter).toBeGreaterThan(callCountBefore);
+        // After clearing and clicking refresh, we should have new calls
+        expect(apiService.getAggregatedData).toHaveBeenCalled();
       });
     });
 
