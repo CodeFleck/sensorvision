@@ -40,6 +40,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
             // Production domain
             "http://indcloud.io",
             "https://indcloud.io",
+            "http://www.indcloud.io",
+            "https://www.indcloud.io",
+            "http://api.indcloud.io",
+            "https://api.indcloud.io",
             "http://54.149.190.208",
             "http://54.149.190.208:8080"
     };
