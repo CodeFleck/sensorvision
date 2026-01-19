@@ -106,6 +106,15 @@ services:
       # Application Base URL (for email links)
       APP_BASE_URL: ${APP_BASE_URL:-https://indcloud.io}
 
+      # LLM Configuration (AI Assistant features)
+      LLM_DEFAULT_PROVIDER: ${LLM_DEFAULT_PROVIDER:-CLAUDE}
+      LLM_CLAUDE_ENABLED: ${LLM_CLAUDE_ENABLED:-false}
+      LLM_CLAUDE_API_KEY: ${LLM_CLAUDE_API_KEY:-}
+      LLM_OPENAI_ENABLED: ${LLM_OPENAI_ENABLED:-false}
+      LLM_OPENAI_API_KEY: ${LLM_OPENAI_API_KEY:-}
+      LLM_GEMINI_ENABLED: ${LLM_GEMINI_ENABLED:-false}
+      LLM_GEMINI_API_KEY: ${LLM_GEMINI_API_KEY:-}
+
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
