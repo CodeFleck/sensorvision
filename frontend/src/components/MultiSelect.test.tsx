@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MultiSelect, MultiSelectOption } from './MultiSelect';
 
+// Reusable noop function for onChange prop
+const noop = vi.fn();
+
 // Helper to create mock options
-const createMockOptions = (count: number = 5): MultiSelectOption[] =>
+const createMockOptions = (count = 5): MultiSelectOption[] =>
   Array.from({ length: count }, (_, i) => ({
     value: `option-${i + 1}`,
     label: `Option ${i + 1}`,
@@ -16,7 +18,7 @@ describe('MultiSelect', () => {
   describe('Basic Rendering', () => {
     it('should render the component', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       expect(screen.getByTestId('multiselect-container')).toBeInTheDocument();
     });
@@ -27,7 +29,7 @@ describe('MultiSelect', () => {
         <MultiSelect
           options={options}
           selected={[]}
-          onChange={() => {}}
+          onChange={noop}
           placeholder="Select devices..."
         />
       );
@@ -37,14 +39,14 @@ describe('MultiSelect', () => {
 
     it('should display default placeholder when not specified', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       expect(screen.getByText('Select items...')).toBeInTheDocument();
     });
 
     it('should render trigger button with correct aria attributes', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       const trigger = screen.getByTestId('multiselect-trigger');
       expect(trigger).toHaveAttribute('aria-haspopup', 'listbox');
@@ -61,7 +63,7 @@ describe('MultiSelect', () => {
         <MultiSelect
           options={options}
           selected={['option-1', 'option-2']}
-          onChange={() => {}}
+          onChange={noop}
         />
       );
 
@@ -77,7 +79,7 @@ describe('MultiSelect', () => {
         <MultiSelect
           options={options}
           selected={['option-1', 'option-2', 'option-3', 'option-4', 'option-5']}
-          onChange={() => {}}
+          onChange={noop}
           maxDisplayed={3}
         />
       );
@@ -91,7 +93,7 @@ describe('MultiSelect', () => {
         <MultiSelect
           options={options}
           selected={['option-1', 'option-2']}
-          onChange={() => {}}
+          onChange={noop}
           maxDisplayed={3}
         />
       );
@@ -105,7 +107,7 @@ describe('MultiSelect', () => {
         <MultiSelect
           options={options}
           selected={['option-1']}
-          onChange={() => {}}
+          onChange={noop}
         />
       );
 
@@ -118,7 +120,7 @@ describe('MultiSelect', () => {
   describe('Dropdown Interaction', () => {
     it('should open dropdown on click', async () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       const trigger = screen.getByTestId('multiselect-trigger');
       fireEvent.click(trigger);
@@ -129,7 +131,7 @@ describe('MultiSelect', () => {
 
     it('should close dropdown on second click', async () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       const trigger = screen.getByTestId('multiselect-trigger');
       fireEvent.click(trigger);
@@ -141,7 +143,7 @@ describe('MultiSelect', () => {
 
     it('should display all options in dropdown', () => {
       const options = createMockOptions(3);
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
 
@@ -152,7 +154,7 @@ describe('MultiSelect', () => {
 
     it('should have proper ARIA attributes on dropdown', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
       const dropdown = screen.getByTestId('multiselect-dropdown');
@@ -164,7 +166,7 @@ describe('MultiSelect', () => {
     it('should have proper ARIA attributes on options', () => {
       const options = createMockOptions();
       render(
-        <MultiSelect options={options} selected={['option-1']} onChange={() => {}} />
+        <MultiSelect options={options} selected={['option-1']} onChange={noop} />
       );
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
@@ -232,7 +234,7 @@ describe('MultiSelect', () => {
     it('should display clear all button when items are selected', () => {
       const options = createMockOptions();
       render(
-        <MultiSelect options={options} selected={['option-1']} onChange={() => {}} />
+        <MultiSelect options={options} selected={['option-1']} onChange={noop} />
       );
 
       expect(screen.getByTestId('clear-all-button')).toBeInTheDocument();
@@ -240,7 +242,7 @@ describe('MultiSelect', () => {
 
     it('should not display clear all button when nothing is selected', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       expect(screen.queryByTestId('clear-all-button')).not.toBeInTheDocument();
     });
@@ -264,7 +266,7 @@ describe('MultiSelect', () => {
     it('should have accessible label on clear all button', () => {
       const options = createMockOptions();
       render(
-        <MultiSelect options={options} selected={['option-1']} onChange={() => {}} />
+        <MultiSelect options={options} selected={['option-1']} onChange={noop} />
       );
 
       expect(screen.getByTestId('clear-all-button')).toHaveAttribute(
@@ -279,7 +281,7 @@ describe('MultiSelect', () => {
   describe('Select All', () => {
     it('should display select all button in dropdown', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
 
@@ -303,7 +305,7 @@ describe('MultiSelect', () => {
         <MultiSelect
           options={options}
           selected={['option-1', 'option-2']}
-          onChange={() => {}}
+          onChange={noop}
         />
       );
 
@@ -318,7 +320,7 @@ describe('MultiSelect', () => {
   describe('Search and Filter', () => {
     it('should display search input in dropdown', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
 
@@ -331,7 +333,7 @@ describe('MultiSelect', () => {
         { value: 'banana', label: 'Banana' },
         { value: 'cherry', label: 'Cherry' },
       ];
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
       const searchInput = screen.getByTestId('search-input');
@@ -345,7 +347,7 @@ describe('MultiSelect', () => {
 
     it('should show "No options found" when search has no matches', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
       fireEvent.change(screen.getByTestId('search-input'), {
@@ -360,7 +362,7 @@ describe('MultiSelect', () => {
         { value: 'apple', label: 'Apple' },
         { value: 'banana', label: 'Banana' },
       ];
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
       fireEvent.change(screen.getByTestId('search-input'), {
@@ -372,7 +374,7 @@ describe('MultiSelect', () => {
 
     it('should have accessible label on search input', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
 
@@ -388,7 +390,7 @@ describe('MultiSelect', () => {
         <MultiSelect
           options={options}
           selected={[]}
-          onChange={() => {}}
+          onChange={noop}
           searchPlaceholder="Find devices..."
         />
       );
@@ -407,7 +409,7 @@ describe('MultiSelect', () => {
   describe('Keyboard Navigation', () => {
     it('should close dropdown on Escape key', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
       expect(screen.getByTestId('multiselect-dropdown')).toBeInTheDocument();
@@ -421,7 +423,7 @@ describe('MultiSelect', () => {
 
     it('should open dropdown on ArrowDown when closed', () => {
       const options = createMockOptions();
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.keyDown(screen.getByTestId('multiselect-container'), {
         key: 'ArrowDown',
@@ -432,8 +434,8 @@ describe('MultiSelect', () => {
 
     it('should navigate options with ArrowDown', () => {
       const options = createMockOptions(3);
-      const { container } = render(
-        <MultiSelect options={options} selected={[]} onChange={() => {}} />
+      render(
+        <MultiSelect options={options} selected={[]} onChange={noop} />
       );
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
@@ -450,7 +452,7 @@ describe('MultiSelect', () => {
 
     it('should navigate options with ArrowUp', () => {
       const options = createMockOptions(3);
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
 
@@ -492,7 +494,7 @@ describe('MultiSelect', () => {
 
     it('should jump to first option on Home key', () => {
       const options = createMockOptions(5);
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
 
@@ -514,7 +516,7 @@ describe('MultiSelect', () => {
 
     it('should jump to last option on End key', () => {
       const options = createMockOptions(5);
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
 
@@ -534,7 +536,7 @@ describe('MultiSelect', () => {
     it('should not open dropdown when disabled', () => {
       const options = createMockOptions();
       render(
-        <MultiSelect options={options} selected={[]} onChange={() => {}} disabled />
+        <MultiSelect options={options} selected={[]} onChange={noop} disabled />
       );
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
@@ -545,7 +547,7 @@ describe('MultiSelect', () => {
     it('should have aria-disabled attribute on trigger', () => {
       const options = createMockOptions();
       render(
-        <MultiSelect options={options} selected={[]} onChange={() => {}} disabled />
+        <MultiSelect options={options} selected={[]} onChange={noop} disabled />
       );
 
       expect(screen.getByTestId('multiselect-trigger')).toHaveAttribute('aria-disabled', 'true');
@@ -554,7 +556,7 @@ describe('MultiSelect', () => {
     it('should apply disabled styling', () => {
       const options = createMockOptions();
       render(
-        <MultiSelect options={options} selected={[]} onChange={() => {}} disabled />
+        <MultiSelect options={options} selected={[]} onChange={noop} disabled />
       );
 
       expect(screen.getByTestId('multiselect-trigger')).toHaveClass('opacity-50');
@@ -563,7 +565,7 @@ describe('MultiSelect', () => {
     it('should not respond to keyboard events when disabled', () => {
       const options = createMockOptions();
       render(
-        <MultiSelect options={options} selected={[]} onChange={() => {}} disabled />
+        <MultiSelect options={options} selected={[]} onChange={noop} disabled />
       );
 
       fireEvent.keyDown(screen.getByTestId('multiselect-container'), {
@@ -578,7 +580,7 @@ describe('MultiSelect', () => {
 
   describe('Edge Cases', () => {
     it('should handle empty options array', () => {
-      render(<MultiSelect options={[]} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={[]} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
 
@@ -603,7 +605,7 @@ describe('MultiSelect', () => {
         <MultiSelect
           options={options}
           selected={['non-existent']}
-          onChange={() => {}}
+          onChange={noop}
         />
       );
 
@@ -618,7 +620,7 @@ describe('MultiSelect', () => {
           label: 'This is a very long option label that might overflow the container',
         },
       ];
-      render(<MultiSelect options={options} selected={['long']} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={['long']} onChange={noop} />);
 
       // Should render without crashing and use truncation
       expect(screen.getByTestId('multiselect-container')).toBeInTheDocument();
@@ -628,7 +630,7 @@ describe('MultiSelect', () => {
       const options = [
         { value: 'special', label: 'Option (with) [special] {chars}' },
       ];
-      render(<MultiSelect options={options} selected={[]} onChange={() => {}} />);
+      render(<MultiSelect options={options} selected={[]} onChange={noop} />);
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
       fireEvent.change(screen.getByTestId('search-input'), {
@@ -664,7 +666,7 @@ describe('MultiSelect', () => {
         <MultiSelect
           options={options}
           selected={[]}
-          onChange={() => {}}
+          onChange={noop}
           aria-label="Select your devices"
         />
       );
@@ -678,7 +680,7 @@ describe('MultiSelect', () => {
     it('should have aria-label on remove buttons', () => {
       const options = createMockOptions();
       render(
-        <MultiSelect options={options} selected={['option-1']} onChange={() => {}} />
+        <MultiSelect options={options} selected={['option-1']} onChange={noop} />
       );
 
       expect(screen.getByTestId('remove-tag-option-1')).toHaveAttribute(
@@ -690,14 +692,14 @@ describe('MultiSelect', () => {
     it('should hide decorative icons from screen readers', () => {
       const options = createMockOptions();
       render(
-        <MultiSelect options={options} selected={['option-1']} onChange={() => {}} />
+        <MultiSelect options={options} selected={['option-1']} onChange={noop} />
       );
 
       fireEvent.click(screen.getByTestId('multiselect-trigger'));
 
       // ChevronDown should have aria-hidden
       const { container } = render(
-        <MultiSelect options={options} selected={[]} onChange={() => {}} />
+        <MultiSelect options={options} selected={[]} onChange={noop} />
       );
       const chevron = container.querySelector('[aria-hidden="true"]');
       expect(chevron).toBeInTheDocument();
