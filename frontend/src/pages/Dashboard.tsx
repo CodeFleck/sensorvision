@@ -30,6 +30,9 @@ const TIME_RANGES = [
   { label: '6 Hours', value: '6h', hours: 6 },
   { label: '12 Hours', value: '12h', hours: 12 },
   { label: '24 Hours', value: '24h', hours: 24 },
+  { label: '7 Days', value: '7d', hours: 24 * 7 },
+  { label: '30 Days', value: '30d', hours: 24 * 30 },
+  { label: 'All Time', value: 'all', hours: -1 },  // Special case: -1 means all time
 ] as const;
 
 type TimeRangeValue = typeof TIME_RANGES[number]['value'];
@@ -76,7 +79,12 @@ export const Dashboard = () => {
   const getTimeRange = useCallback((range: TimeRangeValue) => {
     const hours = TIME_RANGES.find(r => r.value === range)?.hours || 1;
     const now = new Date();
-    const start = new Date(now.getTime() - hours * 60 * 60 * 1000);
+
+    // Handle "All Time" case: use a very early date (year 2000)
+    const start = hours === -1
+      ? new Date('2000-01-01T00:00:00Z')
+      : new Date(now.getTime() - hours * 60 * 60 * 1000);
+
     return {
       start: start.toISOString(),
       end: now.toISOString(),
@@ -525,14 +533,20 @@ export const Dashboard = () => {
       </Card>
 
       {/* Real-time Chart */}
-      {Object.keys(latestTelemetry).length > 0 && (
-        <Card>
-          <CardBody>
-            <h2 className="text-lg font-semibold text-primary mb-4">Real-time Telemetry</h2>
+      <Card>
+        <CardBody>
+          <h2 className="text-lg font-semibold text-primary mb-4">Real-time Telemetry</h2>
+          {Object.keys(latestTelemetry).length > 0 ? (
             <RealTimeChart telemetryData={Object.values(latestTelemetry)} />
-          </CardBody>
-        </Card>
-      )}
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-secondary">
+              <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>Waiting for real-time telemetry data...</p>
+              <p className="text-sm mt-1">Data will appear here when devices send telemetry via WebSocket</p>
+            </div>
+          )}
+        </CardBody>
+      </Card>
 
       {/* Device Grid */}
       <div>
