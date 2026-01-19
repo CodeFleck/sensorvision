@@ -40,11 +40,11 @@ public class DeviceTypeService {
     }
 
     /**
-     * Get device type by ID
+     * Get device type by ID with all templates eagerly loaded
      */
     @Transactional(readOnly = true)
     public DeviceType getDeviceType(Long id) {
-        return deviceTypeRepository.findById(id)
+        return deviceTypeRepository.findByIdWithTemplates(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Device type not found: " + id));
     }
 
