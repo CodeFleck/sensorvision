@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import io.indcloud.config.TelemetryConfigurationProperties;
 import io.indcloud.model.Device;
 import io.indcloud.model.DeviceStatus;
+import io.indcloud.model.Event;
 import io.indcloud.model.Organization;
 import io.indcloud.model.TelemetryRecord;
 import io.indcloud.mqtt.TelemetryPayload;
@@ -28,6 +29,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -58,6 +60,9 @@ class TelemetryIngestionServiceTest {
     @Mock
     private DynamicVariableService dynamicVariableService;
 
+    @Mock
+    private EventService eventService;
+
     private MeterRegistry meterRegistry;
 
     private TelemetryConfigurationProperties telemetryConfig;
@@ -79,6 +84,7 @@ class TelemetryIngestionServiceTest {
                 ruleEngineService,
                 syntheticVariableService,
                 dynamicVariableService,
+                eventService,
                 meterRegistry,
                 telemetryConfig
         );
@@ -563,5 +569,152 @@ class TelemetryIngestionServiceTest {
         assertEquals(75.0, meterRegistry.find("iot_dynamic_valid_sensor").gauge().value(), 0.01);
         // Null value sensor should NOT create a gauge
         assertNull(meterRegistry.find("iot_dynamic_null_sensor").gauge());
+    }
+
+    // ==================== Device Connected Event Tests ====================
+
+    @Test
+    void ingest_withOfflineDevice_shouldCreateDeviceConnectedEvent() {
+        // Arrange
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device offlineDevice = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("offline-device-001")
+                .name("Offline Device")
+                .status(DeviceStatus.OFFLINE)
+                .organization(org)
+                .build();
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "offline-device-001",
+                Instant.now(),
+                Map.of("kw_consumption", new BigDecimal("50.0")),
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("offline-device-001"))
+                .thenReturn(Optional.of(offlineDevice));
+        when(deviceRepository.save(any(Device.class))).thenReturn(offlineDevice);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        telemetryIngestionService.ingest(payload);
+
+        // Assert - DEVICE_CONNECTED event should be created
+        verify(eventService).createDeviceEvent(
+                eq(org),
+                eq("offline-device-001"),
+                eq(Event.EventType.DEVICE_CONNECTED),
+                eq(Event.EventSeverity.INFO),
+                eq("Device connected"),
+                contains("is now online")
+        );
+    }
+
+    @Test
+    void ingest_withUnknownDevice_shouldCreateDeviceConnectedEvent() {
+        // Arrange
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device unknownDevice = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("unknown-device-001")
+                .name("Unknown Device")
+                .status(DeviceStatus.UNKNOWN)
+                .organization(org)
+                .build();
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "unknown-device-001",
+                Instant.now(),
+                Map.of("voltage", new BigDecimal("220.0")),
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("unknown-device-001"))
+                .thenReturn(Optional.of(unknownDevice));
+        when(deviceRepository.save(any(Device.class))).thenReturn(unknownDevice);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        telemetryIngestionService.ingest(payload);
+
+        // Assert - DEVICE_CONNECTED event should be created for UNKNOWN status
+        verify(eventService).createDeviceEvent(
+                eq(org),
+                eq("unknown-device-001"),
+                eq(Event.EventType.DEVICE_CONNECTED),
+                eq(Event.EventSeverity.INFO),
+                eq("Device connected"),
+                contains("is now online")
+        );
+    }
+
+    @Test
+    void ingest_withOnlineDevice_shouldNotCreateDeviceConnectedEvent() {
+        // Arrange
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device onlineDevice = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("online-device-001")
+                .name("Online Device")
+                .status(DeviceStatus.ONLINE)  // Already online
+                .organization(org)
+                .build();
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "online-device-001",
+                Instant.now(),
+                Map.of("current", new BigDecimal("10.5")),
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("online-device-001"))
+                .thenReturn(Optional.of(onlineDevice));
+        when(deviceRepository.save(any(Device.class))).thenReturn(onlineDevice);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        telemetryIngestionService.ingest(payload);
+
+        // Assert - NO event should be created for already online device
+        verify(eventService, never()).createDeviceEvent(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void ingest_withNullPreviousStatus_shouldCreateDeviceConnectedEvent() {
+        // Arrange - device with null status (can happen for legacy devices)
+        Organization org = Organization.builder().id(1L).name("Test Org").build();
+        Device deviceWithNullStatus = Device.builder()
+                .id(UUID.randomUUID())
+                .externalId("null-status-device")
+                .name("Device With Null Status")
+                .status(null)  // Null status
+                .organization(org)
+                .build();
+
+        TelemetryPayload payload = new TelemetryPayload(
+                "null-status-device",
+                Instant.now(),
+                Map.of("temperature", new BigDecimal("25.0")),
+                Map.of()
+        );
+
+        when(deviceRepository.findByExternalIdWithOrganization("null-status-device"))
+                .thenReturn(Optional.of(deviceWithNullStatus));
+        when(deviceRepository.save(any(Device.class))).thenReturn(deviceWithNullStatus);
+        when(telemetryRecordRepository.save(any(TelemetryRecord.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        telemetryIngestionService.ingest(payload);
+
+        // Assert - DEVICE_CONNECTED event SHOULD be created for null status (treated as offline)
+        verify(eventService).createDeviceEvent(
+                eq(org),
+                eq("null-status-device"),
+                eq(Event.EventType.DEVICE_CONNECTED),
+                eq(Event.EventSeverity.INFO),
+                eq("Device connected"),
+                contains("is now online")
+        );
     }
 }
