@@ -135,7 +135,7 @@ class EventControllerTest {
         when(eventService.getRecentEvents(testOrganization, 24)).thenReturn(events);
 
         // When
-        ResponseEntity<List<EventResponse>> response = eventController.getRecentEvents(24);
+        ResponseEntity<List<EventResponse>> response = eventController.getRecentEvents(24, 50);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

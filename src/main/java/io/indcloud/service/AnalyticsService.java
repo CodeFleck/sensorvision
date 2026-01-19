@@ -107,8 +107,8 @@ public class AnalyticsService {
             return List.of();
         }
 
-        // If no interval specified, return single aggregation
-        if (interval == null || interval.isEmpty()) {
+        // If no interval specified (null, empty, or "NONE"), return single aggregation
+        if (interval == null || interval.isEmpty() || "NONE".equalsIgnoreCase(interval)) {
             AggregationResponse result = calculateLegacyAggregation(records, deviceId, variable, aggregation, from);
             return result != null ? List.of(result) : List.of();
         }
@@ -139,8 +139,8 @@ public class AnalyticsService {
             return List.of();
         }
 
-        // If no interval specified, return single aggregation
-        if (interval == null || interval.isEmpty()) {
+        // If no interval specified (null, empty, or "NONE"), return single aggregation
+        if (interval == null || interval.isEmpty() || "NONE".equalsIgnoreCase(interval)) {
             AggregationResponse result = calculateDynamicAggregation(values, device.getExternalId(),
                     variableName, aggregation, from);
             return result != null ? List.of(result) : List.of();
