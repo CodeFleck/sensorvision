@@ -36,7 +36,7 @@ const DeviceTags: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedTagId, setExpandedTagId] = useState<number | null>(null);
-  const [savingDevices, setSavingDevices] = useState(false);
+  const [savingTagIds, setSavingTagIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadTags();
@@ -77,7 +77,7 @@ const DeviceTags: React.FC = () => {
 
     if (toAdd.length === 0 && toRemove.length === 0) return;
 
-    setSavingDevices(true);
+    setSavingTagIds(prev => new Set(prev).add(tagId));
     setError(null);
 
     try {
@@ -96,7 +96,11 @@ const DeviceTags: React.FC = () => {
         : 'Failed to update device assignments';
       setError(message);
     } finally {
-      setSavingDevices(false);
+      setSavingTagIds(prev => {
+        const next = new Set(prev);
+        next.delete(tagId);
+        return next;
+      });
     }
   }, []);
 
@@ -174,7 +178,7 @@ const DeviceTags: React.FC = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+        <div role="alert" aria-live="polite" className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
           {error}
         </div>
       )}
@@ -261,7 +265,7 @@ const DeviceTags: React.FC = () => {
                       </td>
                     </tr>
                     {isExpanded && (
-                      <tr className="bg-gray-50 dark:bg-gray-750">
+                      <tr className="bg-gray-50 dark:bg-gray-700">
                         <td colSpan={5} className="px-6 py-4">
                           <div className="flex items-start gap-4">
                             <div className="flex-1 max-w-md">
@@ -274,10 +278,10 @@ const DeviceTags: React.FC = () => {
                                 onChange={(newSelection) => handleDeviceSelectionChange(tag.id, tagDeviceIds, newSelection)}
                                 placeholder="Select devices to tag..."
                                 searchPlaceholder="Search devices..."
-                                disabled={savingDevices}
+                                disabled={savingTagIds.has(tag.id)}
                                 aria-label={`Select devices for tag ${tag.name}`}
                               />
-                              {savingDevices && (
+                              {savingTagIds.has(tag.id) && (
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Saving changes...</p>
                               )}
                             </div>

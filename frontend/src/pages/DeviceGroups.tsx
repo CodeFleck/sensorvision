@@ -30,7 +30,7 @@ const DeviceGroups: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null);
-  const [savingDevices, setSavingDevices] = useState(false);
+  const [savingGroupIds, setSavingGroupIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadGroups();
@@ -71,7 +71,7 @@ const DeviceGroups: React.FC = () => {
 
     if (toAdd.length === 0 && toRemove.length === 0) return;
 
-    setSavingDevices(true);
+    setSavingGroupIds(prev => new Set(prev).add(groupId));
     setError(null);
 
     try {
@@ -90,7 +90,11 @@ const DeviceGroups: React.FC = () => {
         : 'Failed to update device assignments';
       setError(message);
     } finally {
-      setSavingDevices(false);
+      setSavingGroupIds(prev => {
+        const next = new Set(prev);
+        next.delete(groupId);
+        return next;
+      });
     }
   }, []);
 
@@ -168,7 +172,7 @@ const DeviceGroups: React.FC = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+        <div role="alert" aria-live="polite" className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
           {error}
         </div>
       )}
@@ -230,10 +234,10 @@ const DeviceGroups: React.FC = () => {
                         onChange={(newSelection) => handleDeviceSelectionChange(group.id, groupDeviceIds, newSelection)}
                         placeholder="Select devices to add..."
                         searchPlaceholder="Search devices..."
-                        disabled={savingDevices}
+                        disabled={savingGroupIds.has(group.id)}
                         aria-label={`Select devices for ${group.name}`}
                       />
-                      {savingDevices && (
+                      {savingGroupIds.has(group.id) && (
                         <p className="text-xs text-gray-500 mt-1">Saving changes...</p>
                       )}
                     </div>
