@@ -64,11 +64,13 @@ public class EventController {
      */
     @GetMapping("/recent")
     public ResponseEntity<java.util.List<EventResponse>> getRecentEvents(
-            @RequestParam(defaultValue = "24") int hours
+            @RequestParam(defaultValue = "24") int hours,
+            @RequestParam(defaultValue = "50") int limit
     ) {
         Organization organization = securityUtils.getCurrentUserOrganization();
         java.util.List<Event> events = eventService.getRecentEvents(organization, hours);
         java.util.List<EventResponse> response = events.stream()
+                .limit(limit)
                 .map(EventResponse::fromEvent)
                 .toList();
         return ResponseEntity.ok(response);
