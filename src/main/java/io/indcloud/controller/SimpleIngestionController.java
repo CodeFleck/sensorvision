@@ -6,10 +6,13 @@ import io.indcloud.model.Device;
 import io.indcloud.model.Organization;
 import io.indcloud.mqtt.TelemetryPayload;
 import io.indcloud.repository.DeviceRepository;
+import io.indcloud.security.DeviceTokenAuthenticationFilter.DeviceTokenAuthentication;
 import io.indcloud.service.DeviceTokenService;
 import io.indcloud.service.TelemetryIngestionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -108,6 +111,15 @@ public class SimpleIngestionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new SimpleIngestResponse(false, "Device configuration error"));
         }
+
+        // Set up SecurityContext so TelemetryIngestionService can use it for auto-provisioning
+        // This ensures new devices are created in the authenticated organization, not Default Organization
+        DeviceTokenAuthentication auth = new DeviceTokenAuthentication(
+                authenticatedDevice.getExternalId(),
+                authenticatedDevice,
+                java.util.Collections.singletonList(new SimpleGrantedAuthority("ROLE_DEVICE"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
         // Check if the target device exists and verify organization ownership
         Optional<Device> targetDevice = deviceRepository.findByExternalId(deviceId);
