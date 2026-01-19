@@ -12,6 +12,7 @@ import io.indcloud.service.TelemetryIngestionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -114,60 +115,66 @@ public class SimpleIngestionController {
 
         // Set up SecurityContext so TelemetryIngestionService can use it for auto-provisioning
         // This ensures new devices are created in the authenticated organization, not Default Organization
-        DeviceTokenAuthentication auth = new DeviceTokenAuthentication(
-                authenticatedDevice.getExternalId(),
-                authenticatedDevice,
-                java.util.Collections.singletonList(new SimpleGrantedAuthority("ROLE_DEVICE"))
-        );
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        // CRITICAL: Must save and restore original context to prevent thread pool pollution
+        SecurityContext originalContext = SecurityContextHolder.getContext();
+        try {
+            SecurityContext newContext = SecurityContextHolder.createEmptyContext();
+            DeviceTokenAuthentication auth = new DeviceTokenAuthentication(
+                    authenticatedDevice.getExternalId(),
+                    authenticatedDevice,
+                    java.util.Collections.singletonList(new SimpleGrantedAuthority("ROLE_DEVICE"))
+            );
+            newContext.setAuthentication(auth);
+            SecurityContextHolder.setContext(newContext);
+            log.debug("Set SecurityContext with organization {} for device auto-provisioning",
+                    authenticatedOrganization.getName());
 
-        // Check if the target device exists and verify organization ownership
-        Optional<Device> targetDevice = deviceRepository.findByExternalId(deviceId);
-        if (targetDevice.isPresent()) {
-            // Device exists - verify it belongs to the same organization
-            if (!targetDevice.get().getOrganization().getId().equals(authenticatedOrganization.getId())) {
-                log.warn("Organization mismatch: token org={}, target device org={}",
-                        authenticatedOrganization.getId(),
-                        targetDevice.get().getOrganization().getId());
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(new SimpleIngestResponse(false,
-                            "Cannot send data to device in different organization"));
+            // Check if the target device exists and verify organization ownership
+            Optional<Device> targetDevice = deviceRepository.findByExternalId(deviceId);
+            if (targetDevice.isPresent()) {
+                // Device exists - verify it belongs to the same organization
+                if (!targetDevice.get().getOrganization().getId().equals(authenticatedOrganization.getId())) {
+                    log.warn("Organization mismatch: token org={}, target device org={}",
+                            authenticatedOrganization.getId(),
+                            targetDevice.get().getOrganization().getId());
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(new SimpleIngestResponse(false,
+                                "Cannot send data to device in different organization"));
+                }
+                log.debug("Target device exists and belongs to same organization");
+            } else {
+                // Device doesn't exist - will be auto-created by ingestion service
+                // in the authenticated organization (if auto-provision is enabled)
+                log.debug("Target device {} will be auto-created in organization {}",
+                        deviceId, authenticatedOrganization.getName());
             }
-            log.debug("Target device exists and belongs to same organization");
-        } else {
-            // Device doesn't exist - will be auto-created by ingestion service
-            // in the authenticated organization (if auto-provision is enabled)
-            log.debug("Target device {} will be auto-created in organization {}",
-                    deviceId, authenticatedOrganization.getName());
-        }
 
-        // Update last used timestamp
-        deviceTokenService.updateTokenLastUsed(apiKey);
+            // Update last used timestamp
+            deviceTokenService.updateTokenLastUsed(apiKey);
 
-        // Convert all values to BigDecimal (telemetry service expects BigDecimal)
-        // Fail fast on invalid data types or conversion errors
-        Map<String, BigDecimal> telemetryVariables;
-        try {
-            telemetryVariables = variables.entrySet().stream()
-                    .filter(entry -> entry.getValue() != null)
-                    .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            entry -> convertToBigDecimal(entry.getKey(), entry.getValue())
-                    ));
-        } catch (IllegalArgumentException e) {
-            // Invalid data type or conversion failure
-            log.error("Invalid data format for device {}: {}", deviceId, e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(new SimpleIngestResponse(false, e.getMessage()));
-        }
+            // Convert all values to BigDecimal (telemetry service expects BigDecimal)
+            // Fail fast on invalid data types or conversion errors
+            Map<String, BigDecimal> telemetryVariables;
+            try {
+                telemetryVariables = variables.entrySet().stream()
+                        .filter(entry -> entry.getValue() != null)
+                        .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> convertToBigDecimal(entry.getKey(), entry.getValue())
+                        ));
+            } catch (IllegalArgumentException e) {
+                // Invalid data type or conversion failure
+                log.error("Invalid data format for device {}: {}", deviceId, e.getMessage());
+                return ResponseEntity.badRequest()
+                        .body(new SimpleIngestResponse(false, e.getMessage()));
+            }
 
-        if (telemetryVariables.isEmpty()) {
-            log.warn("No valid numeric variables provided for device: {}", deviceId);
-            return ResponseEntity.badRequest()
-                    .body(new SimpleIngestResponse(false, "At least one numeric variable is required"));
-        }
+            if (telemetryVariables.isEmpty()) {
+                log.warn("No valid numeric variables provided for device: {}", deviceId);
+                return ResponseEntity.badRequest()
+                        .body(new SimpleIngestResponse(false, "At least one numeric variable is required"));
+            }
 
-        try {
             // Create telemetry payload
             TelemetryPayload payload = new TelemetryPayload(
                     deviceId,
@@ -188,6 +195,9 @@ public class SimpleIngestionController {
             log.error("Failed to ingest simple telemetry for device: {}", deviceId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new SimpleIngestResponse(false, "Failed to process data: " + e.getMessage()));
+        } finally {
+            // CRITICAL: Always restore original SecurityContext to prevent thread pool pollution
+            SecurityContextHolder.setContext(originalContext);
         }
     }
 
