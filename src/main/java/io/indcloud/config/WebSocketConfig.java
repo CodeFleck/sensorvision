@@ -29,12 +29,19 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private final JwtService jwtService;
 
     private static final String[] ALLOWED_ORIGINS = {
+            // Local development
             "http://localhost:3003",
             "http://localhost:3002",
             "http://localhost:3001",
             "http://localhost:3000",
+            // Legacy/staging IP-based access
             "http://35.88.65.186.nip.io:8080",
-            "http://35.88.65.186:8080"
+            "http://35.88.65.186:8080",
+            // Production domain
+            "http://indcloud.io",
+            "https://indcloud.io",
+            "http://54.149.190.208",
+            "http://54.149.190.208:8080"
     };
 
     @Override
