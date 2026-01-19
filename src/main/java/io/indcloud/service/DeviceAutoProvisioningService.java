@@ -97,7 +97,7 @@ public class DeviceAutoProvisioningService {
      * Create variables from device type variable definitions.
      */
     private int createVariablesFromTemplate(Device device, DeviceType deviceType) {
-        List<DeviceTypeVariable> templateVars = deviceType.getVariables();
+        var templateVars = deviceType.getVariables();
         int created = 0;
 
         for (DeviceTypeVariable templateVar : templateVars) {
@@ -133,7 +133,7 @@ public class DeviceAutoProvisioningService {
      * Create alert rules from device type rule templates.
      */
     private int createRulesFromTemplate(Device device, DeviceType deviceType) {
-        List<DeviceTypeRuleTemplate> ruleTemplates = deviceType.getRuleTemplates();
+        var ruleTemplates = deviceType.getRuleTemplates();
         int created = 0;
 
         for (DeviceTypeRuleTemplate template : ruleTemplates) {
@@ -170,7 +170,7 @@ public class DeviceAutoProvisioningService {
      * Create a dashboard with widgets from device type dashboard templates.
      */
     private boolean createDashboardFromTemplate(Device device, DeviceType deviceType) {
-        List<DeviceTypeDashboardTemplate> widgetTemplates = deviceType.getDashboardTemplates();
+        var widgetTemplates = deviceType.getDashboardTemplates();
 
         if (widgetTemplates.isEmpty()) {
             return false;
