@@ -32,6 +32,7 @@ import { apiService } from '../services/api';
 import { Device, Alert } from '../types';
 import { mlAnomaliesApi, MLAnomaly } from '../services/mlService';
 import { SafeLLMContent } from '../components/SafeLLMContent';
+import { MultiSelect } from '../components/MultiSelect';
 
 type TabType = 'query' | 'reports' | 'root-cause';
 
@@ -288,32 +289,18 @@ export const AIAssistant = () => {
             {/* Device Filter */}
             <div className="p-4 border-b border-default">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <Cpu className="h-4 w-4 text-secondary" />
                   <span className="text-sm text-secondary">Filter by devices:</span>
                 </div>
-                <select
-                  multiple
-                  value={selectedDevices}
-                  onChange={(e) =>
-                    setSelectedDevices(Array.from(e.target.selectedOptions, (opt) => opt.value))
-                  }
-                  className="flex-1 max-w-md px-3 py-2 border border-default rounded-lg bg-primary text-primary text-sm"
-                >
-                  {devices.map((device) => (
-                    <option key={device.id} value={device.id}>
-                      {device.name}
-                    </option>
-                  ))}
-                </select>
-                {selectedDevices.length > 0 && (
-                  <button
-                    onClick={() => setSelectedDevices([])}
-                    className="text-sm text-link hover:underline"
-                  >
-                    Clear
-                  </button>
-                )}
+                <MultiSelect
+                  options={devices.map((d) => ({ value: d.id, label: d.name }))}
+                  selected={selectedDevices}
+                  onChange={setSelectedDevices}
+                  placeholder="All devices"
+                  searchPlaceholder="Search devices..."
+                  className="flex-1 max-w-md"
+                />
               </div>
             </div>
 
@@ -485,20 +472,13 @@ export const AIAssistant = () => {
                         <Cpu className="inline h-4 w-4 mr-1" />
                         Devices (optional)
                       </label>
-                      <select
-                        multiple
-                        value={reportDevices}
-                        onChange={(e) =>
-                          setReportDevices(Array.from(e.target.selectedOptions, (opt) => opt.value))
-                        }
-                        className="w-full px-3 py-2 border border-default rounded-lg bg-primary text-primary h-32"
-                      >
-                        {devices.map((device) => (
-                          <option key={device.id} value={device.id}>
-                            {device.name}
-                          </option>
-                        ))}
-                      </select>
+                      <MultiSelect
+                        options={devices.map((d) => ({ value: d.id, label: d.name }))}
+                        selected={reportDevices}
+                        onChange={setReportDevices}
+                        placeholder="All devices"
+                        searchPlaceholder="Search devices..."
+                      />
                     </div>
 
                     {/* Custom Prompt */}
