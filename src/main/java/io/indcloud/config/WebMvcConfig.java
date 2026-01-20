@@ -56,6 +56,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/admin/dashboard/**",  // Exclude admin dashboard (stats endpoint)
                         "/api/v1/admin/support-tickets/**",  // Exclude support ticket operations
                         "/api/v1/llm/**",  // Exclude LLM endpoints (handled by LLMRateLimitInterceptor)
+                        "/api/v1/widget-assistant/**",  // Exclude widget assistant (uses LLM rate limits)
                         "/swagger-ui/**",  // Exclude Swagger UI
                         "/v3/api-docs/**"  // Exclude OpenAPI docs
                 )

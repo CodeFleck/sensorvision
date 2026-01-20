@@ -24,6 +24,7 @@ import io.indcloud.dto.TelemetryPointDto;
 import io.indcloud.dto.DynamicTelemetryPointDto;
 import io.indcloud.websocket.TelemetryWebSocketHandler;
 import io.indcloud.config.TelemetryConfigurationProperties;
+import io.indcloud.logging.LogContext;
 import io.indcloud.security.DeviceTokenAuthenticationFilter.DeviceTokenAuthentication;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,6 +47,7 @@ public class TelemetryIngestionService {
     private final SyntheticVariableService syntheticVariableService;
     private final DynamicVariableService dynamicVariableService;
     private final EventService eventService;
+    private final AutoWidgetGeneratorService autoWidgetGeneratorService;
     private final MeterRegistry meterRegistry;
     private final TelemetryConfigurationProperties telemetryConfig;
     private final Counter mqttMessagesCounter;
@@ -69,6 +71,7 @@ public class TelemetryIngestionService {
                                      SyntheticVariableService syntheticVariableService,
                                      DynamicVariableService dynamicVariableService,
                                      EventService eventService,
+                                     AutoWidgetGeneratorService autoWidgetGeneratorService,
                                      MeterRegistry meterRegistry,
                                      TelemetryConfigurationProperties telemetryConfig) {
         this.deviceRepository = deviceRepository;
@@ -80,6 +83,7 @@ public class TelemetryIngestionService {
         this.syntheticVariableService = syntheticVariableService;
         this.dynamicVariableService = dynamicVariableService;
         this.eventService = eventService;
+        this.autoWidgetGeneratorService = autoWidgetGeneratorService;
         this.meterRegistry = meterRegistry;
         this.telemetryConfig = telemetryConfig;
         this.mqttMessagesCounter = meterRegistry.counter("mqtt_messages_total");
@@ -121,6 +125,26 @@ public class TelemetryIngestionService {
                     return deviceService.getOrCreateDevice(payload.deviceId(), targetOrg);
                 });
 
+        // Set logging context for this telemetry processing
+        LogContext.setDevice(device.getId(), device.getExternalId());
+        if (device.getOrganization() != null) {
+            LogContext.setOrganization(device.getOrganization().getId(), device.getOrganization().getName());
+        }
+        LogContext.setOperation("telemetry_ingestion");
+
+        try {
+            processTelemetry(device, payload);
+        } finally {
+            LogContext.clearDevice();
+            LogContext.clearOrganization();
+            LogContext.clearOperation();
+        }
+    }
+
+    /**
+     * Internal method to process telemetry after logging context is set.
+     */
+    private void processTelemetry(Device device, TelemetryPayload payload) {
         Map<String, Object> metadata = payload.metadata();
         if (metadata != null) {
             device.setLocation((String) metadata.getOrDefault("location", device.getLocation()));
@@ -234,6 +258,17 @@ public class TelemetryIngestionService {
 
         // Calculate synthetic variables (derived metrics)
         syntheticVariableService.calculateSyntheticVariables(record);
+
+        // Auto-generate widgets for first telemetry from a device
+        if (payload.variables() != null && !payload.variables().isEmpty()) {
+            boolean isFirstTelemetry = device.getInitialWidgetsCreated() == null
+                                       || !device.getInitialWidgetsCreated();
+            if (isFirstTelemetry) {
+                log.info("First telemetry from device {}, triggering auto-widget generation",
+                        device.getExternalId());
+                autoWidgetGeneratorService.generateInitialWidgets(device, payload.variables());
+            }
+        }
     }
 
     // Lock object for synchronizing gauge creation to prevent cardinality overflow

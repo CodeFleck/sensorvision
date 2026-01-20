@@ -5,7 +5,9 @@ import java.util.Optional;
 import java.util.UUID;
 import io.indcloud.model.Device;
 import io.indcloud.model.Organization;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -59,4 +61,12 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
 
     @Query("SELECT d FROM Device d LEFT JOIN FETCH d.organization WHERE d.id = :id")
     Optional<Device> findByIdWithOrganization(@Param("id") UUID id);
+
+    /**
+     * Find device by ID with pessimistic write lock for safe concurrent updates.
+     * Used by auto-widget generation to prevent race conditions.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT d FROM Device d LEFT JOIN FETCH d.organization WHERE d.id = :id")
+    Optional<Device> findByIdWithLock(@Param("id") UUID id);
 }

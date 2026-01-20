@@ -2,26 +2,75 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <springProperty scope="context" name="appName" source="spring.application.name"/>
-    <!-- Allow root log level to be controlled from Spring property `logging.level.root` -->
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="indcloud"/>
+    <springProperty scope="context" name="appVersion" source="spring.application.version" defaultValue="1.0.0"/>
+    <springProperty scope="context" name="environment" source="spring.profiles.active" defaultValue="default"/>
     <springProperty scope="context" name="loggingLevelRoot" source="logging.level.root"/>
-    <!-- Read log file name and patterns from Spring properties (fallbacks provided) -->
     <springProperty scope="context" name="loggingFileName" source="logging.file.name"/>
     <springProperty scope="context" name="loggingPatternConsole" source="logging.pattern.console"/>
     <springProperty scope="context" name="loggingPatternFile" source="logging.pattern.file"/>
 
-    <!-- Console Appender -->
+    <!-- ===================== -->
+    <!-- Console Appender (Human-readable for local dev) -->
+    <!-- ===================== -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>${loggingPatternConsole:-%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n}</pattern>
+            <pattern>${loggingPatternConsole:-%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{correlationId:-}] %msg%n}</pattern>
         </encoder>
     </appender>
 
-    <!-- File Appender with Rolling -->
+    <!-- ===================== -->
+    <!-- JSON Console Appender (for Kibana/ELK in production) -->
+    <!-- ===================== -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Include all MDC fields automatically -->
+            <includeMdcKeyName>correlationId</includeMdcKeyName>
+            <includeMdcKeyName>requestPath</includeMdcKeyName>
+            <includeMdcKeyName>requestMethod</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>clientIp</includeMdcKeyName>
+            <includeMdcKeyName>deviceId</includeMdcKeyName>
+            <includeMdcKeyName>deviceExternalId</includeMdcKeyName>
+            <includeMdcKeyName>organizationId</includeMdcKeyName>
+            <includeMdcKeyName>organizationName</includeMdcKeyName>
+            <includeMdcKeyName>dashboardId</includeMdcKeyName>
+            <includeMdcKeyName>widgetId</includeMdcKeyName>
+            <includeMdcKeyName>ruleId</includeMdcKeyName>
+            <includeMdcKeyName>alertId</includeMdcKeyName>
+            <includeMdcKeyName>mlModelId</includeMdcKeyName>
+            <includeMdcKeyName>trainingJobId</includeMdcKeyName>
+            <includeMdcKeyName>operation</includeMdcKeyName>
+            <includeMdcKeyName>variableName</includeMdcKeyName>
+
+            <!-- Custom fields for all log entries -->
+            <customFields>{"application":"${appName}","version":"${appVersion}","environment":"${environment}"}</customFields>
+
+            <!-- Include caller info for debug logs -->
+            <includeCallerData>false</includeCallerData>
+
+            <!-- Shorter field names -->
+            <fieldNames>
+                <timestamp>@timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+                <stackTrace>stackTrace</stackTrace>
+            </fieldNames>
+
+            <!-- Pretty print for readability (disable in production for performance) -->
+            <jsonGeneratorDecorator class="net.logstash.logback.decorate.PrettyPrintingJsonGeneratorDecorator"/>
+        </encoder>
+    </appender>
+
+    <!-- ===================== -->
+    <!-- File Appender with Rolling (Human-readable) -->
+    <!-- ===================== -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${loggingFileName:-logs/indcloud.log}</file>
         <encoder>
-            <pattern>${loggingPatternFile:-%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n}</pattern>
+            <pattern>${loggingPatternFile:-%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{correlationId:-}] [device:%X{deviceExternalId:-}] [org:%X{organizationId:-}] %msg%n}</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>logs/indcloud-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
@@ -31,12 +80,85 @@
         </rollingPolicy>
     </appender>
 
-    <!-- Root Logger; level is read from `logging.level.root` (fallback to INFO) -->
-    <root level="${loggingLevelRoot:-INFO}">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-    </root>
+    <!-- ===================== -->
+    <!-- JSON File Appender with Rolling (for Kibana/Filebeat) -->
+    <!-- ===================== -->
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/indcloud-json.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"application":"${appName}","version":"${appVersion}","environment":"${environment}"}</customFields>
+            <fieldNames>
+                <timestamp>@timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+                <stackTrace>stackTrace</stackTrace>
+            </fieldNames>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/indcloud-json-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
 
-    <!-- Keep XML free of package-specific logger levels. Use application.yml `logging.level.*` instead. -->
+    <!-- ===================== -->
+    <!-- Async Appender for Performance -->
+    <!-- ===================== -->
+    <appender name="ASYNC_JSON_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="JSON_FILE"/>
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <!-- ===================== -->
+    <!-- Profile: default (local development) -->
+    <!-- ===================== -->
+    <springProfile name="default,dev,test">
+        <root level="${loggingLevelRoot:-INFO}">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- ===================== -->
+    <!-- Profile: json (JSON logging for local testing) -->
+    <!-- ===================== -->
+    <springProfile name="json">
+        <root level="${loggingLevelRoot:-INFO}">
+            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="ASYNC_JSON_FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- ===================== -->
+    <!-- Profile: prod (Production with JSON for Kibana) -->
+    <!-- ===================== -->
+    <springProfile name="prod,production">
+        <root level="${loggingLevelRoot:-INFO}">
+            <appender-ref ref="JSON_CONSOLE"/>
+            <appender-ref ref="ASYNC_JSON_FILE"/>
+        </root>
+
+        <!-- Reduce noise from framework logs in production -->
+        <logger name="org.springframework" level="WARN"/>
+        <logger name="org.hibernate" level="WARN"/>
+        <logger name="org.apache" level="WARN"/>
+        <logger name="com.zaxxer.hikari" level="WARN"/>
+    </springProfile>
+
+    <!-- ===================== -->
+    <!-- Profile: staging (Both formats for debugging) -->
+    <!-- ===================== -->
+    <springProfile name="staging">
+        <root level="${loggingLevelRoot:-INFO}">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ASYNC_JSON_FILE"/>
+        </root>
+    </springProfile>
 
 </configuration>

@@ -291,3 +291,101 @@ export const getSourceTypeLabel = (type: RootCauseSourceType): string => {
   };
   return labels[type] || type;
 };
+
+// ============================================================================
+// Widget Assistant Types
+// ============================================================================
+
+export interface WidgetSuggestion {
+  name: string;
+  type: string;
+  deviceId: string;
+  deviceName?: string;
+  variableName: string;
+  width?: number;
+  height?: number;
+  config?: Record<string, unknown>;
+}
+
+export interface ChatRequest {
+  message: string;
+  dashboardId: number;
+  conversationId?: string;
+}
+
+export interface ChatResponse {
+  conversationId: string;
+  response: string;
+  widgetSuggestion?: WidgetSuggestion;
+  needsClarification: boolean;
+  provider?: string;
+  modelId?: string;
+  tokensUsed?: number;
+  latencyMs?: number;
+}
+
+export interface ConfirmRequest {
+  conversationId: string;
+  dashboardId: number;
+  confirmed: boolean;
+}
+
+export interface ConfirmResponse {
+  success: boolean;
+  widgetId?: number;
+  message: string;
+}
+
+export interface ContextResponse {
+  dashboardId: number;
+  dashboardName: string;
+  devices: DeviceInfo[];
+}
+
+export interface DeviceInfo {
+  id: string;
+  externalId: string;
+  name: string;
+  deviceType?: string;
+  variables: VariableInfo[];
+}
+
+export interface VariableInfo {
+  name: string;
+  displayName?: string;
+  unit?: string;
+  lastValue?: number;
+}
+
+// ============================================================================
+// Widget Assistant API
+// ============================================================================
+
+export const widgetAssistantApi = {
+  /**
+   * Send a chat message to the widget assistant
+   */
+  async chat(req: ChatRequest): Promise<ChatResponse> {
+    return request<ChatResponse>('/widget-assistant/chat', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    });
+  },
+
+  /**
+   * Confirm and create a suggested widget
+   */
+  async confirmWidget(req: ConfirmRequest): Promise<ConfirmResponse> {
+    return request<ConfirmResponse>('/widget-assistant/confirm', {
+      method: 'POST',
+      body: JSON.stringify(req),
+    });
+  },
+
+  /**
+   * Get context information for a dashboard
+   */
+  async getContext(dashboardId: number): Promise<ContextResponse> {
+    return request<ContextResponse>(`/widget-assistant/context/${dashboardId}`);
+  },
+};

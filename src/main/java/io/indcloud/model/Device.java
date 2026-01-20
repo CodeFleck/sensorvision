@@ -87,6 +87,11 @@ public class Device extends AuditableEntity implements SoftDeletable {
     @Column(name = "last_health_check_at")
     private LocalDateTime lastHealthCheckAt;
 
+    // Flag to track if initial widgets have been auto-generated
+    @Column(name = "initial_widgets_created")
+    @Builder.Default
+    private Boolean initialWidgetsCreated = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
     private Organization organization;
