@@ -69,9 +69,6 @@ describe('Dashboard', () => {
     location: 'Floor 1',
     lastSeenAt: new Date().toISOString(),
     active: true,
-    organizationId: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   };
 
   const mockTelemetryPoint: TelemetryPoint = {
@@ -174,6 +171,7 @@ describe('Dashboard', () => {
     it('should show loading message initially', () => {
       // Make API call pending to keep loading state
       vi.mocked(apiService.getDevices).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -605,6 +603,7 @@ describe('Dashboard', () => {
 
     it('should show loading spinner when metrics are loading', async () => {
       vi.mocked(apiService.getAggregatedData).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -894,6 +893,7 @@ describe('Dashboard', () => {
 
     it('should disable time range selector when metrics loading', async () => {
       vi.mocked(apiService.getAggregatedData).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -909,6 +909,7 @@ describe('Dashboard', () => {
 
     it('should disable refresh button when metrics loading', async () => {
       vi.mocked(apiService.getAggregatedData).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         () => new Promise(() => {}) // Never resolves
       );
 
