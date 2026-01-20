@@ -63,6 +63,9 @@ class TelemetryIngestionServiceTest {
     @Mock
     private EventService eventService;
 
+    @Mock
+    private AutoWidgetGeneratorService autoWidgetGeneratorService;
+
     private MeterRegistry meterRegistry;
 
     private TelemetryConfigurationProperties telemetryConfig;
@@ -85,6 +88,7 @@ class TelemetryIngestionServiceTest {
                 syntheticVariableService,
                 dynamicVariableService,
                 eventService,
+                autoWidgetGeneratorService,
                 meterRegistry,
                 telemetryConfig
         );

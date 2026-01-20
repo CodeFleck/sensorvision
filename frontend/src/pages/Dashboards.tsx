@@ -7,6 +7,7 @@ import { AddWidgetModal } from '../components/widgets/AddWidgetModal';
 import { EditWidgetModal } from '../components/widgets/EditWidgetModal';
 import { WidgetFullscreenModal } from '../components/widgets/WidgetFullscreenModal';
 import { MultiWidgetFullscreenModal } from '../components/widgets/MultiWidgetFullscreenModal';
+import { WidgetAssistantChat } from '../components/widgets/WidgetAssistantChat';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { Button } from '../components/ui';
 import GridLayout from 'react-grid-layout';
@@ -513,6 +514,14 @@ export const Dashboards: React.FC = () => {
           latestData={latestData}
           isOpen={showMultiWidgetFullscreen}
           onClose={() => setShowMultiWidgetFullscreen(false)}
+        />
+      )}
+
+      {/* AI Widget Assistant Chat (hidden in kiosk mode) */}
+      {!kioskMode && dashboard && (
+        <WidgetAssistantChat
+          dashboardId={dashboard.id}
+          onWidgetCreated={loadDashboard}
         />
       )}
     </div>

@@ -46,6 +46,7 @@ public class TelemetryIngestionService {
     private final SyntheticVariableService syntheticVariableService;
     private final DynamicVariableService dynamicVariableService;
     private final EventService eventService;
+    private final AutoWidgetGeneratorService autoWidgetGeneratorService;
     private final MeterRegistry meterRegistry;
     private final TelemetryConfigurationProperties telemetryConfig;
     private final Counter mqttMessagesCounter;
@@ -69,6 +70,7 @@ public class TelemetryIngestionService {
                                      SyntheticVariableService syntheticVariableService,
                                      DynamicVariableService dynamicVariableService,
                                      EventService eventService,
+                                     AutoWidgetGeneratorService autoWidgetGeneratorService,
                                      MeterRegistry meterRegistry,
                                      TelemetryConfigurationProperties telemetryConfig) {
         this.deviceRepository = deviceRepository;
@@ -80,6 +82,7 @@ public class TelemetryIngestionService {
         this.syntheticVariableService = syntheticVariableService;
         this.dynamicVariableService = dynamicVariableService;
         this.eventService = eventService;
+        this.autoWidgetGeneratorService = autoWidgetGeneratorService;
         this.meterRegistry = meterRegistry;
         this.telemetryConfig = telemetryConfig;
         this.mqttMessagesCounter = meterRegistry.counter("mqtt_messages_total");
@@ -234,6 +237,17 @@ public class TelemetryIngestionService {
 
         // Calculate synthetic variables (derived metrics)
         syntheticVariableService.calculateSyntheticVariables(record);
+
+        // Auto-generate widgets for first telemetry from a device
+        if (payload.variables() != null && !payload.variables().isEmpty()) {
+            boolean isFirstTelemetry = device.getInitialWidgetsCreated() == null
+                                       || !device.getInitialWidgetsCreated();
+            if (isFirstTelemetry) {
+                log.info("First telemetry from device {}, triggering auto-widget generation",
+                        device.getExternalId());
+                autoWidgetGeneratorService.generateInitialWidgets(device, payload.variables());
+            }
+        }
     }
 
     // Lock object for synchronizing gauge creation to prevent cardinality overflow

@@ -35,4 +35,10 @@ public interface WidgetRepository extends JpaRepository<Widget, Long> {
      */
     @Query("SELECT w FROM Widget w WHERE w.deviceId = :deviceId AND w.variableName = :variableName")
     List<Widget> findByDeviceIdAndVariableName(@Param("deviceId") String deviceId, @Param("variableName") String variableName);
+
+    /**
+     * Find the maximum Y position on a dashboard (for auto-positioning new widgets)
+     */
+    @Query("SELECT MAX(w.positionY + w.height) FROM Widget w WHERE w.dashboard.id = :dashboardId")
+    Integer findMaxPositionYByDashboard(@Param("dashboardId") Long dashboardId);
 }

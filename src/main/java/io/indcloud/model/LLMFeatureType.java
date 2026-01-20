@@ -9,7 +9,8 @@ public enum LLMFeatureType {
     REPORT_GENERATION("report_generation", "Generate reports from data"),
     ROOT_CAUSE_ANALYSIS("root_cause", "Analyze root causes of issues"),
     ALERT_SUMMARY("alert_summary", "Summarize alerts and events"),
-    PREDICTIVE_INSIGHT("predictive_insight", "Provide predictive insights");
+    PREDICTIVE_INSIGHT("predictive_insight", "Provide predictive insights"),
+    WIDGET_ASSISTANT("widget_assistant", "Widget creation via natural language");
 
     private final String code;
     private final String description;
