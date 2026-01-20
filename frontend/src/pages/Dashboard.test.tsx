@@ -69,9 +69,6 @@ describe('Dashboard', () => {
     location: 'Floor 1',
     lastSeenAt: new Date().toISOString(),
     active: true,
-    organizationId: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   };
 
   const mockTelemetryPoint: TelemetryPoint = {

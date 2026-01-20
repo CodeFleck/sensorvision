@@ -168,18 +168,6 @@ export const WidgetAssistantChat: React.FC<WidgetAssistantChatProps> = ({
     'Add a metric card showing voltage',
   ];
 
-  const getWidgetTypeIcon = (type: string) => {
-    const icons: Record<string, string> = {
-      LINE_CHART: 'chart-line',
-      GAUGE: 'gauge',
-      METRIC_CARD: 'hash',
-      BAR_CHART: 'bar-chart',
-      AREA_CHART: 'area-chart',
-      PIE_CHART: 'pie-chart',
-    };
-    return icons[type] || 'layout-grid';
-  };
-
   return (
     <>
       {/* Floating Chat Bubble */}
