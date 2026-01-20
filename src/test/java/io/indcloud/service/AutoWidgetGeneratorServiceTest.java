@@ -85,7 +85,7 @@ class AutoWidgetGeneratorServiceTest {
         variables.put("temperature", new BigDecimal("23.5"));
         variables.put("humidity", new BigDecimal("65.0"));
 
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+        when(deviceRepository.findByIdWithLock(testDevice.getId())).thenReturn(Optional.of(testDevice));
         when(dashboardRepository.findByOrganizationAndIsDefaultTrueWithWidgets(testOrg))
                 .thenReturn(Optional.of(testDashboard));
         when(widgetRepository.save(any(Widget.class))).thenAnswer(invocation -> {
@@ -146,7 +146,7 @@ class AutoWidgetGeneratorServiceTest {
                 .initialWidgetsCreated(true) // Already has widgets
                 .build();
 
-        when(deviceRepository.findById(deviceWithWidgets.getId()))
+        when(deviceRepository.findByIdWithLock(deviceWithWidgets.getId()))
                 .thenReturn(Optional.of(deviceWithWidgets));
 
         Map<String, BigDecimal> variables = Map.of("temperature", new BigDecimal("23.5"));
@@ -161,7 +161,7 @@ class AutoWidgetGeneratorServiceTest {
     @Test
     void generateInitialWidgets_whenNoDashboard_shouldNotCreateWidgets() {
         // Arrange
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+        when(deviceRepository.findByIdWithLock(testDevice.getId())).thenReturn(Optional.of(testDevice));
         when(dashboardRepository.findByOrganizationAndIsDefaultTrueWithWidgets(testOrg))
                 .thenReturn(Optional.empty());
 
@@ -180,7 +180,7 @@ class AutoWidgetGeneratorServiceTest {
         Map<String, BigDecimal> variables = new LinkedHashMap<>();
         variables.put("power_consumption", new BigDecimal("100.0"));
 
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+        when(deviceRepository.findByIdWithLock(testDevice.getId())).thenReturn(Optional.of(testDevice));
         when(dashboardRepository.findByOrganizationAndIsDefaultTrueWithWidgets(testOrg))
                 .thenReturn(Optional.of(testDashboard));
         when(widgetRepository.save(any(Widget.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -205,7 +205,7 @@ class AutoWidgetGeneratorServiceTest {
         Map<String, BigDecimal> variables = new LinkedHashMap<>();
         variables.put("temperature", new BigDecimal("23.5"));
 
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+        when(deviceRepository.findByIdWithLock(testDevice.getId())).thenReturn(Optional.of(testDevice));
         when(dashboardRepository.findByOrganizationAndIsDefaultTrueWithWidgets(testOrg))
                 .thenReturn(Optional.of(testDashboard));
         when(widgetRepository.save(any(Widget.class))).thenAnswer(invocation -> invocation.getArgument(0));

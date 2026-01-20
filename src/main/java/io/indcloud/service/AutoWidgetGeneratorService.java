@@ -68,15 +68,16 @@ public class AutoWidgetGeneratorService {
             return;
         }
 
-        // Double-check the flag (in case of race conditions)
-        Device freshDevice = deviceRepository.findById(device.getId()).orElse(null);
+        // Acquire pessimistic lock to prevent race conditions
+        // Only one thread can hold the lock at a time, ensuring no duplicate widget creation
+        Device freshDevice = deviceRepository.findByIdWithLock(device.getId()).orElse(null);
         if (freshDevice == null) {
             log.warn("Device {} not found when trying to generate widgets", device.getExternalId());
             return;
         }
 
         if (Boolean.TRUE.equals(freshDevice.getInitialWidgetsCreated())) {
-            log.debug("Widgets already created for device {}, skipping", device.getExternalId());
+            log.debug("Widgets already created for device {}, skipping (detected via lock)", device.getExternalId());
             return;
         }
 

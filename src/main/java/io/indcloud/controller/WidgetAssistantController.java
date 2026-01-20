@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Widget Assistant", description = "AI-powered widget creation via natural language")
+@PreAuthorize("hasRole('USER')")
 public class WidgetAssistantController {
 
     private final WidgetAssistantService widgetAssistantService;

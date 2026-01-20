@@ -125,6 +125,8 @@ class WidgetAssistantServiceTest {
 
         when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrg);
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(dashboardRepository.findByIdAndOrganization(1L, testOrg))
+                .thenReturn(Optional.of(testDashboard));
         when(deviceRepository.findActiveByOrganization(testOrg)).thenReturn(List.of(testDevice));
         when(variableRepository.findByDeviceId(testDevice.getId())).thenReturn(Collections.emptyList());
 
@@ -176,6 +178,8 @@ class WidgetAssistantServiceTest {
 
         when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrg);
         when(securityUtils.getCurrentUser()).thenReturn(testUser);
+        when(dashboardRepository.findByIdAndOrganization(1L, testOrg))
+                .thenReturn(Optional.of(testDashboard));
         when(deviceRepository.findActiveByOrganization(testOrg)).thenReturn(List.of(testDevice));
         when(variableRepository.findByDeviceId(testDevice.getId())).thenReturn(Collections.emptyList());
 
@@ -270,6 +274,10 @@ class WidgetAssistantServiceTest {
                 1L,
                 true
         );
+
+        when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrg);
+        when(dashboardRepository.findByIdAndOrganization(1L, testOrg))
+                .thenReturn(Optional.of(testDashboard));
 
         // Act
         ConfirmResponse response = widgetAssistantService.confirmWidget(request);

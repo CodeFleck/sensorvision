@@ -17,10 +17,12 @@ import io.indcloud.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -45,10 +47,14 @@ public class WidgetAssistantService {
     @Value("${llm.features.widget-assistant.enabled:true}")
     private boolean widgetAssistantEnabled;
 
+    @Value("${llm.features.widget-assistant.conversation-ttl-minutes:30}")
+    private int conversationTtlMinutes;
+
     // In-memory conversation storage (per conversation ID)
     // In production, use database storage with WidgetAssistantConversation entities
     private final Map<UUID, List<LLMRequest.Message>> conversationHistory = new ConcurrentHashMap<>();
     private final Map<UUID, WidgetSuggestion> pendingSuggestions = new ConcurrentHashMap<>();
+    private final Map<UUID, Instant> conversationLastAccess = new ConcurrentHashMap<>();
 
     private static final String SYSTEM_PROMPT = """
         You are an AI widget assistant for an IoT dashboard. Your job is to help users create widgets
@@ -116,6 +122,19 @@ public class WidgetAssistantService {
         Organization org = securityUtils.getCurrentUserOrganization();
         User user = securityUtils.getCurrentUser();
 
+        // Verify dashboard access - must belong to user's organization
+        if (request.dashboardId() != null) {
+            boolean hasAccess = dashboardRepository.findByIdAndOrganization(request.dashboardId(), org).isPresent();
+            if (!hasAccess) {
+                log.warn("User {} attempted to access dashboard {} without permission",
+                        user.getEmail(), request.dashboardId());
+                return Mono.just(new ChatResponse(
+                    null, "You do not have access to this dashboard.", null, false,
+                    null, null, null, null
+                ));
+            }
+        }
+
         // Create or get conversation ID
         UUID conversationId = request.conversationId() != null ?
             request.conversationId() : UUID.randomUUID();
@@ -123,10 +142,11 @@ public class WidgetAssistantService {
         // Build context with available devices and variables
         String contextPrompt = buildContextPrompt(org, request.dashboardId());
 
-        // Get conversation history
+        // Get conversation history and update last access time
         List<LLMRequest.Message> history = conversationHistory.computeIfAbsent(
             conversationId, k -> new ArrayList<>()
         );
+        conversationLastAccess.put(conversationId, Instant.now());
 
         // Add user message to history
         history.add(LLMRequest.Message.builder()
@@ -156,6 +176,16 @@ public class WidgetAssistantService {
         if (!request.confirmed()) {
             pendingSuggestions.remove(request.conversationId());
             return new ConfirmResponse(false, null, "Widget creation cancelled.");
+        }
+
+        // Verify dashboard access
+        Organization org = securityUtils.getCurrentUserOrganization();
+        if (request.dashboardId() != null) {
+            boolean hasAccess = dashboardRepository.findByIdAndOrganization(request.dashboardId(), org).isPresent();
+            if (!hasAccess) {
+                log.warn("User attempted to create widget on dashboard {} without permission", request.dashboardId());
+                return new ConfirmResponse(false, null, "You do not have access to this dashboard.");
+            }
         }
 
         WidgetSuggestion suggestion = pendingSuggestions.get(request.conversationId());
@@ -399,5 +429,42 @@ public class WidgetAssistantService {
             log.warn("Error calculating widget position: {}", e.getMessage());
             return 0;
         }
+    }
+
+    /**
+     * Scheduled cleanup of abandoned conversations.
+     * Runs every 5 minutes to remove conversations that haven't been accessed
+     * within the configured TTL period.
+     */
+    @Scheduled(fixedRate = 300000) // 5 minutes
+    public void cleanupAbandonedConversations() {
+        if (conversationLastAccess.isEmpty()) {
+            return;
+        }
+
+        Instant cutoff = Instant.now().minusSeconds(conversationTtlMinutes * 60L);
+        int cleanedCount = 0;
+
+        for (Map.Entry<UUID, Instant> entry : conversationLastAccess.entrySet()) {
+            if (entry.getValue().isBefore(cutoff)) {
+                UUID conversationId = entry.getKey();
+                conversationHistory.remove(conversationId);
+                pendingSuggestions.remove(conversationId);
+                conversationLastAccess.remove(conversationId);
+                cleanedCount++;
+            }
+        }
+
+        if (cleanedCount > 0) {
+            log.info("Widget assistant cleanup: removed {} abandoned conversations (TTL: {} minutes)",
+                    cleanedCount, conversationTtlMinutes);
+        }
+    }
+
+    /**
+     * Get the count of active conversations (for monitoring/debugging).
+     */
+    public int getActiveConversationCount() {
+        return conversationHistory.size();
     }
 }
