@@ -32,12 +32,16 @@ public class AutoWidgetGeneratorService {
     private final DeviceRepository deviceRepository;
     private final DefaultDashboardInitializer defaultDashboardInitializer;
     private final ObjectMapper objectMapper;
+    private final EventService eventService;
 
     @Value("${auto-widgets.enabled:true}")
     private boolean autoWidgetsEnabled;
 
     @Value("${auto-widgets.max-widgets-per-variable:3}")
     private int maxWidgetsPerVariable;
+
+    @Value("${auto-widgets.max-variables:10}")
+    private int maxVariables;
 
     // Grid layout constants
     private static final int GRID_COLS = 12;
@@ -106,10 +110,26 @@ public class AutoWidgetGeneratorService {
             int startY = calculateNextPositionY(dashboard);
             AtomicInteger currentY = new AtomicInteger(startY);
             AtomicInteger widgetsCreated = new AtomicInteger(0);
+            AtomicInteger variablesProcessed = new AtomicInteger(0);
 
-            // Create widgets for each variable
+            // Create widgets for each variable (limited to maxVariables)
             for (Map.Entry<String, BigDecimal> entry : variables.entrySet()) {
+                // Limit number of variables to prevent dashboard overload
+                if (variablesProcessed.get() >= maxVariables) {
+                    log.info("Reached max variables limit ({}) for device {}, skipping remaining {} variables",
+                            maxVariables, device.getExternalId(), variables.size() - maxVariables);
+                    break;
+                }
+
                 String variableName = entry.getKey();
+
+                // Skip internal/meta variables
+                if (variableName.startsWith("_") || variableName.startsWith("$")) {
+                    log.debug("Skipping internal variable '{}' for device {}", variableName, device.getExternalId());
+                    continue;
+                }
+
+                variablesProcessed.incrementAndGet();
                 String displayName = humanizeVariableName(variableName);
 
                 // Create LINE_CHART for trends
@@ -150,6 +170,25 @@ public class AutoWidgetGeneratorService {
         } catch (Exception e) {
             log.error("Failed to generate initial widgets for device {}: {}",
                     device.getExternalId(), e.getMessage(), e);
+
+            // Create an event to notify about the failure (visible in dashboard events)
+            Organization org = device.getOrganization();
+            if (org != null) {
+                try {
+                    eventService.createDeviceEvent(
+                            org,
+                            device.getExternalId(),
+                            Event.EventType.SYSTEM_ERROR,
+                            Event.EventSeverity.WARNING,
+                            "Auto-widget generation failed",
+                            String.format("Failed to generate initial widgets for device %s: %s",
+                                    device.getName() != null ? device.getName() : device.getExternalId(),
+                                    e.getMessage())
+                    );
+                } catch (Exception eventError) {
+                    log.warn("Failed to create event for widget generation error: {}", eventError.getMessage());
+                }
+            }
         }
     }
 

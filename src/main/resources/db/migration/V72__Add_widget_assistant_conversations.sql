@@ -3,8 +3,8 @@
 
 CREATE TABLE widget_assistant_conversations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id),
-    organization_id UUID NOT NULL REFERENCES organizations(id),
+    user_id BIGINT NOT NULL REFERENCES users(id),
+    organization_id BIGINT NOT NULL REFERENCES organizations(id),
     dashboard_id BIGINT NOT NULL REFERENCES dashboards(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

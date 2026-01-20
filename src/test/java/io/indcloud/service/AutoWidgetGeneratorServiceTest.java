@@ -35,6 +35,9 @@ class AutoWidgetGeneratorServiceTest {
     @Mock
     private DefaultDashboardInitializer defaultDashboardInitializer;
 
+    @Mock
+    private EventService eventService;
+
     private AutoWidgetGeneratorService autoWidgetGeneratorService;
     private ObjectMapper objectMapper;
 
@@ -50,12 +53,14 @@ class AutoWidgetGeneratorServiceTest {
                 widgetRepository,
                 deviceRepository,
                 defaultDashboardInitializer,
-                objectMapper
+                objectMapper,
+                eventService
         );
 
         // Enable auto-widgets for testing
         ReflectionTestUtils.setField(autoWidgetGeneratorService, "autoWidgetsEnabled", true);
         ReflectionTestUtils.setField(autoWidgetGeneratorService, "maxWidgetsPerVariable", 3);
+        ReflectionTestUtils.setField(autoWidgetGeneratorService, "maxVariables", 10);
 
         testOrg = Organization.builder()
                 .id(1L)

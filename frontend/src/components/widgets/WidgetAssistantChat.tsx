@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { widgetAssistantApi, ChatResponse, WidgetSuggestion } from '../../services/llmService';
+import { generateUUID } from '../../utils/uuid';
 
 interface WidgetAssistantChatProps {
   dashboardId: number;
@@ -55,7 +56,7 @@ export const WidgetAssistantChat: React.FC<WidgetAssistantChatProps> = ({
     if (!inputValue.trim() || loading) return;
 
     const userMessage: Message = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       type: 'user',
       content: inputValue,
       timestamp: new Date(),
@@ -78,7 +79,7 @@ export const WidgetAssistantChat: React.FC<WidgetAssistantChatProps> = ({
       }
 
       const assistantMessage: Message = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         type: 'assistant',
         content: response.response,
         timestamp: new Date(),
@@ -101,7 +102,7 @@ export const WidgetAssistantChat: React.FC<WidgetAssistantChatProps> = ({
       setMessages((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           type: 'assistant',
           content: `Error: ${errorMessage}`,
           timestamp: new Date(),
@@ -130,7 +131,7 @@ export const WidgetAssistantChat: React.FC<WidgetAssistantChatProps> = ({
         setMessages((prev) => [
           ...prev,
           {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             type: 'assistant',
             content: `Widget "${pendingSuggestion.name}" has been created on your dashboard.`,
             timestamp: new Date(),
@@ -153,7 +154,7 @@ export const WidgetAssistantChat: React.FC<WidgetAssistantChatProps> = ({
     setMessages((prev) => [
       ...prev,
       {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         type: 'assistant',
         content: 'Widget creation cancelled. Feel free to describe another widget you\'d like to create.',
         timestamp: new Date(),

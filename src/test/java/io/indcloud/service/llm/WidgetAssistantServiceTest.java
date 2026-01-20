@@ -8,6 +8,8 @@ import io.indcloud.model.*;
 import io.indcloud.repository.DashboardRepository;
 import io.indcloud.repository.DeviceRepository;
 import io.indcloud.repository.VariableRepository;
+import io.indcloud.repository.WidgetAssistantConversationRepository;
+import io.indcloud.repository.WidgetAssistantMessageRepository;
 import io.indcloud.security.SecurityUtils;
 import io.indcloud.service.DashboardService;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +45,12 @@ class WidgetAssistantServiceTest {
     private VariableRepository variableRepository;
 
     @Mock
+    private WidgetAssistantConversationRepository conversationRepository;
+
+    @Mock
+    private WidgetAssistantMessageRepository messageRepository;
+
+    @Mock
     private SecurityUtils securityUtils;
 
     private WidgetAssistantService widgetAssistantService;
@@ -62,12 +70,16 @@ class WidgetAssistantServiceTest {
                 dashboardRepository,
                 deviceRepository,
                 variableRepository,
+                conversationRepository,
+                messageRepository,
                 securityUtils,
                 objectMapper
         );
 
         // Enable widget assistant for testing
         ReflectionTestUtils.setField(widgetAssistantService, "widgetAssistantEnabled", true);
+        ReflectionTestUtils.setField(widgetAssistantService, "conversationTtlMinutes", 30);
+        ReflectionTestUtils.setField(widgetAssistantService, "maxMessagesPerConversation", 50);
 
         testOrg = Organization.builder()
                 .id(1L)
@@ -75,6 +87,7 @@ class WidgetAssistantServiceTest {
                 .build();
 
         testUser = new User();
+        ReflectionTestUtils.setField(testUser, "id", 1L);
         testUser.setEmail("test@example.com");
         testUser.setOrganization(testOrg);
 
@@ -130,6 +143,12 @@ class WidgetAssistantServiceTest {
         when(deviceRepository.findActiveByOrganization(testOrg)).thenReturn(List.of(testDevice));
         when(variableRepository.findByDeviceId(testDevice.getId())).thenReturn(Collections.emptyList());
 
+        // Mock conversation creation
+        when(conversationRepository.save(any(WidgetAssistantConversation.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(messageRepository.save(any(WidgetAssistantMessage.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         LLMResponse llmResponse = LLMResponse.builder()
                 .success(true)
                 .content("""
@@ -182,6 +201,12 @@ class WidgetAssistantServiceTest {
                 .thenReturn(Optional.of(testDashboard));
         when(deviceRepository.findActiveByOrganization(testOrg)).thenReturn(List.of(testDevice));
         when(variableRepository.findByDeviceId(testDevice.getId())).thenReturn(Collections.emptyList());
+
+        // Mock conversation creation
+        when(conversationRepository.save(any(WidgetAssistantConversation.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(messageRepository.save(any(WidgetAssistantMessage.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         LLMResponse llmResponse = LLMResponse.builder()
                 .success(true)
@@ -257,6 +282,9 @@ class WidgetAssistantServiceTest {
                 false
         );
 
+        // Mock conversation lookup for cleanup
+        when(conversationRepository.findById(conversationId)).thenReturn(Optional.empty());
+
         // Act
         ConfirmResponse response = widgetAssistantService.confirmWidget(request);
 
@@ -275,9 +303,21 @@ class WidgetAssistantServiceTest {
                 true
         );
 
+        // Create a conversation without pending suggestion
+        WidgetAssistantConversation conversation = WidgetAssistantConversation.builder()
+                .id(conversationId)
+                .user(testUser)
+                .organization(testOrg)
+                .dashboard(testDashboard)
+                .pendingSuggestion(null)
+                .build();
+
         when(securityUtils.getCurrentUserOrganization()).thenReturn(testOrg);
+        when(securityUtils.getCurrentUser()).thenReturn(testUser);
         when(dashboardRepository.findByIdAndOrganization(1L, testOrg))
                 .thenReturn(Optional.of(testDashboard));
+        when(conversationRepository.findById(conversationId))
+                .thenReturn(Optional.of(conversation));
 
         // Act
         ConfirmResponse response = widgetAssistantService.confirmWidget(request);

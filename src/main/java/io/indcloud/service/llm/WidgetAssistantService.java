@@ -12,6 +12,8 @@ import io.indcloud.model.*;
 import io.indcloud.repository.DashboardRepository;
 import io.indcloud.repository.DeviceRepository;
 import io.indcloud.repository.VariableRepository;
+import io.indcloud.repository.WidgetAssistantConversationRepository;
+import io.indcloud.repository.WidgetAssistantMessageRepository;
 import io.indcloud.security.SecurityUtils;
 import io.indcloud.service.DashboardService;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +26,14 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
  * Service for AI-powered widget creation via natural language.
  * Uses LLMServiceRouter to parse user requests and suggest widget configurations.
+ *
+ * Conversations are persisted to the database for durability across restarts
+ * and support for multi-instance deployments.
  */
 @Service
 @Slf4j
@@ -41,6 +45,8 @@ public class WidgetAssistantService {
     private final DashboardRepository dashboardRepository;
     private final DeviceRepository deviceRepository;
     private final VariableRepository variableRepository;
+    private final WidgetAssistantConversationRepository conversationRepository;
+    private final WidgetAssistantMessageRepository messageRepository;
     private final SecurityUtils securityUtils;
     private final ObjectMapper objectMapper;
 
@@ -50,11 +56,8 @@ public class WidgetAssistantService {
     @Value("${llm.features.widget-assistant.conversation-ttl-minutes:30}")
     private int conversationTtlMinutes;
 
-    // In-memory conversation storage (per conversation ID)
-    // In production, use database storage with WidgetAssistantConversation entities
-    private final Map<UUID, List<LLMRequest.Message>> conversationHistory = new ConcurrentHashMap<>();
-    private final Map<UUID, WidgetSuggestion> pendingSuggestions = new ConcurrentHashMap<>();
-    private final Map<UUID, Instant> conversationLastAccess = new ConcurrentHashMap<>();
+    @Value("${llm.features.widget-assistant.max-messages-per-conversation:50}")
+    private int maxMessagesPerConversation;
 
     private static final String SYSTEM_PROMPT = """
         You are an AI widget assistant for an IoT dashboard. Your job is to help users create widgets
@@ -112,7 +115,7 @@ public class WidgetAssistantService {
     /**
      * Process a chat message and return AI response with optional widget suggestion.
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public Mono<ChatResponse> chat(ChatRequest request) {
         if (!widgetAssistantEnabled) {
             return Mono.just(new ChatResponse(
@@ -140,9 +143,10 @@ public class WidgetAssistantService {
         User user = securityUtils.getCurrentUser();
 
         // Verify dashboard access - must belong to user's organization
+        Dashboard dashboard = null;
         if (request.dashboardId() != null) {
-            boolean hasAccess = dashboardRepository.findByIdAndOrganization(request.dashboardId(), org).isPresent();
-            if (!hasAccess) {
+            dashboard = dashboardRepository.findByIdAndOrganization(request.dashboardId(), org).orElse(null);
+            if (dashboard == null) {
                 log.warn("User {} attempted to access dashboard {} without permission",
                         user.getEmail(), request.dashboardId());
                 return Mono.just(new ChatResponse(
@@ -152,20 +156,60 @@ public class WidgetAssistantService {
             }
         }
 
-        // Create or get conversation ID
-        UUID conversationId = request.conversationId() != null ?
-            request.conversationId() : UUID.randomUUID();
+        // Get or create conversation
+        WidgetAssistantConversation conversation;
+        if (request.conversationId() != null) {
+            conversation = conversationRepository.findByIdWithMessages(request.conversationId()).orElse(null);
+            if (conversation == null) {
+                // Conversation not found, create a new one
+                conversation = createNewConversation(user, org, dashboard);
+            } else {
+                // Verify conversation belongs to current user
+                if (!conversation.getUser().getId().equals(user.getId())) {
+                    log.warn("User {} attempted to access conversation {} belonging to another user",
+                            user.getEmail(), request.conversationId());
+                    return Mono.just(new ChatResponse(
+                        null, "Invalid conversation.", null, false,
+                        null, null, null, null
+                    ));
+                }
+                // Update timestamp
+                conversation.setUpdatedAt(Instant.now());
+            }
+        } else {
+            conversation = createNewConversation(user, org, dashboard);
+        }
+
+        // Check conversation length limit
+        if (conversation.getMessages().size() >= maxMessagesPerConversation) {
+            return Mono.just(new ChatResponse(
+                conversation.getId(),
+                "This conversation has reached its limit of " + maxMessagesPerConversation +
+                " messages. Please start a new conversation.",
+                null, false, null, null, null, null
+            ));
+        }
 
         // Build context with available devices and variables
         String contextPrompt = buildContextPrompt(org, request.dashboardId());
 
-        // Get conversation history and update last access time
-        List<LLMRequest.Message> history = conversationHistory.computeIfAbsent(
-            conversationId, k -> new ArrayList<>()
-        );
-        conversationLastAccess.put(conversationId, Instant.now());
+        // Build LLM message history from database
+        List<LLMRequest.Message> history = conversation.getMessages().stream()
+            .map(m -> LLMRequest.Message.builder()
+                .role(m.getRole().name())
+                .content(m.getContent())
+                .build())
+            .collect(Collectors.toList());
 
-        // Add user message to history
+        // Add user message to database
+        WidgetAssistantMessage userMessage = WidgetAssistantMessage.builder()
+            .role(WidgetAssistantMessage.MessageRole.user)
+            .content(request.message())
+            .build();
+        conversation.addMessage(userMessage);
+        messageRepository.save(userMessage);
+
+        // Add to history for LLM
         history.add(LLMRequest.Message.builder()
             .role("user")
             .content(request.message())
@@ -181,8 +225,24 @@ public class WidgetAssistantService {
             .temperature(0.3)
             .build();
 
+        final WidgetAssistantConversation finalConversation = conversation;
+        conversationRepository.save(conversation);
+
         return llmServiceRouter.complete(llmRequest, org, user)
-            .map(response -> processLLMResponse(response, conversationId));
+            .map(response -> processLLMResponse(response, finalConversation));
+    }
+
+    /**
+     * Create a new conversation for the user.
+     */
+    private WidgetAssistantConversation createNewConversation(User user, Organization org, Dashboard dashboard) {
+        WidgetAssistantConversation conversation = WidgetAssistantConversation.builder()
+            .id(UUID.randomUUID())
+            .user(user)
+            .organization(org)
+            .dashboard(dashboard)
+            .build();
+        return conversationRepository.save(conversation);
     }
 
     /**
@@ -191,12 +251,18 @@ public class WidgetAssistantService {
     @Transactional
     public ConfirmResponse confirmWidget(ConfirmRequest request) {
         if (!request.confirmed()) {
-            pendingSuggestions.remove(request.conversationId());
+            // Clear pending suggestion
+            conversationRepository.findById(request.conversationId()).ifPresent(conv -> {
+                conv.setPendingSuggestion(null);
+                conversationRepository.save(conv);
+            });
             return new ConfirmResponse(false, null, "Widget creation cancelled.");
         }
 
         // Verify dashboard access
         Organization org = securityUtils.getCurrentUserOrganization();
+        User user = securityUtils.getCurrentUser();
+
         if (request.dashboardId() != null) {
             boolean hasAccess = dashboardRepository.findByIdAndOrganization(request.dashboardId(), org).isPresent();
             if (!hasAccess) {
@@ -205,9 +271,31 @@ public class WidgetAssistantService {
             }
         }
 
-        WidgetSuggestion suggestion = pendingSuggestions.get(request.conversationId());
-        if (suggestion == null) {
+        // Get conversation and verify ownership
+        WidgetAssistantConversation conversation = conversationRepository.findById(request.conversationId()).orElse(null);
+        if (conversation == null) {
+            return new ConfirmResponse(false, null, "Conversation not found.");
+        }
+
+        if (!conversation.getUser().getId().equals(user.getId())) {
+            log.warn("User {} attempted to confirm widget in conversation {} belonging to another user",
+                    user.getEmail(), request.conversationId());
+            return new ConfirmResponse(false, null, "Invalid conversation.");
+        }
+
+        // Get pending suggestion from database
+        if (conversation.getPendingSuggestion() == null) {
             return new ConfirmResponse(false, null, "No pending widget suggestion found.");
+        }
+
+        WidgetSuggestion suggestion;
+        try {
+            suggestion = objectMapper.readValue(conversation.getPendingSuggestion(), WidgetSuggestion.class);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse pending suggestion: {}", e.getMessage());
+            conversation.setPendingSuggestion(null);
+            conversationRepository.save(conversation);
+            return new ConfirmResponse(false, null, "Invalid widget suggestion. Please try again.");
         }
 
         // Verify device ownership - device must belong to user's organization
@@ -218,7 +306,8 @@ public class WidgetAssistantService {
             if (!deviceBelongsToOrg) {
                 log.warn("Widget creation blocked: device {} does not belong to organization {}",
                         suggestion.deviceId(), org.getId());
-                pendingSuggestions.remove(request.conversationId());
+                conversation.setPendingSuggestion(null);
+                conversationRepository.save(conversation);
                 return new ConfirmResponse(false, null, "The specified device is not available.");
             }
         }
@@ -245,9 +334,18 @@ public class WidgetAssistantService {
 
             WidgetResponse widget = dashboardService.addWidget(request.dashboardId(), widgetRequest);
 
-            // Clean up
-            pendingSuggestions.remove(request.conversationId());
-            conversationHistory.remove(request.conversationId());
+            // Clear pending suggestion and mark conversation as having created a widget
+            conversation.setPendingSuggestion(null);
+            conversationRepository.save(conversation);
+
+            // Add a system message noting the widget was created
+            WidgetAssistantMessage systemMessage = WidgetAssistantMessage.builder()
+                .role(WidgetAssistantMessage.MessageRole.assistant)
+                .content("Widget '" + suggestion.name() + "' has been created successfully.")
+                .widgetCreated(true)
+                .build();
+            conversation.addMessage(systemMessage);
+            messageRepository.save(systemMessage);
 
             return new ConfirmResponse(true, widget.id(),
                 "Widget '" + suggestion.name() + "' created successfully!");
@@ -344,10 +442,11 @@ public class WidgetAssistantService {
     /**
      * Process LLM response and extract widget suggestion if present.
      */
-    private ChatResponse processLLMResponse(LLMResponse llmResponse, UUID conversationId) {
+    @Transactional
+    private ChatResponse processLLMResponse(LLMResponse llmResponse, WidgetAssistantConversation conversation) {
         if (!llmResponse.isSuccess()) {
             return new ChatResponse(
-                conversationId,
+                conversation.getId(),
                 "I encountered an error: " + llmResponse.getErrorMessage(),
                 null, false,
                 llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
@@ -359,14 +458,13 @@ public class WidgetAssistantService {
 
         String content = llmResponse.getContent();
 
-        // Add assistant response to history
-        conversationHistory.computeIfPresent(conversationId, (k, history) -> {
-            history.add(LLMRequest.Message.builder()
-                .role("assistant")
-                .content(content)
-                .build());
-            return history;
-        });
+        // Save assistant response to database
+        WidgetAssistantMessage assistantMessage = WidgetAssistantMessage.builder()
+            .role(WidgetAssistantMessage.MessageRole.assistant)
+            .content(content)
+            .build();
+        conversation.addMessage(assistantMessage);
+        messageRepository.save(assistantMessage);
 
         try {
             // Parse JSON response
@@ -385,7 +483,7 @@ public class WidgetAssistantService {
                 } catch (IllegalArgumentException e) {
                     log.warn("LLM returned invalid widget type '{}', asking for clarification", widgetTypeStr);
                     return new ChatResponse(
-                        conversationId,
+                        conversation.getId(),
                         "I suggested an unsupported widget type. Could you specify what type of widget you want? Available types are: line chart, gauge, metric card, bar chart, area chart, pie chart, indicator, table, or map.",
                         null,
                         true,
@@ -407,11 +505,16 @@ public class WidgetAssistantService {
                     widgetNode.has("config") ? objectMapper.convertValue(widgetNode.get("config"), Map.class) : null
                 );
 
-                // Store pending suggestion
-                pendingSuggestions.put(conversationId, suggestion);
+                // Store pending suggestion in database
+                try {
+                    conversation.setPendingSuggestion(objectMapper.writeValueAsString(suggestion));
+                    conversationRepository.save(conversation);
+                } catch (JsonProcessingException e) {
+                    log.error("Failed to serialize widget suggestion: {}", e.getMessage());
+                }
 
                 return new ChatResponse(
-                    conversationId,
+                    conversation.getId(),
                     message,
                     suggestion,
                     false,
@@ -422,7 +525,7 @@ public class WidgetAssistantService {
                 );
             } else if ("clarification".equals(type)) {
                 return new ChatResponse(
-                    conversationId,
+                    conversation.getId(),
                     message,
                     null,
                     true,
@@ -433,7 +536,7 @@ public class WidgetAssistantService {
                 );
             } else {
                 return new ChatResponse(
-                    conversationId,
+                    conversation.getId(),
                     message,
                     null,
                     false,
@@ -447,7 +550,7 @@ public class WidgetAssistantService {
             // If not valid JSON, treat as plain text response
             log.warn("Failed to parse LLM response as JSON: {}", e.getMessage());
             return new ChatResponse(
-                conversationId,
+                conversation.getId(),
                 content,
                 null,
                 true, // Assume clarification needed if response wasn't structured
@@ -486,34 +589,23 @@ public class WidgetAssistantService {
      * within the configured TTL period.
      */
     @Scheduled(fixedRate = 300000) // 5 minutes
+    @Transactional
     public void cleanupAbandonedConversations() {
-        if (conversationLastAccess.isEmpty()) {
-            return;
-        }
-
         Instant cutoff = Instant.now().minusSeconds(conversationTtlMinutes * 60L);
-        int cleanedCount = 0;
 
-        for (Map.Entry<UUID, Instant> entry : conversationLastAccess.entrySet()) {
-            if (entry.getValue().isBefore(cutoff)) {
-                UUID conversationId = entry.getKey();
-                conversationHistory.remove(conversationId);
-                pendingSuggestions.remove(conversationId);
-                conversationLastAccess.remove(conversationId);
-                cleanedCount++;
-            }
-        }
+        int deletedCount = conversationRepository.deleteAbandonedConversations(cutoff);
 
-        if (cleanedCount > 0) {
+        if (deletedCount > 0) {
             log.info("Widget assistant cleanup: removed {} abandoned conversations (TTL: {} minutes)",
-                    cleanedCount, conversationTtlMinutes);
+                    deletedCount, conversationTtlMinutes);
         }
     }
 
     /**
      * Get the count of active conversations (for monitoring/debugging).
      */
-    public int getActiveConversationCount() {
-        return conversationHistory.size();
+    public long getActiveConversationCount() {
+        Instant since = Instant.now().minusSeconds(conversationTtlMinutes * 60L);
+        return conversationRepository.countActiveConversationsSince(since);
     }
 }
