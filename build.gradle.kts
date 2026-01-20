@@ -58,6 +58,9 @@ dependencies {
     implementation("com.bucket4j:bucket4j-core:8.10.1")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
+    // Structured JSON logging for Kibana/ELK integration
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+
     // HTML sanitization for rich text content
     implementation("org.jsoup:jsoup:1.17.2")
 

@@ -107,6 +107,8 @@ public class WidgetAssistantService {
         IMPORTANT: Always respond with ONLY the JSON object, no additional text.
         """;
 
+    private static final int MAX_MESSAGE_LENGTH = 2000;
+
     /**
      * Process a chat message and return AI response with optional widget suggestion.
      */
@@ -115,6 +117,21 @@ public class WidgetAssistantService {
         if (!widgetAssistantEnabled) {
             return Mono.just(new ChatResponse(
                 null, "Widget assistant is currently disabled.", null, false,
+                null, null, null, null
+            ));
+        }
+
+        // Validate message
+        if (request.message() == null || request.message().isBlank()) {
+            return Mono.just(new ChatResponse(
+                null, "Message cannot be empty.", null, false,
+                null, null, null, null
+            ));
+        }
+
+        if (request.message().length() > MAX_MESSAGE_LENGTH) {
+            return Mono.just(new ChatResponse(
+                null, "Message too long. Please limit to " + MAX_MESSAGE_LENGTH + " characters.", null, false,
                 null, null, null, null
             ));
         }
@@ -191,6 +208,19 @@ public class WidgetAssistantService {
         WidgetSuggestion suggestion = pendingSuggestions.get(request.conversationId());
         if (suggestion == null) {
             return new ConfirmResponse(false, null, "No pending widget suggestion found.");
+        }
+
+        // Verify device ownership - device must belong to user's organization
+        if (suggestion.deviceId() != null && !suggestion.deviceId().isBlank()) {
+            boolean deviceBelongsToOrg = deviceRepository.findActiveByExternalId(suggestion.deviceId())
+                    .filter(d -> d.getOrganization() != null && d.getOrganization().getId().equals(org.getId()))
+                    .isPresent();
+            if (!deviceBelongsToOrg) {
+                log.warn("Widget creation blocked: device {} does not belong to organization {}",
+                        suggestion.deviceId(), org.getId());
+                pendingSuggestions.remove(request.conversationId());
+                return new ConfirmResponse(false, null, "The specified device is not available.");
+            }
         }
 
         try {
@@ -347,9 +377,28 @@ public class WidgetAssistantService {
             if ("suggestion".equals(type) && json.has("widget")) {
                 JsonNode widgetNode = json.get("widget");
 
+                // Parse widget type safely
+                WidgetType widgetType;
+                String widgetTypeStr = widgetNode.path("type").asText();
+                try {
+                    widgetType = WidgetType.valueOf(widgetTypeStr);
+                } catch (IllegalArgumentException e) {
+                    log.warn("LLM returned invalid widget type '{}', asking for clarification", widgetTypeStr);
+                    return new ChatResponse(
+                        conversationId,
+                        "I suggested an unsupported widget type. Could you specify what type of widget you want? Available types are: line chart, gauge, metric card, bar chart, area chart, pie chart, indicator, table, or map.",
+                        null,
+                        true,
+                        llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
+                        llmResponse.getModelId(),
+                        llmResponse.getTotalTokens(),
+                        llmResponse.getLatencyMs()
+                    );
+                }
+
                 WidgetSuggestion suggestion = new WidgetSuggestion(
                     widgetNode.path("name").asText(),
-                    WidgetType.valueOf(widgetNode.path("type").asText()),
+                    widgetType,
                     widgetNode.path("deviceId").asText(),
                     widgetNode.path("deviceName").asText(null),
                     widgetNode.path("variableName").asText(),

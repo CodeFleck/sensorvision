@@ -24,6 +24,7 @@ import io.indcloud.dto.TelemetryPointDto;
 import io.indcloud.dto.DynamicTelemetryPointDto;
 import io.indcloud.websocket.TelemetryWebSocketHandler;
 import io.indcloud.config.TelemetryConfigurationProperties;
+import io.indcloud.logging.LogContext;
 import io.indcloud.security.DeviceTokenAuthenticationFilter.DeviceTokenAuthentication;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -124,6 +125,26 @@ public class TelemetryIngestionService {
                     return deviceService.getOrCreateDevice(payload.deviceId(), targetOrg);
                 });
 
+        // Set logging context for this telemetry processing
+        LogContext.setDevice(device.getId(), device.getExternalId());
+        if (device.getOrganization() != null) {
+            LogContext.setOrganization(device.getOrganization().getId(), device.getOrganization().getName());
+        }
+        LogContext.setOperation("telemetry_ingestion");
+
+        try {
+            processTelemetry(device, payload);
+        } finally {
+            LogContext.clearDevice();
+            LogContext.clearOrganization();
+            LogContext.clearOperation();
+        }
+    }
+
+    /**
+     * Internal method to process telemetry after logging context is set.
+     */
+    private void processTelemetry(Device device, TelemetryPayload payload) {
         Map<String, Object> metadata = payload.metadata();
         if (metadata != null) {
             device.setLocation((String) metadata.getOrDefault("location", device.getLocation()));
