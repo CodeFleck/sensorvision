@@ -110,7 +110,10 @@ export const TableWidget: React.FC<TableWidgetProps> = ({ widget, deviceId, late
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {displayFields.map((field) => {
-            const value = data[field.key as keyof TelemetryPoint];
+            // Convert snake_case to camelCase for API property access
+            const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+            const camelKey = toCamelCase(field.key);
+            const value = data[camelKey as keyof TelemetryPoint] ?? data[field.key as keyof TelemetryPoint];
             const displayValue = typeof value === 'number'
               ? value.toFixed(field.decimals)
               : value?.toString() ?? 'N/A';

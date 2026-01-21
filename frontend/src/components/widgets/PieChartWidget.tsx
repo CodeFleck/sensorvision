@@ -76,9 +76,14 @@ export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, deviceId
           ? variables.filter(v => configuredVariables.includes(v.name))
           : variables;
 
+        // Convert snake_case to camelCase for API property access
+        const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+
         const labels = displayVariables.map(v => v.displayName || v.name);
         const values = displayVariables.map(v => {
-          const val = telemetryData[v.name as keyof TelemetryPoint];
+          // Try both snake_case and camelCase property names
+          const camelName = toCamelCase(v.name);
+          const val = telemetryData[camelName as keyof TelemetryPoint] ?? telemetryData[v.name as keyof TelemetryPoint];
           return typeof val === 'number' ? Math.abs(val) : 0;
         });
 
