@@ -228,7 +228,9 @@ export const Dashboard = () => {
         }, {});
 
         setLatestTelemetry(telemetryMap);
-        fetchMetrics(devicesData, selectedTimeRange);
+        // Note: fetchMetrics is NOT called here - the useEffect watching `devices` handles it
+        // This prevents a race condition where changing devices triggers a second fetchMetrics call
+        // which aborts the first one, causing AbortError logs
       }
     } catch (err) {
       console.error('Failed to fetch data:', err);
