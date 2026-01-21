@@ -16,11 +16,16 @@ export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, deviceId, late
   const max = widget.config.max ?? 100;
   const unit = widget.config.unit ?? '';
 
+  // Convert snake_case to camelCase for API property access
+  const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+
   // Update value when real-time data arrives
   useEffect(() => {
     if (latestData && widget.variableName) {
-      const varName = widget.variableName as keyof TelemetryPoint;
-      const rawValue = latestData[varName];
+      // Try both snake_case and camelCase property names
+      const varName = widget.variableName as string;
+      const camelName = toCamelCase(varName);
+      const rawValue = (latestData[camelName as keyof TelemetryPoint] ?? latestData[varName as keyof TelemetryPoint]) as number | undefined;
 
       // Only update if the variable is actually present in the data and is a number
       // This prevents resetting to 0 when data for other variables arrives
@@ -41,8 +46,10 @@ export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, deviceId, late
 
       try {
         const data = await apiService.getLatestForDevice(deviceId);
-        const varName = widget.variableName as keyof typeof data;
-        const rawValue = data[varName];
+        // Try both snake_case and camelCase property names
+        const varName = widget.variableName as string;
+        const camelName = toCamelCase(varName);
+        const rawValue = (data[camelName as keyof typeof data] ?? data[varName as keyof typeof data]) as number | undefined;
 
         // Only update if the variable has a value and is a number
         if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {

@@ -13,11 +13,16 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, device
   const [status, setStatus] = useState<'off' | 'normal' | 'warning' | 'critical'>('off');
   const [loading, setLoading] = useState(true);
 
+  // Convert snake_case to camelCase for API property access
+  const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+
   // Update value when real-time data arrives via WebSocket
   useEffect(() => {
     if (latestData && widget.variableName) {
-      const varName = widget.variableName as keyof TelemetryPoint;
-      const rawValue = latestData[varName];
+      // Try both snake_case and camelCase property names
+      const varName = widget.variableName as string;
+      const camelName = toCamelCase(varName);
+      const rawValue = (latestData[camelName as keyof TelemetryPoint] ?? latestData[varName as keyof TelemetryPoint]) as number | undefined;
 
       // Only update if the variable is actually present in the data
       // This prevents resetting when data for other variables arrives
@@ -41,7 +46,10 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, device
       try {
         // Fetch latest value for the device
         const telemetryData = await apiService.getLatestForDevice(deviceId);
-        const value = telemetryData[widget.variableName] as number;
+        // Try both snake_case and camelCase property names
+        const varName = widget.variableName as string;
+        const camelName = toCamelCase(varName);
+        const value = (telemetryData[camelName as keyof typeof telemetryData] ?? telemetryData[varName as keyof typeof telemetryData]) as number | undefined;
 
         if (value !== null && value !== undefined) {
           setCurrentValue(value);

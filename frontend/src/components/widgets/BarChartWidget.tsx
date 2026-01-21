@@ -53,10 +53,13 @@ export const BarChartWidget: React.FC<BarChartWidgetProps> = ({ widget, deviceId
         );
 
         const varName = widget.variableName as string;
+        // Convert snake_case to camelCase for API property access
+        const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        const accessKey = toCamelCase(varName);
         const labels = telemetryData.map((point) =>
           new Date(point.timestamp).toLocaleTimeString()
         );
-        const values = telemetryData.map((point) => (point[varName] as number) || 0);
+        const values = telemetryData.map((point) => (point[accessKey] as number) || 0);
 
         setData({
           labels,

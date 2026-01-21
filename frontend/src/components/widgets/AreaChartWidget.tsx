@@ -67,10 +67,13 @@ export const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({ widget, device
 
         // Transform data for Chart.js
         const varName = widget.variableName as string;
+        // Convert snake_case to camelCase for API property access
+        const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+        const accessKey = toCamelCase(varName);
         const labels = telemetryData.map((point) =>
           new Date(point.timestamp).toLocaleTimeString()
         );
-        const values = telemetryData.map((point) => (point[varName] as number) || 0);
+        const values = telemetryData.map((point) => (point[accessKey] as number) || 0);
 
         // Get colors from config or use defaults
         const borderColor = widget.config.colors?.[0] || 'rgb(59, 130, 246)';
