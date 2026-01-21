@@ -4,7 +4,11 @@ Continuous Telemetry Simulator with Anomaly Generation
 Sends mock IoT data to the MQTT broker with occasional anomalies for alert testing.
 
 Usage:
-    python continuous_simulator.py --host indcloud.io --port 1883
+    # With authentication (required for production):
+    python continuous_simulator.py --host indcloud.io --device-id my-device --token YOUR_API_TOKEN
+
+    # Without authentication (local development only):
+    python continuous_simulator.py --host localhost --no-auth
 
 Features:
 - Generates realistic telemetry data every 30 seconds
@@ -58,7 +62,7 @@ def get_base_load(hour):
         return 90  # Night (low usage)
 
 
-def generate_telemetry(device, force_anomaly=False):
+def generate_telemetry(device, api_token=None, force_anomaly=False):
     """Generate telemetry data for a device, optionally with anomaly."""
     now = datetime.now(timezone.utc)
     hour = now.hour
@@ -107,7 +111,8 @@ def generate_telemetry(device, force_anomaly=False):
     }
 
     # Add temperature/humidity for environmental and HVAC sensors
-    if device["type"] in ["environmental", "hvac"]:
+    device_type = device.get("type", "smart_meter")
+    if device_type in ["environmental", "hvac"]:
         variables["temperature"] = round(temperature, 1)
         variables["humidity"] = round(humidity, 1)
 
@@ -116,13 +121,17 @@ def generate_telemetry(device, force_anomaly=False):
         "timestamp": now.isoformat(),
         "variables": variables,
         "metadata": {
-            "location": device["location"],
-            "sensor_type": device["type"],
+            "location": device.get("location", "Unknown"),
+            "sensor_type": device_type,
             "is_anomaly": is_anomaly,
             "anomaly_type": anomaly_type,
             "simulator": "continuous_simulator.py"
         }
     }
+
+    # Include API token for authentication (required for production)
+    if api_token:
+        payload["apiToken"] = api_token
 
     return payload
 
@@ -146,10 +155,34 @@ def main():
     parser.add_argument("--port", type=int, default=1883, help="MQTT broker port")
     parser.add_argument("--interval", type=int, default=30, help="Interval between sends (seconds)")
     parser.add_argument("--anomaly-rate", type=float, default=0.05, help="Anomaly probability (0.0-1.0)")
+    parser.add_argument("--device-id", help="Single device ID to simulate (uses token auth)")
+    parser.add_argument("--token", help="API token for authentication (required for production)")
+    parser.add_argument("--no-auth", action="store_true", help="Skip authentication (local dev only)")
     args = parser.parse_args()
+
+    # Validate auth configuration
+    if not args.no_auth and args.host != "localhost":
+        if not args.token:
+            print("[ERROR] API token required for production. Use --token YOUR_TOKEN")
+            print("        Get your token from: https://indcloud.io/integration-wizard")
+            print("        Or use --no-auth for local development only.")
+            sys.exit(1)
+        if not args.device_id:
+            print("[ERROR] Device ID required when using token auth. Use --device-id YOUR_DEVICE_ID")
+            sys.exit(1)
 
     global ANOMALY_PROBABILITY
     ANOMALY_PROBABILITY = args.anomaly_rate
+
+    # Determine which devices to simulate
+    if args.device_id:
+        # Single authenticated device
+        devices_to_simulate = [{"id": args.device_id, "type": "smart_meter"}]
+        api_token = args.token
+    else:
+        # Multiple demo devices (no auth)
+        devices_to_simulate = DEVICES
+        api_token = None
 
     # Setup signal handler for graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
@@ -160,7 +193,12 @@ def main():
     print("=" * 60)
     print(f"  MQTT Broker: {args.host}:{args.port}")
     print(f"  Interval: {args.interval} seconds")
-    print(f"  Devices: {len(DEVICES)}")
+    print(f"  Devices: {len(devices_to_simulate)}")
+    if args.device_id:
+        print(f"  Device ID: {args.device_id}")
+        print(f"  Auth: Token provided")
+    else:
+        print(f"  Auth: None (local dev mode)")
     print(f"  Anomaly Rate: {ANOMALY_PROBABILITY * 100:.1f}%")
     print("=" * 60)
     print()
@@ -186,9 +224,9 @@ def main():
         iteration += 1
         print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Iteration {iteration}")
 
-        for device in DEVICES:
+        for device in devices_to_simulate:
             try:
-                payload = generate_telemetry(device)
+                payload = generate_telemetry(device, api_token=api_token)
                 topic = f"indcloud/devices/{device['id']}/telemetry"
                 message = json.dumps(payload)
 
