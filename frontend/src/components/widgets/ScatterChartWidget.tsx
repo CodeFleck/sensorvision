@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Widget, TelemetryPoint } from '../../types';
 import { apiService } from '../../services/api';
+import { toCamelCase } from '../../utils/stringUtils';
 import {
   Chart as ChartJS,
   LinearScale,
@@ -69,6 +70,9 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
         const xVar = (widget.config.xVariable as string | undefined) || 'timestamp';
         const yVar = widget.variableName || (widget.config.yVariable as string | undefined) || 'kwConsumption';
 
+        const xAccessKey = toCamelCase(xVar);
+        const yAccessKey = toCamelCase(yVar);
+
         // Transform data for scatter plot
         const scatterData = telemetryData.map((point) => {
           let xValue: number;
@@ -76,10 +80,10 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
           if (xVar === 'timestamp') {
             xValue = new Date(point.timestamp).getTime();
           } else {
-            xValue = (point[xVar] as number) || 0;
+            xValue = (point[xAccessKey] as number) || 0;
           }
 
-          const yValue = (point[yVar] as number) || 0;
+          const yValue = (point[yAccessKey] as number) || 0;
 
           return {
             x: xValue,

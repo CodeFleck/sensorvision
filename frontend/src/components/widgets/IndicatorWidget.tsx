@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Widget, TelemetryPoint } from '../../types';
 import { apiService } from '../../services/api';
+import { getTelemetryValue } from '../../utils/stringUtils';
 
 interface IndicatorWidgetProps {
   widget: Widget;
@@ -16,12 +17,8 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, device
   // Update value when real-time data arrives via WebSocket
   useEffect(() => {
     if (latestData && widget.variableName) {
-      const varName = widget.variableName as keyof TelemetryPoint;
-      const rawValue = latestData[varName];
-
-      // Only update if the variable is actually present in the data
-      // This prevents resetting when data for other variables arrives
-      if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
+      const rawValue = getTelemetryValue(latestData as Record<string, unknown>, widget.variableName);
+      if (rawValue !== undefined) {
         setCurrentValue(rawValue);
         calculateStatus(rawValue);
         setLoading(false);
@@ -39,11 +36,9 @@ export const IndicatorWidget: React.FC<IndicatorWidgetProps> = ({ widget, device
       }
 
       try {
-        // Fetch latest value for the device
         const telemetryData = await apiService.getLatestForDevice(deviceId);
-        const value = telemetryData[widget.variableName] as number;
-
-        if (value !== null && value !== undefined) {
+        const value = getTelemetryValue(telemetryData as Record<string, unknown>, widget.variableName);
+        if (value !== undefined) {
           setCurrentValue(value);
           calculateStatus(value);
         }

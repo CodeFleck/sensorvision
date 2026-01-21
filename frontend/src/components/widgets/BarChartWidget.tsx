@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Widget, TelemetryPoint } from '../../types';
 import { apiService } from '../../services/api';
+import { toCamelCase } from '../../utils/stringUtils';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -53,10 +54,11 @@ export const BarChartWidget: React.FC<BarChartWidgetProps> = ({ widget, deviceId
         );
 
         const varName = widget.variableName as string;
+        const accessKey = toCamelCase(varName);
         const labels = telemetryData.map((point) =>
           new Date(point.timestamp).toLocaleTimeString()
         );
-        const values = telemetryData.map((point) => (point[varName] as number) || 0);
+        const values = telemetryData.map((point) => (point[accessKey] as number) || 0);
 
         setData({
           labels,

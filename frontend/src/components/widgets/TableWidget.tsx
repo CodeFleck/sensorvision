@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Widget, TelemetryPoint, DeviceVariable } from '../../types';
 import { apiService } from '../../services/api';
+import { getTelemetryValue } from '../../utils/stringUtils';
 
 interface TableWidgetProps {
   widget: Widget;
@@ -110,10 +111,10 @@ export const TableWidget: React.FC<TableWidgetProps> = ({ widget, deviceId, late
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {displayFields.map((field) => {
-            const value = data[field.key as keyof TelemetryPoint];
-            const displayValue = typeof value === 'number'
-              ? value.toFixed(field.decimals)
-              : value?.toString() ?? 'N/A';
+            const numericValue = getTelemetryValue(data as Record<string, unknown>, field.key);
+            const displayValue = numericValue !== undefined
+              ? numericValue.toFixed(field.decimals)
+              : 'N/A';
 
             return (
               <tr key={field.key} className="hover:bg-gray-50">

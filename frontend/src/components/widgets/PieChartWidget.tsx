@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Widget, TelemetryPoint, DeviceVariable } from '../../types';
 import { apiService } from '../../services/api';
+import { getTelemetryValue } from '../../utils/stringUtils';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -78,8 +79,8 @@ export const PieChartWidget: React.FC<PieChartWidgetProps> = ({ widget, deviceId
 
         const labels = displayVariables.map(v => v.displayName || v.name);
         const values = displayVariables.map(v => {
-          const val = telemetryData[v.name as keyof TelemetryPoint];
-          return typeof val === 'number' ? Math.abs(val) : 0;
+          const val = getTelemetryValue(telemetryData as Record<string, unknown>, v.name);
+          return val !== undefined ? Math.abs(val) : 0;
         });
 
         // Define color palette
