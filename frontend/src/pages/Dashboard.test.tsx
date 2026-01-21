@@ -518,10 +518,10 @@ describe('Dashboard', () => {
       renderDashboard();
 
       await waitFor(() => {
-        expect(screen.getByDisplayValue('1 Hour')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('24 Hours')).toBeInTheDocument();
       });
 
-      const select = screen.getByDisplayValue('1 Hour') as HTMLSelectElement;
+      const select = screen.getByDisplayValue('24 Hours') as HTMLSelectElement;
       const options = Array.from(select.options).map(opt => opt.textContent);
 
       // Check that all expected options are present
@@ -552,7 +552,7 @@ describe('Dashboard', () => {
 
       const callCountBefore = vi.mocked(apiService.getAggregatedData).mock.calls.length;
 
-      const select = screen.getByDisplayValue('1 Hour');
+      const select = screen.getByDisplayValue('24 Hours');
 
       await act(async () => {
         fireEvent.change(select, { target: { value: '6h' } });
@@ -649,10 +649,10 @@ describe('Dashboard', () => {
       renderDashboard();
 
       await waitFor(() => {
-        expect(screen.getByDisplayValue('1 Hour')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('24 Hours')).toBeInTheDocument();
       });
 
-      const select = screen.getByDisplayValue('1 Hour');
+      const select = screen.getByDisplayValue('24 Hours');
 
       await act(async () => {
         fireEvent.change(select, { target: { value: '6h' } });
@@ -886,7 +886,7 @@ describe('Dashboard', () => {
       renderDashboard();
 
       await waitFor(() => {
-        const select = screen.getByDisplayValue('1 Hour');
+        const select = screen.getByDisplayValue('24 Hours');
         expect(select.tagName).toBe('SELECT');
       });
     });
@@ -900,7 +900,7 @@ describe('Dashboard', () => {
       renderDashboard();
 
       await waitFor(() => {
-        const selects = screen.queryAllByDisplayValue('1 Hour');
+        const selects = screen.queryAllByDisplayValue('24 Hours');
         // At least one select should exist and be disabled while loading
         const disabledSelect = selects.find(s => (s as HTMLSelectElement).disabled);
         expect(disabledSelect).toBeDefined();
@@ -966,7 +966,7 @@ describe('Dashboard', () => {
         expect(apiService.getDevices).toHaveBeenCalledTimes(1);
       });
 
-      const select = screen.getByDisplayValue('1 Hour');
+      const select = screen.getByDisplayValue('24 Hours');
       fireEvent.change(select, { target: { value: '6h' } });
 
       await waitFor(() => {

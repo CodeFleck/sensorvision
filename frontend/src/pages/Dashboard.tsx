@@ -58,7 +58,7 @@ export const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Metrics panel state
-  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRangeValue>('1h');
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRangeValue>('24h');
   const [metricsData, setMetricsData] = useState<MetricsData | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(false);
 
