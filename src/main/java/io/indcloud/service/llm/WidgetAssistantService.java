@@ -113,6 +113,8 @@ public class WidgetAssistantService {
         """;
 
     private static final int MAX_MESSAGE_LENGTH = 2000;
+    private static final int DEFAULT_WIDGET_WIDTH = 6;
+    private static final int DEFAULT_WIDGET_HEIGHT = 4;
 
     /**
      * Process a chat message and return AI response with optional widget suggestion.
@@ -443,7 +445,22 @@ public class WidgetAssistantService {
 
     /**
      * Process LLM response and extract widget suggestion if present.
-     * Uses programmatic transaction management since this runs in a reactive context.
+     *
+     * <p><b>IMPORTANT:</b> This method is called from a {@code Mono.map()} reactive operator.
+     * Spring's {@code @Transactional} annotation doesn't work reliably in reactive pipelines because:
+     * <ul>
+     *   <li>Transaction state is stored in ThreadLocal, which doesn't propagate through reactive schedulers</li>
+     *   <li>The Mono executes asynchronously after the calling method's transaction has already closed</li>
+     *   <li>{@code @Transactional} on private methods is ignored by Spring's proxy-based AOP</li>
+     * </ul>
+     *
+     * <p>We use programmatic {@link TransactionTemplate} instead to ensure ACID guarantees
+     * for database operations within the reactive callback.
+     *
+     * @param llmResponse The response from the LLM service
+     * @param conversation The conversation context (may be detached, will be reloaded in transaction)
+     * @return ChatResponse with optional widget suggestion
+     * @throws IllegalStateException if conversation no longer exists in database
      */
     private ChatResponse processLLMResponse(LLMResponse llmResponse, WidgetAssistantConversation conversation) {
         if (!llmResponse.isSuccess()) {
@@ -461,11 +478,13 @@ public class WidgetAssistantService {
         String content = llmResponse.getContent();
 
         // Use programmatic transaction for database operations in reactive context
-        return transactionTemplate.execute(status -> {
+        ChatResponse result = transactionTemplate.execute(status -> {
             // Reload conversation within transaction to avoid detached entity issues
+            // Using orElseThrow to fail fast if conversation was deleted (e.g., by TTL cleanup)
             WidgetAssistantConversation managedConversation = conversationRepository
                 .findByIdWithMessages(conversation.getId())
-                .orElse(conversation);
+                .orElseThrow(() -> new IllegalStateException(
+                    "Conversation " + conversation.getId() + " no longer exists"));
 
             // Save assistant response to database
             WidgetAssistantMessage assistantMessage = WidgetAssistantMessage.builder()
@@ -509,8 +528,8 @@ public class WidgetAssistantService {
                         widgetNode.path("deviceId").asText(),
                         widgetNode.path("deviceName").asText(null),
                         widgetNode.path("variableName").asText(),
-                        widgetNode.path("width").asInt(6),
-                        widgetNode.path("height").asInt(4),
+                        widgetNode.path("width").asInt(DEFAULT_WIDGET_WIDTH),
+                        widgetNode.path("height").asInt(DEFAULT_WIDGET_HEIGHT),
                         widgetNode.has("config") ? objectMapper.convertValue(widgetNode.get("config"), Map.class) : null
                     );
 
@@ -519,7 +538,18 @@ public class WidgetAssistantService {
                         managedConversation.setPendingSuggestion(objectMapper.writeValueAsString(suggestion));
                         conversationRepository.save(managedConversation);
                     } catch (JsonProcessingException e) {
-                        log.error("Failed to serialize widget suggestion: {}", e.getMessage());
+                        // Don't silently swallow - return error to user so they know to retry
+                        log.error("Failed to serialize widget suggestion: {}", e.getMessage(), e);
+                        return new ChatResponse(
+                            managedConversation.getId(),
+                            "I understood your request but encountered an error saving the suggestion. Please try again.",
+                            null,
+                            true,
+                            llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
+                            llmResponse.getModelId(),
+                            llmResponse.getTotalTokens(),
+                            llmResponse.getLatencyMs()
+                        );
                     }
 
                     return new ChatResponse(
@@ -570,6 +600,23 @@ public class WidgetAssistantService {
                 );
             }
         });
+
+        // Null safety: TransactionTemplate.execute() can return null if callback returns null
+        // This should never happen given our code paths, but defensive programming is wise
+        if (result == null) {
+            log.error("TransactionTemplate returned null unexpectedly for conversation {}", conversation.getId());
+            return new ChatResponse(
+                conversation.getId(),
+                "An unexpected error occurred processing your request. Please try again.",
+                null, false,
+                llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
+                llmResponse.getModelId(),
+                llmResponse.getTotalTokens(),
+                llmResponse.getLatencyMs()
+            );
+        }
+
+        return result;
     }
 
     /**

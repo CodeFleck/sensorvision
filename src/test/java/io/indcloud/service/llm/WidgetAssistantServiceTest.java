@@ -154,9 +154,20 @@ class WidgetAssistantServiceTest {
         when(deviceRepository.findActiveByOrganization(testOrg)).thenReturn(List.of(testDevice));
         when(variableRepository.findByDeviceId(testDevice.getId())).thenReturn(Collections.emptyList());
 
-        // Mock conversation creation
+        // Mock conversation creation and retrieval
         when(conversationRepository.save(any(WidgetAssistantConversation.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(conversationRepository.findByIdWithMessages(any(UUID.class)))
+                .thenAnswer(invocation -> {
+                    UUID id = invocation.getArgument(0);
+                    WidgetAssistantConversation conv = WidgetAssistantConversation.builder()
+                            .id(id)
+                            .user(testUser)
+                            .organization(testOrg)
+                            .dashboard(testDashboard)
+                            .build();
+                    return Optional.of(conv);
+                });
         when(messageRepository.save(any(WidgetAssistantMessage.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -213,9 +224,20 @@ class WidgetAssistantServiceTest {
         when(deviceRepository.findActiveByOrganization(testOrg)).thenReturn(List.of(testDevice));
         when(variableRepository.findByDeviceId(testDevice.getId())).thenReturn(Collections.emptyList());
 
-        // Mock conversation creation
+        // Mock conversation creation and retrieval
         when(conversationRepository.save(any(WidgetAssistantConversation.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(conversationRepository.findByIdWithMessages(any(UUID.class)))
+                .thenAnswer(invocation -> {
+                    UUID id = invocation.getArgument(0);
+                    WidgetAssistantConversation conv = WidgetAssistantConversation.builder()
+                            .id(id)
+                            .user(testUser)
+                            .organization(testOrg)
+                            .dashboard(testDashboard)
+                            .build();
+                    return Optional.of(conv);
+                });
         when(messageRepository.save(any(WidgetAssistantMessage.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
