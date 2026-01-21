@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.support.TransactionTemplate;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
@@ -53,6 +54,9 @@ class WidgetAssistantServiceTest {
     @Mock
     private SecurityUtils securityUtils;
 
+    @Mock
+    private TransactionTemplate transactionTemplate;
+
     private WidgetAssistantService widgetAssistantService;
     private ObjectMapper objectMapper;
 
@@ -73,13 +77,20 @@ class WidgetAssistantServiceTest {
                 conversationRepository,
                 messageRepository,
                 securityUtils,
-                objectMapper
+                objectMapper,
+                transactionTemplate
         );
 
         // Enable widget assistant for testing
         ReflectionTestUtils.setField(widgetAssistantService, "widgetAssistantEnabled", true);
         ReflectionTestUtils.setField(widgetAssistantService, "conversationTtlMinutes", 30);
         ReflectionTestUtils.setField(widgetAssistantService, "maxMessagesPerConversation", 50);
+
+        // Configure transactionTemplate to execute the callback directly (lenient since not all tests use it)
+        lenient().when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
+            org.springframework.transaction.support.TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(null);
+        });
 
         testOrg = Organization.builder()
                 .id(1L)
@@ -143,9 +154,20 @@ class WidgetAssistantServiceTest {
         when(deviceRepository.findActiveByOrganization(testOrg)).thenReturn(List.of(testDevice));
         when(variableRepository.findByDeviceId(testDevice.getId())).thenReturn(Collections.emptyList());
 
-        // Mock conversation creation
+        // Mock conversation creation and retrieval
         when(conversationRepository.save(any(WidgetAssistantConversation.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(conversationRepository.findByIdWithMessages(any(UUID.class)))
+                .thenAnswer(invocation -> {
+                    UUID id = invocation.getArgument(0);
+                    WidgetAssistantConversation conv = WidgetAssistantConversation.builder()
+                            .id(id)
+                            .user(testUser)
+                            .organization(testOrg)
+                            .dashboard(testDashboard)
+                            .build();
+                    return Optional.of(conv);
+                });
         when(messageRepository.save(any(WidgetAssistantMessage.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -202,9 +224,20 @@ class WidgetAssistantServiceTest {
         when(deviceRepository.findActiveByOrganization(testOrg)).thenReturn(List.of(testDevice));
         when(variableRepository.findByDeviceId(testDevice.getId())).thenReturn(Collections.emptyList());
 
-        // Mock conversation creation
+        // Mock conversation creation and retrieval
         when(conversationRepository.save(any(WidgetAssistantConversation.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        when(conversationRepository.findByIdWithMessages(any(UUID.class)))
+                .thenAnswer(invocation -> {
+                    UUID id = invocation.getArgument(0);
+                    WidgetAssistantConversation conv = WidgetAssistantConversation.builder()
+                            .id(id)
+                            .user(testUser)
+                            .organization(testOrg)
+                            .dashboard(testDashboard)
+                            .build();
+                    return Optional.of(conv);
+                });
         when(messageRepository.save(any(WidgetAssistantMessage.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 

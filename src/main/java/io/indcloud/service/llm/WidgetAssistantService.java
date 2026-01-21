@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -49,6 +50,7 @@ public class WidgetAssistantService {
     private final WidgetAssistantMessageRepository messageRepository;
     private final SecurityUtils securityUtils;
     private final ObjectMapper objectMapper;
+    private final TransactionTemplate transactionTemplate;
 
     @Value("${llm.features.widget-assistant.enabled:true}")
     private boolean widgetAssistantEnabled;
@@ -111,6 +113,8 @@ public class WidgetAssistantService {
         """;
 
     private static final int MAX_MESSAGE_LENGTH = 2000;
+    private static final int DEFAULT_WIDGET_WIDTH = 6;
+    private static final int DEFAULT_WIDGET_HEIGHT = 4;
 
     /**
      * Process a chat message and return AI response with optional widget suggestion.
@@ -441,8 +445,23 @@ public class WidgetAssistantService {
 
     /**
      * Process LLM response and extract widget suggestion if present.
+     *
+     * <p><b>IMPORTANT:</b> This method is called from a {@code Mono.map()} reactive operator.
+     * Spring's {@code @Transactional} annotation doesn't work reliably in reactive pipelines because:
+     * <ul>
+     *   <li>Transaction state is stored in ThreadLocal, which doesn't propagate through reactive schedulers</li>
+     *   <li>The Mono executes asynchronously after the calling method's transaction has already closed</li>
+     *   <li>{@code @Transactional} on private methods is ignored by Spring's proxy-based AOP</li>
+     * </ul>
+     *
+     * <p>We use programmatic {@link TransactionTemplate} instead to ensure ACID guarantees
+     * for database operations within the reactive callback.
+     *
+     * @param llmResponse The response from the LLM service
+     * @param conversation The conversation context (may be detached, will be reloaded in transaction)
+     * @return ChatResponse with optional widget suggestion
+     * @throws IllegalStateException if conversation no longer exists in database
      */
-    @Transactional
     private ChatResponse processLLMResponse(LLMResponse llmResponse, WidgetAssistantConversation conversation) {
         if (!llmResponse.isSuccess()) {
             return new ChatResponse(
@@ -458,33 +477,95 @@ public class WidgetAssistantService {
 
         String content = llmResponse.getContent();
 
-        // Save assistant response to database
-        WidgetAssistantMessage assistantMessage = WidgetAssistantMessage.builder()
-            .role(WidgetAssistantMessage.MessageRole.assistant)
-            .content(content)
-            .build();
-        conversation.addMessage(assistantMessage);
-        messageRepository.save(assistantMessage);
+        // Use programmatic transaction for database operations in reactive context
+        ChatResponse result = transactionTemplate.execute(status -> {
+            // Reload conversation within transaction to avoid detached entity issues
+            // Using orElseThrow to fail fast if conversation was deleted (e.g., by TTL cleanup)
+            WidgetAssistantConversation managedConversation = conversationRepository
+                .findByIdWithMessages(conversation.getId())
+                .orElseThrow(() -> new IllegalStateException(
+                    "Conversation " + conversation.getId() + " no longer exists"));
 
-        try {
-            // Parse JSON response
-            JsonNode json = objectMapper.readTree(content);
-            String type = json.path("type").asText();
-            String message = json.path("message").asText();
+            // Save assistant response to database
+            WidgetAssistantMessage assistantMessage = WidgetAssistantMessage.builder()
+                .role(WidgetAssistantMessage.MessageRole.assistant)
+                .content(content)
+                .build();
+            managedConversation.addMessage(assistantMessage);
+            messageRepository.save(assistantMessage);
 
-            if ("suggestion".equals(type) && json.has("widget")) {
-                JsonNode widgetNode = json.get("widget");
+            try {
+                // Parse JSON response
+                JsonNode json = objectMapper.readTree(content);
+                String type = json.path("type").asText();
+                String message = json.path("message").asText();
 
-                // Parse widget type safely
-                WidgetType widgetType;
-                String widgetTypeStr = widgetNode.path("type").asText();
-                try {
-                    widgetType = WidgetType.valueOf(widgetTypeStr);
-                } catch (IllegalArgumentException e) {
-                    log.warn("LLM returned invalid widget type '{}', asking for clarification", widgetTypeStr);
+                if ("suggestion".equals(type) && json.has("widget")) {
+                    JsonNode widgetNode = json.get("widget");
+
+                    // Parse widget type safely
+                    WidgetType widgetType;
+                    String widgetTypeStr = widgetNode.path("type").asText();
+                    try {
+                        widgetType = WidgetType.valueOf(widgetTypeStr);
+                    } catch (IllegalArgumentException e) {
+                        log.warn("LLM returned invalid widget type '{}', asking for clarification", widgetTypeStr);
+                        return new ChatResponse(
+                            managedConversation.getId(),
+                            "I suggested an unsupported widget type. Could you specify what type of widget you want? Available types are: line chart, gauge, metric card, bar chart, area chart, pie chart, indicator, table, or map.",
+                            null,
+                            true,
+                            llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
+                            llmResponse.getModelId(),
+                            llmResponse.getTotalTokens(),
+                            llmResponse.getLatencyMs()
+                        );
+                    }
+
+                    WidgetSuggestion suggestion = new WidgetSuggestion(
+                        widgetNode.path("name").asText(),
+                        widgetType,
+                        widgetNode.path("deviceId").asText(),
+                        widgetNode.path("deviceName").asText(null),
+                        widgetNode.path("variableName").asText(),
+                        widgetNode.path("width").asInt(DEFAULT_WIDGET_WIDTH),
+                        widgetNode.path("height").asInt(DEFAULT_WIDGET_HEIGHT),
+                        widgetNode.has("config") ? objectMapper.convertValue(widgetNode.get("config"), Map.class) : null
+                    );
+
+                    // Store pending suggestion in database
+                    try {
+                        managedConversation.setPendingSuggestion(objectMapper.writeValueAsString(suggestion));
+                        conversationRepository.save(managedConversation);
+                    } catch (JsonProcessingException e) {
+                        // Don't silently swallow - return error to user so they know to retry
+                        log.error("Failed to serialize widget suggestion: {}", e.getMessage(), e);
+                        return new ChatResponse(
+                            managedConversation.getId(),
+                            "I understood your request but encountered an error saving the suggestion. Please try again.",
+                            null,
+                            true,
+                            llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
+                            llmResponse.getModelId(),
+                            llmResponse.getTotalTokens(),
+                            llmResponse.getLatencyMs()
+                        );
+                    }
+
                     return new ChatResponse(
-                        conversation.getId(),
-                        "I suggested an unsupported widget type. Could you specify what type of widget you want? Available types are: line chart, gauge, metric card, bar chart, area chart, pie chart, indicator, table, or map.",
+                        managedConversation.getId(),
+                        message,
+                        suggestion,
+                        false,
+                        llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
+                        llmResponse.getModelId(),
+                        llmResponse.getTotalTokens(),
+                        llmResponse.getLatencyMs()
+                    );
+                } else if ("clarification".equals(type)) {
+                    return new ChatResponse(
+                        managedConversation.getId(),
+                        message,
                         null,
                         true,
                         llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
@@ -492,74 +573,50 @@ public class WidgetAssistantService {
                         llmResponse.getTotalTokens(),
                         llmResponse.getLatencyMs()
                     );
+                } else {
+                    return new ChatResponse(
+                        managedConversation.getId(),
+                        message,
+                        null,
+                        false,
+                        llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
+                        llmResponse.getModelId(),
+                        llmResponse.getTotalTokens(),
+                        llmResponse.getLatencyMs()
+                    );
                 }
-
-                WidgetSuggestion suggestion = new WidgetSuggestion(
-                    widgetNode.path("name").asText(),
-                    widgetType,
-                    widgetNode.path("deviceId").asText(),
-                    widgetNode.path("deviceName").asText(null),
-                    widgetNode.path("variableName").asText(),
-                    widgetNode.path("width").asInt(6),
-                    widgetNode.path("height").asInt(4),
-                    widgetNode.has("config") ? objectMapper.convertValue(widgetNode.get("config"), Map.class) : null
-                );
-
-                // Store pending suggestion in database
-                try {
-                    conversation.setPendingSuggestion(objectMapper.writeValueAsString(suggestion));
-                    conversationRepository.save(conversation);
-                } catch (JsonProcessingException e) {
-                    log.error("Failed to serialize widget suggestion: {}", e.getMessage());
-                }
-
+            } catch (JsonProcessingException e) {
+                // If not valid JSON, treat as plain text response
+                log.warn("Failed to parse LLM response as JSON: {}", e.getMessage());
                 return new ChatResponse(
-                    conversation.getId(),
-                    message,
-                    suggestion,
-                    false,
-                    llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
-                    llmResponse.getModelId(),
-                    llmResponse.getTotalTokens(),
-                    llmResponse.getLatencyMs()
-                );
-            } else if ("clarification".equals(type)) {
-                return new ChatResponse(
-                    conversation.getId(),
-                    message,
+                    managedConversation.getId(),
+                    content,
                     null,
-                    true,
-                    llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
-                    llmResponse.getModelId(),
-                    llmResponse.getTotalTokens(),
-                    llmResponse.getLatencyMs()
-                );
-            } else {
-                return new ChatResponse(
-                    conversation.getId(),
-                    message,
-                    null,
-                    false,
+                    true, // Assume clarification needed if response wasn't structured
                     llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
                     llmResponse.getModelId(),
                     llmResponse.getTotalTokens(),
                     llmResponse.getLatencyMs()
                 );
             }
-        } catch (JsonProcessingException e) {
-            // If not valid JSON, treat as plain text response
-            log.warn("Failed to parse LLM response as JSON: {}", e.getMessage());
+        });
+
+        // Null safety: TransactionTemplate.execute() can return null if callback returns null
+        // This should never happen given our code paths, but defensive programming is wise
+        if (result == null) {
+            log.error("TransactionTemplate returned null unexpectedly for conversation {}", conversation.getId());
             return new ChatResponse(
                 conversation.getId(),
-                content,
-                null,
-                true, // Assume clarification needed if response wasn't structured
+                "An unexpected error occurred processing your request. Please try again.",
+                null, false,
                 llmResponse.getProvider() != null ? llmResponse.getProvider().name() : null,
                 llmResponse.getModelId(),
                 llmResponse.getTotalTokens(),
                 llmResponse.getLatencyMs()
             );
         }
+
+        return result;
     }
 
     /**
