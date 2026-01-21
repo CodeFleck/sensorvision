@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Widget, TelemetryPoint } from '../../types';
 import { apiService } from '../../services/api';
+import { toCamelCase } from '../../utils/stringUtils';
 import {
   Chart as ChartJS,
   LinearScale,
@@ -69,8 +70,6 @@ export const ScatterChartWidget: React.FC<ScatterChartWidgetProps> = ({ widget, 
         const xVar = (widget.config.xVariable as string | undefined) || 'timestamp';
         const yVar = widget.variableName || (widget.config.yVariable as string | undefined) || 'kwConsumption';
 
-        // Convert snake_case to camelCase for API property access
-        const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
         const xAccessKey = toCamelCase(xVar);
         const yAccessKey = toCamelCase(yVar);
 

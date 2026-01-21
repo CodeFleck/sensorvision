@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Widget, TelemetryPoint } from '../../types';
 import { apiService } from '../../services/api';
+import { toCamelCase } from '../../utils/stringUtils';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -67,8 +68,6 @@ export const AreaChartWidget: React.FC<AreaChartWidgetProps> = ({ widget, device
 
         // Transform data for Chart.js
         const varName = widget.variableName as string;
-        // Convert snake_case to camelCase for API property access
-        const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
         const accessKey = toCamelCase(varName);
         const labels = telemetryData.map((point) =>
           new Date(point.timestamp).toLocaleTimeString()

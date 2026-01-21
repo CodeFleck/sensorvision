@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Widget, TelemetryPoint } from '../../types';
 import { apiService } from '../../services/api';
+import { getTelemetryValue } from '../../utils/stringUtils';
 
 interface MetricCardWidgetProps {
   widget: Widget;
@@ -16,21 +17,11 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, devi
   const unit = (widget.config.unit as string | undefined) ?? '';
   const decimals = (widget.config.decimals as number | undefined) ?? 1;
 
-  // Convert snake_case to camelCase for API property access
-  const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-
   // Update value when real-time data arrives
   useEffect(() => {
     if (latestData && widget.variableName) {
-      // Try both snake_case and camelCase property names
-      const varName = widget.variableName as string;
-      const camelName = toCamelCase(varName);
-      const rawValue = (latestData[camelName as keyof TelemetryPoint] ?? latestData[varName as keyof TelemetryPoint]) as number | undefined;
-
-      // Only update if the variable is actually present in the data and is a number
-      // This prevents resetting to 0 when data for other variables arrives
-      if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
-        // Use functional update to avoid stale closure issues with previousValue
+      const rawValue = getTelemetryValue(latestData as Record<string, unknown>, widget.variableName);
+      if (rawValue !== undefined) {
         setValue(prevValue => {
           setPreviousValue(prevValue);
           return rawValue;
@@ -50,14 +41,8 @@ export const MetricCardWidget: React.FC<MetricCardWidgetProps> = ({ widget, devi
 
       try {
         const data = await apiService.getLatestForDevice(deviceId);
-        // Try both snake_case and camelCase property names
-        const varName = widget.variableName as string;
-        const camelName = toCamelCase(varName);
-        const rawValue = (data[camelName as keyof typeof data] ?? data[varName as keyof typeof data]) as number | undefined;
-
-        // Only update if the variable has a value and is a number
-        if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
-          // Use functional update to avoid stale closure issues with previousValue
+        const rawValue = getTelemetryValue(data as Record<string, unknown>, widget.variableName);
+        if (rawValue !== undefined) {
           setValue(prevValue => {
             setPreviousValue(prevValue);
             return rawValue;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Widget, TelemetryPoint } from '../../types';
 import { apiService } from '../../services/api';
+import { getTelemetryValue } from '../../utils/stringUtils';
 
 interface GaugeWidgetProps {
   widget: Widget;
@@ -16,20 +17,11 @@ export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, deviceId, late
   const max = widget.config.max ?? 100;
   const unit = widget.config.unit ?? '';
 
-  // Convert snake_case to camelCase for API property access
-  const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-
   // Update value when real-time data arrives
   useEffect(() => {
     if (latestData && widget.variableName) {
-      // Try both snake_case and camelCase property names
-      const varName = widget.variableName as string;
-      const camelName = toCamelCase(varName);
-      const rawValue = (latestData[camelName as keyof TelemetryPoint] ?? latestData[varName as keyof TelemetryPoint]) as number | undefined;
-
-      // Only update if the variable is actually present in the data and is a number
-      // This prevents resetting to 0 when data for other variables arrives
-      if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
+      const rawValue = getTelemetryValue(latestData as Record<string, unknown>, widget.variableName);
+      if (rawValue !== undefined) {
         setValue(rawValue);
         setLoading(false);
       }
@@ -46,13 +38,8 @@ export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, deviceId, late
 
       try {
         const data = await apiService.getLatestForDevice(deviceId);
-        // Try both snake_case and camelCase property names
-        const varName = widget.variableName as string;
-        const camelName = toCamelCase(varName);
-        const rawValue = (data[camelName as keyof typeof data] ?? data[varName as keyof typeof data]) as number | undefined;
-
-        // Only update if the variable has a value and is a number
-        if (rawValue !== undefined && rawValue !== null && typeof rawValue === 'number') {
+        const rawValue = getTelemetryValue(data as Record<string, unknown>, widget.variableName);
+        if (rawValue !== undefined) {
           setValue(rawValue);
         }
       } catch (error) {
@@ -63,7 +50,6 @@ export const GaugeWidget: React.FC<GaugeWidgetProps> = ({ widget, deviceId, late
     };
 
     fetchData();
-    // Only poll if we don't have real-time data
     const interval = setInterval(fetchData, widget.config.refreshInterval ?? 30000);
     return () => clearInterval(interval);
   }, [deviceId, widget.variableName, widget.config.refreshInterval]);
