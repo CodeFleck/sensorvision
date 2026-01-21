@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Dashboard, Widget, TelemetryPoint } from '../types';
 import { apiService } from '../services/api';
@@ -172,42 +172,52 @@ export const Dashboards: React.FC = () => {
     });
   };
 
-  // Handle layout changes from drag/resize
-  const handleLayoutChange = async (layout: Layout[]) => {
-    if (!dashboard || kioskMode) return;
+  // Refs for debounced layout save - using refs avoids stale closure issues
+  const pendingLayoutRef = useRef<Layout[] | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dashboardRef = useRef<Dashboard | null>(null);
 
-    // Update widget positions
+  // Keep dashboardRef in sync with dashboard state
+  useEffect(() => {
+    dashboardRef.current = dashboard;
+  }, [dashboard]);
+
+  // Save layout changes to server (debounced - only called after user stops dragging)
+  // Uses dashboardRef to get current dashboard ID and widget data
+  const saveLayoutToServer = useCallback(async (layout: Layout[]) => {
+    const currentDashboard = dashboardRef.current;
+    if (!currentDashboard || kioskMode) return;
+
+    // Send position updates for all widgets in the layout
+    // We always send updates since debouncing ensures this only runs once after drag completes
+    // The overhead of occasional no-op updates is minimal compared to the complexity of tracking original positions
     const updates = layout.map(async (item) => {
       const widgetId = parseInt(item.i);
-      const widget = dashboard.widgets.find(w => w.id === widgetId);
+      const widget = currentDashboard.widgets.find(w => w.id === widgetId);
 
       if (!widget) return;
 
-      // Only update if position or size changed
-      if (
-        widget.positionX !== item.x ||
-        widget.positionY !== item.y ||
-        widget.width !== item.w ||
-        widget.height !== item.h
-      ) {
-        try {
-          await apiService.updateWidget(dashboard.id, widgetId, {
-            ...widget,
-            positionX: item.x,
-            positionY: item.y,
-            width: item.w,
-            height: item.h,
-          });
-        } catch (err) {
-          console.error(`Failed to update widget ${widgetId} position:`, err);
-        }
+      try {
+        await apiService.updateWidget(currentDashboard.id, widgetId, {
+          ...widget,
+          positionX: item.x,
+          positionY: item.y,
+          width: item.w,
+          height: item.h,
+        });
+      } catch (err) {
+        console.error(`Failed to update widget ${widgetId} position:`, err);
       }
     });
 
     await Promise.all(updates);
+  }, [kioskMode]);
 
-    // Update local state without reloading entire dashboard
-    // This prevents widgets from remounting and retriggering all API calls
+  // Handle layout changes from drag/resize - updates local state immediately, debounces server save
+  const handleLayoutChange = useCallback((layout: Layout[]) => {
+    if (!dashboard || kioskMode) return;
+
+    // Update local state immediately for smooth UI feedback
     setDashboard(prev => {
       if (!prev) return prev;
       return {
@@ -227,7 +237,34 @@ export const Dashboards: React.FC = () => {
         }),
       };
     });
-  };
+
+    // Store pending layout and debounce server save
+    pendingLayoutRef.current = layout;
+
+    // Clear any existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Debounce: save to server 500ms after last layout change
+    saveTimeoutRef.current = setTimeout(() => {
+      if (pendingLayoutRef.current) {
+        saveLayoutToServer(pendingLayoutRef.current);
+        pendingLayoutRef.current = null;
+      }
+    }, 500);
+  }, [dashboard, kioskMode, saveLayoutToServer]);
+
+  // Cleanup timeout when dashboard changes or on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+        pendingLayoutRef.current = null;
+      }
+    };
+  }, [dashboard?.id]); // Cleanup when dashboard ID changes
 
   // ESC key to exit kiosk mode
   useEffect(() => {
